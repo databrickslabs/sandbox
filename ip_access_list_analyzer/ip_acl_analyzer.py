@@ -140,15 +140,28 @@ def apply_modifications(w: WorkspaceClient, make_changes: bool, orig: List[IpAcc
                     enabled=l.enabled, ip_addresses=l.ip_addresses)
 
 
-def main():
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+    
+                
+def main(args):
     parser = argparse.ArgumentParser(description='Analyze and fix Databricks IP Access Lists')
-    parser.add_argument('--apply', help="Do analysis and apply changes",
-                        action='store_true', default=False)
+    parser.add_argument('--apply', help="Do analysis and apply changes", default=False, type=str2bool, nargs='?', const=True)
     parser.add_argument('--debug', help="Allow debug output",
                         action='store_true', default=False)
-    parser.add_argument('--json-file', nargs=1,
+    parser.add_argument('--json_file', nargs=1, default="",
                         help="Load IP Access Lists from a JSON file that is output of lists API")
-    args = parser.parse_args()
+    if args:
+        args = parser.parse_args([item for row in [['--'+k, v] for k,v in args.items()] for item in row])
+    else:
+        args = parser.parse_args()
     log_level = logging.INFO
     if args.debug:
         log_level = logging.DEBUG
@@ -160,7 +173,7 @@ def main():
 
     w = None
 
-    if args.json_file:
+    if args.json_file and args.json_file[0]:
         logging.debug(f"Going to load IP Access Lists from JSON file: {args.json_file[0]}")
         with open(args.json_file[0]) as f:
             d = json.load(f)

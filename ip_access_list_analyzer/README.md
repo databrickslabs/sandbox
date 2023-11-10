@@ -1,4 +1,4 @@
-# Analyzer/fix tool for Databricks IP Access Lists
+<# Analyzer/fix tool for Databricks IP Access Lists
 
 This tool is used to perform analysis of the [Databricks IP Access Lists for Workspaces](https://docs.databricks.com/security/network/ip-access-list-workspace.html) to identify problems, like:
 
@@ -22,7 +22,7 @@ Only enabled IP Access Lists are analyzed (and fixed).
 To run the tool just execute:
 
 ```sh
-python ip-acl-analyzer.py [options]
+python ip_acl_analyzer.py [options]
 ```
 
 Pass `--help` command-line flag to obtain built-in help.  Specify `--debug` option to get detailed log output.
@@ -31,14 +31,14 @@ This tool works in two modes:
 
 1. Analysis (and optional fix) of IP Access Lists obtained directly from workspace via [REST API](https://docs.databricks.com/api/workspace/ipaccesslists/list).  To work in this mode you need to configure authentication via environment variables as described in [documentation](https://docs.databricks.com/dev-tools/auth.html).  To apply fixes for problems found, add `--apply` command line flag - in this case tool will remove empty lists and modify lists that were modified.
 
-1. Analysis (without fixing) of IP Access Lists stored in the files by using the `--json-file` command line flag. The format of the file must be the same as output of the [Get IP Acces Lists REST API](https://docs.databricks.com/api/workspace/ipaccesslists/list). See `test.json` for example. 
+1. Analysis (without fixing) of IP Access Lists stored in the files by using the `--json_file` command line flag. The format of the file must be the same as output of the [Get IP Acces Lists REST API](https://docs.databricks.com/api/workspace/ipaccesslists/list). See `test.json` for example. 
 
 ### Example
 
 If you execute following command:
 
 ```sh
-python ip-acl-analyzer.py --json-file=test.json --debug
+python ip_acl_analyzer.py --json_file=test.json --debug
 ```
 
 Then you will receive following output:
