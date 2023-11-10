@@ -1,4 +1,4 @@
-<# Analyzer/fix tool for Databricks IP Access Lists
+# Analyzer/fix tool for Databricks IP Access Lists
 
 This tool is used to perform analysis of the [Databricks IP Access Lists for Workspaces](https://docs.databricks.com/security/network/ip-access-list-workspace.html) to identify problems, like:
 
