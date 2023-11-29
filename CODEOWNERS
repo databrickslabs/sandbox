@@ -1,12 +1,12 @@
 # There can be only one CODEOWNERS file in the repo for clarity. See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners#codeowners-file-location
 
-# Asset-specific owners are listed fist. Please keep this list in the alphabetical order
+# Catch-all rule comes first
+
+* @databrickslabs/sandbox-write
+
+# Specific owners are listed last. Please keep this list in the alphabetical order
 
 database-diagram-builder   @alexott
 go-libs                    @nfx
 ip_access_list_analyzer    @alexott
 runtime-packages           @nfx
-
-# Catch-all rule comes last
-
-* @databrickslabs/sandbox-write
