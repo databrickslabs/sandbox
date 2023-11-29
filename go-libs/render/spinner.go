@@ -1,4 +1,4 @@
-package clirender
+package render
 
 import (
 	"time"

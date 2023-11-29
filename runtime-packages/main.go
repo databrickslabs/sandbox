@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,7 +16,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databrickslabs/sandbox/clirender"
+	"github.com/databrickslabs/sandbox/go-libs/localcache"
+	"github.com/databrickslabs/sandbox/go-libs/render"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -28,6 +29,13 @@ type Package struct {
 	Group   string `json:"group,omitempty"`
 	Name    string `json:"name"`
 	Version string `json:"version"`
+}
+
+func (p Package) String() string {
+	if p.Group != "" {
+		return fmt.Sprintf("%s:%s", p.Group, p.Name)
+	}
+	return p.Name
 }
 
 type RuntimeInfo struct {
@@ -124,7 +132,7 @@ func singleRuntime(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 	if err != nil {
 		return err
 	}
-	spinner := clirender.Spinner(cmd)
+	spinner := render.Spinner(cmd)
 	defer close(spinner)
 	run, err := wait.OnProgress(func(r *jobs.Run) {
 		if r.State == nil {
@@ -147,9 +155,9 @@ func singleRuntime(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 		return err
 	}
 	if isJSON {
-		return clirender.RenderJson(os.Stdout, info)
+		return render.RenderJson(os.Stdout, info)
 	}
-	return clirender.RenderTemplate(os.Stdout, `
+	return render.RenderTemplate(os.Stdout, `
 Name: {{.Name|green}}
 Version: {{.Version|green}}
 Apache Spark Version: {{.SparkVersion|green}}
@@ -175,25 +183,34 @@ func getRuntimeVersion(ver string) (string, bool) {
 	return fmt.Sprintf("v%s", match[1]), true
 }
 
-func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath string) error {
+type Runtimes struct {
+	SortedRuntimes []string               `json:"sorted_runtimes"`
+	DbrToVariants  map[string][]string    `json:"dbr_to_variants"`
+	VariantToDBR   map[string]string      `json:"variant_to_dbr"`
+	Info           map[string]RuntimeInfo `json:"info"`
+}
+
+func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath string) (*Runtimes, error) {
 	ctx := cmd.Context()
+	r := &Runtimes{
+		DbrToVariants: map[string][]string{},
+		VariantToDBR:  map[string]string{},
+		Info:          map[string]RuntimeInfo{},
+	}
 	runtimes, err := w.Clusters.SparkVersions(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	nodes, err := w.Clusters.ListNodeTypes(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	smallestVM, err := nodes.Smallest(compute.NodeTypeRequest{
 		LocalDisk: true,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	xx := map[string][]string{}
-	variantToDBR := map[string]string{}
 	for _, version := range runtimes.Versions {
 		skip := ((strings.Contains(version.Key, "apache-spark-")) ||
 			(strings.Contains(version.Key, "-aarch64-")) ||
@@ -211,19 +228,17 @@ func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath
 		if !ok {
 			continue
 		}
-		xx[dbrVersion] = append(xx[dbrVersion], version.Key)
-		variantToDBR[version.Key] = dbrVersion
+		r.DbrToVariants[dbrVersion] = append(r.DbrToVariants[dbrVersion], version.Key)
+		r.VariantToDBR[version.Key] = dbrVersion
 	}
-	yy := []string{}
-	for k := range xx {
-		yy = append(yy, k)
+	for k := range r.DbrToVariants {
+		r.SortedRuntimes = append(r.SortedRuntimes, k)
 	}
-	semver.Sort(yy)
-
+	semver.Sort(r.SortedRuntimes)
 	cnt := 0
 	tasks := []jobs.SubmitTask{}
-	for _, dbrVersion := range yy {
-		for _, runtime := range xx[dbrVersion] {
+	for _, dbrVersion := range r.SortedRuntimes {
+		for _, runtime := range r.DbrToVariants[dbrVersion] {
 			cnt++
 			clusterSpec := &compute.ClusterSpec{
 				SparkVersion:    runtime,
@@ -259,9 +274,9 @@ func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath
 		Tasks:   tasks,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	spinner := clirender.Spinner(cmd)
+	spinner := render.Spinner(cmd)
 	defer close(spinner)
 	run, err := wait.OnProgress(func(r *jobs.Run) {
 		if r.State == nil {
@@ -271,70 +286,96 @@ func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath
 		spinner <- fmt.Sprintf("job is %s", r.State.LifeCycleState)
 	}).Get()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	infos := map[string][]RuntimeInfo{}
 	for _, t := range run.Tasks {
 		output, err := w.Jobs.GetRunOutputByRunId(ctx, t.RunId)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		var info RuntimeInfo // todo: fails on cancelled job
 		err = json.Unmarshal([]byte(output.NotebookOutput.Result), &info)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		infos[info.Name] = append(infos[info.Name], info)
+		r.Info[info.Name] = info
 	}
+	return r, nil
+}
 
-	packagesInRuntimes := map[Package][]RuntimeInfo{}
-	
-
+func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath string) error {
+	ctx := cmd.Context()
+	cacheKey := fmt.Sprintf("dbr-versions-%s", instancePoolID)
+	cache := localcache.NewLocalCache[*Runtimes]("/tmp", cacheKey, 24*time.Hour)
+	snapshot, err := cache.Load(ctx, func() (*Runtimes, error) {
+		return fetchSnapshot(cmd, w, notebookPath)
+	})
+	if err != nil {
+		return err
+	}
 	mlOnly := map[string]bool{}
-
+	for _, runtimes := range snapshot.DbrToVariants {
+		packagesInRuntimes := map[Package][]RuntimeInfo{}
+		for _, runtimeVariant := range runtimes {
+			info := snapshot.Info[runtimeVariant]
+			for _, pkg := range info.PyPI {
+				packagesInRuntimes[pkg] = append(packagesInRuntimes[pkg], info)
+			}
+			for _, pkg := range info.Jars {
+				packagesInRuntimes[pkg] = append(packagesInRuntimes[pkg], info)
+			}
+		}
+		for pkg, variants := range packagesInRuntimes {
+			if len(variants) == 1 {
+				mlOnly[pkg.String()] = true
+			}
+		}
+	}
 	rows := []string{"Apache Spark", "Python"}
-	runtimeVersions := []string{}
 	matrix := map[string]map[string]string{}
 	matrix["Apache Spark"] = map[string]string{}
 	matrix["Python"] = map[string]string{}
-	for runtimeVersion, variants := range infos {
-		runtimeVersions = append(runtimeVersions, runtimeVersion)
-		for _, info := range variants {
-			matrix["Apache Spark"][runtimeVersion] = info.SparkVersion
-			matrix["Python"][runtimeVersion] = info.PythonVersion
-			for _, v := range info.PyPI {
-				// TODO: MLR
-				name := v.Name
-				_, ok := matrix[name]
-				if !ok {
-					matrix[name] = map[string]string{}
-				}
-				matrix[name][runtimeVersion] = v.Version
-				rows = append(rows, name)
-			}
-			for _, v := range info.Jars {
-				name := fmt.Sprintf("%s:%s", v.Group, v.Name)
-				_, ok := matrix[name]
-				if !ok {
-					matrix[name] = map[string]string{}
-				}
-				matrix[name][runtimeVersion] = v.Version
-				rows = append(rows, name)
-			}
+	seenPackages := map[string]bool{}
+	populate := func(v Package, runtimeVersion string) {
+		name := v.String()
+		_, isML := mlOnly[name]
+		if isML {
+			name = fmt.Sprintf("%s (ML)", name)
+		}
+		_, ok := matrix[name]
+		if !ok {
+			matrix[name] = map[string]string{}
+		}
+		matrix[name][runtimeVersion] = v.Version
+		if seenPackages[name] {
+			return
+		}
+		rows = append(rows, name)
+		seenPackages[name] = true
+	}
+	for v, info := range snapshot.Info {
+		runtimeVersion := snapshot.VariantToDBR[v]
+		matrix["Apache Spark"][runtimeVersion] = info.SparkVersion
+		matrix["Python"][runtimeVersion] = info.PythonVersion
+		for _, v := range info.PyPI {
+			populate(v, runtimeVersion)
+		}
+		for _, v := range info.Jars {
+			populate(v, runtimeVersion)
 		}
 	}
+	slices.Sort(rows)
 	trows := []string{}
-	sort.Strings(runtimeVersions) // TODO: or semver?...
 	header := []string{"..."}
-	header = append(header, runtimeVersions...)
+	header = append(header, snapshot.SortedRuntimes...)
 	trows = append(trows, strings.Join(header, "\t"))
 	for _, pkg := range rows {
 		row := []string{pkg}
-		for _, rv := range runtimeVersions {
+		for _, rv := range snapshot.SortedRuntimes {
 			row = append(row, matrix[pkg][rv])
 		}
 		trows = append(trows, strings.Join(row, "\t"))
 	}
 	template := strings.Join(trows, "\n")
-	return clirender.RenderTemplate(os.Stdout, template, true)
+	return render.RenderTemplate(os.Stdout, template, true)
 }

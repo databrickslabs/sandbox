@@ -1,5 +1,5 @@
 ---
-title: "CLI rendering helpers for Go"
+title: "Utility libraries for Go"
 language: go
 author: "Serge Smertin"
 date: 2023-11-29
@@ -9,6 +9,6 @@ tags:
  - cli
 ---
 
-# CLI rendering helpers for Go
+# Utility libraries for Go
 
 ..

@@ -1,4 +1,4 @@
-module github.com/databrickslabs/sandbox/clirender
+module github.com/databrickslabs/sandbox/go-libs
 
 go 1.21.0
 
