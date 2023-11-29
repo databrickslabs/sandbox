@@ -1,6 +1,6 @@
 # Databricks notebook source
 
-import pkg_resources, json, sys, platform, subprocess
+import pkg_resources, json, os, platform, subprocess
 from pyspark.version import __version__
 
 jars = []
@@ -26,6 +26,7 @@ python_packages = sorted(python_packages, key=lambda x: x['name'])
 runtime = dbutils.widgets.get("runtime")
 dbutils.notebook.exit(json.dumps({
     'name': runtime,
+    'version': os.environ['DATABRICKS_RUNTIME_VERSION'],
     'spark_version': __version__[0:5],
     'python_version': platform.python_version(),
     'pypi': python_packages,
