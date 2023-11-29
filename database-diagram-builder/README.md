@@ -1,3 +1,18 @@
+---
+title: "UML diagram builder for specified Spark Databases"
+language: python
+author: "Alex Ott"
+date: 2022-10-15
+
+tags: 
+- spark
+- diagrams
+- uml
+- notebook
+- plantuml
+- script
+---
+
 ## Generates UML diagram for specified Spark databases
 
 Generates [PlantUML](https://plantuml.com/) diagram for all, or selected databases registered in Databricks/Spark.  Generated UML diagram then could be converted into PDF/SVG/PNG or other formats using `plantuml` command-line tool.

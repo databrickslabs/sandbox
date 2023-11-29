@@ -1,3 +1,17 @@
+---
+title: "Analyzer/fix tool for Databricks IP Access Lists"
+language: python
+author: "Alex Ott"
+date: 2022-10-15
+
+tags: 
+- workspaces
+- security
+- ip-access-lists
+- script
+- installable
+---
+
 # Analyzer/fix tool for Databricks IP Access Lists
 
 This tool is used to perform analysis of the [Databricks IP Access Lists for Workspaces](https://docs.databricks.com/security/network/ip-access-list-workspace.html) to identify problems, like:
