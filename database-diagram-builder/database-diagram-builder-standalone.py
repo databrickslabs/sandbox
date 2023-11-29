@@ -7,6 +7,8 @@ from pyspark.sql.utils import AnalysisException
 from pyspark.sql.types import *
 import sys
 
+
+
 name_offset = 3
 pad_offset = 2
 
