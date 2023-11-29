@@ -1,0 +1,7 @@
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+
+This Software contains code from the following open source projects, licensed under the Databricks License:
+
+Databricks CLI - https://github.com/databricks/cli/blame/main/libs/cmdio/render.go
+Copyright (2022) Databricks, Inc.
+License - https://github.com/databricks/cli/blob/main/LICENSE
