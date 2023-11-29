@@ -9,4 +9,5 @@
 database-diagram-builder   @alexott
 go-libs                    @nfx
 ip_access_list_analyzer    @alexott
+metascan                   @nfx
 runtime-packages           @nfx
