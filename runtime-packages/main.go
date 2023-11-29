@@ -378,6 +378,11 @@ func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath
 		"distro-info":          true,
 		"python-apt":           true,
 		"tf-estimator-nightly": true,
+		"dbus-python":          true,
+		"launchpadlib":         true,
+		"lazr.restfulclient":   true,
+		"lazr.uri":             true,
+		"notebook-shim":        true,
 	}
 	for v, info := range snapshot.Info {
 		runtimeVersion := snapshot.VariantToDBR[v]
