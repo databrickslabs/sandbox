@@ -17,8 +17,6 @@ for j in subprocess.check_output(['ls', '-1', '/databricks/jars']).decode().spli
         })
 jars = sorted(jars, key=lambda jar: (jar['group'], jar['name']))
 
-skip_packages = ['distro-info', 'python-apt', 'tf-estimator-nightly']
-
 python_packages = [
     {"name": n, "version": v}
     for n, v in sorted([(i.key, i.version) 

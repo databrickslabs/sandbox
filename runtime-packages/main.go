@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databrickslabs/sandbox/go-libs/localcache"
 	"github.com/databrickslabs/sandbox/go-libs/render"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -53,7 +54,12 @@ func (ri RuntimeInfo) IsML() bool {
 
 var cfg databricks.Config
 var isJSON bool
+var includePython bool
+var includeML bool
+var includeJava bool
+var ltsOnly bool
 var instancePoolID string
+var numLastRuntimes int
 
 func main() {
 	databricks.WithProduct("runtime-packages", "0.0.1")
@@ -85,6 +91,11 @@ func main() {
 	flags.StringVar(&cfg.ClusterID, "cluster-id", "", "Databricks cluster to run package discovery job")
 	flags.StringVar(&instancePoolID, "instance-pool-id", "", "Instance pool to run discovery in")
 	flags.BoolVar(&isJSON, "json", false, "output in JSON")
+	flags.BoolVar(&includePython, "include-python", true, "include Python packages in the output table")
+	flags.BoolVar(&includeML, "include-ml", true, "include Databricks Runtime for Machine Learning packages in the output table")
+	flags.BoolVar(&includeJava, "include-java", false, "include JVM packages in the output table")
+	flags.BoolVar(&ltsOnly, "lts", false, "only Databricks Runtimes with the long-term support")
+	flags.IntVar(&numLastRuntimes, "last-runtimes", 10, "maximum number of Databricks Runtime versions to display")
 	err := cmd.Execute()
 	if err != nil {
 		os.Stderr.Write([]byte(err.Error()))
@@ -187,6 +198,7 @@ type Runtimes struct {
 	SortedRuntimes []string               `json:"sorted_runtimes"`
 	DbrToVariants  map[string][]string    `json:"dbr_to_variants"`
 	VariantToDBR   map[string]string      `json:"variant_to_dbr"`
+	LTS            map[string]bool        `json:"lts"`
 	Info           map[string]RuntimeInfo `json:"info"`
 }
 
@@ -196,6 +208,7 @@ func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 		DbrToVariants: map[string][]string{},
 		VariantToDBR:  map[string]string{},
 		Info:          map[string]RuntimeInfo{},
+		LTS:           map[string]bool{},
 	}
 	runtimes, err := w.Clusters.SparkVersions(ctx)
 	if err != nil {
@@ -220,10 +233,7 @@ func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 		if skip {
 			continue
 		}
-		isLTS := strings.Contains(version.Name, "LTS") || strings.Contains(version.Key, "-esr-")
-		if !isLTS { // TODO: make configurable
-			continue
-		}
+		r.LTS[version.Key] = strings.Contains(version.Name, "LTS") || strings.Contains(version.Key, "-esr-")
 		dbrVersion, ok := getRuntimeVersion(version.Key)
 		if !ok {
 			continue
@@ -283,7 +293,12 @@ func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 			spinner <- "starting job"
 			return
 		}
-		spinner <- fmt.Sprintf("job is %s", r.State.LifeCycleState)
+		state := map[string]int{}
+		for _, t := range r.Tasks {
+			state[t.State.LifeCycleState.String()] += 1
+		}
+		repr, _ := json.Marshal(state)
+		spinner <- fmt.Sprintf("job tasks: %s", string(repr))
 	}).Get()
 	if err != nil {
 		return nil, err
@@ -293,7 +308,13 @@ func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 		if err != nil {
 			return nil, err
 		}
-		var info RuntimeInfo // todo: fails on cancelled job
+		if output.Error != "" {
+			if output.ErrorTrace != "" {
+				cmd.ErrOrStderr().Write([]byte(output.ErrorTrace))
+			}
+			return nil, fmt.Errorf(output.Error)
+		}
+		var info RuntimeInfo
 		err = json.Unmarshal([]byte(output.NotebookOutput.Result), &info)
 		if err != nil {
 			return nil, err
@@ -304,6 +325,9 @@ func fetchSnapshot(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPa
 }
 
 func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath string) error {
+	if !includePython && includeJava {
+		includeML = false
+	}
 	ctx := cmd.Context()
 	cacheKey := fmt.Sprintf("dbr-versions-%s", instancePoolID)
 	cache := localcache.NewLocalCache[*Runtimes]("/tmp", cacheKey, 24*time.Hour)
@@ -338,41 +362,110 @@ func allRuntimes(cmd *cobra.Command, w *databricks.WorkspaceClient, notebookPath
 	seenPackages := map[string]bool{}
 	populate := func(v Package, runtimeVersion string) {
 		name := v.String()
-		_, isML := mlOnly[name]
-		if isML {
-			name = fmt.Sprintf("%s (ML)", name)
-		}
 		_, ok := matrix[name]
 		if !ok {
 			matrix[name] = map[string]string{}
 		}
-		matrix[name][runtimeVersion] = v.Version
+		version, _, _ := strings.Cut(v.Version, "-")
+		matrix[name][runtimeVersion] = version
 		if seenPackages[name] {
 			return
 		}
 		rows = append(rows, name)
 		seenPackages[name] = true
 	}
+	skipPackages := map[string]bool{
+		"distro-info":          true,
+		"python-apt":           true,
+		"tf-estimator-nightly": true,
+	}
 	for v, info := range snapshot.Info {
 		runtimeVersion := snapshot.VariantToDBR[v]
+		if ltsOnly && !snapshot.LTS[v] {
+			continue
+		}
 		matrix["Apache Spark"][runtimeVersion] = info.SparkVersion
 		matrix["Python"][runtimeVersion] = info.PythonVersion
-		for _, v := range info.PyPI {
-			populate(v, runtimeVersion)
+		if includePython {
+			for _, v := range info.PyPI {
+				if skipPackages[v.Name] {
+					continue
+				}
+				populate(v, runtimeVersion)
+			}
 		}
-		for _, v := range info.Jars {
-			populate(v, runtimeVersion)
+		if includeJava {
+			for _, v := range info.Jars {
+				populate(v, runtimeVersion)
+			}
 		}
 	}
 	slices.Sort(rows)
 	trows := []string{}
 	header := []string{"..."}
-	header = append(header, snapshot.SortedRuntimes...)
+	if includeML {
+		header = append(header, "ML-only")
+	}
+	runtimes := snapshot.SortedRuntimes[:]
+	if ltsOnly {
+		ltsRuntimes := map[string]bool{}
+		for k, v := range snapshot.VariantToDBR {
+			ltsRuntimes[v] = snapshot.LTS[k]
+		}
+		runtimes = []string{}
+		for k, isLTS := range ltsRuntimes {
+			if !isLTS {
+				continue
+			}
+			runtimes = append(runtimes, k)
+		}
+		semver.Sort(runtimes)
+	}
+	prevDBRs := map[string]string{}
+	for i := 1; i < len(runtimes); i++ {
+		prevDBRs[runtimes[i]] = runtimes[i-1]
+	}
+	isChanged := func(rv, version string, all map[string]string) bool {
+		prevDBR, ok := prevDBRs[rv]
+		if !ok {
+			// first row?..
+			return false
+		}
+		prev, ok := all[prevDBR]
+		if !ok {
+			return false
+		}
+		return prev != version
+	}
+	if numLastRuntimes > len(runtimes) {
+		numLastRuntimes = len(runtimes)
+	}
+	runtimes = runtimes[len(runtimes)-numLastRuntimes:]
+	for _, v := range runtimes {
+		header = append(header, color.YellowString(v))
+	}
 	trows = append(trows, strings.Join(header, "\t"))
 	for _, pkg := range rows {
 		row := []string{pkg}
-		for _, rv := range snapshot.SortedRuntimes {
-			row = append(row, matrix[pkg][rv])
+		_, isML := mlOnly[pkg]
+		if isML && !includeML {
+			continue
+		}
+		if includeML {
+			if isML {
+				row = append(row, "yes")
+			} else {
+				row = append(row, "-")
+			}
+		}
+		for _, rv := range runtimes {
+			version := matrix[pkg][rv]
+			if isChanged(rv, version, matrix[pkg]) {
+				version = color.GreenString(version)
+			} else {
+				version = color.YellowString(version)
+			}
+			row = append(row, version)
 		}
 		trows = append(trows, strings.Join(row, "\t"))
 	}
