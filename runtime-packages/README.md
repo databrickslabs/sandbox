@@ -13,10 +13,12 @@ tags:
 
 # Discovery tool for package versions in Databricks Runtimes
 
+Helps with upgrading workloads between Databricks Runtime version upgrades. When run in the interactive mode, green color indicates about the version change compares to the previous runtime.
+
 ![](runtime-packages.png)
 
 ## Usage
-  runtime-packages [flags]
+  `runtime-packages [flags]`
 
 ## Flags
 
