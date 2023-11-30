@@ -22,10 +22,10 @@ var userContentOverride int
 
 type GitHubClient struct {
 	api *httpclient.ApiClient
-	cfg *GitHubClientConfig
+	cfg *GitHubConfig
 }
 
-type GitHubClientConfig struct {
+type GitHubConfig struct {
 	GitHubTokenSource
 
 	RetryTimeout       time.Duration
@@ -38,7 +38,7 @@ type GitHubClientConfig struct {
 	transport http.RoundTripper
 }
 
-func NewClient(cfg *GitHubClientConfig) *GitHubClient {
+func NewClient(cfg *GitHubConfig) *GitHubClient {
 	return &GitHubClient{
 		api: httpclient.NewApiClient(httpclient.ClientConfig{
 			Visitors: []httpclient.RequestVisitor{func(r *http.Request) error {
@@ -69,7 +69,13 @@ func (c *GitHubClient) Versions(ctx context.Context, org, repo string) (Versions
 	return releases, err
 }
 
-func (c *GitHubClient) Repositories(ctx context.Context, org string) (Repositories, error) {
+func (c *GitHubClient) GetRepo(ctx context.Context, org, name string) (repo Repo, err error) {
+	url := fmt.Sprintf("%s/repos/%s/%s", gitHubAPI, org, name)
+	err = c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&repo))
+	return
+}
+
+func (c *GitHubClient) ListRepositories(ctx context.Context, org string) (Repositories, error) {
 	var repos Repositories
 	url := fmt.Sprintf("%s/users/%s/repos", gitHubAPI, org)
 	err := c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&repos))

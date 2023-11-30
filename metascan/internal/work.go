@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/adrg/frontmatter"
@@ -25,23 +24,9 @@ func ProjectFileset() (fileset.FileSet, error) {
 	return fileset.RecursiveChildren(root)
 }
 
-type Repository struct {
+type Collection struct {
 	root   fileset.FileSet
 	Assets []Metadata
-}
-
-type Maturity int
-
-const (
-	Experiment Maturity = iota
-	Demo
-	Accelerator
-	Alpha
-	Beta
-)
-
-func (m Maturity) String() string {
-	return strings.Split("Experiment,Demo,Accelerator,Alpha,Beta", ",")[m]
 }
 
 type Metadata struct {
@@ -52,8 +37,10 @@ type Metadata struct {
 	Tags     []string  `yaml:"tags"`
 	Maturity Maturity
 
-	repo   *Repository
-	folder string
+	lastUpdated time.Time
+
+	collection *Collection
+	folder     string
 }
 
 func (m *Metadata) Name() string {
@@ -77,25 +64,15 @@ func (m *Metadata) Validate() error {
 }
 
 func (m *Metadata) LastUpdated() time.Time {
-	last := time.Time{}
-	for _, file := range m.repo.root.Filter(m.folder + "*") {
-		info, err := file.Info()
-		if err != nil {
-			continue
-		}
-		if info.ModTime().After(last) {
-			last = info.ModTime()
-		}
-	}
-	return last
+	return m.lastUpdated
 }
 
-func NewRepository() (*Repository, error) {
+func NewRepository() (*Collection, error) {
 	fs, err := ProjectFileset()
 	if err != nil {
 		return nil, err
 	}
-	repo := &Repository{
+	repo := &Collection{
 		root: fs,
 	}
 	for _, readme := range fs.Filter(`README.md`) {
@@ -111,7 +88,7 @@ func NewRepository() (*Repository, error) {
 		if meta.Title == "" {
 			continue
 		}
-		meta.repo = repo
+		meta.collection = repo
 		meta.folder = path.Dir(readme.Relative)
 		repo.Assets = append(repo.Assets, meta)
 	}

@@ -24,5 +24,6 @@ func Run(ctx context.Context) {
 		},
 	}).With(
 		newScan(),
+		newClone(),
 	).Run(ctx)
 }

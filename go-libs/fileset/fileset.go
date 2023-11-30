@@ -9,6 +9,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type FileSet []File
@@ -40,6 +41,20 @@ func (fi FileSet) Filter(pathRegex string) (out FileSet) {
 		out = append(out, v)
 	}
 	return out
+}
+
+func (fi FileSet) LastUpdated() time.Time {
+	last := time.Time{}
+	for _, file := range fi {
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+		if info.ModTime().After(last) {
+			last = info.ModTime()
+		}
+	}
+	return last
 }
 
 func (fi FileSet) FindAll(pathRegex, needleRegex string) (map[File][]string, error) {
