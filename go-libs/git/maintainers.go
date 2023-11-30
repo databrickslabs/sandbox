@@ -98,8 +98,53 @@ func (a AuthorInfo) Totals() int {
 	return a.Commits + a.Added + a.Deleted
 }
 
-func (all Commits) ContributorsRaw() (out Authors) {
-	// this method doesn't count contributions per folder
+func (all Commits) Started() time.Time {
+	started := time.Now()
+	for _, v := range all {
+		if v.Time.Before(started) {
+			started = v.Time
+		}
+	}
+	return started
+}
+
+func (all Commits) Ended() time.Time {
+	started := time.Time{}
+	for _, v := range all {
+		if v.Time.After(started) {
+			started = v.Time
+		}
+	}
+	return started
+}
+
+func (all Commits) Filter(prefix string) (out Commits) {
+	// this is a straightforward code ownership detection strategy,
+	// though we can go berserk with prefix tree for paths
+	for _, c := range all {
+		stats := []NumStat{}
+		for _, ns := range c.Stats {
+			// we don't handle path renames
+			if !strings.HasPrefix(ns.Pathname, prefix) {
+				continue
+			}
+			stats = append(stats, ns)
+		}
+		if len(stats) == 0 {
+			continue
+		}
+		out = append(out, CommitInfo{
+			Time:   c.Time,
+			Sha:    c.Sha,
+			Author: c.Author,
+			Email:  c.Email,
+			Stats:  stats,
+		})
+	}
+	return out
+}
+
+func (all Commits) Authors() (out Authors) {
 	type tmp struct {
 		Author, Email string
 	}
@@ -131,3 +176,28 @@ func (all Commits) ContributorsRaw() (out Authors) {
 }
 
 type Authors []AuthorInfo
+
+func (authors Authors) Primary() string {
+	top := authors.Top(1)
+	if len(top) == 0 {
+		panic("no authors?...")
+	}
+	return top[0]
+}
+
+func (authors Authors) Top(atMost int) []string {
+	if atMost > len(authors) {
+		atMost = len(authors)
+	}
+	var out []string
+	for _, v := range authors {
+		if v.Email == "action@github.com" {
+			continue
+		}
+		if v.Author == "dependabot[bot]" {
+			continue
+		}
+		out = append(out, v.Author)
+	}
+	return out[:atMost]
+}

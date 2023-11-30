@@ -125,5 +125,8 @@ func (g *globalInfo) clone(ctx context.Context, v Item, repo github.Repo) (*Clon
 		Repo:      repo,
 		Git:       checkout,
 		FileSet:   fs,
+		Collection: &Collection{
+			root: fs,
+		},
 	}, nil
 }

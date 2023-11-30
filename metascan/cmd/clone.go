@@ -40,10 +40,16 @@ func newClone() lite.Registerable[internal.Config] {
 			if err != nil {
 				return err
 			}
+			assets, err := clones.Metadatas(ctx)
+			if err != nil {
+				return err
+			}
+			return render.RenderTemplate(cmd.OutOrStdout(), `Matirity	Name	Title	Author	Updated{{range .}}
+{{.Maturity}}	{{.Name}}	{{.Title}}	{{.Author}}	{{.LastUpdated.Format "2006-01-02"}}{{end}}
+			`, assets)
 			type tmp struct {
 				Author, Email string
 			}
-
 			mailmap := internal.LoadMapping(req.mailmap)
 
 			stats := map[tmp]int{}
@@ -52,7 +58,7 @@ func newClone() lite.Registerable[internal.Config] {
 				if err != nil {
 					return err
 				}
-				for _, a := range history.ContributorsRaw() {
+				for _, a := range history.Authors() {
 					email := mailmap.LookupEmail(a.Email, a.Author)
 					author := mailmap.LookupAuthor(a.Email, a.Author)
 					stats[tmp{author, email}] += a.Commits
