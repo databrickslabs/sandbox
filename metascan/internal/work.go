@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/adrg/frontmatter"
@@ -28,20 +27,6 @@ func ProjectFileset() (fileset.FileSet, error) {
 type Repository struct {
 	root   fileset.FileSet
 	Assets []Metadata
-}
-
-type Maturity int
-
-const (
-	Experiment Maturity = iota
-	Demo
-	Accelerator
-	Alpha
-	Beta
-)
-
-func (m Maturity) String() string {
-	return strings.Split("Experiment,Demo,Accelerator,Alpha,Beta", ",")[m]
 }
 
 type Metadata struct {

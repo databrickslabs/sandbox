@@ -39,9 +39,9 @@ func getRepositories(ctx context.Context, org string) (Repositories, error) {
 	return repos, err
 }
 
-type Repositories []ghRepo
+type Repositories []Repo
 
-type ghRepo struct {
+type Repo struct {
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
 	Langauge      string   `json:"language"`

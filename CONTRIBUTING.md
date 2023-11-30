@@ -32,3 +32,24 @@ tags:
 # Go projects
 
 We use [mutliple modules](https://github.com/golang/tools/blob/master/gopls/doc/workspace.md#multiple-modules) setup for go-based tools and libraries.
+
+To debug in VSCode, create `.vscode/launch.json` with approximately the following contents:
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "metascan clone-all",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/metascan/main.go",
+            "args": [
+                "clone-all",
+                "--debug"
+            ]
+        }
+    ]
+}
+```
