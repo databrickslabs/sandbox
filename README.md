@@ -1,4 +1,4 @@
-# sandbox
+# ![Databricks Labs Sandbox](./docs/logo-no-background.svg)
 Experimental and low-maturity scripts
 
 ## Project support 
