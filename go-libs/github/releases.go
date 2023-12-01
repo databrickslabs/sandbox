@@ -13,34 +13,28 @@ const cacheTTL = 1 * time.Hour
 
 // NewReleaseCache creates a release cache for a repository in the GitHub org.
 // Caller has to provide different cache directories for different repositories.
-func NewReleaseCache(org, repo, cacheDir string) *ReleaseCache {
+func NewReleaseCache(client *GitHubClient, org, repo, cacheDir string) *ReleaseCache {
 	pattern := fmt.Sprintf("%s-%s-releases", org, repo)
 	return &ReleaseCache{
-		cache: localcache.NewLocalCache[Versions](cacheDir, pattern, cacheTTL),
-		Org:   org,
-		Repo:  repo,
+		cache:  localcache.NewLocalCache[Versions](cacheDir, pattern, cacheTTL),
+		client: client,
+		Org:    org,
+		Repo:   repo,
 	}
 }
 
 type ReleaseCache struct {
-	cache localcache.LocalCache[Versions]
-	Org   string
-	Repo  string
+	cache  localcache.LocalCache[Versions]
+	client *GitHubClient
+	Org    string
+	Repo   string
 }
 
 func (r *ReleaseCache) Load(ctx context.Context) (Versions, error) {
 	return r.cache.Load(ctx, func() (Versions, error) {
-		return getVersions(ctx, r.Org, r.Repo)
+		logger.Debugf(ctx, "Fetching latest releases for %s/%s from GitHub API", r.Org, r.Repo)
+		return r.client.Versions(ctx, r.Org, r.Repo)
 	})
-}
-
-// getVersions is considered to be a private API, as we want the usage go through a cache
-func getVersions(ctx context.Context, org, repo string) (Versions, error) {
-	var releases Versions
-	logger.Debugf(ctx, "Fetching latest releases for %s/%s from GitHub API", org, repo)
-	url := fmt.Sprintf("%s/repos/%s/%s/releases", gitHubAPI, org, repo)
-	err := httpGetAndUnmarshal(ctx, url, &releases)
-	return releases, err
 }
 
 type ghAsset struct {

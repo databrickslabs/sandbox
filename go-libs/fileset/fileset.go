@@ -1,15 +1,17 @@
 package fileset
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/databricks/databricks-sdk-go/logger"
 )
 
 type FileSet []File
@@ -100,7 +102,7 @@ func (fi File) MustMatch(needle string) bool {
 func (fi File) FindAll(needle *regexp.Regexp) (all []string, err error) {
 	raw, err := fi.Raw()
 	if err != nil {
-		log.Printf("[ERROR] read %s: %s", fi.Absolute, err)
+		logger.Errorf(context.Background(), "read %s: %s", fi.Absolute, err)
 		return nil, err
 	}
 	for _, v := range needle.FindAllStringSubmatch(string(raw), -1) {
@@ -112,7 +114,7 @@ func (fi File) FindAll(needle *regexp.Regexp) (all []string, err error) {
 func (fi File) Match(needle *regexp.Regexp) bool {
 	raw, err := fi.Raw()
 	if err != nil {
-		log.Printf("[ERROR] read %s: %s", fi.Absolute, err)
+		logger.Errorf(context.Background(), "read %s: %s", fi.Absolute, err)
 		return false
 	}
 	return needle.Match(raw)
@@ -144,14 +146,6 @@ func RecursiveChildren(dir string) (found FileSet, err error) {
 			continue
 		}
 		if current.Name() == "vendor" {
-			continue
-		}
-		if current.Name() == "scripts" {
-			continue
-		}
-		// ext directory contains external projects at the current project depends
-		// on. We should ignore it for listing files in the project
-		if current.Name() == "ext" {
 			continue
 		}
 		children, err := ReadDir(current.Absolute)
