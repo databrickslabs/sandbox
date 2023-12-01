@@ -11,32 +11,26 @@ import (
 
 const repositoryCacheTTL = 24 * time.Hour
 
-func NewRepositoryCache(org, cacheDir string) *repositoryCache {
+func NewRepositoryCache(client *GitHubClient, org, cacheDir string) *repositoryCache {
 	filename := fmt.Sprintf("%s-repositories", org)
 	return &repositoryCache{
-		cache: localcache.NewLocalCache[Repositories](cacheDir, filename, repositoryCacheTTL),
-		Org:   org,
+		cache:  localcache.NewLocalCache[Repositories](cacheDir, filename, repositoryCacheTTL),
+		client: client,
+		Org:    org,
 	}
 }
 
 type repositoryCache struct {
-	cache localcache.LocalCache[Repositories]
-	Org   string
+	cache  localcache.LocalCache[Repositories]
+	client *GitHubClient
+	Org    string
 }
 
 func (r *repositoryCache) Load(ctx context.Context) (Repositories, error) {
 	return r.cache.Load(ctx, func() (Repositories, error) {
-		return getRepositories(ctx, r.Org)
+		logger.Debugf(ctx, "Loading repositories for %s from GitHub API", r.Org)
+		return r.client.ListRepositories(ctx, r.Org)
 	})
-}
-
-// getRepositories is considered to be privata API, as we want the usage to go through a cache
-func getRepositories(ctx context.Context, org string) (Repositories, error) {
-	var repos Repositories
-	logger.Debugf(ctx, "Loading repositories for %s from GitHub API", org)
-	url := fmt.Sprintf("%s/users/%s/repos", gitHubAPI, org)
-	err := httpGetAndUnmarshal(ctx, url, &repos)
-	return repos, err
 }
 
 type Repositories []Repo
