@@ -4,12 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContext(t *testing.T) {
-	testutil.CleanupEnvironment(t)
 	t.Setenv("FOO", "bar")
 
 	ctx0 := context.Background()
