@@ -1,4 +1,4 @@
-package internal
+package clone
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 	"github.com/databrickslabs/sandbox/go-libs/git"
 	"github.com/databrickslabs/sandbox/go-libs/github"
+	"github.com/databrickslabs/sandbox/metascan/inventory"
+	"github.com/databrickslabs/sandbox/metascan/metadata"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
@@ -18,7 +20,7 @@ import (
 
 type Clones []*Clone
 
-func (cc Clones) Metadatas(ctx context.Context) (out []Metadata, err error) {
+func (cc Clones) Metadatas(ctx context.Context) (out []metadata.Metadata, err error) {
 	for _, c := range cc {
 		m, err := c.Metadatas(ctx)
 		if err != nil {
@@ -27,24 +29,23 @@ func (cc Clones) Metadatas(ctx context.Context) (out []Metadata, err error) {
 		out = append(out, m...)
 	}
 	sort.Slice(out, func(i, j int) bool {
-		return out[i].lastUpdated.After(out[j].lastUpdated)
+		return out[i].LastUpdated.After(out[j].LastUpdated)
 	})
 	return out, nil
 }
 
 type Clone struct {
-	Inventory  Item
-	Git        *git.Checkout
-	Repo       github.Repo
-	FileSet    fileset.FileSet
-	Collection *Collection
+	Inventory inventory.Item
+	Git       *git.Checkout
+	Repo      github.Repo
+	FileSet   fileset.FileSet
 }
 
-func (c Clone) Name() string {
+func (c *Clone) Name() string {
 	return fmt.Sprintf("%s/%s", c.Inventory.Org, c.Repo.Name)
 }
 
-func (c Clone) Metadatas(ctx context.Context) ([]Metadata, error) {
+func (c *Clone) Metadatas(ctx context.Context) ([]metadata.Metadata, error) {
 	markdown := goldmark.New(
 		goldmark.WithExtensions(
 			meta.Meta,
@@ -53,18 +54,18 @@ func (c Clone) Metadatas(ctx context.Context) ([]Metadata, error) {
 			parser.WithAutoHeadingID(),
 		),
 	)
-
 	if c.Inventory.IsSandbox {
 		history, err := c.Git.History(ctx)
 		if err != nil {
 			return nil, err
 		}
-		out := []Metadata{}
+		out := []metadata.Metadata{}
 		readmes := c.FileSet.Filter(`README.md`)
 		for _, readme := range readmes {
 			folder := path.Dir(readme.Relative)
-
-			subFileset := c.FileSet.Filter(folder)
+			if folder == "." {
+				continue
+			}
 			subHistory := history.Filter(func(pathname string) bool {
 				if strings.HasSuffix(pathname, ".md") {
 					// exclude any documentation
@@ -73,12 +74,10 @@ func (c Clone) Metadatas(ctx context.Context) ([]Metadata, error) {
 				return strings.HasPrefix(pathname, folder)
 			})
 			authors := subHistory.Authors()
-
 			raw, err := readme.Raw()
 			if err != nil {
 				return nil, err
 			}
-
 			document := markdown.Parser().Parse(text.NewReader(raw))
 			doc := document.OwnerDocument()
 			child := doc.FirstChild()
@@ -86,34 +85,33 @@ func (c Clone) Metadatas(ctx context.Context) ([]Metadata, error) {
 			if title == "" {
 				continue
 			}
-
-			out = append(out, Metadata{
+			if len(authors) == 0 {
+				continue
+			}
+			// todo: need the rest of the readme file
+			out = append(out, metadata.Metadata{
 				Title:       title,
 				Author:      authors.Primary(),
-				Language:    "todo",
+				Language:    subHistory.Language(),
 				Date:        subHistory.Started(),
-				lastUpdated: subHistory.Ended(),
+				LastUpdated: subHistory.Ended(),
 				Maturity:    c.Inventory.Maturity,
-				folder:      folder,
-				collection: &Collection{
-					root: subFileset,
-				},
+				URL:         fmt.Sprintf("%s/%s", c.Repo.HtmlURL, folder),
 			})
 		}
 		return out, nil
 	}
-	return []Metadata{{
-		Title:      c.Repo.Description,
-		Tags:       c.Repo.Topics,
-		Language:   c.Repo.Langauge,
-		Date:       c.FileSet.LastUpdated(),
-		Maturity:   c.Inventory.Maturity,
-		folder:     c.FileSet.Root(),
-		collection: c.Collection,
+	return []metadata.Metadata{{
+		Title:    c.Repo.Description,
+		Tags:     c.Repo.Topics,
+		Language: c.Repo.Langauge,
+		Date:     c.FileSet.LastUpdated(),
+		Maturity: c.Inventory.Maturity,
+		URL:      c.Repo.HtmlURL,
 	}}, nil
 }
 
-func (c Clone) Maintainers(ctx context.Context) ([]string, error) {
+func (c *Clone) Maintainers(ctx context.Context) ([]string, error) {
 	history, err := c.Git.History(ctx)
 	if err != nil {
 		return nil, err

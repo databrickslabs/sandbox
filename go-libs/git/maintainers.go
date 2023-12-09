@@ -118,14 +118,13 @@ func (all Commits) Ended() time.Time {
 	return started
 }
 
-func (all Commits) Filter(prefix string) (out Commits) {
-	// this is a straightforward code ownership detection strategy,
-	// though we can go berserk with prefix tree for paths
+// Filter reduces the history based on the predicate from path
+func (all Commits) Filter(predicate func(pathname string) bool) (out Commits) {
 	for _, c := range all {
 		stats := []NumStat{}
 		for _, ns := range c.Stats {
 			// we don't handle path renames
-			if !strings.HasPrefix(ns.Pathname, prefix) {
+			if !predicate(ns.Pathname) {
 				continue
 			}
 			stats = append(stats, ns)
@@ -142,6 +141,43 @@ func (all Commits) Filter(prefix string) (out Commits) {
 		})
 	}
 	return out
+}
+
+func (all Commits) LanguageStats() map[string]int {
+	// this is a straightforward code language detection strategy
+	stats := map[string]int{}
+	for _, c := range all {
+		for _, ns := range c.Stats {
+			split := strings.Split(ns.Pathname, ".")
+			ext := split[len(split)-1]
+			stats[ext] += ns.Added + ns.Deleted
+		}
+		if len(stats) == 0 {
+			continue
+		}
+	}
+	return stats
+}
+
+func (all Commits) Language() string {
+	type lang struct {
+		Ext     string
+		Changes int
+	}
+	var out []lang
+	for k, v := range all.LanguageStats() {
+		out = append(out, lang{
+			Ext:     k,
+			Changes: v,
+		})
+	}
+	if len(out) == 0 {
+		return "unknown"
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Changes > out[j].Changes
+	})
+	return out[0].Ext
 }
 
 func (all Commits) Authors() (out Authors) {
