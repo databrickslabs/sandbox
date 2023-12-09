@@ -14,3 +14,9 @@ dist/metascan: $(wildcard metascan/*.go) $(wildcard metascan/internal/*.go) $(wi
 	@echo "Building metascan"
 
 dist: dist/runtime-packages dist/metascan
+
+.venv/bin/python:
+	python3.10 -m venv .venv
+
+dev: .venv/bin/python
+	.venv/bin/python -m pip install .
