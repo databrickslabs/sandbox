@@ -1,8 +1,11 @@
 [tool.poetry]
-name = "sandbox"
+name = "databricks-labs-sandbox"
 version = "0.0.1"
-description = ""
+description = "Experimental and low-maturity scripts"
 authors = ["Databricks Labs"]
+packages = [
+    {include = "ip_access_list_analyzer"}
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
