@@ -151,7 +151,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
     
                 
-def main(args):
+def main(args=None):
     parser = argparse.ArgumentParser(description='Analyze and fix Databricks IP Access Lists')
     parser.add_argument('--apply', help="Do analysis and apply changes", default=False, type=str2bool, nargs='?', const=True)
     parser.add_argument('--debug', help="Allow debug output",
