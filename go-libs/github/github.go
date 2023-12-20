@@ -74,7 +74,7 @@ func (c *GitHubClient) ListRepositories(ctx context.Context, org string) (Reposi
 }
 
 func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string) ([]workflowRun, error) {
-	path := fmt.Sprintf("/repos/%s/%s/actions/workflows/%v.yml/runs", org, repo, workflow)
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%v.yml/runs", gitHubAPI, org, repo, workflow)
 	var response struct {
 		TotalCount   *int          `json:"total_count,omitempty"`
 		WorkflowRuns []workflowRun `json:"workflow_runs,omitempty"`
@@ -84,7 +84,7 @@ func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string)
 }
 
 func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head string) ([]RepositoryCommit, error) {
-	path := fmt.Sprintf("/repos/%v/%v/compare/%v...%v", org, repo, base, head)
+	path := fmt.Sprintf("%s/repos/%v/%v/compare/%v...%v", gitHubAPI, org, repo, base, head)
 	var response struct {
 		Commits []RepositoryCommit `json:"commits,omitempty"`
 	}
