@@ -10,7 +10,6 @@ import (
 )
 
 const gitHubAPI = "https://api.github.com"
-const gitHubUserContent = "https://raw.githubusercontent.com"
 
 type GitHubClient struct {
 	api *httpclient.ApiClient
@@ -82,4 +81,13 @@ func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string)
 	}
 	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&response))
 	return response.WorkflowRuns, err
+}
+
+func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head string) ([]RepositoryCommit, error) {
+	path := fmt.Sprintf("/repos/%v/%v/compare/%v...%v", org, repo, base, head)
+	var response struct {
+		Commits []RepositoryCommit `json:"commits,omitempty"`
+	}
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&response))
+	return response.Commits, err
 }

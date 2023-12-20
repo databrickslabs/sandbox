@@ -36,6 +36,13 @@ func (l *Checkout) cmd(ctx context.Context, args ...string) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
+func (l *Checkout) OrgAndRepo() (string, string, bool) {
+	tmp := strings.TrimSuffix(l.fetchRemote, ".git")
+	tmp = strings.TrimPrefix(tmp, "https://github.com/")
+	tmp = strings.TrimPrefix(tmp, "git@github.com:")
+	return strings.Cut(tmp, "/")
+}
+
 func (l *Checkout) remotes(ctx context.Context) (map[string]string, error) {
 	remotes := map[string]string{
 		"fetch": "origin",
