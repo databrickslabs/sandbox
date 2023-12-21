@@ -5,3 +5,9 @@ This Software contains code from the following projects, licensed under the Data
 Databricks CLI
 Copyright (2022) Databricks, Inc.
 License - https://github.com/databricks/cli/blob/main/LICENSE
+
+This Software contains code from the following projects, licensed under the BSD-style license:
+
+go-github
+Copyright 2013 The go-github AUTHORS. All rights reserved.
+License - https://github.com/google/go-github/blob/master/LICENSE
