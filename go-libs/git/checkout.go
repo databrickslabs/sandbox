@@ -36,6 +36,10 @@ func (l *Checkout) cmd(ctx context.Context, args ...string) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
+func (l *Checkout) Dir() string {
+	return l.dir
+}
+
 func (l *Checkout) OrgAndRepo() (string, string, bool) {
 	tmp := strings.TrimSuffix(l.fetchRemote, ".git")
 	tmp = strings.TrimPrefix(tmp, "https://github.com/")
@@ -72,8 +76,27 @@ func (l *Checkout) CurrentBranch(ctx context.Context) (string, error) {
 	return l.cmd(ctx, "branch", "--show-current")
 }
 
+func (l *Checkout) DefaultBranch(ctx context.Context) (string, error) {
+	return l.cmd(ctx, "config", "--get", "init.defaultBranch")
+}
+
 func (l *Checkout) CheckoutMain(ctx context.Context) (string, error) {
-	return l.cmd(ctx, "checkout", "main")
+	defaultBranch, err := l.DefaultBranch(ctx)
+	if err != nil {
+		return "", fmt.Errorf("default branch: %w", err)
+	}
+	return l.cmd(ctx, "checkout", defaultBranch)
+}
+
+// If prepare/X.X.X does not name an existing branch, this creates the new branch,
+// pointing to the current commit, as if by regular git checkout -b. If prepare/X.X.X does name an
+// existing branch, what happens instead is that Git forcibly re-points the branch name to the current commit.
+//
+// This is a lot like a git reset --soft. A branch name is really just a human-readable name for some Git hash ID,
+// and a soft reset changes the hash ID attached to the branch name, without touching the index or work-tree. In
+// the same way, git checkout -B will change the ID attached to this name, without touching the index or work-tree.
+func (l *Checkout) ForceCheckout(ctx context.Context, branch string) (string, error) {
+	return l.cmd(ctx, "checkout", "-B", branch)
 }
 
 func (l *Checkout) ResetHard(ctx context.Context) (string, error) {
@@ -104,6 +127,6 @@ func (l *Checkout) CreateTag(ctx context.Context, v, msg string) (string, error)
 	return l.cmd(ctx, "tag", v, "-f", "-m", msg)
 }
 
-func (l *Checkout) PushTag(ctx context.Context, v string) (string, error) {
+func (l *Checkout) ForcePush(ctx context.Context, v string) (string, error) {
 	return l.cmd(ctx, "push", l.pushRemote, v, "-f")
 }

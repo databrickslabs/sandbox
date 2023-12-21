@@ -60,6 +60,25 @@ func (c *GitHubClient) Versions(ctx context.Context, org, repo string) (Versions
 	return releases, err
 }
 
+type CreateReleaseRequest struct {
+	TagName                string `json:"tag_name,omitempty"`
+	Name                   string `json:"name,omitempty"`
+	Body                   string `json:"body,omitempty"`
+	Draft                  bool   `json:"draft,omitempty"`
+	Prerelease             bool   `json:"prerelease,omitempty"`
+	GenerateReleaseNotes   bool   `json:"generate_release_notes,omitempty"`
+	DiscussionCategoryName string `json:"discussion_category_name,omitempty"`
+}
+
+func (c *GitHubClient) CreateRelease(ctx context.Context, org, repo string, req CreateReleaseRequest) (*Release, error) {
+	var res Release
+	url := fmt.Sprintf("%s/repos/%s/%s/releases", gitHubAPI, org, repo)
+	err := c.api.Do(ctx, "POST", url,
+		httpclient.WithRequestData(req),
+		httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
 func (c *GitHubClient) GetRepo(ctx context.Context, org, name string) (repo Repo, err error) {
 	url := fmt.Sprintf("%s/repos/%s/%s", gitHubAPI, org, name)
 	err = c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&repo))
@@ -90,4 +109,38 @@ func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head
 	}
 	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&response))
 	return response.Commits, err
+}
+
+func (c *GitHubClient) ListPullRequests(ctx context.Context, org, repo string, opts PullRequestListOptions) ([]PullRequest, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls", gitHubAPI, org, repo)
+	var prs []PullRequest
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithRequestData(opts),
+		httpclient.WithResponseUnmarshal(&prs))
+	return prs, err
+}
+
+func (c *GitHubClient) EditPullRequest(ctx context.Context, org, repo string, number int, body PullRequestUpdate) error {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d", gitHubAPI, org, repo, number)
+	return c.api.Do(ctx, "PATCH", path, httpclient.WithRequestData(body))
+}
+
+func (c *GitHubClient) CreatePullRequest(ctx context.Context, org, repo string, body NewPullRequest) (*PullRequest, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls", gitHubAPI, org, repo)
+	var res PullRequest
+	err := c.api.Do(ctx, "POST", path,
+		httpclient.WithRequestData(body),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *GitHubClient) GetPullRequest(ctx context.Context, org, repo string, number int) (*PullRequest, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d", gitHubAPI, org, repo, number)
+	var res PullRequest
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&res))
+	return &res, err
 }
