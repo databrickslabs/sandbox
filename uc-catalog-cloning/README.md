@@ -1,3 +1,15 @@
+---
+title: "UC Catalog Cloning1"
+language: Python
+author: "Ehsan Olfat, Vasco Lopes"
+date: 2023-12-22
+
+tags: 
+- Unity Catalog
+- Cloning
+- Automation
+---
+
 # uc-catalog-cloning
 
 **uc-catalog-cloning** is a powerful cloning script designed to streamline the process of creating a new catalog with an updated storage location. It facilitates the seamless cloning of all associated databases, managed tables, permission accesses, tags, and comments from the source catalog to the target catalog. For more information, see this [blog post](https://community.databricks.com/t5/technical-blog/uc-catalog-cloning-an-automated-approach/ba-p/53460).
