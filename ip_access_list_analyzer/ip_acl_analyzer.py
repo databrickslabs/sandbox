@@ -5,7 +5,8 @@ import itertools
 import json
 import logging
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk.core import Config
+from databricks.sdk import WorkspaceClient, AccountClient
 from databricks.sdk.service.settings import IpAccessListInfo, ListType
 
 import ipaddress
@@ -180,7 +181,11 @@ def main(args=None):
             ipls = [IpAccessListInfo.from_dict(l) for l in d['ip_access_lists']]
     else:
         logging.debug("Getting IP Access Lists from workspace")
-        w = WorkspaceClient()
+        cfg = Config()
+        if cfg.is_account_client:
+            w = AccountClient(config=cfg)
+        else:
+            w = WorkspaceClient(config=cfg)
         logging.debug(f"Processing IP Access Lists for host {w.config.host}")
         ipls = list(w.ip_access_lists.list())
 
