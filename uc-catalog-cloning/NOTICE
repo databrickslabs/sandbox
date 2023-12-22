@@ -1,0 +1,21 @@
+Copyright (2023) Databricks, Inc.
+
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+—--
+
+This Software contains code from the following open source projects, licensed under the Apache 2.0 license:
+
+databricks/databricks-sdk-py - https://github.com/databricks/databricks-sdk-py
+Copyright (2023) Databricks, Inc. 
+License - https://github.com/databricks/databricks-sdk-py/blob/main/LICENSE
+
+apache/spark/python/pyspark - https://github.com/apache/spark/tree/master/python/pyspark
+Copyright 2014 and onwards The Apache Software Foundation.
+License - https://github.com/apache/spark/blob/master/LICENSE
+—--
+
+This Software contains code from the following open source projects, licensed under the MIT license:
+
+termcolor/termcolor -  https://github.com/termcolor/termcolor
+Copyright termcolor Authors
+LIcense -  https://opensource.org/license/mit/
