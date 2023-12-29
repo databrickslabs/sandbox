@@ -1,5 +1,5 @@
 ---
-title: "UC Catalog Cloning1"
+title: "UC Catalog Cloning"
 language: Python
 author: "Ehsan Olfat, Vasco Lopes"
 date: 2023-12-22
@@ -81,5 +81,3 @@ We welcome contributions from the open-source community to make this cloning scr
 - Create tests for your code to maintain code quality.
 - Submit a pull request for review.
 
-## LICENSE
-Please see [LICENSE](https://github.com/esiol-db/uc-catalog-cloning/blob/main/LICENSE)
