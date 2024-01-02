@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/fatih/color"
@@ -122,9 +124,6 @@ func (r *Root[T]) preRun(init Init[T]) func(cmd *cobra.Command, args []string) e
 		}
 		v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 		v.AutomaticEnv() // or after config reading?...
-		if r.Debug {
-			v.DebugTo(r.ErrOrStderr())
-		}
 		err := v.ReadInConfig()
 		if _, ok := err.(viper.ConfigFileNotFoundError); err != nil && !ok {
 			return fmt.Errorf("config: %w", err)
@@ -137,6 +136,10 @@ func (r *Root[T]) preRun(init Init[T]) func(cmd *cobra.Command, args []string) e
 		if err != nil {
 			return fmt.Errorf("command flags: %w", err)
 		}
+		err = r.debugConfiguration(cmd.Context(), v)
+		if err != nil {
+			return fmt.Errorf("effective config: %w", err)
+		}
 		if init.PreRun != nil {
 			err = init.PreRun(r)
 			if err != nil {
@@ -147,10 +150,45 @@ func (r *Root[T]) preRun(init Init[T]) func(cmd *cobra.Command, args []string) e
 	}
 }
 
+func (r *Root[T]) debugConfiguration(ctx context.Context, v *viper.Viper) error {
+	if !r.Debug {
+		return nil
+	}
+	tmpName := filepath.Join(os.TempDir(), fmt.Sprintf("%s-%d.yml", r.Use, time.Now().Unix()))
+	defer func() {
+		os.Remove(tmpName)
+	}()
+	err := v.WriteConfigAs(tmpName)
+	if err != nil {
+		return fmt.Errorf("write tmp: %w", err)
+	}
+	raw, err := os.ReadFile(tmpName)
+	if err != nil {
+		return fmt.Errorf("read tmp: %w", err)
+	}
+	logger.Infof(ctx, "effective %s config:\n---\n%s", r.Use, raw)
+	return nil
+}
+
 func (r *Root[T]) bindViperToFlags(v *viper.Viper, flags *pflag.FlagSet, prefix string) error {
 	var err error
 	flags.VisitAll(func(f *pflag.Flag) {
+		if f.Name == "help" {
+			return
+		}
+		if f.Annotations == nil {
+			f.Annotations = map[string][]string{}
+		}
+		_, ok := f.Annotations["lite.prefix"]
+		if !ok {
+			f.Annotations["lite.prefix"] = []string{prefix}
+		}
 		propName := strings.ReplaceAll(fmt.Sprintf("%s%s", prefix, f.Name), "-", "_")
+		err = r.setDefault(v, flags, f, propName, prefix)
+		if err != nil {
+			err = fmt.Errorf("(default) %s: %w", propName, err)
+			return
+		}
 		if !f.Changed && v.IsSet(propName) {
 			switch x := v.Get(propName).(type) {
 			case []any:
@@ -166,7 +204,76 @@ func (r *Root[T]) bindViperToFlags(v *viper.Viper, flags *pflag.FlagSet, prefix 
 			}
 		}
 	})
+
 	return err
+}
+
+func (r *Root[T]) setDefault(v *viper.Viper, flags *pflag.FlagSet, f *pflag.Flag, propName, prefix string) error {
+	if v.IsSet(propName) {
+		return nil
+	}
+	if f.Annotations["lite.prefix"][0] != prefix {
+		return nil
+	}
+	switch f.Value.Type() {
+	case "bool":
+		value, err := flags.GetBool(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "float64":
+		value, err := flags.GetFloat64(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "int64":
+		value, err := flags.GetInt64(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "uint64":
+		value, err := flags.GetUint64(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "stringSlice":
+		value, err := flags.GetStringSlice(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "intSlice":
+		value, err := flags.GetIntSlice(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "uintSlice":
+		value, err := flags.GetUintSlice(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "boolSlice":
+		value, err := flags.GetBoolSlice(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	case "duration":
+		value, err := flags.GetDuration(f.Name)
+		if err != nil {
+			return err
+		}
+		v.SetDefault(propName, value)
+	default:
+		return fmt.Errorf("unknown value type: %s", f.Value.Type())
+	}
+	return nil
 }
 
 type Registerable[T any] interface {
