@@ -101,16 +101,22 @@ func (s *StatementExecutionExt) determineDefaultWarehouse(ctx context.Context) (
 	if err != nil {
 		return "", fmt.Errorf("list warehouses: %w", err)
 	}
+	ids := []string{}
 	for _, v := range warehouses {
-		if v.State == sql.StateRunning {
+		switch v.State {
+		case sql.StateDeleted, sql.StateDeleting:
+			continue
+		case sql.StateRunning:
 			// first running warehouse
 			s.warehouseID = v.Id
 			return s.warehouseID, nil
+		default:
+			ids = append(ids, v.Id)
 		}
 	}
-	if s.warehouseID == "" && len(warehouses) > 0 {
+	if s.warehouseID == "" && len(ids) > 0 {
 		// otherwise first warehouse
-		s.warehouseID = warehouses[0].Id
+		s.warehouseID = ids[0]
 		return s.warehouseID, nil
 	}
 	return "", fmt.Errorf("no warehouse id given")
