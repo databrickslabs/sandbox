@@ -2,10 +2,13 @@ package sqlexec
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"sync"
+	"time"
 
-	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 )
@@ -58,9 +61,9 @@ func (i *stringArrayIterator) Next(context.Context) ([]string, error) {
 }
 
 type scanIterator struct {
-	ctx    context.Context
-	schema *sql.ResultSchema
-	sai    *stringArrayIterator
+	ctx      context.Context
+	schema   *sql.ResultSchema
+	iterator *stringArrayIterator
 }
 
 func (i *scanIterator) Scan(out ...any) bool {
@@ -68,36 +71,197 @@ func (i *scanIterator) Scan(out ...any) bool {
 		logger.Errorf(i.ctx, "empty arguments")
 		return false
 	}
-	if !i.sai.HasNext(i.ctx) {
+	if !i.iterator.HasNext(i.ctx) {
 		return false
 	}
-	row, err := i.sai.Next(i.ctx)
+	row, err := i.iterator.Next(i.ctx)
 	if err != nil {
 		logger.Errorf(i.ctx, "failed to fetch: %w", err)
 		return false
 	}
 	for j := 0; j < len(out); j++ {
-		err := i.unmarshall(i.schema.Columns[j].TypeName, row[j], &out[j])
+		col := i.schema.Columns[j]
+		err := i.unmarshall(col, row[j], out[j]) // or &out[j]?
 		if err != nil {
+			err = fmt.Errorf("%s (%s): %w", col.Name, col.TypeText, err)
 			logger.Errorf(i.ctx, "failed to fetch: %s", err)
-			i.sai.err = err
+			i.iterator.err = err
 			return false
 		}
 	}
 	return true
 }
 
-func (i *scanIterator) unmarshall(t sql.ColumnInfoTypeName, in string, out any) error {
-	err := json.Unmarshal([]byte(in), out)
-	if err != nil {
+var (
+	arrayTypeRE = regexp.MustCompile(`ARRAY<(.*)>`)
+	mapTypeRE   = regexp.MustCompile(`MAP<STRING, (.*)>`)
+	typeIndex   = map[string]sql.ColumnInfoTypeName{
+		"ARRAY":             sql.ColumnInfoTypeNameArray,
+		"BINARY":            sql.ColumnInfoTypeNameBinary,
+		"BOOLEAN":           sql.ColumnInfoTypeNameBoolean,
+		"BYTE":              sql.ColumnInfoTypeNameByte,
+		"CHAR":              sql.ColumnInfoTypeNameChar,
+		"DATE":              sql.ColumnInfoTypeNameDate,
+		"DECIMAL":           sql.ColumnInfoTypeNameDecimal,
+		"DOUBLE":            sql.ColumnInfoTypeNameDouble,
+		"FLOAT":             sql.ColumnInfoTypeNameFloat,
+		"INT":               sql.ColumnInfoTypeNameInt,
+		"INTERVAL":          sql.ColumnInfoTypeNameInterval,
+		"LONG":              sql.ColumnInfoTypeNameLong,
+		"MAP":               sql.ColumnInfoTypeNameMap,
+		"NULL":              sql.ColumnInfoTypeNameNull,
+		"SHORT":             sql.ColumnInfoTypeNameShort,
+		"STRING":            sql.ColumnInfoTypeNameString,
+		"STRUCT":            sql.ColumnInfoTypeNameStruct,
+		"TIMESTAMP":         sql.ColumnInfoTypeNameTimestamp,
+		"USER_DEFINED_TYPE": sql.ColumnInfoTypeNameUserDefinedType,
+	}
+)
+
+func (i *scanIterator) typeByText(typeText string) (sql.ColumnInfoTypeName, error) {
+	v, ok := typeIndex[typeText]
+	if !ok {
+		return "", fmt.Errorf("unknown type: %s", typeText)
+	}
+	return v, nil
+}
+
+func (i *scanIterator) unmarshall(col sql.ColumnInfo, src string, out any) (err error) {
+	defer func() {
+		p := recover()
+		if p != nil {
+			err = fmt.Errorf("panic: %s", p)
+		}
+	}()
+	switch dst := out.(type) {
+	case *string, *int, *int32, *int64, *bool, *float32, *float64, *byte:
+		return json.Unmarshal([]byte(src), dst)
+	case *time.Time:
+		if col.TypeName == sql.ColumnInfoTypeNameDate {
+			var year, month, day int
+			_, err := fmt.Sscanf(string(src), "%d-%d-%d", &year, &month, &day)
+			if err != nil {
+				return err
+			}
+			*dst = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+			return nil
+		}
+		*dst, err = time.Parse("2006-01-02T15:04:05Z", src)
 		return err
+	case *[]byte:
+		var err error
+		*dst, err = base64.StdEncoding.DecodeString(src)
+		return err
+	default:
+		switch col.TypeName {
+		case sql.ColumnInfoTypeNameArray:
+			return i.unmarshallArray(col, src, out)
+		case sql.ColumnInfoTypeNameMap:
+			return i.unmarshallMap(col, src, out)
+		case sql.ColumnInfoTypeNameStruct:
+			// try to unmarshal struct to map[string]any
+			return json.Unmarshal([]byte(src), dst)
+		}
 	}
 	return nil
 }
 
+func sliceUnmarshaller[X any](col sql.ColumnInfo, src []string, dst *[]X,
+	unmarshall func(sql.ColumnInfo, string, any) error) error {
+	for _, v := range src {
+		var item X
+		err := unmarshall(col, v, &item)
+		if err != nil {
+			return fmt.Errorf("elem: %w", err)
+		}
+		*dst = append(*dst, item)
+	}
+	return nil
+}
+
+func mapUnmarshaller[X any](col sql.ColumnInfo, src map[string]string, dst *map[string]X,
+	unmarshall func(sql.ColumnInfo, string, any) error) error {
+	for k, v := range src {
+		var item X
+		err := unmarshall(col, v, &item)
+		if err != nil {
+			return fmt.Errorf("%s: %w", k, err)
+		}
+		(*dst)[k] = item
+	}
+	return nil
+}
+
+func (i *scanIterator) unmarshallArray(col sql.ColumnInfo, src string, out any) error {
+	var tmp []string
+	err := json.Unmarshal([]byte(src), &tmp)
+	if err != nil {
+		return fmt.Errorf("unmashal: %w", err)
+	}
+	matches := arrayTypeRE.FindStringSubmatch(col.TypeText)
+	if len(matches) == 0 {
+		return fmt.Errorf("no elem type")
+	}
+	innerTypeText := matches[1]
+	innerTypeName, err := i.typeByText(innerTypeText)
+	if err != nil {
+		return fmt.Errorf("inner type: %w", err)
+	}
+	inner := sql.ColumnInfo{
+		TypeName: innerTypeName,
+		TypeText: innerTypeText,
+	}
+	switch dst := out.(type) {
+	case *[]int:
+		return sliceUnmarshaller[int](inner, tmp, dst, i.unmarshall)
+	case *[]string:
+		return sliceUnmarshaller[string](inner, tmp, dst, i.unmarshall)
+	case *[]float32:
+		return sliceUnmarshaller[float32](inner, tmp, dst, i.unmarshall)
+	case *[]any:
+		return sliceUnmarshaller[any](inner, tmp, dst, i.unmarshall)
+	default:
+		return fmt.Errorf("unknown type name: %s", col.TypeName)
+	}
+}
+
+func (i *scanIterator) unmarshallMap(col sql.ColumnInfo, src string, out any) error {
+	var tmp map[string]string
+	err := json.Unmarshal([]byte(src), &tmp)
+	if err != nil {
+		return fmt.Errorf("unmashal: %w", err)
+	}
+	matches := mapTypeRE.FindStringSubmatch(col.TypeText)
+	if len(matches) == 0 {
+		return fmt.Errorf("no elem type")
+	}
+	innerTypeText := matches[1]
+	innerTypeName, err := i.typeByText(innerTypeText)
+	if err != nil {
+		return fmt.Errorf("inner type: %w", err)
+	}
+	inner := sql.ColumnInfo{
+		TypeName: innerTypeName,
+		TypeText: innerTypeText,
+	}
+	switch dst := out.(type) {
+	case *map[string]string:
+		*dst = tmp
+		return nil
+	case *map[string]int:
+		return mapUnmarshaller[int](inner, tmp, dst, i.unmarshall)
+	case *map[string]float32:
+		return mapUnmarshaller[float32](inner, tmp, dst, i.unmarshall)
+	case *map[string]any:
+		return mapUnmarshaller[any](inner, tmp, dst, i.unmarshall)
+	default:
+		return fmt.Errorf("unknown type name: %s", col.TypeName)
+	}
+}
+
 type iterableResult struct {
 	scanner  *scanIterator
-	iterator listing.Iterator[[]string]
+	iterator *stringArrayIterator
 }
 
 // Scan mimics the rows interface from go - see https://pkg.go.dev/database/sql#example-Rows
@@ -106,7 +270,7 @@ func (rc *iterableResult) Scan(out ...any) bool {
 }
 
 func (rc *iterableResult) Err() error {
-	return rc.scanner.sai.err
+	return rc.iterator.err
 }
 
 func (rc *iterableResult) HasNext(ctx context.Context) bool {
