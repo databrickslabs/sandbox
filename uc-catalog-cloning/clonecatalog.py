@@ -13,26 +13,23 @@ logger.addHandler(file_handler)
 
 # Attempt to retrieve the Databricks environment's API URL
 # This block checks whether the code is running inside a Databricks notebook.
-try:
-    dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
-except Exception as e:
-    logger.info(e)
-    try:
-        from databricks.connect import DatabricksSession
 
-        spark = DatabricksSession.builder.getOrCreate()
-    except ImportError as ie:
-        logger.info(ie)
-        raise ImportError(
-            "Could not import databricks-connect, please install with `pip install databricks-connect==13.3.3`."
-        ) from ie
-    except ValueError as ve:
-        logger.info(ve)
-        raise ImportError(
-            "Please re-install databricks-connect with `pip install databricks-connect==13.3.3`.\n"
-            "and databricks-sdk with `pip install databricks-sdk==0.14.0`.\n"
-            "If you are running from Databricks you also need to restart Python by running `dbutils.library.restartPython()`."
-        ) from ve
+try:
+    from databricks.connect import DatabricksSession
+
+    spark = DatabricksSession.builder.getOrCreate()
+except ImportError as ie:
+    logger.info(ie)
+    raise ImportError(
+        "Could not import databricks-connect, please install with `pip install databricks-connect==13.3.3`."
+    ) from ie
+except ValueError as ve:
+    logger.info(ve)
+    raise ImportError(
+        "Please re-install databricks-connect with `pip install databricks-connect==13.3.3`.\n"
+        "and databricks-sdk with `pip install databricks-sdk==0.14.0`.\n"
+        "If you are running from Databricks you also need to restart Python by running `dbutils.library.restartPython()`."
+    ) from ve
 
 # Import necessary Databricks SDK modules
 # If unavailable, prompt the user to install or upgrade them
