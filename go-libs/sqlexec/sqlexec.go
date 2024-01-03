@@ -234,9 +234,9 @@ func (s *StatementExecutionExt) Execute(ctx context.Context, req ExecuteStatemen
 	return &iterableResult{
 		iterator: sai,
 		scanner: &scanIterator{
-			schema: manifest.Schema,
-			ctx:    ctx,
-			sai:    sai,
+			schema:   manifest.Schema,
+			ctx:      ctx,
+			iterator: sai,
 		},
 	}, nil
 }
