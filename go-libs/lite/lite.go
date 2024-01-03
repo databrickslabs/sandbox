@@ -77,9 +77,25 @@ func New[T any](ctx context.Context, init Init[T]) *Root[T] {
 	cmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
 		return fmt.Errorf("%w\n\n%s", err, c.UsageString())
 	})
-	cmd.PersistentFlags().BoolVar(&cmd.Debug, "debug", false, "Enable debug log output")
+	if init.EnvPrefix == "" {
+		init.EnvPrefix = strings.ToUpper(init.Name)
+	}
+	flags := cmd.PersistentFlags()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		logger.Warnf(ctx, "Cannot find home dir: %s", err)
+	}
+	init.ConfigPath = filepath.Clean(strings.ReplaceAll(init.ConfigPath, "$HOME", home))
+	flags.StringVar(&cmd.configPath, "config", init.ConfigPath, "Location of client config files")
+	if !flags.Changed("config") {
+		configPath, ok := os.LookupEnv(fmt.Sprintf("%s_CONFIG", init.EnvPrefix))
+		if ok {
+			cmd.configPath = configPath
+		}
+	}
+	flags.BoolVar(&cmd.Debug, "debug", false, "Enable debug log output")
 	if init.Bind != nil {
-		init.Bind(cmd.PersistentFlags(), &cmd.Config)
+		init.Bind(flags, &cmd.Config)
 	}
 	cmd.PersistentPreRunE = cmd.preRun(init)
 	return cmd
@@ -87,9 +103,10 @@ func New[T any](ctx context.Context, init Init[T]) *Root[T] {
 
 type Root[T any] struct {
 	cobra.Command
-	Logger *slog.Logger
-	Debug  bool
-	Config T
+	Logger     *slog.Logger
+	Debug      bool
+	Config     T
+	configPath string
 }
 
 func (r *Root[T]) initLogger() {
@@ -115,15 +132,17 @@ func (r *Root[T]) preRun(init Init[T]) func(cmd *cobra.Command, args []string) e
 		v := viper.NewWithOptions(viper.WithLogger(r.Logger))
 		v.SetConfigName(init.Name)
 		v.SetConfigType("yaml")
-		v.AddConfigPath(".")
-		if init.ConfigPath != "" {
-			v.AddConfigPath(init.ConfigPath)
+		if r.configPath != "" {
+			v.AddConfigPath(r.configPath)
+		} else {
+			v.AddConfigPath(".")
 		}
 		if init.EnvPrefix != "" {
 			v.SetEnvPrefix(init.EnvPrefix)
 		}
 		v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 		v.AutomaticEnv() // or after config reading?...
+
 		err := v.ReadInConfig()
 		if _, ok := err.(viper.ConfigFileNotFoundError); err != nil && !ok {
 			return fmt.Errorf("config: %w", err)
