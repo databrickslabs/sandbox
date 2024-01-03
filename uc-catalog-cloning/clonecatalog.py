@@ -51,7 +51,7 @@ try:
 except ImportError as e:
     logger.info(e)
     raise ImportError(
-        "Could not import pyspark, please install with `pip install pyspark`."
+        "Could not import pyspark, please install with `pip install databricks-connect==13.3.3`."
     ) from e
 try:
     from termcolor import cprint
