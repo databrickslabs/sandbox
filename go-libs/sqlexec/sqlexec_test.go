@@ -11,6 +11,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestShowDatabases(t *testing.T) {
+	ctx, w := fixtures.WorkspaceTest(t)
+
+	exec, err := sqlexec.New(w)
+	require.NoError(t, err)
+
+	result, err := exec.Query(ctx, "SHOW DATABASES IN hive_metastore")
+	require.NoError(t, err)
+
+	var name string
+	for result.Scan(&name) {
+		logger.Infof(ctx, "name: %s", name)
+	}
+	require.NoError(t, result.Err())
+}
+
 func TestQueryRuns(t *testing.T) {
 	ctx, w := fixtures.WorkspaceTest(t)
 
