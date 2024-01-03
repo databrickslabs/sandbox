@@ -134,7 +134,10 @@ func (i *scanIterator) unmarshall(col sql.ColumnInfo, src string, out any) (err 
 		}
 	}()
 	switch dst := out.(type) {
-	case *string, *int, *int32, *int64, *bool, *float32, *float64, *byte:
+	case *string:
+		*dst = src
+		return nil
+	case *int, *int32, *int64, *bool, *float32, *float64, *byte:
 		return json.Unmarshal([]byte(src), dst)
 	case *time.Time:
 		if col.TypeName == sql.ColumnInfoTypeNameDate {
