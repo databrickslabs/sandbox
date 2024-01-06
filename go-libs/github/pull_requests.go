@@ -2,29 +2,33 @@ package github
 
 import "time"
 
-type PullRequestListOptions struct {
-	// State filters pull requests based on their state. Possible values are:
-	// open, closed, all. Default is "open".
-	State string `url:"state,omitempty"`
-
-	// Head filters pull requests by head user and branch name in the format of:
-	// "user:ref-name".
-	Head string `url:"head,omitempty"`
-
-	// Base filters pull requests by base branch name.
-	Base string `url:"base,omitempty"`
-
-	// Sort specifies how to sort pull requests. Possible values are: created,
-	// updated, popularity, long-running. Default is "created".
-	Sort string `url:"sort,omitempty"`
-
-	// Direction in which to sort pull requests. Possible values are: asc, desc.
-	// If Sort is "created" or not specified, Default is "desc", otherwise Default
-	// is "asc"
-	Direction string `url:"direction,omitempty"`
-
+type PageOptions struct {
 	Page    int `url:"page,omitempty"`
 	PerPage int `url:"per_page,omitempty"`
+}
+
+type iteratableRequest interface {
+	defaults()
+	increment()
+}
+
+func (po *PageOptions) defaults() {
+	po.Page = 1
+	po.PerPage = 100
+}
+
+func (po *PageOptions) increment() {
+	po.Page++
+}
+
+type ListPullRequests struct {
+	State     string `url:"state,omitempty"`
+	Head      string `url:"head,omitempty"`
+	Base      string `url:"base,omitempty"`
+	Sort      string `url:"sort,omitempty"`
+	Direction string `url:"direction,omitempty"`
+
+	PageOptions
 }
 
 type PullRequestAutoMerge struct {
@@ -88,7 +92,7 @@ type PullRequest struct {
 	Base                PullRequestBranch    `json:"base,omitempty"`
 }
 
-type PullRequestUpdate struct {
+type UpdatePullRequest struct {
 	Title string `json:"title,omitempty"`
 	Body  string `json:"body,omitempty"`
 	State string `json:"state,omitempty"`
@@ -103,4 +107,34 @@ type NewPullRequest struct {
 	Issue               int    `json:"issue,omitempty"`
 	MaintainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
 	Draft               bool   `json:"draft,omitempty"`
+}
+
+// PullRequestComment represents a comment left on a pull request.
+type PullRequestComment struct {
+	ID                  int64     `json:"id,omitempty"`
+	NodeID              string    `json:"node_id,omitempty"`
+	InReplyTo           int64     `json:"in_reply_to_id,omitempty"`
+	Body                string    `json:"body,omitempty"`
+	Path                string    `json:"path,omitempty"`
+	DiffHunk            string    `json:"diff_hunk,omitempty"`
+	PullRequestReviewID int64     `json:"pull_request_review_id,omitempty"`
+	Position            int       `json:"position,omitempty"`
+	OriginalPosition    int       `json:"original_position,omitempty"`
+	StartLine           int       `json:"start_line,omitempty"`
+	Line                int       `json:"line,omitempty"`
+	OriginalLine        int       `json:"original_line,omitempty"`
+	OriginalStartLine   int       `json:"original_start_line,omitempty"`
+	Side                string    `json:"side,omitempty"`
+	StartSide           string    `json:"start_side,omitempty"`
+	CommitID            string    `json:"commit_id,omitempty"`
+	OriginalCommitID    string    `json:"original_commit_id,omitempty"`
+	User                *User     `json:"user,omitempty"`
+	CreatedAt           time.Time `json:"created_at,omitempty"`
+	UpdatedAt           time.Time `json:"updated_at,omitempty"`
+	// AuthorAssociation is the comment author's relationship to the pull request's repository.
+	// Possible values are "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "MEMBER", "OWNER", or "NONE".
+	AuthorAssociation string `json:"author_association,omitempty"`
+	URL               string `json:"url,omitempty"`
+	HTMLURL           string `json:"html_url,omitempty"`
+	PullRequestURL    string `json:"pull_request_url,omitempty"`
 }

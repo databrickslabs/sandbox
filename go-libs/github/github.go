@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/listing"
+	"github.com/google/go-querystring/query"
 )
 
 const gitHubAPI = "https://api.github.com"
@@ -53,11 +55,11 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 	}
 }
 
-func (c *GitHubClient) Versions(ctx context.Context, org, repo string) (Versions, error) {
-	var releases Versions
+func (c *GitHubClient) Versions(ctx context.Context, org, repo string) listing.Iterator[Release] {
 	url := fmt.Sprintf("%s/repos/%s/%s/releases", gitHubAPI, org, repo)
-	err := c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&releases))
-	return releases, err
+	return paginator[Release, string](ctx, c, url, &PageOptions{}, func(r Release) string {
+		return r.Version
+	})
 }
 
 type CreateReleaseRequest struct {
@@ -80,47 +82,64 @@ func (c *GitHubClient) CreateRelease(ctx context.Context, org, repo string, req 
 }
 
 func (c *GitHubClient) GetRepo(ctx context.Context, org, name string) (repo Repo, err error) {
-	url := fmt.Sprintf("%s/repos/%s/%s", gitHubAPI, org, name)
-	err = c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&repo))
+	path := fmt.Sprintf("%s/repos/%s/%s", gitHubAPI, org, name)
+	err = c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&repo))
 	return
 }
 
-func (c *GitHubClient) ListRepositories(ctx context.Context, org string) (Repositories, error) {
-	var repos Repositories
-	url := fmt.Sprintf("%s/users/%s/repos", gitHubAPI, org)
-	err := c.api.Do(ctx, "GET", url, httpclient.WithResponseUnmarshal(&repos))
-	return repos, err
+func (c *GitHubClient) ListRepositories(ctx context.Context, org string) listing.Iterator[Repo] {
+	path := fmt.Sprintf("%s/users/%s/repos", gitHubAPI, org)
+	return paginator[Repo, string](ctx, c, path, &PageOptions{}, func(r Repo) string {
+		return r.SshURL
+	})
 }
 
-func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string) ([]workflowRun, error) {
+func (c *GitHubClient) ListRepositoryIssues(ctx context.Context, org, repo string, req *ListIssues) listing.Iterator[Issue] {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues", gitHubAPI, org, repo)
+	return paginator[Issue, int64](ctx, c, path, req, func(i Issue) int64 {
+		return i.ID
+	})
+}
+
+func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string) listing.Iterator[workflowRun] {
 	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%v.yml/runs", gitHubAPI, org, repo, workflow)
-	var response struct {
-		TotalCount   *int          `json:"total_count,omitempty"`
+	type response struct {
 		WorkflowRuns []workflowRun `json:"workflow_runs,omitempty"`
 	}
-	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&response))
-	return response.WorkflowRuns, err
+	return rawPaginator[workflowRun, response, int64](ctx, c, path, &PageOptions{}, func(r response) []workflowRun {
+		return r.WorkflowRuns
+	}, func(wr workflowRun) int64 {
+		return wr.ID
+	})
 }
 
-func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head string) ([]RepositoryCommit, error) {
-	path := fmt.Sprintf("%s/repos/%v/%v/compare/%v...%v", gitHubAPI, org, repo, base, head)
-	var response struct {
+func (c *GitHubClient) ListCommits(ctx context.Context, org, repo string, req *ListCommits) listing.Iterator[RepositoryCommit] {
+	path := fmt.Sprintf("%s/repos/%s/%s/commits", gitHubAPI, org, repo)
+	return paginator[RepositoryCommit, string](ctx, c, path, req, func(rc RepositoryCommit) string {
+		return rc.SHA
+	})
+}
+
+func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head string) listing.Iterator[RepositoryCommit] {
+	type response struct {
 		Commits []RepositoryCommit `json:"commits,omitempty"`
 	}
-	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&response))
-	return response.Commits, err
+	path := fmt.Sprintf("%s/repos/%v/%v/compare/%v...%v", gitHubAPI, org, repo, base, head)
+	return rawPaginator[RepositoryCommit, response, string](ctx, c, path, &PageOptions{}, func(r response) []RepositoryCommit {
+		return r.Commits
+	}, func(rc RepositoryCommit) string {
+		return rc.SHA
+	})
 }
 
-func (c *GitHubClient) ListPullRequests(ctx context.Context, org, repo string, opts PullRequestListOptions) ([]PullRequest, error) {
+func (c *GitHubClient) ListPullRequests(ctx context.Context, org, repo string, opts *ListPullRequests) listing.Iterator[PullRequest] {
 	path := fmt.Sprintf("%s/repos/%s/%s/pulls", gitHubAPI, org, repo)
-	var prs []PullRequest
-	err := c.api.Do(ctx, "GET", path,
-		httpclient.WithRequestData(opts),
-		httpclient.WithResponseUnmarshal(&prs))
-	return prs, err
+	return paginator[PullRequest, int64](ctx, c, path, opts, func(pr PullRequest) int64 {
+		return pr.ID
+	})
 }
 
-func (c *GitHubClient) EditPullRequest(ctx context.Context, org, repo string, number int, body PullRequestUpdate) error {
+func (c *GitHubClient) EditPullRequest(ctx context.Context, org, repo string, number int, body UpdatePullRequest) error {
 	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d", gitHubAPI, org, repo, number)
 	return c.api.Do(ctx, "PATCH", path, httpclient.WithRequestData(body))
 }
@@ -143,4 +162,130 @@ func (c *GitHubClient) GetPullRequest(ctx context.Context, org, repo string, num
 	err := c.api.Do(ctx, "GET", path,
 		httpclient.WithResponseUnmarshal(&res))
 	return &res, err
+}
+
+func (c *GitHubClient) GetPullRequestComments(ctx context.Context, org, repo string, number int) listing.Iterator[PullRequestComment] {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d/comments", gitHubAPI, org, repo, number)
+	return paginator[PullRequestComment, int64](ctx, c, path, &PageOptions{}, func(prc PullRequestComment) int64 {
+		return prc.ID
+	})
+}
+
+func (c *GitHubClient) GetPullRequestCommits(ctx context.Context, org, repo string, number int) listing.Iterator[RepositoryCommit] {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d/commits", gitHubAPI, org, repo, number)
+	return paginator[RepositoryCommit, string](ctx, c, path, &PageOptions{}, func(rc RepositoryCommit) string {
+		return rc.SHA
+	})
+}
+
+// GetIssueComments returns comments for a number, which can be issue # or pr #
+func (c *GitHubClient) GetIssueComments(ctx context.Context, org, repo string, number int) listing.Iterator[IssueComment] {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
+	return paginator[IssueComment, int64](ctx, c, path, &PageOptions{}, func(ic IssueComment) int64 {
+		return ic.ID
+	})
+}
+
+func (c *GitHubClient) GetRepoTrafficClones(ctx context.Context, org, repo string) ([]ClonesStat, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/traffic/clones", gitHubAPI, org, repo)
+	var res struct {
+		Clones []ClonesStat `json:"clones"`
+	}
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&res))
+	return res.Clones, err
+}
+
+func (c *GitHubClient) GetRepoTrafficViews(ctx context.Context, org, repo string) ([]ViewsStat, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/traffic/views", gitHubAPI, org, repo)
+	var res struct {
+		Views []ViewsStat `json:"views"`
+	}
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&res))
+	return res.Views, err
+}
+
+func (c *GitHubClient) GetRepoTrafficPaths(ctx context.Context, org, repo string) (res []PopularPathStat, err error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/traffic/popular/paths", gitHubAPI, org, repo)
+	err = c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&res))
+	return res, err
+}
+
+func (c *GitHubClient) GetRepoTrafficReferrals(ctx context.Context, org, repo string) (res []ReferralSourceStat, err error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/traffic/popular/referrers", gitHubAPI, org, repo)
+	err = c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&res))
+	return res, err
+}
+
+func (c *GitHubClient) GetRepoStargazers(ctx context.Context, org, repo string) listing.Iterator[Stargazer] {
+	path := fmt.Sprintf("%s/repos/%s/%s/subscribers", gitHubAPI, org, repo)
+	return paginator[Stargazer, string](ctx, c, path, &ListStargazers{}, func(s Stargazer) string {
+		return s.User.Login
+	})
+}
+
+func (c *GitHubClient) GetUser(ctx context.Context, login string) (*User, error) {
+	path := fmt.Sprintf("%s/users/%s", gitHubAPI, login)
+	var user User
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&user))
+	return &user, err
+}
+
+func paginator[T any, ID comparable](
+	ctx context.Context,
+	c *GitHubClient,
+	path string,
+	request iteratableRequest,
+	getId func(T) ID,
+) listing.Iterator[T] {
+	return rawPaginator[T, []T, ID](ctx, c, path, request, func(res []T) []T {
+		return res
+	}, getId)
+}
+
+type visitingRequest interface {
+	visitRequest(r *http.Request) error
+}
+
+func rawPaginator[T any, R any, ID comparable](
+	ctx context.Context,
+	c *GitHubClient,
+	path string,
+	request iteratableRequest,
+	getItems func(R) []T,
+	getId func(T) ID,
+) listing.Iterator[T] {
+	request.defaults()
+	return listing.NewDedupeIterator(listing.NewIterator(&request,
+		func(ctx context.Context, po iteratableRequest) (R, error) {
+			var res R
+			err := c.api.Do(ctx, "GET", path,
+				httpclient.WithRequestVisitor(func(r *http.Request) error {
+					if vr, ok := po.(visitingRequest); ok {
+						// sometimes we need to add headers
+						err := vr.visitRequest(r)
+						if err != nil {
+							return err
+						}
+					}
+					qs, err := query.Values(request)
+					if err != nil {
+						return err
+					}
+					r.URL.RawQuery = qs.Encode()
+					return nil
+				}),
+				httpclient.WithResponseUnmarshal(&res))
+			if len(getItems(res)) == 0 {
+				return res, listing.ErrNoMoreItems
+			}
+			return res, err
+		}, getItems, func(_ R) *iteratableRequest {
+			request.increment()
+			return &request
+		}), getId)
 }

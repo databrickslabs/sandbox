@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/databrickslabs/sandbox/go-libs/counters"
 )
 
 // See https://git-scm.com/docs/pretty-formats for docs
@@ -14,25 +16,25 @@ import (
 // shows number of added and deleted lines in decimal notation and pathname without abbreviation,
 // to make it more machine friendly. For binary files, outputs two - instead of saying 0 0.
 type NumStat struct {
-	Added    int
-	Deleted  int
-	Pathname string
+	Added    int    `json:"added"`
+	Deleted  int    `json:"deleted"`
+	Pathname string `json:"pathname"`
 }
 
 type CommitInfo struct {
 	// %aI - author date, strict ISO 8601 format
-	Time time.Time
+	Time time.Time `json:"time"`
 
 	// %H - commit hash
-	Sha string
+	Sha string `json:"sha"`
 
 	// %aN - author name (respecting .mailmap, see git-shortlog[1] or git-blame[1])
-	Author string
+	Author string `json:"author"`
 
 	// %aE - author email (respecting .mailmap, see git-shortlog[1] or git-blame[1])
-	Email string
+	Email string `json:"email"`
 
-	Stats []NumStat
+	Stats []NumStat `json:"stats"`
 }
 
 func (l *Checkout) History(ctx context.Context) (Commits, error) {
@@ -87,11 +89,11 @@ func parseStat(stat string) int {
 type Commits []CommitInfo
 
 type AuthorInfo struct {
-	Author  string
-	Email   string
-	Commits int
-	Added   int
-	Deleted int
+	Author  string `json:"author"`
+	Email   string `json:"email"`
+	Commits int    `json:"commits"`
+	Added   int    `json:"added"`
+	Deleted int    `json:"deleted"`
 }
 
 func (a AuthorInfo) Totals() int {
@@ -143,14 +145,14 @@ func (all Commits) Filter(predicate func(pathname string) bool) (out Commits) {
 	return out
 }
 
-func (all Commits) LanguageStats() map[string]int {
+func (all Commits) LanguageStats() counters.Counter[string] {
 	// this is a straightforward code language detection strategy
-	stats := map[string]int{}
+	stats := counters.NewStringCounter()
 	for _, c := range all {
 		for _, ns := range c.Stats {
 			split := strings.Split(ns.Pathname, ".")
 			ext := split[len(split)-1]
-			stats[ext] += ns.Added + ns.Deleted
+			stats.AddN(ext, ns.Added+ns.Deleted)
 		}
 		if len(stats) == 0 {
 			continue
@@ -160,40 +162,23 @@ func (all Commits) LanguageStats() map[string]int {
 }
 
 func (all Commits) Language() string {
-	type lang struct {
-		Ext     string
-		Changes int
-	}
-	var out []lang
-	for k, v := range all.LanguageStats() {
-		out = append(out, lang{
-			Ext:     k,
-			Changes: v,
-		})
-	}
-	if len(out) == 0 {
-		return "unknown"
-	}
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Changes > out[j].Changes
-	})
-	return out[0].Ext
+	return all.LanguageStats().HeadOrDefault("unknown")
 }
 
 func (all Commits) Authors() (out Authors) {
 	type tmp struct {
 		Author, Email string
 	}
-	commits := map[tmp]int{}
-	added := map[tmp]int{}
-	deleted := map[tmp]int{}
+	commits := counters.Counter[tmp]{}
+	added := counters.Counter[tmp]{}
+	deleted := counters.Counter[tmp]{}
 	// other interesting metrics: unique hours worked based on hour-truncated git commit timestamps
 	for _, c := range all {
 		k := tmp{c.Author, c.Email}
-		commits[k] += 1
+		commits.Add(k)
 		for _, s := range c.Stats {
-			added[k] += s.Added
-			deleted[k] += s.Deleted
+			added.AddN(k, s.Added)
+			deleted.AddN(k, s.Deleted)
 		}
 	}
 	for k, commits := range commits {

@@ -205,7 +205,7 @@ func (r *Root[T]) bindViperToFlags(v *viper.Viper, flags *pflag.FlagSet, prefix 
 		propName := strings.ReplaceAll(fmt.Sprintf("%s%s", prefix, f.Name), "-", "_")
 		err = r.setDefault(v, flags, f, propName, prefix)
 		if err != nil {
-			err = fmt.Errorf("(default) %s: %w", propName, err)
+			// err = fmt.Errorf("(default) %s: %w", propName, err)
 			return
 		}
 		if !f.Changed && v.IsSet(propName) {
@@ -289,8 +289,8 @@ func (r *Root[T]) setDefault(v *viper.Viper, flags *pflag.FlagSet, f *pflag.Flag
 			return err
 		}
 		v.SetDefault(propName, value)
-	default:
-		return fmt.Errorf("unknown value type: %s", f.Value.Type())
+		// default:
+		// 	return fmt.Errorf("unknown value type: %s", f.Value.Type())
 	}
 	return nil
 }
