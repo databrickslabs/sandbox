@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/localcache"
 )
@@ -33,7 +34,7 @@ type ReleaseCache struct {
 func (r *ReleaseCache) Load(ctx context.Context) (Versions, error) {
 	return r.cache.Load(ctx, func() (Versions, error) {
 		logger.Debugf(ctx, "Fetching latest releases for %s/%s from GitHub API", r.Org, r.Repo)
-		return r.client.Versions(ctx, r.Org, r.Repo)
+		return listing.ToSlice[Release](ctx, r.client.Versions(ctx, r.Org, r.Repo))
 	})
 }
 

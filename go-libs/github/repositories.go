@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/localcache"
 )
@@ -29,7 +30,7 @@ type repositoryCache struct {
 func (r *repositoryCache) Load(ctx context.Context) (Repositories, error) {
 	return r.cache.Load(ctx, func() (Repositories, error) {
 		logger.Debugf(ctx, "Loading repositories for %s from GitHub API", r.Org)
-		return r.client.ListRepositories(ctx, r.Org)
+		return listing.ToSlice[Repo](ctx, r.client.ListRepositories(ctx, r.Org))
 	})
 }
 

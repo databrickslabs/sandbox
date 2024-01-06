@@ -2,6 +2,15 @@ package github
 
 import "time"
 
+type ListCommits struct {
+	Base   string    `url:"sha,omitempty"`
+	Path   string    `url:"path,omitempty"`
+	Author string    `url:"author,omitempty"`
+	Since  time.Time `url:"since,omitempty"`
+	Until  time.Time `url:"until,omitempty"`
+	PageOptions
+}
+
 type CommitAuthor struct {
 	Date  time.Time `json:"date,omitempty"`
 	Name  string    `json:"name,omitempty"`
@@ -13,6 +22,7 @@ type User struct {
 	Name    string `json:"name,omitempty"`
 	Company string `json:"company,omitempty"`
 	Email   string `json:"email,omitempty"`
+	Type    string `json:"type,omitempty"`
 }
 
 type SignatureVerification struct {
@@ -27,7 +37,7 @@ type Commit struct {
 	Author       CommitAuthor          `json:"author,omitempty"`
 	Committer    CommitAuthor          `json:"committer,omitempty"`
 	Message      string                `json:"message,omitempty"`
-	Parents      []Commit             `json:"parents,omitempty"`
+	Parents      []Commit              `json:"parents,omitempty"`
 	Verification SignatureVerification `json:"verification,omitempty"`
 }
 

@@ -56,11 +56,12 @@ func (g *globalInfo) Checkout(ctx context.Context) (Clones, error) {
 			g.tasks <- cloneRepo{repo, v}
 			continue
 		case v.Org != "":
-			repos, err := g.github.ListRepositories(ctx, v.Org)
-			if err != nil {
-				return nil, err
-			}
-			for _, repo := range repos {
+			repos := g.github.ListRepositories(ctx, v.Org)
+			for repos.HasNext(ctx) {
+				repo, err := repos.Next(ctx)
+				if err != nil {
+					return nil, err
+				}
 				if repo.IsArchived {
 					logger.Debugf(ctx, "Skipping archived repo: %s", repo.Name)
 					continue
