@@ -26,12 +26,13 @@ type GitHubConfig struct {
 	InsecureSkipVerify bool
 	DebugHeaders       bool
 	DebugTruncateBytes int
-	RateLimitPerSecond int
 
 	transport http.RoundTripper
 }
 
 func NewClient(cfg *GitHubConfig) *GitHubClient {
+	// No more than 900 points per minute are allowed for REST API endpoints
+	// See https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
 	return &GitHubClient{
 		api: httpclient.NewApiClient(httpclient.ClientConfig{
 			Visitors: []httpclient.RequestVisitor{func(r *http.Request) error {
@@ -48,8 +49,8 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 			InsecureSkipVerify: cfg.InsecureSkipVerify,
 			DebugHeaders:       cfg.DebugHeaders,
 			DebugTruncateBytes: cfg.DebugTruncateBytes,
-			RateLimitPerSecond: cfg.RateLimitPerSecond,
 			Transport:          cfg.transport,
+			RateLimitPerSecond: 10,
 		}),
 		cfg: cfg,
 	}
