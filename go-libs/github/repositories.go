@@ -48,6 +48,7 @@ type Repo struct {
 	HtmlURL       string   `json:"html_url"`
 	CloneURL      string   `json:"clone_url"`
 	SshURL        string   `json:"ssh_url"`
+	Visibility    string   `json:"visibility"`
 	License       struct {
 		Name string `json:"name"`
 	} `json:"license"`
