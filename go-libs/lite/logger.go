@@ -58,6 +58,15 @@ func (l *friendlyHandler) Handle(ctx context.Context, rec slog.Record) error {
 	return err
 }
 
+func LogContext(ctx context.Context, key, value string) context.Context {
+	switch x := logger.Get(ctx).(type) {
+	case *slogAdapter:
+		return logger.NewContext(ctx, &slogAdapter{x.With(slog.String(key, value))})
+	default:
+		return ctx
+	}
+}
+
 // slogAdapter makes an slog.Logger usable with the Databricks SDK.
 type slogAdapter struct {
 	*slog.Logger
