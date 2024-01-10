@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/google/go-querystring/query"
+	"golang.org/x/time/rate"
 )
 
 const gitHubAPI = "https://api.github.com"
@@ -32,9 +33,16 @@ type GitHubConfig struct {
 }
 
 func NewClient(cfg *GitHubConfig) *GitHubClient {
+	// No more than 900 points per minute are allowed for REST API endpoints
+	// See https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+	limiter := rate.NewLimiter(rate.Every(time.Minute), 900)
 	return &GitHubClient{
 		api: httpclient.NewApiClient(httpclient.ClientConfig{
 			Visitors: []httpclient.RequestVisitor{func(r *http.Request) error {
+				err := limiter.Wait(r.Context())
+				if err != nil {
+					return fmt.Errorf("rate limit: %w", err)
+				}
 				token, err := cfg.Token()
 				if err != nil {
 					return fmt.Errorf("token: %w", err)
