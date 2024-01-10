@@ -221,7 +221,7 @@ func (c *GitHubClient) GetRepoTrafficReferrals(ctx context.Context, org, repo st
 }
 
 func (c *GitHubClient) GetRepoStargazers(ctx context.Context, org, repo string) listing.Iterator[Stargazer] {
-	path := fmt.Sprintf("%s/repos/%s/%s/subscribers", gitHubAPI, org, repo)
+	path := fmt.Sprintf("%s/repos/%s/%s/stargazers", gitHubAPI, org, repo)
 	return paginator[Stargazer, string](ctx, c, path, &ListStargazers{}, func(s Stargazer) string {
 		return s.User.Login
 	})
