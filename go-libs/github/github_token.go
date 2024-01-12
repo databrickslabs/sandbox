@@ -19,11 +19,32 @@ import (
 )
 
 type GitHubTokenSource struct {
-	Pat              string
-	PrivateKeyPath   string
-	PrivateKeyBase64 string
+	// The primary rate limit for unauthenticated requests is 60 requests per hour.
+	Anonymous bool
+	
+	// Users have personal rate limit of 5,000 requests per hour.
+	//
+	// You can use the built-in GITHUB_TOKEN to authenticate requests in 
+	// GitHub Actions workflows: the rate limit for GITHUB_TOKEN is 1,000 requests 
+	// per hour per repository. For requests to resources that belong to a GitHub 
+	// Enterprise Cloud account, the limit is 15,000 requests per hour per repository.
+	Pat string
+	
+	// Requests made on your behalf by a GitHub App that is owned by
+	// a GitHub Enterprise Cloud organization have a higher rate limit
+	// of 15,000 requests per hour.
+	//
+	// For installations that are not on a GitHub Enterprise Cloud organization, 
+	// the rate limit for the installation will scale with the number of users 
+	// and repositories. Installations that have more than 20 repositories receive 
+	// another 50 requests per hour for each repository. Installations that are on 
+	// an organization that have more than 20 users receive another 50 requests per 
+	// hour for each user. The rate limit cannot increase beyond 12,500 requests 
+	// per hour.
 	ApplicationID    int64
 	InstallationID   int
+	PrivateKeyPath   string
+	PrivateKeyBase64 string
 
 	cached oauth2.TokenSource
 }
@@ -34,6 +55,9 @@ func (g *GitHubTokenSource) Token() (*oauth2.Token, error) {
 			AccessToken: g.Pat,
 		}, nil
 	}
+	if g.Anonymous {
+		return &oauth2.Token{}, nil
+	}
 	if g.cached != nil {
 		return g.cached.Token()
 	}
@@ -41,6 +65,7 @@ func (g *GitHubTokenSource) Token() (*oauth2.Token, error) {
 		&ghEnvTokenSource{"GITHUB_TOKEN"},
 		&ghInstallationTokenSource{g},
 		&ghCliTokenSource{},
+		&anonymousTokenSource{},
 	} {
 		token, err := ts.Token()
 		if errors.Is(err, fs.ErrNotExist) {
@@ -52,6 +77,12 @@ func (g *GitHubTokenSource) Token() (*oauth2.Token, error) {
 		return token, nil
 	}
 	return nil, fmt.Errorf("no github token available")
+}
+
+type anonymousTokenSource struct{}
+
+func (e *anonymousTokenSource) Token() (*oauth2.Token, error) {
+	return &oauth2.Token{}, nil
 }
 
 type ghEnvTokenSource struct {

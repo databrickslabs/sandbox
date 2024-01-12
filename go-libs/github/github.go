@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -40,10 +42,42 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 				if err != nil {
 					return fmt.Errorf("token: %w", err)
 				}
-				auth := fmt.Sprintf("%s %s", token.TokenType, token.AccessToken)
-				r.Header.Set("Authorization", auth)
+				// we can also support anonymous calls to GH
+				if token.AccessToken != "" {
+					auth := fmt.Sprintf("%s %s", token.TokenType, token.AccessToken)
+					r.Header.Set("Authorization", auth)
+				}
 				return nil
 			}},
+			ErrorMapper: func(ctx context.Context, resp *http.Response, body io.ReadCloser) error {
+				httpErr := httpclient.DefaultErrorMapper(ctx, resp, body).(*httpclient.HttpError)
+				var ghErr Error
+				jsonErr := json.Unmarshal([]byte(httpErr.Message), &ghErr)
+				if jsonErr != nil {
+					return httpErr
+				}
+				ghErr.HttpError = httpErr
+				now := time.Now().Local()
+				var rateLimitResetUTC, retryAfter int64
+				fmt.Sscanf(resp.Header.Get("X-Ratelimit-Reset"), "%d", &rateLimitResetUTC)
+				resetsIn := time.Duration(rateLimitResetUTC - now.UTC().Unix())
+				ghErr.rateLimitReset = now.Add(time.Second * resetsIn)
+				fmt.Sscanf(resp.Header.Get("Retry-After"), "%d", &retryAfter)
+				ghErr.retryAfter = time.Second * time.Duration(retryAfter)
+				fmt.Sscanf(resp.Header.Get("X-Ratelimit-Remaining"), "%d", &ghErr.rateLimitRemaining)
+				return &ghErr
+			},
+			ErrorRetriable: func(ctx context.Context, err error) bool {
+				ghErr, ok := err.(*Error)
+				if !ok {
+					return httpclient.DefaultErrorRetriable(ctx, err)
+				}
+				if ghErr.retryAfter > 0 {
+					time.Sleep(ghErr.retryAfter)
+					return true
+				}
+				return false
+			},
 			RetryTimeout:       cfg.RetryTimeout,
 			HTTPTimeout:        cfg.HTTPTimeout,
 			InsecureSkipVerify: cfg.InsecureSkipVerify,
@@ -54,6 +88,10 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 		}),
 		cfg: cfg,
 	}
+}
+
+func scanIntHeader(resp *http.Response, name string, value *int) (int, error) {
+	return fmt.Sscanf(resp.Header.Get(name), "%d", value)
 }
 
 func (c *GitHubClient) Versions(ctx context.Context, org, repo string) listing.Iterator[Release] {
