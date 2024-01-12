@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/common"
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/google/go-querystring/query"
@@ -49,8 +49,8 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 				}
 				return nil
 			}},
-			ErrorMapper: func(ctx context.Context, resp *http.Response, body io.ReadCloser) error {
-				httpErr := httpclient.DefaultErrorMapper(ctx, resp, body).(*httpclient.HttpError)
+			ErrorMapper: func(ctx context.Context, rw common.ResponseWrapper) error {
+				httpErr := httpclient.DefaultErrorMapper(ctx, rw).(*httpclient.HttpError)
 				var ghErr Error
 				jsonErr := json.Unmarshal([]byte(httpErr.Message), &ghErr)
 				if jsonErr != nil {
@@ -59,12 +59,12 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 				ghErr.HttpError = httpErr
 				now := time.Now().Local()
 				var rateLimitResetUTC, retryAfter int64
-				fmt.Sscanf(resp.Header.Get("X-Ratelimit-Reset"), "%d", &rateLimitResetUTC)
+				fmt.Sscanf(rw.Response.Header.Get("X-Ratelimit-Reset"), "%d", &rateLimitResetUTC)
 				resetsIn := time.Duration(rateLimitResetUTC - now.UTC().Unix())
 				ghErr.rateLimitReset = now.Add(time.Second * resetsIn)
-				fmt.Sscanf(resp.Header.Get("Retry-After"), "%d", &retryAfter)
+				fmt.Sscanf(rw.Response.Header.Get("Retry-After"), "%d", &retryAfter)
 				ghErr.retryAfter = time.Second * time.Duration(retryAfter)
-				fmt.Sscanf(resp.Header.Get("X-Ratelimit-Remaining"), "%d", &ghErr.rateLimitRemaining)
+				fmt.Sscanf(rw.Response.Header.Get("X-Ratelimit-Remaining"), "%d", &ghErr.rateLimitRemaining)
 				return &ghErr
 			},
 			ErrorRetriable: func(ctx context.Context, err error) bool {
@@ -88,10 +88,6 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 		}),
 		cfg: cfg,
 	}
-}
-
-func scanIntHeader(resp *http.Response, name string, value *int) (int, error) {
-	return fmt.Sscanf(resp.Header.Get(name), "%d", value)
 }
 
 func (c *GitHubClient) Versions(ctx context.Context, org, repo string) listing.Iterator[Release] {

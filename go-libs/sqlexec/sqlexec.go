@@ -32,8 +32,8 @@ func New(w *databricks.WorkspaceClient) (*StatementExecutionExt, error) {
 
 // StatementExecutionExt represents the extended statement execution API
 type StatementExecutionExt struct {
-	statementExecutionAPI *sql.StatementExecutionAPI
-	warehousesAPI         *sql.WarehousesAPI
+	statementExecutionAPI sql.StatementExecutionInterface
+	warehousesAPI         sql.WarehousesInterface
 	warehouseID           string
 	mu                    sync.Mutex
 }

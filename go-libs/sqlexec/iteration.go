@@ -15,7 +15,7 @@ import (
 
 type stringArrayIterator struct {
 	result *sql.ResultData
-	api    *sql.StatementExecutionAPI
+	api    sql.StatementExecutionInterface
 	id     string
 	pos    int
 	err    error
