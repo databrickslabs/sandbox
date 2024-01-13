@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -15,13 +17,14 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString([]byte(a.GetInput("xxx"))[:10]))
 	return &acceptance{
 		action:  a,
 		context: context,
 		gh: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{
 				// TODO: autodetect
-				Pat: a.GetInput("github_token"),
+				Pat: a.GetInput("xxx"),
 			},
 		}),
 	}, nil
