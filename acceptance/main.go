@@ -18,7 +18,8 @@ func main() {
 
 	gh := github.NewClient(&github.GitHubConfig{
 		GitHubTokenSource: github.GitHubTokenSource{
-			Pat: a.Getenv("GITHUB_TOKEN"),
+			// Pat: a.Getenv("GITHUB_TOKEN"),
+			Pat: ghc.Event["token"].(string),
 		},
 	})
 	// also - there's OIDC integration:
