@@ -23,7 +23,7 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 		gh: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{
 				// TODO: autodetect
-				Pat: a.Getenv("GITHUB_TOKEN"),
+				Pat: a.GetInput("token"),
 			},
 		}),
 	}, nil
