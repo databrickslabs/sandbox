@@ -1,6 +1,10 @@
 package main
 
-import "github.com/sethvargo/go-githubactions"
+import (
+	"encoding/json"
+
+	"github.com/sethvargo/go-githubactions"
+)
 
 func main() {
 	a := githubactions.New()
@@ -12,7 +16,12 @@ func main() {
 
 	org, repo := ghc.Repo()
 	a.Debugf("this is debug")
-	a.Infof("Org: %s, Repo: %s, Actor: %s, Workflow: %s, Ref: %s, ref name: %s, event: %v", org, repo, ghc.Actor, ghc.Workflow, ghc.Ref, ghc.RefName, ghc.Event)
+	a.Infof("Org: %s, Repo: %s, Actor: %s, Workflow: %s, Ref: %s, ref name: %s", org, repo, ghc.Actor, ghc.Workflow, ghc.Ref, ghc.RefName)
+	raw, err := json.MarshalIndent(ghc.Event, "", "  ")
+	if err != nil {
+		a.Errorf(err.Error())
+	}
+	a.Infof("event: %s", string(raw))
 	a.Noticef("This is notice")
 	a.Warningf("this is warning")
 	a.Errorf("this is error")

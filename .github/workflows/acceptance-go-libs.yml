@@ -14,7 +14,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.5.0
+      - name: Checkout
+        uses: actions/checkout@v4
 
       #   - uses: azure/login@v1
       #     with:
@@ -22,4 +23,5 @@ jobs:
       #       tenant-id: ${{ secrets.ARM_TENANT_ID }}
       #       subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - uses: databrickslabs/sandbox/acceptance@gh-action
+      - name: Acceptance
+        uses: databrickslabs/sandbox/acceptance@gh-action
