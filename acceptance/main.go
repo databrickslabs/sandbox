@@ -16,7 +16,13 @@ func main() {
 		a.Errorf(err.Error())
 	}
 
-	gh := github.NewClient(&github.GitHubConfig{})
+	gh := github.NewClient(&github.GitHubConfig{
+		GitHubTokenSource: github.GitHubTokenSource{
+			Pat: a.Getenv("GITHUB_TOKEN"),
+		},
+	})
+	// also - there's OIDC integration:
+	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
 
 	org, repo := ghc.Repo()
 	a.Debugf("this is debug")
