@@ -22,6 +22,14 @@ jobs:
       #       client-id: ${{ var.ARM_CLIENT_ID }}
       #       tenant-id: ${{ secrets.ARM_TENANT_ID }}
       #       subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      
+      - name: Dump github context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+      
+      - name: Dump env
+        run: env | sort
 
       - name: Acceptance
         uses: databrickslabs/sandbox/acceptance@gh-action
