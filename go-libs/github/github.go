@@ -50,11 +50,18 @@ func NewClient(cfg *GitHubConfig) *GitHubClient {
 				return nil
 			}},
 			ErrorMapper: func(ctx context.Context, rw common.ResponseWrapper) error {
-				httpErr := httpclient.DefaultErrorMapper(ctx, rw).(*httpclient.HttpError)
+				err := httpclient.DefaultErrorMapper(ctx, rw)
+				if err == nil {
+					return nil
+				}
 				var ghErr Error
+				httpErr, ok := err.(*httpclient.HttpError)
+				if !ok {
+					return err
+				}
 				jsonErr := json.Unmarshal([]byte(httpErr.Message), &ghErr)
 				if jsonErr != nil {
-					return httpErr
+					return fmt.Errorf("json: %w: %w", jsonErr, httpErr)
 				}
 				ghErr.HttpError = httpErr
 				now := time.Now().Local()
