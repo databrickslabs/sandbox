@@ -3,7 +3,7 @@ name: 'Databricks Labs Acceptance Suite'
 description: 'Run relevant acceptance suite'
 author: Serge Smertin
 inputs:
-  token:
+  github_token:
     description: GitHub token to use for commenting on PR
     required: true
   go-version:

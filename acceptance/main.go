@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -23,7 +21,7 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 		gh: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{
 				// TODO: autodetect
-				Pat: a.GetInput("token"),
+				Pat: a.GetInput("github_token"),
 			},
 		}),
 	}, nil
@@ -40,7 +38,7 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 	if err != nil {
 		return nil, fmt.Errorf("marshall: %w", err)
 	}
-	fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
+	// fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
 	var event struct {
 		PullRequest *github.PullRequest `json:"pull_request"`
 	}
@@ -52,6 +50,7 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 }
 
 func (a *acceptance) comment(ctx context.Context) error {
+	// todo: try a.context.Event["number"].(int)
 	pr, err := a.currentPullRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("pull request: %w", err)
