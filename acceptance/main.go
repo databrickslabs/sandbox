@@ -2,78 +2,80 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
 )
 
-func main() {
-	a := githubactions.New()
-
-	ghc, err := githubactions.Context()
+func New(opts ...githubactions.Option) (*acceptance, error) {
+	a := githubactions.New(opts...)
+	context, err := a.Context()
 	if err != nil {
-		a.Errorf(err.Error())
+		return nil, err
 	}
+	return &acceptance{
+		action:  a,
+		context: context,
+		gh: github.NewClient(&github.GitHubConfig{
+			GitHubTokenSource: github.GitHubTokenSource{
+				// TODO: autodetect
+				Pat: a.Getenv("GITHUB_TOKEN"),
+			},
+		}),
+	}, nil
+}
 
-	gh := github.NewClient(&github.GitHubConfig{
-		GitHubTokenSource: github.GitHubTokenSource{
-			// Pat: a.Getenv("GITHUB_TOKEN"),
-			Pat: ghc.Event["token"].(string),
-		},
-	})
-	// also - there's OIDC integration:
-	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
+type acceptance struct {
+	action  *githubactions.Action
+	context *githubactions.GitHubContext
+	gh      *github.GitHubClient
+}
 
-	org, repo := ghc.Repo()
-	a.Debugf("this is debug")
-	a.Infof("Org: %s, Repo: %s, Actor: %s, Workflow: %s, Ref: %s, ref name: %s", org, repo, ghc.Actor, ghc.Workflow, ghc.Ref, ghc.RefName)
-	raw, err := json.MarshalIndent(ghc.Event, "", "  ")
+func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullRequest, error) {
+	raw, err := json.MarshalIndent(a.context.Event, "", "  ")
 	if err != nil {
-		a.Errorf(err.Error())
+		return nil, fmt.Errorf("marshall: %w", err)
 	}
-	a.Infof("event: %s", string(raw))
-
+	a.action.Infof("b64: %s", base64.StdEncoding.EncodeToString(raw))
 	var event struct {
 		PullRequest *github.PullRequest `json:"pull_request"`
 	}
 	err = json.Unmarshal(raw, &event)
 	if err != nil {
-		a.Errorf(err.Error())
+		return nil, fmt.Errorf("unmarshall: %w", err)
 	}
-	ctx := context.Background()
-	_, err = gh.CreateIssueComment(ctx, org, repo, event.PullRequest.Number, "Test from acceptance action")
+	return event.PullRequest, nil
+}
+
+func (a *acceptance) comment(ctx context.Context) error {
+	pr, err := a.currentPullRequest(ctx)
 	if err != nil {
-		a.Errorf(err.Error())
+		return fmt.Errorf("pull request: %w", err)
 	}
-
-	a.Noticef("This is notice")
-	a.Warningf("this is warning")
-	a.Errorf("this is error")
-
-	m := map[string]string{
-		"file": "app.go",
-		"line": "100",
+	org, repo := a.context.Repo()
+	_, err = a.gh.CreateIssueComment(ctx, org, repo, pr.Number, "Test from acceptance action")
+	if err != nil {
+		return fmt.Errorf("new comment: %w", err)
 	}
-	a.WithFieldsMap(m).Errorf("an error message")
+	return nil
+}
 
-	a.SetOutput("sample", "foo")
+func mainE(ctx context.Context) error {
+	a, err := New()
+	if err != nil {
+		return err
+	}
+	return a.comment(ctx)
+	// also - there's OIDC integration:
+	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
+}
 
-	a.AddStepSummary(`
-## Heading
-
-- :rocket:
-- :moon:
-`)
-
-	if err := a.AddStepSummaryTemplate(`
-## Heading
-
-- {{.Input}}
-- :moon:
-`, map[string]string{
-		"Input": ":rocket:",
-	}); err != nil {
-		a.Errorf(err.Error())
+func main() {
+	err := mainE(context.Background())
+	if err != nil {
+		githubactions.Fatalf("failed: %s", err)
 	}
 }
