@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -39,7 +40,7 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 	if err != nil {
 		return nil, fmt.Errorf("marshall: %w", err)
 	}
-	a.action.Infof("b64: %s", base64.StdEncoding.EncodeToString(raw))
+	fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
 	var event struct {
 		PullRequest *github.PullRequest `json:"pull_request"`
 	}
