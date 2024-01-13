@@ -221,11 +221,45 @@ func (c *GitHubClient) GetPullRequestCommits(ctx context.Context, org, repo stri
 }
 
 // GetIssueComments returns comments for a number, which can be issue # or pr #
+// Every pull request is an issue, but not every issue is a pull request.
 func (c *GitHubClient) GetIssueComments(ctx context.Context, org, repo string, number int) listing.Iterator[IssueComment] {
 	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
 	return paginator[IssueComment, int64](ctx, c, path, &PageOptions{}, func(ic IssueComment) int64 {
 		return ic.ID
 	})
+}
+
+func (c *GitHubClient) CreateIssueComment(ctx context.Context, org, repo string, number int, body string) (*IssueComment, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
+	var res IssueComment
+	err := c.api.Do(ctx, "POST", path,
+		httpclient.WithRequestData(map[string]string{
+			"body": body,
+		}),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *GitHubClient) UpdateIssueComment(ctx context.Context, org, repo string, commentID int, body string) (*IssueComment, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
+	var res IssueComment
+	err := c.api.Do(ctx, "PATCH", path,
+		httpclient.WithRequestData(map[string]string{
+			"body": body,
+		}),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *GitHubClient) DeleteIssueComment(ctx context.Context, org, repo string, commentID int) error {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
+	return c.api.Do(ctx, "DELETE", path)
 }
 
 func (c *GitHubClient) GetRepoTrafficClones(ctx context.Context, org, repo string) ([]ClonesStat, error) {

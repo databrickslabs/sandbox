@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 
+	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
 )
 
@@ -14,6 +16,8 @@ func main() {
 		a.Errorf(err.Error())
 	}
 
+	gh := github.NewClient(&github.GitHubConfig{})
+
 	org, repo := ghc.Repo()
 	a.Debugf("this is debug")
 	a.Infof("Org: %s, Repo: %s, Actor: %s, Workflow: %s, Ref: %s, ref name: %s", org, repo, ghc.Actor, ghc.Workflow, ghc.Ref, ghc.RefName)
@@ -22,6 +26,20 @@ func main() {
 		a.Errorf(err.Error())
 	}
 	a.Infof("event: %s", string(raw))
+
+	var event struct {
+		PullRequest *github.PullRequest `json:"pull_request"`
+	}
+	err = json.Unmarshal(raw, &event)
+	if err != nil {
+		a.Errorf(err.Error())
+	}
+	ctx := context.Background()
+	_, err = gh.CreateIssueComment(ctx, org, repo, event.PullRequest.Number, "Test from acceptance action")
+	if err != nil {
+		a.Errorf(err.Error())
+	}
+
 	a.Noticef("This is notice")
 	a.Warningf("this is warning")
 	a.Errorf("this is error")
