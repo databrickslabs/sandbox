@@ -1,6 +1,12 @@
 ---
 name: 'Databricks Labs Acceptance Suite'
 description: 'Run relevant acceptance suite'
+author: Serge Smertin
+inputs:
+  go-version:
+    description: 'Go version'
+    required: false
+    default: 1.21.0
 outputs:
   owner:
     description: 'Sample output'
@@ -9,6 +15,11 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ inputs.go-version }}
+    
     - name: Download Go modules
       run: go mod download
       working-directory: ${{ github.action_path }}
