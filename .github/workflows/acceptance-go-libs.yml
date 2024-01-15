@@ -38,4 +38,6 @@ jobs:
 
       - name: Acceptance
         uses: databrickslabs/sandbox/acceptance@gh-action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
