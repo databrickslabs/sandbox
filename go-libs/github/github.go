@@ -312,7 +312,7 @@ func (c *GitHubClient) GetUser(ctx context.Context, login string) (*User, error)
 }
 
 func (c *GitHubClient) CurrentUser(ctx context.Context) (*User, error) {
-	path := fmt.Sprintf("%s/users", gitHubAPI)
+	path := fmt.Sprintf("%s/user", gitHubAPI)
 	var user User
 	err := c.api.Do(ctx, "GET", path,
 		httpclient.WithResponseUnmarshal(&user))
