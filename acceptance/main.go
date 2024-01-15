@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -53,25 +51,19 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 }
 
 func (a *acceptance) comment(ctx context.Context) error {
-	raw, err := json.MarshalIndent(a.context.Event, "", "  ")
+	pr, err := a.currentPullRequest(ctx)
 	if err != nil {
-		return fmt.Errorf("marshall: %w", err)
+		return fmt.Errorf("pr: %w", err)
 	}
-	fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
-	numberAny, ok := a.context.Event["number"]
-	if !ok {
-		return fmt.Errorf("no pr number in the context")
-	}
-	number := numberAny.(int)
 	me, err := a.gh.CurrentUser(ctx)
-	if !ok {
+	if err != nil {
 		return fmt.Errorf("current user: %w", err)
 	}
 	org, repo := a.context.Repo()
-	it := a.gh.GetIssueComments(ctx, org, repo, number)
+	it := a.gh.GetIssueComments(ctx, org, repo, pr.Number)
 	for it.HasNext(ctx) {
 		comment, err := it.Next(ctx)
-		if !ok {
+		if err != nil {
 			return fmt.Errorf("comment: %w", err)
 		}
 		if comment.User.Login != me.Login {
@@ -80,7 +72,7 @@ func (a *acceptance) comment(ctx context.Context) error {
 		_, err = a.gh.UpdateIssueComment(ctx, org, repo, comment.ID, "updated comment")
 		return err
 	}
-	_, err = a.gh.CreateIssueComment(ctx, org, repo, number, "Test from acceptance action")
+	_, err = a.gh.CreateIssueComment(ctx, org, repo, pr.Number, "Test from acceptance action")
 	if err != nil {
 		return fmt.Errorf("new comment: %w", err)
 	}
