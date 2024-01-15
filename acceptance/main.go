@@ -23,11 +23,7 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 		action:  a,
 		context: context,
 		gh: github.NewClient(&github.GitHubConfig{
-			GitHubTokenSource: github.GitHubTokenSource{
-				// TODO: autodetect
-				// Pat: a.GetInput("xxx"),
-				// Pat: token,
-			},
+			GitHubTokenSource: github.GitHubTokenSource{},
 		}),
 	}, nil
 }
@@ -55,13 +51,32 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 }
 
 func (a *acceptance) comment(ctx context.Context) error {
-	// todo: try a.context.Event["number"].(int)
-	pr, err := a.currentPullRequest(ctx)
-	if err != nil {
-		return fmt.Errorf("pull request: %w", err)
+	numberAny, ok := a.context.Event["number"]
+	if !ok {
+		return fmt.Errorf("no pr number in the context")
+	}
+	number, ok := numberAny.(int)
+	if !ok {
+		return fmt.Errorf("pr number is not valid")
+	}
+	me, err := a.gh.CurrentUser(ctx)
+	if !ok {
+		return fmt.Errorf("current user: %w", err)
 	}
 	org, repo := a.context.Repo()
-	_, err = a.gh.CreateIssueComment(ctx, org, repo, pr.Number, "Test from acceptance action")
+	it := a.gh.GetIssueComments(ctx, org, repo, number)
+	for it.HasNext(ctx) {
+		comment, err := it.Next(ctx)
+		if !ok {
+			return fmt.Errorf("comment: %w", err)
+		}
+		if comment.User.Login != me.Login {
+			continue
+		}
+		_, err = a.gh.UpdateIssueComment(ctx, org, repo, comment.ID, "updated comment")
+		return err
+	}
+	_, err = a.gh.CreateIssueComment(ctx, org, repo, number, "Test from acceptance action")
 	if err != nil {
 		return fmt.Errorf("new comment: %w", err)
 	}

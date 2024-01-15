@@ -243,7 +243,7 @@ func (c *GitHubClient) CreateIssueComment(ctx context.Context, org, repo string,
 	return &res, nil
 }
 
-func (c *GitHubClient) UpdateIssueComment(ctx context.Context, org, repo string, commentID int, body string) (*IssueComment, error) {
+func (c *GitHubClient) UpdateIssueComment(ctx context.Context, org, repo string, commentID int64, body string) (*IssueComment, error) {
 	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
 	var res IssueComment
 	err := c.api.Do(ctx, "PATCH", path,
@@ -257,7 +257,7 @@ func (c *GitHubClient) UpdateIssueComment(ctx context.Context, org, repo string,
 	return &res, nil
 }
 
-func (c *GitHubClient) DeleteIssueComment(ctx context.Context, org, repo string, commentID int) error {
+func (c *GitHubClient) DeleteIssueComment(ctx context.Context, org, repo string, commentID int64) error {
 	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
 	return c.api.Do(ctx, "DELETE", path)
 }
@@ -305,6 +305,14 @@ func (c *GitHubClient) GetRepoStargazers(ctx context.Context, org, repo string) 
 
 func (c *GitHubClient) GetUser(ctx context.Context, login string) (*User, error) {
 	path := fmt.Sprintf("%s/users/%s", gitHubAPI, login)
+	var user User
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&user))
+	return &user, err
+}
+
+func (c *GitHubClient) CurrentUser(ctx context.Context) (*User, error) {
+	path := fmt.Sprintf("%s/users", gitHubAPI)
 	var user User
 	err := c.api.Do(ctx, "GET", path,
 		httpclient.WithResponseUnmarshal(&user))
