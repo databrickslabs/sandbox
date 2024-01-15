@@ -13,4 +13,4 @@ const { spawnSync } = require('child_process');
 
 // TODO: try calling the result of GOOS=js GOARCH=wasm go build -o acceptance.wasm
 
-spawnSync('go', ['run', 'main.go'], { stdio: 'inherit' });
+spawnSync('go', ['run', `${__dirname}/main.go`], { stdio: 'inherit' });
