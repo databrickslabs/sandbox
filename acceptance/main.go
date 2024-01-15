@@ -62,10 +62,7 @@ func (a *acceptance) comment(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("no pr number in the context")
 	}
-	number, ok := numberAny.(int)
-	if !ok {
-		return fmt.Errorf("pr number is not valid")
-	}
+	number := numberAny.(int)
 	me, err := a.gh.CurrentUser(ctx)
 	if !ok {
 		return fmt.Errorf("current user: %w", err)
