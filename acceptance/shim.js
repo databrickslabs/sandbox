@@ -8,4 +8,7 @@
 
 // const binary = chooseBinary()
 // const mainScript = `${__dirname}/${binary}`
-const spawnSyncReturns = child_process.spawnSync('go', ['main.go'], { stdio: 'inherit' })
+
+const { spawnSync } = require('child_process');
+
+spawnSync('go', ['main.go'], { stdio: 'inherit' });
