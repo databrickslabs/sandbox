@@ -50,8 +50,7 @@ func (a *acceptance) tag() string {
 }
 
 func (a *acceptance) taggedComment(body string) string {
-	// GITHUB_WORKFLOW_REF
-	return fmt.Sprintf("%s\n---\n<sub>Running from [%s #%d](%s)</sub>%s",
+	return fmt.Sprintf("%s\n<sub>Running from [%s #%d](%s){:target=\"_blank\"}</sub>%s",
 		body, a.context.Workflow, a.context.RunNumber, a.runURL(), a.tag())
 }
 
@@ -60,7 +59,6 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 	if err != nil {
 		return nil, fmt.Errorf("marshall: %w", err)
 	}
-	// fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
 	var event struct {
 		PullRequest *github.PullRequest `json:"pull_request"`
 	}
