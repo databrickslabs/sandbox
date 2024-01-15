@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
@@ -27,7 +26,6 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 		gh: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{},
 		}),
-		getenv: os.Getenv,
 	}, nil
 }
 
@@ -35,7 +33,6 @@ type acceptance struct {
 	action  *githubactions.Action
 	context *githubactions.GitHubContext
 	gh      *github.GitHubClient
-	getenv  func(key string) string
 }
 
 func (a *acceptance) runURL() string {
@@ -46,7 +43,7 @@ func (a *acceptance) runURL() string {
 func (a *acceptance) tag() string {
 	// The ref path to the workflow. For example,
 	// octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch.
-	return fmt.Sprintf("\n<!-- workflow:%s -->", a.getenv("GITHUB_WORKFLOW_REF"))
+	return fmt.Sprintf("\n<!-- workflow:%s -->", a.action.Getenv("GITHUB_WORKFLOW_REF"))
 }
 
 func (a *acceptance) taggedComment(body string) string {
