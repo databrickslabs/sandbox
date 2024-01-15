@@ -68,7 +68,7 @@ func (a *acceptance) comment(ctx context.Context) error {
 	return nil
 }
 
-func mainE(ctx context.Context) error {
+func run(ctx context.Context) error {
 	a, err := New()
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func mainE(ctx context.Context) error {
 }
 
 func main() {
-	err := mainE(context.Background())
+	err := run(context.Background())
 	if err != nil {
 		githubactions.Fatalf("failed: %s", err)
 	}
