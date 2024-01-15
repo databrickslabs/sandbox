@@ -11,10 +11,10 @@ import (
 
 func New(opts ...githubactions.Option) (*acceptance, error) {
 	a := githubactions.New(opts...)
-	token, err := a.GetIDToken(context.Background(), "")
-	if err != nil {
-		return nil, fmt.Errorf("oidc: %w", err)
-	}
+	// token, err := a.GetIDToken(context.Background(), "")
+	// if err != nil {
+	// 	return nil, fmt.Errorf("oidc: %w", err)
+	// }
 	context, err := a.Context()
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func New(opts ...githubactions.Option) (*acceptance, error) {
 			GitHubTokenSource: github.GitHubTokenSource{
 				// TODO: autodetect
 				// Pat: a.GetInput("xxx"),
-				Pat: token,
+				// Pat: token,
 			},
 		}),
 	}, nil
