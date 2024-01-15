@@ -5,12 +5,10 @@
 //     }
 //     // ...
 // }
-
 // const binary = chooseBinary()
 // const mainScript = `${__dirname}/${binary}`
-
-const { spawnSync } = require('child_process');
-
 // TODO: try calling the result of GOOS=js GOARCH=wasm go build -o acceptance.wasm
-
-spawnSync('go', ['run', `${__dirname}/main.go`], { stdio: 'inherit' });
+const { spawnSync } = require('child_process');
+const { exit } = require('node:process');
+const { status } = spawnSync('go', ['run', `${__dirname}/main.go`], { stdio: 'inherit' });
+exit(status);
