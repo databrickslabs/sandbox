@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -51,6 +53,11 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 }
 
 func (a *acceptance) comment(ctx context.Context) error {
+	raw, err := json.MarshalIndent(a.context.Event, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshall: %w", err)
+	}
+	fmt.Fprintf(os.Stdout, "b64: %s", base64.StdEncoding.EncodeToString(raw))
 	numberAny, ok := a.context.Event["number"]
 	if !ok {
 		return fmt.Errorf("no pr number in the context")
