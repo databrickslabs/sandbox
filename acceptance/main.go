@@ -50,7 +50,7 @@ func (a *acceptance) tag() string {
 }
 
 func (a *acceptance) taggedComment(body string) string {
-	return fmt.Sprintf("%s\n<sub>Running from [%s #%d](%s){:target=\"_blank\"}</sub>%s",
+	return fmt.Sprintf("%s\n<sub>Running from [%s #%d](%s)</sub>%s",
 		body, a.context.Workflow, a.context.RunNumber, a.runURL(), a.tag())
 }
 

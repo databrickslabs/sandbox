@@ -23,13 +23,12 @@ jobs:
       #       tenant-id: ${{ secrets.ARM_TENANT_ID }}
       #       subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       
-      - name: Dump github context
-        run: echo "$GITHUB_CONTEXT" || base64
+      - name: DEBUG
+        run: |
+          echo "$GITHUB_CONTEXT"
+          env | sort
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-      
-      - name: Dump env
-        run: env | sort | base64 | base64
 
       - name: Setup Go
         uses: actions/setup-go@v5
