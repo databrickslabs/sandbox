@@ -138,3 +138,16 @@ type PullRequestComment struct {
 	HTMLURL           string `json:"html_url,omitempty"`
 	PullRequestURL    string `json:"pull_request_url,omitempty"`
 }
+
+type PullRequestReview struct {
+	ID                int64     `json:"id,omitempty"`
+	NodeID            string    `json:"node_id,omitempty"`
+	User              User      `json:"user,omitempty"`
+	Body              string    `json:"body,omitempty"`
+	SubmittedAt       time.Time `json:"submitted_at,omitempty"`
+	CommitID          string    `json:"commit_id,omitempty"`
+	HTMLURL           string    `json:"html_url,omitempty"`
+	PullRequestURL    string    `json:"pull_request_url,omitempty"`
+	State             string    `json:"state,omitempty"`
+	AuthorAssociation string    `json:"author_association,omitempty"`
+}
