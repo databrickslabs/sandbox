@@ -67,7 +67,7 @@ func (a *boilerplate) taggedComment(ctx context.Context, body string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("run url: %w", err)
 	}
-	return fmt.Sprintf("%s\n<sub>Running from [%s #%d](%s)</sub>%s",
+	return fmt.Sprintf("%s\n\n<sub>Running from [%s #%d](%s)</sub>%s",
 		body, a.context.Workflow, a.context.RunNumber, runUrl, a.tag()), nil
 }
 

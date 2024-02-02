@@ -34,26 +34,6 @@ func (r GoTestRunner) ListAll(files fileset.FileSet) (all []string) {
 	return all
 }
 
-// func (r GoTestRunner) setCmdEnv(cmd *exec.Cmd, vars map[string]string) error {
-// 	// run test with current environment
-// 	cmd.Env = os.Environ()
-// 	// and variables from test environment
-// 	for k, v := range vars {
-// 		cmd.Env = append(cmd.Env, fmt.Sprintf(`%s=%s`, k, v))
-// 		if strings.HasSuffix(k, "_TOKEN") ||
-// 			strings.HasSuffix(k, "_CREDENTIALS") ||
-// 			strings.HasSuffix(k, "_PASSWORD") ||
-// 			strings.HasSuffix(k, "_SAS") ||
-// 			strings.HasSuffix(k, "_KEY") ||
-// 			strings.HasSuffix(k, "_SECRET") {
-// 			log.Printf("[DEBUG][ENV] %s=***", k)
-// 			continue
-// 		}
-// 		log.Printf("[DEBUG][ENV] %s=%s", k, v)
-// 	}
-// 	return nil
-// }
-
 func (r GoTestRunner) RunOne(ctx context.Context, files fileset.FileSet, one string) error {
 	found := files.FirstMatch(`_test.go`, fmt.Sprintf(`func %s\(`, one))
 	if found == nil {
