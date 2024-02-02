@@ -22,7 +22,7 @@ func TestBackground(t *testing.T) {
 	ctx := context.Background()
 	res, err := Background(ctx, []string{"echo", "1"}, WithDir("/"))
 	assert.NoError(t, err)
-	assert.Equal(t, "2", strings.TrimSpace(res))
+	assert.Equal(t, "1", strings.TrimSpace(res))
 }
 
 func TestBackgroundOnlyStdoutGetsoutOnSuccess(t *testing.T) {
