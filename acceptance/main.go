@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
 )
@@ -82,7 +83,7 @@ func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullReques
 	return event.PullRequest, nil
 }
 
-func (a *acceptance) comment(ctx context.Context) error {
+func (a *acceptance) comment(ctx context.Context, commentText string) error {
 	pr, err := a.currentPullRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("pr: %w", err)
@@ -98,14 +99,14 @@ func (a *acceptance) comment(ctx context.Context) error {
 		if !strings.Contains(comment.Body, tag) {
 			continue
 		}
-		text, err := a.taggedComment(ctx, "Updated comment")
+		text, err := a.taggedComment(ctx, commentText)
 		if err != nil {
 			return fmt.Errorf("text: %w", err)
 		}
 		_, err = a.gh.UpdateIssueComment(ctx, org, repo, comment.ID, text)
 		return err
 	}
-	text, err := a.taggedComment(ctx, "New comment")
+	text, err := a.taggedComment(ctx, commentText)
 	if err != nil {
 		return fmt.Errorf("text: %w", err)
 	}
@@ -121,7 +122,12 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return a.comment(ctx)
+	directory := a.action.GetInput("directory")
+	report, err := ecosystem.RunAll(ctx, directory)
+	if err != nil {
+		return err
+	}
+	return a.comment(ctx, report.StepSummary())
 
 	// also - there's OIDC integration:
 	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
