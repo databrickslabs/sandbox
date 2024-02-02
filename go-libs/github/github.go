@@ -1,6 +1,7 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -143,6 +144,36 @@ func (c *GitHubClient) ListRepositoryIssues(ctx context.Context, org, repo strin
 	})
 }
 
+func (c *GitHubClient) ListWorkflows(ctx context.Context, org, repo string) listing.Iterator[Workflow] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows", gitHubAPI, org, repo)
+	return rawPaginator[Workflow, Workflows, int64](ctx, c, path, &PageOptions{}, func(w Workflows) []Workflow {
+		return w.Workflows
+	}, func(w Workflow) int64 {
+		return w.ID
+	})
+}
+
+func (c *GitHubClient) ListWorkflowRuns(ctx context.Context, org, repo string, opts *ListWorkflowRunsOptions) listing.Iterator[WorkflowRun] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/runs", gitHubAPI, org, repo)
+	return rawPaginator[WorkflowRun, WorkflowRuns, int64](ctx, c, path, opts, func(wr WorkflowRuns) []WorkflowRun {
+		return wr.WorkflowRuns
+	}, func(wr WorkflowRun) int64 {
+		return wr.ID
+	})
+}
+
+func (c *GitHubClient) GetWorkflowRunLogs(ctx context.Context, org, repo string, runID int64) (*bytes.Buffer, error) {
+	var location string
+	path := fmt.Sprintf("%s/repos/%v/%v/actions/runs/%v/logs", gitHubAPI, org, repo, runID)
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseHeader("Location", &location))
+	if err != nil {
+		return nil, fmt.Errorf("redirect: %w", err)
+	}
+	var buf bytes.Buffer
+	err = c.api.Do(ctx, "GET", location, httpclient.WithResponseUnmarshal(&buf))
+	return &buf, err
+}
+
 func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string) listing.Iterator[workflowRun] {
 	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%v.yml/runs", gitHubAPI, org, repo, workflow)
 	type response struct {
@@ -152,6 +183,15 @@ func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string)
 		return r.WorkflowRuns
 	}, func(wr workflowRun) int64 {
 		return wr.ID
+	})
+}
+
+func (c *GitHubClient) ListWorkflowJobs(ctx context.Context, org, repo string, runID int64) listing.Iterator[WorkflowJob] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/runs/%v/jobs", gitHubAPI, org, repo, runID)
+	return rawPaginator[WorkflowJob, Jobs, int64](ctx, c, path, &PageOptions{}, func(j Jobs) []WorkflowJob {
+		return j.Jobs
+	}, func(wj WorkflowJob) int64 {
+		return wj.ID
 	})
 }
 
@@ -213,6 +253,13 @@ func (c *GitHubClient) GetPullRequestComments(ctx context.Context, org, repo str
 	})
 }
 
+func (c *GitHubClient) GetPullRequestReviews(ctx context.Context, org, repo string, number int) listing.Iterator[PullRequestReview] {
+	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d/reviews", gitHubAPI, org, repo, number)
+	return paginator[PullRequestReview, int64](ctx, c, path, &PageOptions{}, func(prr PullRequestReview) int64 {
+		return prr.ID
+	})
+}
+
 func (c *GitHubClient) GetPullRequestCommits(ctx context.Context, org, repo string, number int) listing.Iterator[RepositoryCommit] {
 	path := fmt.Sprintf("%s/repos/%s/%s/pulls/%d/commits", gitHubAPI, org, repo, number)
 	return paginator[RepositoryCommit, string](ctx, c, path, &PageOptions{}, func(rc RepositoryCommit) string {
@@ -221,11 +268,45 @@ func (c *GitHubClient) GetPullRequestCommits(ctx context.Context, org, repo stri
 }
 
 // GetIssueComments returns comments for a number, which can be issue # or pr #
+// Every pull request is an issue, but not every issue is a pull request.
 func (c *GitHubClient) GetIssueComments(ctx context.Context, org, repo string, number int) listing.Iterator[IssueComment] {
 	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
 	return paginator[IssueComment, int64](ctx, c, path, &PageOptions{}, func(ic IssueComment) int64 {
 		return ic.ID
 	})
+}
+
+func (c *GitHubClient) CreateIssueComment(ctx context.Context, org, repo string, number int, body string) (*IssueComment, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
+	var res IssueComment
+	err := c.api.Do(ctx, "POST", path,
+		httpclient.WithRequestData(map[string]string{
+			"body": body,
+		}),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *GitHubClient) UpdateIssueComment(ctx context.Context, org, repo string, commentID int64, body string) (*IssueComment, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
+	var res IssueComment
+	err := c.api.Do(ctx, "PATCH", path,
+		httpclient.WithRequestData(map[string]string{
+			"body": body,
+		}),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *GitHubClient) DeleteIssueComment(ctx context.Context, org, repo string, commentID int64) error {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues/comments/%d", gitHubAPI, org, repo, commentID)
+	return c.api.Do(ctx, "DELETE", path)
 }
 
 func (c *GitHubClient) GetRepoTrafficClones(ctx context.Context, org, repo string) ([]ClonesStat, error) {
@@ -275,6 +356,61 @@ func (c *GitHubClient) GetUser(ctx context.Context, login string) (*User, error)
 	err := c.api.Do(ctx, "GET", path,
 		httpclient.WithResponseUnmarshal(&user))
 	return &user, err
+}
+
+func (c *GitHubClient) CurrentUser(ctx context.Context) (*User, error) {
+	path := fmt.Sprintf("%s/user", gitHubAPI)
+	var user User
+	err := c.api.Do(ctx, "GET", path,
+		httpclient.WithResponseUnmarshal(&user))
+	return &user, err
+}
+
+func (c *GitHubClient) ListTeams(ctx context.Context, org string) listing.Iterator[Team] {
+	path := fmt.Sprintf("%s/orgs/%s/teams", gitHubAPI, org)
+	return paginator[Team, string](ctx, c, path, &PageOptions{}, func(t Team) string {
+		return t.Slug
+	})
+}
+
+func (c *GitHubClient) CreateTeam(ctx context.Context, org string, req NewTeam) (*Team, error) {
+	var res Team
+	path := fmt.Sprintf("%s/orgs/%s/teams", gitHubAPI, org)
+	err := c.api.Do(ctx, "POST", path,
+		httpclient.WithRequestData(req),
+		httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
+func (c *GitHubClient) DeleteTeam(ctx context.Context, org, slug string) error {
+	path := fmt.Sprintf("%s/orgs/%s/teams/%s", gitHubAPI, org, slug)
+	return c.api.Do(ctx, "DELETE", path)
+}
+
+func (c *GitHubClient) ListTeamMembers(ctx context.Context, org, slug string) listing.Iterator[User] {
+	path := fmt.Sprintf("%s/orgs/%s/teams/%s/members", gitHubAPI, org, slug)
+	return paginator[User, string](ctx, c, path, &PageOptions{}, func(u User) string {
+		return u.Login
+	})
+}
+
+func (c *GitHubClient) AddTeamMember(ctx context.Context, org, teamSlug, username string) error {
+	path := fmt.Sprintf("%s/orgs/%s/teams/%s/members/%s", gitHubAPI, org, teamSlug, username)
+	return c.api.Do(ctx, "POST", path)
+}
+
+func (c *GitHubClient) RemoveTeamMember(ctx context.Context, org, teamSlug, username string) error {
+	path := fmt.Sprintf("%s/orgs/%s/teams/%s/members/%s", gitHubAPI, org, teamSlug, username)
+	return c.api.Do(ctx, "DELETE", path)
+}
+
+func (c *GitHubClient) GraphQL(ctx context.Context, query string, vars map[string]any, data any) error {
+	return c.api.Do(ctx, "POST", "https://api.github.com/graphql",
+		httpclient.WithRequestData(map[string]any{
+			"query":     query,
+			"variables": vars,
+		}),
+		httpclient.WithResponseUnmarshal(data))
 }
 
 func paginator[T any, ID comparable](

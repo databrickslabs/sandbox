@@ -1,0 +1,21 @@
+---
+name: 'Databricks Labs Acceptance Suite'
+description: 'Run relevant acceptance suite'
+author: Serge Smertin
+inputs:
+  go-version:
+    description: 'Go version'
+    required: false
+    default: 1.21.0
+  directory:
+    description: 'Working directory'
+    required: false
+    default: .
+outputs:
+  sample:
+    description: 'Sample output'
+    value: ${{ steps.invoke.outputs.sample }}
+
+runs:
+  using: node20
+  main: shim.js

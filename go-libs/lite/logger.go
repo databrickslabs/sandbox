@@ -100,5 +100,5 @@ func (s *slogAdapter) Warnf(ctx context.Context, format string, v ...any) {
 }
 
 func (s *slogAdapter) Errorf(ctx context.Context, format string, v ...any) {
-	s.ErrorContext(ctx, fmt.Sprintf(format, v...), nil)
+	s.ErrorContext(ctx, fmt.Sprintf(format, v...))
 }
