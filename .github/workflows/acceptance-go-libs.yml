@@ -24,7 +24,7 @@ jobs:
           go-version: 1.21
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@gh-action
+        uses: databrickslabs/sandbox/acceptance@actions/artifact
         with:
           directory: go-libs
         env:
