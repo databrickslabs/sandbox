@@ -115,7 +115,14 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 
 	// make sure to sync on writing to stdout
 	// See https://github.com/golang/go/issues/10338
-	pipeReader, pipeWriter, err := os.Pipe()
+	outReader, outWriter, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	// otherwise [ERROR] cannot parse JSON line:
+	// invalid character 'g' looking for beginning of value -
+	// go: downloading github.com/stretchr/testify v1.8.4
+	errReader, errWriter, err := os.Pipe()
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +141,8 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		logger.Errorf(ctx, "unable to open log file: %s", err)
 		return nil, err
 	}
-	reader := io.TeeReader(pipeReader, teeFile)
+	go io.Copy(teeFile, errReader)
+	reader := io.TeeReader(outReader, teeFile)
 
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup
@@ -162,11 +170,11 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		"-coverpkg=./...",
 		"-coverprofile=coverage.txt",
 		"-run", fmt.Sprintf("^%s", testFilter),
-	}, nil, pipeWriter, pipeWriter,
+	}, nil, outWriter, errWriter,
 		process.WithDir(root))
 
 	// The process has terminated; close the writer it had been writing into.
-	pipeWriter.Close()
+	outWriter.Close()
 
 	// Wait for the goroutine above to finish collecting the test report.
 	//
