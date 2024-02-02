@@ -5,10 +5,17 @@ import (
 	"errors"
 	"os"
 
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/sethvargo/go-githubactions"
 )
+
+func init() {
+	logger.DefaultLogger = &logger.SimpleLogger{
+		Level: logger.LevelDebug,
+	}
+}
 
 func run(ctx context.Context, opts ...githubactions.Option) error {
 	b, err := boilerplate.New(ctx)
