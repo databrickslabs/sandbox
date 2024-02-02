@@ -114,7 +114,11 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	module := strings.Split(lines[0], " ")[1]
 
 	// make sure to sync on writing to stdout
-	pipeReader, pipeWriter := io.Pipe()
+	// See https://github.com/golang/go/issues/10338
+	pipeReader, pipeWriter, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
 
 	// certain environments need to further filter down the set of tests to run,
 	// hence the `TEST_FILTER` environment variable (for now) with `TestAcc` as
@@ -130,7 +134,6 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		logger.Errorf(ctx, "unable to open log file: %s", err)
 		return nil, err
 	}
-	defer teeFile.Close()
 	reader := io.TeeReader(pipeReader, teeFile)
 
 	// We have to wait for the output to be fully processed before returning.
@@ -139,8 +142,8 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 
 	go func() {
 		defer wg.Done()
-		ch := ReadTestEvents(ctx, reader)
-		results = CollectTestReport(ch)
+		ch := readGoTestEvents(ctx, reader)
+		results = collectTestReport(ch)
 
 		// Strip root module from package name for brevity.
 		for i := range results {
@@ -154,17 +157,22 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	// that may lead to confusion. Hence, on CI it's still better to have no parallelism.
 	err = process.Forwarded(ctx, []string{
 		"go", "test", "./...", "-json",
-		"-timeout", "1h",
+		// "-timeout", "1h",
+		"-timeout", "1s",
 		"-coverpkg=./...",
 		"-coverprofile=coverage.txt",
 		"-run", fmt.Sprintf("^%s", testFilter),
-	}, pipeReader, pipeWriter, os.Stderr,
+	}, nil, pipeWriter, pipeWriter,
 		process.WithDir(root))
 
 	// The process has terminated; close the writer it had been writing into.
 	pipeWriter.Close()
 
 	// Wait for the goroutine above to finish collecting the test report.
+	//
+	// If c.Stdin is not an *os.File, Wait also waits for the I/O loop
+	// copying from c.Stdin into the process's standard input
+	// to complete.
 	wg.Wait()
 
 	return results, err
@@ -180,7 +188,7 @@ type TestEvent struct {
 	Output  string
 }
 
-func ReadTestEvents(ctx context.Context, reader io.Reader) <-chan TestEvent {
+func readGoTestEvents(ctx context.Context, reader io.Reader) <-chan TestEvent {
 	ch := make(chan TestEvent)
 
 	go func() {
@@ -226,7 +234,7 @@ func summarize(output string) string {
 	return strings.Join(concise, "\n")
 }
 
-func CollectTestReport(ch <-chan TestEvent) (report TestReport) {
+func collectTestReport(ch <-chan TestEvent) (report TestReport) {
 	testEventsByKey := map[string][]TestEvent{}
 
 	for testEvent := range ch {
