@@ -30,13 +30,19 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 		GitHub: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{},
 		}),
+		uploader: newUploader(),
 	}, nil
 }
 
 type boilerplate struct {
-	Action  *githubactions.Action
-	context *githubactions.GitHubContext
-	GitHub  *github.GitHubClient
+	Action   *githubactions.Action
+	context  *githubactions.GitHubContext
+	GitHub   *github.GitHubClient
+	uploader *artifactUploader
+}
+
+func (a *boilerplate) Upload(ctx context.Context, artifactName string, buf []byte) error {
+	return a.uploader.uploadArtifact(ctx, artifactName, buf)
 }
 
 func (a *boilerplate) RunURL(ctx context.Context) (string, error) {

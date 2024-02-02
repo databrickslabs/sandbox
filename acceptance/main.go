@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
@@ -20,6 +21,8 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return errors.Join(testErr, err)
 	}
+	raw, _ := os.ReadFile("test.log")
+	b.Upload(ctx, "test.log", raw)
 	return testErr
 	// also - there's OIDC integration:
 	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
