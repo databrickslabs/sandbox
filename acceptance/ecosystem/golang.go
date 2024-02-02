@@ -92,7 +92,6 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	}
 	lines := strings.Split(string(raw), "\n")
 	module := strings.Split(lines[0], " ")[1]
-
 	// make sure to sync on writing to stdout
 	// See https://github.com/golang/go/issues/10338
 	outReader, outWriter, err := os.Pipe()
@@ -106,14 +105,12 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if err != nil {
 		return nil, err
 	}
-
 	// certain environments need to further filter down the set of tests to run,
 	// hence the `TEST_FILTER` environment variable (for now) with `TestAcc` as
 	// the default prefix.
 	testFilter, ok := env.Lookup(ctx, "TEST_FILTER")
 	if !ok {
-		// testFilter = "TestAcc"
-		testFilter = "Test"
+		testFilter = "TestAcc"
 	}
 	// Tee into file so we can debug issues with logic below.
 	teeFile, err := os.OpenFile("test.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
@@ -123,52 +120,44 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	}
 	go io.Copy(teeFile, errReader)
 	reader := io.TeeReader(outReader, teeFile)
-
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup
 	wg.Add(1)
-
 	go func() {
 		defer wg.Done()
 		ch := readGoTestEvents(ctx, reader)
 		results = collectTestReport(ch)
-
 		// Strip root module from package name for brevity.
 		for i := range results {
 			results[i].Package = strings.TrimPrefix(results[i].Package, module+"/")
 		}
 	}()
-
 	// we may later need to add something like  `"-parallel", "20"``, preferably configurable.
 	// on GitHub actions we have only a single core available, hence no test parallelism.
 	// on the other hand, current way of logging pollutes test log output with another test log output,
 	// that may lead to confusion. Hence, on CI it's still better to have no parallelism.
 	err = process.Forwarded(ctx, []string{
 		"go", "test", "./...", "-json",
-		// "-timeout", "1h",
-		"-timeout", "1s",
+		"-timeout", "1h",
 		"-coverpkg=./...",
 		"-coverprofile=coverage.txt",
 		"-run", fmt.Sprintf("^%s", testFilter),
 	}, nil, outWriter, errWriter,
 		process.WithDir(root))
-
 	// The process has terminated; close the writer it had been writing into.
 	outWriter.Close()
 	errWriter.Close()
-
 	// Wait for the goroutine above to finish collecting the test report.
 	//
 	// If c.Stdin is not an *os.File, Wait also waits for the I/O loop
 	// copying from c.Stdin into the process's standard input
 	// to complete.
 	wg.Wait()
-
 	return results, err
 }
 
-// TestEvent is defined at https://pkg.go.dev/cmd/test2json#hdr-Output_Format.
-type TestEvent struct {
+// goTestEvent is defined at https://pkg.go.dev/cmd/test2json#hdr-Output_Format.
+type goTestEvent struct {
 	Time    time.Time // encodes as an RFC3339-format string
 	Action  string
 	Package string
@@ -177,37 +166,32 @@ type TestEvent struct {
 	Output  string
 }
 
-func readGoTestEvents(ctx context.Context, reader io.Reader) <-chan TestEvent {
-	ch := make(chan TestEvent)
-
+func readGoTestEvents(ctx context.Context, reader io.Reader) <-chan goTestEvent {
+	ch := make(chan goTestEvent)
 	go func() {
 		defer close(ch)
-
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
 			line := scanner.Bytes()
 
-			var testEvent TestEvent
+			var testEvent goTestEvent
 			err := json.Unmarshal(line, &testEvent)
 			if err != nil {
 				logger.Errorf(ctx, "cannot parse JSON line: %s - %s", err, string(line))
 				return
 			}
-
 			ch <- testEvent
 		}
-
 		err := scanner.Err()
 		if err != nil && err != io.ErrClosedPipe {
 			logger.Errorf(ctx, "cannot scan json lines: %s", err)
 			return
 		}
 	}()
-
 	return ch
 }
 
-func collectOutput(testEvents []TestEvent) string {
+func collectOutput(testEvents []goTestEvent) string {
 	var b strings.Builder
 	for _, testEvent := range testEvents {
 		if testEvent.Action == "output" {
@@ -223,18 +207,15 @@ func summarize(output string) string {
 	return strings.Join(concise, "\n")
 }
 
-func collectTestReport(ch <-chan TestEvent) (report TestReport) {
-	testEventsByKey := map[string][]TestEvent{}
-
+func collectTestReport(ch <-chan goTestEvent) (report TestReport) {
+	testEventsByKey := map[string][]goTestEvent{}
 	for testEvent := range ch {
 		if testEvent.Test == "" {
 			continue
 		}
-
 		// Keep track of all events per test.
 		key := fmt.Sprintf("%s/%s", testEvent.Package, testEvent.Test)
 		testEventsByKey[key] = append(testEventsByKey[key], testEvent)
-
 		// Only take action on pass/skip/fail
 		switch testEvent.Action {
 		case "pass":
@@ -282,7 +263,6 @@ func collectTestReport(ch <-chan TestEvent) (report TestReport) {
 			continue
 		}
 	}
-
 	// Mark remaining tests as failed (timed out?)
 	for _, testEvents := range testEventsByKey {
 		testEvent := testEvents[len(testEvents)-1]
@@ -298,6 +278,5 @@ func collectTestReport(ch <-chan TestEvent) (report TestReport) {
 		})
 		log.Printf("[INFO] ❌ %s (%0.3fs)\n%s", testEvent.Test, testEvent.Elapsed, summarize(testLog))
 	}
-
 	return
 }
