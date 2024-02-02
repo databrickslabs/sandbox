@@ -35,9 +35,21 @@ type acceptance struct {
 	gh      *github.GitHubClient
 }
 
-func (a *acceptance) runURL() string {
-	return fmt.Sprintf("%s/%s/actions/runs/%d/job/%s", // ?pr=56
-		a.context.ServerURL, a.context.Repository, a.context.RunID, a.context.Job)
+func (a *acceptance) runURL(ctx context.Context) (string, error) {
+	org, repo := a.context.Repo()
+	workflowJobs := a.gh.ListWorkflowJobs(ctx, org, repo, a.context.RunID)
+	for workflowJobs.HasNext(ctx) {
+		job, err := workflowJobs.Next(ctx)
+		if err != nil {
+			return "", err
+		}
+		if job.RunnerName == a.action.Getenv("RUNNER_NAME") {
+			url := fmt.Sprintf("%s/%s/actions/runs/%d/job/%d", // ?pr=56
+				a.context.ServerURL, a.context.Repository, a.context.RunID, job.ID)
+			return url, nil
+		}
+	}
+	return "", fmt.Errorf("id not found for current run: %s", a.context.Job)
 }
 
 func (a *acceptance) tag() string {
@@ -46,9 +58,13 @@ func (a *acceptance) tag() string {
 	return fmt.Sprintf("\n<!-- workflow:%s -->", a.action.Getenv("GITHUB_WORKFLOW_REF"))
 }
 
-func (a *acceptance) taggedComment(body string) string {
+func (a *acceptance) taggedComment(ctx context.Context, body string) (string, error) {
+	runUrl, err := a.runURL(ctx)
+	if err != nil {
+		return "", fmt.Errorf("run url: %w", err)
+	}
 	return fmt.Sprintf("%s\n<sub>Running from [%s #%d](%s)</sub>%s",
-		body, a.context.Workflow, a.context.RunNumber, a.runURL(), a.tag())
+		body, a.context.Workflow, a.context.RunNumber, runUrl, a.tag()), nil
 }
 
 func (a *acceptance) currentPullRequest(ctx context.Context) (*github.PullRequest, error) {
@@ -82,10 +98,18 @@ func (a *acceptance) comment(ctx context.Context) error {
 		if !strings.Contains(comment.Body, tag) {
 			continue
 		}
-		_, err = a.gh.UpdateIssueComment(ctx, org, repo, comment.ID, a.taggedComment("Updated comment"))
+		text, err := a.taggedComment(ctx, "Updated comment")
+		if err != nil {
+			return fmt.Errorf("text: %w", err)
+		}
+		_, err = a.gh.UpdateIssueComment(ctx, org, repo, comment.ID, text)
 		return err
 	}
-	_, err = a.gh.CreateIssueComment(ctx, org, repo, pr.Number, a.taggedComment("New comment"))
+	text, err := a.taggedComment(ctx, "New comment")
+	if err != nil {
+		return fmt.Errorf("text: %w", err)
+	}
+	_, err = a.gh.CreateIssueComment(ctx, org, repo, pr.Number, text)
 	if err != nil {
 		return fmt.Errorf("new comment: %w", err)
 	}
