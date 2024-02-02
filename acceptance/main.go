@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
@@ -14,12 +15,12 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return err
 	}
 	directory := b.Action.GetInput("directory")
-	report, err := ecosystem.RunAll(ctx, directory)
+	report, testErr := ecosystem.RunAll(ctx, directory)
+	err = b.Comment(ctx, report.StepSummary())
 	if err != nil {
-		return err
+		return errors.Join(testErr, err)
 	}
-	return b.Comment(ctx, report.StepSummary())
-
+	return testErr
 	// also - there's OIDC integration:
 	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
 }

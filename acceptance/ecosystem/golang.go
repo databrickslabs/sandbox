@@ -155,6 +155,7 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 
 	// The process has terminated; close the writer it had been writing into.
 	outWriter.Close()
+	errWriter.Close()
 
 	// Wait for the goroutine above to finish collecting the test report.
 	//
