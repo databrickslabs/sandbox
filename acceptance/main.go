@@ -98,6 +98,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 	return a.comment(ctx)
+
 	// also - there's OIDC integration:
 	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
 }
