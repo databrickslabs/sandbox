@@ -90,7 +90,9 @@ func (u *artifactUploader) Upload(ctx context.Context, name, folder string) (*up
 		return nil, fmt.Errorf("pre-signed: %w", err)
 	}
 	shaStream := sha256.New()
+	folderZip.Reset()
 	shaStream.Write(folderZip.Bytes())
+	folderZip.Reset()
 	finalizeResp, err := u.finalizeArtifact(ctx, finalizeArtifactRequest{
 		RunID:    runID,
 		JobRunID: jobRunID,

@@ -149,10 +149,9 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		"go", "test", "./...", "-json",
 		"-timeout", "1h",
 		"-coverpkg=./...",
-		"-coverprofile=coverage.txt",
+		fmt.Sprintf("-coverprofile=%s/go-coverprofile", logDir),
 		"-run", fmt.Sprintf("^%s", testFilter),
-	}, nil, outWriter, errWriter,
-		process.WithDir(root))
+	}, nil, outWriter, errWriter, process.WithDir(root))
 	// The process has terminated; close the writer it had been writing into.
 	outWriter.Close()
 	errWriter.Close()
