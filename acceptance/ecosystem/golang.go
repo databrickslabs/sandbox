@@ -113,17 +113,18 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if !ok {
 		testFilter = "TestAcc"
 	}
+	logDir := env.Get(ctx, LogDirEnv)
 	openFlags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
 	// Tee into file so we can debug issues with logic below.
-	goTestStdout, err := os.OpenFile(filepath.Join(LogDirEnv, "go-test.stdout.log"), openFlags, 0644)
+	goTestStdout, err := os.OpenFile(filepath.Join(logDir, "go-test.out"), openFlags, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("go-test.stdout.log: %w", err)
+		return nil, fmt.Errorf("go-test.out: %w", err)
 	}
 	defer goTestStdout.Close()
 	// separate tailing for standard error of subprocess, so that the output could be analyzed easier
-	goTestStderr, err := os.OpenFile(filepath.Join(LogDirEnv, "go-test.stderr.log"), openFlags, 0644)
+	goTestStderr, err := os.OpenFile(filepath.Join(logDir, "go-test.err"), openFlags, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("go-test.stderr.log: %w", err)
+		return nil, fmt.Errorf("go-test.err: %w", err)
 	}
 	defer goTestStderr.Close()
 	go io.Copy(goTestStderr, errReader)
