@@ -7,18 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/go-libs/env"
+	"github.com/databrickslabs/sandbox/go-libs/process"
 	"github.com/sethvargo/go-githubactions"
 )
-
-func init() {
-	logger.DefaultLogger = &logger.SimpleLogger{
-		Level: logger.LevelDebug,
-	}
-}
 
 func run(ctx context.Context, opts ...githubactions.Option) error {
 	b, err := boilerplate.New(ctx)
@@ -47,7 +41,12 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return errors.Join(testErr, err)
 	}
-	err = b.Comment(ctx, report.StepSummary())
+	summary := report.StepSummary()
+	var processErr *process.ProcessError
+	if errors.As(testErr, &processErr) {
+		summary = fmt.Sprintf("%s\n<details><summary>%s</summary>%s</details>", summary, processErr.Stdout, processErr.Stderr)
+	}
+	err = b.Comment(ctx, summary)
 	if err != nil {
 		return errors.Join(testErr, err)
 	}
