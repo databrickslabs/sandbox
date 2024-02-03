@@ -18,4 +18,5 @@ outputs:
 
 runs:
   using: node20
-  main: shim.js
+  # main: shim.js
+  main: washim.js
