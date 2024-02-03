@@ -13,7 +13,7 @@ const go = new Go();
 go.argv = process.argv.slice(2);
 go.env = Object.assign({ TMPDIR: require("os").tmpdir() }, process.env);
 go.exit = process.exit;
-WebAssembly.instantiate(fs.readFileSync('acceptance.wasm'), go.importObject).then((result) => {
+WebAssembly.instantiate(fs.readFileSync(`${__dirname}/acceptance.wasm`), go.importObject).then((result) => {
 	process.on("exit", (code) => { // Node.js exits if no event handler is pending
 		if (code === 0 && !go.exited) {
 			// deadlock, make Go print error and stack traces
