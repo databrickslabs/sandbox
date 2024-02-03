@@ -7,10 +7,10 @@ globalThis.TextDecoder = require("util").TextDecoder;
 globalThis.performance ??= require("performance");
 globalThis.crypto ??= require("crypto");
 
-require("./wasm_exec");
+const { Go } = require("./wasm_exec");
 
 const go = new Go();
-// go.env = Object.assign({ TMPDIR: require("os").tmpdir() }, process.env);
+go.env = process.env;
 go.exit = process.exit;
 WebAssembly.instantiate(fs.readFileSync(`${__dirname}/acceptance.wasm`), go.importObject).then((result) => {
 	process.on("exit", (code) => { // Node.js exits if no event handler is pending
