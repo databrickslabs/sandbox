@@ -3,6 +3,9 @@ name: 'Databricks Labs Acceptance Suite'
 description: 'Run relevant acceptance suite'
 author: Serge Smertin
 inputs:
+  project:
+    description: 'Project Name'
+    required: true
   go-version:
     description: 'Go version'
     required: false

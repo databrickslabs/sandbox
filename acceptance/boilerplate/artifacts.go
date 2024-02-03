@@ -62,7 +62,7 @@ func newUploader(ctx context.Context) *artifactUploader {
 }
 
 type uploadMetadata struct {
-	ArtifactID int64
+	ArtifactID string
 	Len        int
 }
 
@@ -87,15 +87,16 @@ func (u *artifactUploader) Upload(ctx context.Context, name, folder string) (*up
 	if err != nil {
 		return nil, fmt.Errorf("zip: %w", err)
 	}
-	sha256 := hex.EncodeToString(sha256.New().Sum(folderZip.Bytes()))
 	err = u.uploadToAzureBlob(ctx, createResp.SignedUploadUrl, folderZip)
 	if err != nil {
 		return nil, fmt.Errorf("pre-signed: %w", err)
 	}
+	shaStream := sha256.New()
+	shaStream.Write(folderZip.Bytes())
 	finalizeResp, err := u.finalizeArtifact(ctx, finalizeArtifactRequest{
 		RunID:    runID,
 		JobRunID: jobRunID,
-		Hash:     fmt.Sprintf("sha256:%s", sha256),
+		Hash:     fmt.Sprintf("sha256:%s", hex.EncodeToString(shaStream.Sum(nil))),
 		Size:     folderZip.Len(),
 		Name:     name,
 	})
@@ -230,8 +231,8 @@ type finalizeArtifactRequest struct {
 }
 
 type finalizeArtifactResponse struct {
-	Ok         bool  `json:"ok"`
-	ArtifactId int64 `json:"artifactId"`
+	Ok         bool   `json:"ok"`
+	ArtifactId string `json:"artifactId"`
 }
 
 func (u *artifactUploader) finalizeArtifact(ctx context.Context, req finalizeArtifactRequest) (*finalizeArtifactResponse, error) {
