@@ -162,13 +162,13 @@ func (u *artifactUploader) backendIdsFromToken() (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("jwt: base64: %w", err)
 	}
-	var claims map[string]string
+	var claims map[string]any
 	err = json.Unmarshal(payload, &claims)
 	if err != nil {
 		return "", "", fmt.Errorf("jwt: json: %w", err)
 	}
 	// OAuth2 & JWT are soooo standard, that there are dozens of different implementations...
-	scope, ok := claims["scp"]
+	scope, ok := claims["scp"].(string)
 	if !ok {
 		return "", "", fmt.Errorf("jwt: no scope")
 	}
