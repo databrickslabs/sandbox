@@ -166,12 +166,21 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	wg.Wait()
 
 	if err != nil {
-		// we return results, as they're also useful
-		return results, &process.ProcessError{
-			Command: "go test",
-			Err:     err,
-			Stderr:  errBuf.String(),
+		if results.Pass() {
+			results = append(results, TestResult{
+				Time:   time.Now(),
+				Name:   "compile",
+				Output: errBuf.String(),
+			})
 		}
+		return results, err
+
+		// // we return results, as they're also useful
+		// return results, &process.ProcessError{
+		// 	Command: "go test",
+		// 	Err:     err,
+		// 	Stderr:  errBuf.String(),
+		// }
 	}
 
 	return results, nil
