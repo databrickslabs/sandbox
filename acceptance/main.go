@@ -44,7 +44,8 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	summary := report.StepSummary()
 	var processErr *process.ProcessError
 	if errors.As(testErr, &processErr) {
-		summary = fmt.Sprintf("%s\n<details><summary>%s</summary>%s</details>", summary, processErr.Stdout, processErr.Stderr)
+		summary = fmt.Sprintf("%s\n<details><summary>%s</summary>\n<code>%s</code></details>",
+			summary, processErr.Stdout, processErr.Stderr)
 	}
 	err = b.Comment(ctx, summary)
 	if err != nil {

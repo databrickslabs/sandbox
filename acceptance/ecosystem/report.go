@@ -23,12 +23,17 @@ type TestResult struct {
 type TestReport []TestResult
 
 func (r TestReport) Pass() bool {
+	var passed, run int
 	for _, v := range r {
-		if !v.Pass {
-			return false
+		if v.Skip {
+			continue
 		}
+		if v.Pass {
+			passed++
+		}
+		run++
 	}
-	return true
+	return passed == run
 }
 
 func (r TestReport) String() string {
