@@ -33,6 +33,9 @@ func (r TestReport) Pass() bool {
 		}
 		run++
 	}
+	if run == 0 {
+		return false
+	}
 	return passed == run
 }
 
@@ -51,7 +54,7 @@ func (r TestReport) String() string {
 		failed++
 	}
 	result := "❌"
-	if passed == run {
+	if r.Pass() {
 		result = "✅"
 	}
 	return fmt.Sprintf("%s %d/%d passed, %d failed, %d skipped",
