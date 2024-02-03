@@ -20,7 +20,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 	"github.com/databricks/databricks-sdk-go/httpclient"
-	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 )
 
@@ -47,6 +46,8 @@ func newUploader(ctx context.Context) *artifactUploader {
 		runtimeToken: runtimeToken,
 		client: httpclient.NewApiClient(httpclient.ClientConfig{
 			Visitors: []httpclient.RequestVisitor{func(r *http.Request) error {
+				r.Header.Add("Accept", "application/json")
+				r.Header.Add("Content-Type", "application/json")
 				r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", runtimeToken))
 				url, err := url.Parse(resultsServiceUrl)
 				if err != nil {
@@ -54,7 +55,6 @@ func newUploader(ctx context.Context) *artifactUploader {
 				}
 				r.URL.Host = url.Host
 				r.URL.Scheme = url.Scheme
-				logger.Infof(ctx, "call: %s", r.URL.String())
 				return nil
 			}},
 		}),
@@ -206,7 +206,7 @@ type createArtifactResponse struct {
 
 func (u *artifactUploader) createArtifact(ctx context.Context, req createArtifactRequest) (*createArtifactResponse, error) {
 	var res createArtifactResponse
-	err := u.client.Do(ctx, "POST", "/github.actions.results.api.v1.ArtifactService/CreateArtifact",
+	err := u.client.Do(ctx, "POST", "/twirp/github.actions.results.api.v1.ArtifactService/CreateArtifact",
 		httpclient.WithRequestData(req),
 		httpclient.WithResponseUnmarshal(&res))
 	if err != nil {
@@ -230,7 +230,7 @@ type finalizeArtifactResponse struct {
 
 func (u *artifactUploader) finalizeArtifact(ctx context.Context, req finalizeArtifactRequest) (*finalizeArtifactResponse, error) {
 	var res finalizeArtifactResponse
-	err := u.client.Do(ctx, "POST", "/github.actions.results.api.v1.ArtifactService/FinalizeArtifact",
+	err := u.client.Do(ctx, "POST", "/twirp/github.actions.results.api.v1.ArtifactService/FinalizeArtifact",
 		httpclient.WithRequestData(req),
 		httpclient.WithResponseUnmarshal(&res))
 	if err != nil {
