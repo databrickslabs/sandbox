@@ -150,7 +150,10 @@ func (u *artifactUploader) folderZipStream(ctx context.Context, folder string) (
 		}
 		defer src.Close()
 		_, err = io.Copy(entry, src)
-		return fmt.Errorf("copy: %w", err)
+		if err != nil {
+			return fmt.Errorf("copy: %w", err)
+		}
+		return nil
 	})
 }
 
