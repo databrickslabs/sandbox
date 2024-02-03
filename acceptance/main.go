@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/databricks/databricks-sdk-go/logger"
@@ -20,16 +21,23 @@ func init() {
 func run(ctx context.Context, opts ...githubactions.Option) error {
 	b, err := boilerplate.New(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("boilerplate: %w", err)
 	}
+	artifactDir, err := b.PrepareArtifacts()
+	if err != nil {
+		return fmt.Errorf("prepare artifacts: %w", err)
+	}
+	defer os.RemoveAll(artifactDir)
 	directory := b.Action.GetInput("directory")
 	report, testErr := ecosystem.RunAll(ctx, directory)
 	err = b.Comment(ctx, report.StepSummary())
 	if err != nil {
 		return errors.Join(testErr, err)
 	}
-	raw, _ := os.ReadFile("test.log")
-	b.Upload(ctx, "test.log", raw)
+	err = b.Upload(ctx, artifactDir)
+	if err != nil {
+		return errors.Join(testErr, err)
+	}
 	return testErr
 	// also - there's OIDC integration:
 	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
