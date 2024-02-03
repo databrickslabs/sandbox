@@ -3,7 +3,7 @@ name: acceptance
 on:
   pull_request:
     types: [opened, synchronize]
-    paths: ['go-libs/**']
+    # paths: ['go-libs/**']
 
 permissions:
   id-token: write
@@ -24,7 +24,7 @@ jobs:
           go-version: 1.21
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@gh-action
+        uses: databrickslabs/sandbox/acceptance@go/wasm
         with:
           directory: go-libs
         env:
