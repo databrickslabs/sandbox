@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -174,7 +175,11 @@ func (u *artifactUploader) backendIdsFromToken() (string, string, error) {
 		runID, jobRunID := parts[1], parts[2]
 		return runID, jobRunID, nil
 	}
-	return "", "", fmt.Errorf("invalid claims: %v", claims)
+	x, _ := json.MarshalIndent(map[string]any{
+		"all":     claims,
+		"private": claims.PrivateClaims,
+	}, "", "  ")
+	return "", "", fmt.Errorf("invalid claims: %s", string(x))
 }
 
 type createArtifactRequest struct {
