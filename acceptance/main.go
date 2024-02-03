@@ -41,6 +41,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return errors.Join(testErr, err)
 	}
 	summary := report.StepSummary()
+	b.Action.AddStepSummary(summary)
 	err = b.Comment(ctx, summary)
 	if err != nil {
 		return errors.Join(testErr, err)
