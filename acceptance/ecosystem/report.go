@@ -53,12 +53,21 @@ func (r TestReport) String() string {
 		}
 		failed++
 	}
-	result := "❌"
+	emoji := "❌"
 	if r.Pass() {
-		result = "✅"
+		emoji = "✅"
 	}
-	return fmt.Sprintf("%s %d/%d passed, %d failed, %d skipped",
-		result, passed, run, failed, skipped)
+	var parts []string
+	if passed > 0 {
+		parts = append(parts, fmt.Sprintf("%d/%d passed", passed, run))
+	}
+	if failed > 0 {
+		parts = append(parts, fmt.Sprintf("%d failed", failed))
+	}
+	if skipped > 0 {
+		parts = append(parts, fmt.Sprintf("%d skipped", skipped))
+	}
+	return fmt.Sprintf("%s %s", emoji, strings.Join(parts, ", "))
 }
 
 func (r TestReport) StepSummary() string {
