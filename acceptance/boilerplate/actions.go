@@ -49,6 +49,9 @@ func (a *boilerplate) PrepareArtifacts() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("tmp: %w", err)
 	}
+	if a.context.EventPath == "" {
+		return tempDir, nil
+	}
 	event, err := os.ReadFile(a.context.EventPath)
 	if err != nil {
 		return "", fmt.Errorf("event: %w", err)

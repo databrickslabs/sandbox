@@ -2,6 +2,7 @@ package ecosystem
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -99,6 +100,7 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if err != nil {
 		return nil, err
 	}
+	errBuf := bytes.NewBuffer([]byte{})
 	// otherwise [ERROR] cannot parse JSON line:
 	// invalid character 'g' looking for beginning of value -
 	// go: downloading github.com/stretchr/testify v1.8.4
@@ -127,14 +129,15 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		return nil, fmt.Errorf("go-test.err: %w", err)
 	}
 	defer goTestStderr.Close()
-	go io.Copy(goTestStderr, errReader)
-	reader := io.TeeReader(outReader, goTestStdout)
+	teeErr := io.TeeReader(errReader, goTestStderr)
+	go io.Copy(errBuf, teeErr)
+	teeOut := io.TeeReader(outReader, goTestStdout)
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ch := readGoTestEvents(ctx, reader)
+		ch := readGoTestEvents(ctx, teeOut)
 		results = collectTestReport(ch)
 		// Strip root module from package name for brevity.
 		for i := range results {
@@ -161,7 +164,17 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	// copying from c.Stdin into the process's standard input
 	// to complete.
 	wg.Wait()
-	return results, err
+
+	if err != nil {
+		// we return results, as they're also useful
+		return results, &process.ProcessError{
+			Command: "go test",
+			Err:     err,
+			Stderr:  errBuf.String(),
+		}
+	}
+
+	return results, nil
 }
 
 // goTestEvent is defined at https://pkg.go.dev/cmd/test2json#hdr-Output_Format.
