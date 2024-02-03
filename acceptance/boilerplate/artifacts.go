@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 )
 
@@ -53,6 +54,7 @@ func newUploader(ctx context.Context) *artifactUploader {
 				}
 				r.URL.Host = url.Host
 				r.URL.Scheme = url.Scheme
+				logger.Infof(ctx, "call: %s", r.URL.String())
 				return nil
 			}},
 		}),
