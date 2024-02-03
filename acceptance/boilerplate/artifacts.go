@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -20,7 +21,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databrickslabs/sandbox/go-libs/env"
-	"golang.org/x/oauth2/jws"
 )
 
 const ArtifactDirEnv = "DATABRICKS_LABS_ACTIONS_ARTIFACT_DIR"
@@ -154,14 +154,23 @@ func (u *artifactUploader) folderZipStream(ctx context.Context, folder string) (
 
 // See https://github.com/actions/toolkit/blob/415c42d27ca2a24f3801dd9406344aaea00b7866/packages/artifact/src/internal/shared/util.ts#L22-L69
 func (u *artifactUploader) backendIdsFromToken() (string, string, error) {
-	claims, err := jws.Decode(u.runtimeToken)
+	s := strings.Split(u.runtimeToken, ".")
+	if len(s) < 2 {
+		return "", "", fmt.Errorf("invalid jwt")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(s[1])
 	if err != nil {
-		return "", "", fmt.Errorf("jws: %w", err)
+		return "", "", fmt.Errorf("jwt: base64: %w", err)
+	}
+	var claims map[string]string
+	err = json.Unmarshal(payload, &claims)
+	if err != nil {
+		return "", "", fmt.Errorf("jwt: json: %w", err)
 	}
 	// OAuth2 & JWT are soooo standard, that there are dozens of different implementations...
-	scope, ok := claims.PrivateClaims["scp"].(string)
+	scope, ok := claims["scp"]
 	if !ok {
-		scope = claims.Scope
+		return "", "", fmt.Errorf("jwt: no scope")
 	}
 	scopes := strings.Split(scope, " ")
 	for _, scope := range scopes {
@@ -175,10 +184,7 @@ func (u *artifactUploader) backendIdsFromToken() (string, string, error) {
 		runID, jobRunID := parts[1], parts[2]
 		return runID, jobRunID, nil
 	}
-	x, _ := json.MarshalIndent(map[string]any{
-		"all":     claims,
-		"private": claims.PrivateClaims,
-	}, "", "  ")
+	x, _ := json.MarshalIndent(claims, "", "  ")
 	return "", "", fmt.Errorf("invalid claims: %s", string(x))
 }
 
