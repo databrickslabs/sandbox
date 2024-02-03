@@ -122,7 +122,10 @@ func (u *artifactUploader) uploadToAzureBlob(ctx context.Context, uploadURL stri
 			BlobContentType: &blobContentType,
 		},
 	})
-	return fmt.Errorf("upload stream: %w", err)
+	if err != nil {
+		return fmt.Errorf("upload stream: %w", err)
+	}
+	return nil
 }
 
 func (u *artifactUploader) folderZipStream(ctx context.Context, folder string) (*bytes.Buffer, error) {
