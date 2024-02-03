@@ -126,7 +126,7 @@ func (u *artifactUploader) uploadToAzureBlob(ctx context.Context, uploadURL stri
 }
 
 func (u *artifactUploader) folderZipStream(ctx context.Context, folder string) (*bytes.Buffer, error) {
-	var buf *bytes.Buffer
+	buf := bytes.NewBuffer([]byte{})
 	zipWriter := zip.NewWriter(buf)
 	defer zipWriter.Close()
 	return buf, filepath.Walk(folder, func(filePath string, info os.FileInfo, err error) error {
