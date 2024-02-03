@@ -174,7 +174,7 @@ func (u *artifactUploader) backendIdsFromToken() (string, string, error) {
 		runID, jobRunID := parts[1], parts[2]
 		return runID, jobRunID, nil
 	}
-	return "", "", fmt.Errorf("invalid claims")
+	return "", "", fmt.Errorf("invalid claims: %v", claims)
 }
 
 type createArtifactRequest struct {
