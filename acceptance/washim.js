@@ -10,7 +10,6 @@ globalThis.crypto ??= require("crypto");
 require("./wasm_exec");
 
 const go = new Go();
-go.argv = process.argv.slice(2);
 go.env = Object.assign({ TMPDIR: require("os").tmpdir() }, process.env);
 go.exit = process.exit;
 WebAssembly.instantiate(fs.readFileSync(`${__dirname}/acceptance.wasm`), go.importObject).then((result) => {
