@@ -27,9 +27,6 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 	if err != nil {
 		return nil, err
 	}
-	// TODO: copy `context.EventPath` to `$ARTIFACT_DIR/event.json`, because we may
-	// want to write there from child processes (like test execution logs)
-	ctx = env.Set(ctx, ArtifactDirEnv, "..")
 	return &boilerplate{
 		Action:  a,
 		context: context,

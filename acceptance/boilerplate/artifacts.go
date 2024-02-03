@@ -23,8 +23,6 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/env"
 )
 
-const ArtifactDirEnv = "DATABRICKS_LABS_ACTIONS_ARTIFACT_DIR"
-
 // This file relies on undocumented APIs of GitHub Actions. See more details at:
 //
 // Sep 2022:
@@ -153,6 +151,7 @@ func (u *artifactUploader) folderZipStream(ctx context.Context, folder string) (
 			return fmt.Errorf("open: %w", err)
 		}
 		defer src.Close()
+		// TODO: global search-n-replace ops for a map of values. Just in case.
 		_, err = io.Copy(entry, src)
 		if err != nil {
 			return fmt.Errorf("copy: %w", err)

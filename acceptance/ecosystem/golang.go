@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -112,14 +113,21 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if !ok {
 		testFilter = "TestAcc"
 	}
+	openFlags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
 	// Tee into file so we can debug issues with logic below.
-	teeFile, err := os.OpenFile("test.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	goTestStdout, err := os.OpenFile(filepath.Join(LogDirEnv, "go-test.stdout.log"), openFlags, 0644)
 	if err != nil {
-		logger.Errorf(ctx, "unable to open log file: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("go-test.stdout.log: %w", err)
 	}
-	go io.Copy(teeFile, errReader)
-	reader := io.TeeReader(outReader, teeFile)
+	defer goTestStdout.Close()
+	// separate tailing for standard error of subprocess, so that the output could be analyzed easier
+	goTestStderr, err := os.OpenFile(filepath.Join(LogDirEnv, "go-test.stderr.log"), openFlags, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("go-test.stderr.log: %w", err)
+	}
+	defer goTestStderr.Close()
+	go io.Copy(goTestStderr, errReader)
+	reader := io.TeeReader(outReader, goTestStdout)
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup
 	wg.Add(1)

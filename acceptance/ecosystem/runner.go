@@ -7,6 +7,8 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 )
 
+const LogDirEnv = "DATABRICKS_LABS_LOG_DIR" 
+
 type TestRunner interface {
 	Detect(files fileset.FileSet) bool
 	ListAll(files fileset.FileSet) []string

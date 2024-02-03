@@ -5,7 +5,7 @@ author: Serge Smertin
 inputs:
   project:
     description: 'Project Name'
-    required: true
+    required: false
   go-version:
     description: 'Go version'
     required: false
