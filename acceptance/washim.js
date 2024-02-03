@@ -1,23 +1,28 @@
-'use strict';
-const { readFile } = require('node:fs/promises');
-const { WASI } = require('wasi');
-const { argv, env } = require('node:process');
-const { join } = require('node:path');
+"use strict";
 
-const wasi = new WASI({
-  version: 'preview1',
-  args: argv,
-  env,
-  preopens: {
-    '/local': '/some/real/path/that/wasm/can/access',
-  },
+globalThis.require = require;
+globalThis.fs = require("fs");
+globalThis.TextEncoder = require("util").TextEncoder;
+globalThis.TextDecoder = require("util").TextDecoder;
+globalThis.performance ??= require("performance");
+globalThis.crypto ??= require("crypto");
+
+require("./wasm_exec");
+
+const go = new Go();
+go.argv = process.argv.slice(2);
+go.env = Object.assign({ TMPDIR: require("os").tmpdir() }, process.env);
+go.exit = process.exit;
+WebAssembly.instantiate(fs.readFileSync('acceptance.wasm'), go.importObject).then((result) => {
+	process.on("exit", (code) => { // Node.js exits if no event handler is pending
+		if (code === 0 && !go.exited) {
+			// deadlock, make Go print error and stack traces
+			go._pendingEvent = { id: 0 };
+			go._resume();
+		}
+	});
+	return go.run(result.instance);
+}).catch((err) => {
+	console.error(err);
+	process.exit(1);
 });
-
-(async () => {
-  const wasm = await WebAssembly.compile(
-    await readFile(join(__dirname, 'acceptance.wasi')),
-  );
-  const instance = await WebAssembly.instantiate(wasm, wasi.getImportObject());
-
-  wasi.start(instance);
-})();
