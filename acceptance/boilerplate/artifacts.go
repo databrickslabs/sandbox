@@ -69,11 +69,14 @@ func (u *artifactUploader) Upload(ctx context.Context, name, folder string) (*up
 	if err != nil {
 		return nil, fmt.Errorf("backend ids: %w", err)
 	}
+	// no need to keep it longer
+	expiresAt := time.Now().Add(24 * time.Hour)
 	createResp, err := u.createArtifact(ctx, createArtifactRequest{
-		RunID:    runID,
-		JobRunID: jobRunID,
-		Name:     name,
-		Version:  4,
+		ExpiresAt: &expiresAt,
+		RunID:     runID,
+		JobRunID:  jobRunID,
+		Name:      name,
+		Version:   4,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create: %w", err)

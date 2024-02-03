@@ -64,7 +64,7 @@ func (a *boilerplate) PrepareArtifacts() (string, error) {
 }
 
 func (a *boilerplate) Upload(ctx context.Context, folder string) error {
-	res, err := a.uploader.Upload(ctx, "logs", folder)
+	res, err := a.uploader.Upload(ctx, "acceptance", folder)
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)
 	}

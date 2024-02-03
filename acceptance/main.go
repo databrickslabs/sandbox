@@ -10,7 +10,6 @@ import (
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/go-libs/env"
-	"github.com/databrickslabs/sandbox/go-libs/process"
 	"github.com/sethvargo/go-githubactions"
 )
 
@@ -42,11 +41,6 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return errors.Join(testErr, err)
 	}
 	summary := report.StepSummary()
-	var processErr *process.ProcessError
-	if errors.As(testErr, &processErr) {
-		summary = fmt.Sprintf("%s\n<details><summary>%s</summary>\n<code>%s</code></details>",
-			summary, processErr.Stdout, processErr.Stderr)
-	}
 	err = b.Comment(ctx, summary)
 	if err != nil {
 		return errors.Join(testErr, err)

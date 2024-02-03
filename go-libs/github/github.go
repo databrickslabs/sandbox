@@ -162,6 +162,15 @@ func (c *GitHubClient) ListWorkflowRuns(ctx context.Context, org, repo string, o
 	})
 }
 
+func (c *GitHubClient) ListArtifacts(ctx context.Context, org, repo string) listing.Iterator[Artifact] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/artifacts", gitHubAPI, org, repo)
+	return rawPaginator[Artifact, ListArtifacts, int64](ctx, c, path, &PageOptions{}, func(la ListArtifacts) []Artifact {
+		return la.Artifacts
+	}, func(a Artifact) int64 {
+		return a.ID
+	})
+}
+
 func (c *GitHubClient) GetWorkflowRunLogs(ctx context.Context, org, repo string, runID int64) (*bytes.Buffer, error) {
 	var location string
 	path := fmt.Sprintf("%s/repos/%v/%v/actions/runs/%v/logs", gitHubAPI, org, repo, runID)

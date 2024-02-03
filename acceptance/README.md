@@ -14,6 +14,7 @@ tags:
 
 - [GitHub Action for Acceptance Testing](#github-action-for-acceptance-testing)
   - [Usage](#usage)
+  - [Logs](#logs)
   - [Artifacts](#artifacts)
     - [`event.json`](#eventjson)
     - [`test-report.json`](#test-reportjson)
@@ -62,6 +63,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Logs
+
+If you use `github.com/databrickslabs/sandbox/go-libs/fixtures`, the logs would be available in `go-slog.json` artifact:
+
+```go
+import (
+	"testing"
+	"github.com/databrickslabs/sandbox/go-libs/fixtures"
+)
+
+func TestShowDatabases(t *testing.T) {
+	ctx, w := fixtures.WorkspaceTest(t)
+  // ...
+}
+```
+
+Python support is coming soon.
 
 ## Artifacts
 
