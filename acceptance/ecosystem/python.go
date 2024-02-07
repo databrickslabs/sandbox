@@ -136,7 +136,8 @@ func (r pyTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (TestRe
 			if err != nil {
 				return nil, fmt.Errorf("reply: %w", err)
 			}
-			logger.Infof(ctx, "[%v] %s", result.Pass, result.Name)
+			result.Time = time.Now()
+			logger.Infof(ctx, "%s", result)
 			report = append(report, result)
 		}
 	}
