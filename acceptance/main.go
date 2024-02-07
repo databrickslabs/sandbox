@@ -51,8 +51,6 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return errors.Join(testErr, err)
 	}
 	return testErr
-	// also - there's OIDC integration:
-	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
 }
 
 func main() {
