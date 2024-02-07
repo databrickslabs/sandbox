@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
@@ -30,13 +33,43 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 		GitHub: github.NewClient(&github.GitHubConfig{
 			GitHubTokenSource: github.GitHubTokenSource{},
 		}),
+		uploader: newUploader(ctx),
 	}, nil
 }
 
 type boilerplate struct {
-	Action  *githubactions.Action
-	context *githubactions.GitHubContext
-	GitHub  *github.GitHubClient
+	Action   *githubactions.Action
+	context  *githubactions.GitHubContext
+	GitHub   *github.GitHubClient
+	uploader *artifactUploader
+}
+
+func (a *boilerplate) PrepareArtifacts() (string, error) {
+	tempDir, err := os.MkdirTemp(os.TempDir(), "artifacts-*")
+	if err != nil {
+		return "", fmt.Errorf("tmp: %w", err)
+	}
+	if a.context.EventPath == "" {
+		return tempDir, nil
+	}
+	event, err := os.ReadFile(a.context.EventPath)
+	if err != nil {
+		return "", fmt.Errorf("event: %w", err)
+	}
+	err = os.WriteFile(filepath.Join(tempDir, "event.json"), event, 0600)
+	if err != nil {
+		return "", fmt.Errorf("copy: %w", err)
+	}
+	return tempDir, nil
+}
+
+func (a *boilerplate) Upload(ctx context.Context, folder string) error {
+	res, err := a.uploader.Upload(ctx, "acceptance", folder)
+	if err != nil {
+		return fmt.Errorf("upload: %w", err)
+	}
+	logger.Infof(ctx, "Uploaded artifact: %s", res.ArtifactID)
+	return nil
 }
 
 func (a *boilerplate) RunURL(ctx context.Context) (string, error) {

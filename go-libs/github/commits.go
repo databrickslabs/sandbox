@@ -2,6 +2,8 @@ package github
 
 import "time"
 
+//..
+
 type ListCommits struct {
 	Base   string    `url:"sha,omitempty"`
 	Path   string    `url:"path,omitempty"`

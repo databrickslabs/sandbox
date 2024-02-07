@@ -20,14 +20,6 @@ import (
 const fullCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const hexCharset = "0123456789abcdef"
 
-func init() {
-	// TODO: make sure this is initialisable properly
-	databricks.WithProduct("integration-tests", databricks.Version())
-	logger.DefaultLogger = &logger.SimpleLogger{
-		Level: logger.LevelDebug,
-	}
-}
-
 // WorkspaceTest is the prelude for all workspace-level tests
 func WorkspaceTest(t *testing.T) (context.Context, *databricks.WorkspaceClient) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
@@ -93,6 +85,7 @@ func UcacctTest(t *testing.T) (context.Context, *databricks.AccountClient) {
 func GetEnvOrSkipTest(t *testing.T, name string) string {
 	value := os.Getenv(name)
 	if value == "" {
+		logger.Warnf(context.Background(), "Environment variable %s is missing", name)
 		skipf(t)("Environment variable %s is missing", name)
 	}
 	return value

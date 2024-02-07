@@ -107,7 +107,7 @@ func TestScanWrongType(t *testing.T) {
 	require.EqualError(t, result.Err(), "json: cannot unmarshal number into Go value of type string")
 }
 
-func TestErrorMapping(t *testing.T) {
+func TestAccErrorMapping(t *testing.T) {
 	ctx, w := fixtures.WorkspaceTest(t)
 
 	exec, err := sqlexec.New(w)
@@ -123,7 +123,7 @@ func TestErrorMapping(t *testing.T) {
 	require.ErrorIs(t, err, apierr.ErrAlreadyExists)
 }
 
-func TestMultiChunk(t *testing.T) {
+func TestAccMultiChunk(t *testing.T) {
 	ctx, w := fixtures.WorkspaceTest(t)
 	w.Config.WarehouseID = fixtures.GetEnvOrSkipTest(t, "TEST_DEFAULT_WAREHOUSE_ID")
 

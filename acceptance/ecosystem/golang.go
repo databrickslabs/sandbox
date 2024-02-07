@@ -2,12 +2,14 @@ package ecosystem
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -98,6 +100,7 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if err != nil {
 		return nil, err
 	}
+	errBuf := bytes.NewBuffer([]byte{})
 	// otherwise [ERROR] cannot parse JSON line:
 	// invalid character 'g' looking for beginning of value -
 	// go: downloading github.com/stretchr/testify v1.8.4
@@ -112,20 +115,29 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	if !ok {
 		testFilter = "TestAcc"
 	}
+	logDir := env.Get(ctx, LogDirEnv)
+	openFlags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
 	// Tee into file so we can debug issues with logic below.
-	teeFile, err := os.OpenFile("test.log", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	goTestStdout, err := os.OpenFile(filepath.Join(logDir, "go-test.out"), openFlags, 0644)
 	if err != nil {
-		logger.Errorf(ctx, "unable to open log file: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("go-test.out: %w", err)
 	}
-	go io.Copy(teeFile, errReader)
-	reader := io.TeeReader(outReader, teeFile)
+	defer goTestStdout.Close()
+	// separate tailing for standard error of subprocess, so that the output could be analyzed easier
+	goTestStderr, err := os.OpenFile(filepath.Join(logDir, "go-test.err"), openFlags, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("go-test.err: %w", err)
+	}
+	defer goTestStderr.Close()
+	teeErr := io.TeeReader(errReader, goTestStderr)
+	go io.Copy(errBuf, teeErr)
+	teeOut := io.TeeReader(outReader, goTestStdout)
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ch := readGoTestEvents(ctx, reader)
+		ch := readGoTestEvents(ctx, teeOut)
 		results = collectTestReport(ch)
 		// Strip root module from package name for brevity.
 		for i := range results {
@@ -140,10 +152,9 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 		"go", "test", "./...", "-json",
 		"-timeout", "1h",
 		"-coverpkg=./...",
-		"-coverprofile=coverage.txt",
+		fmt.Sprintf("-coverprofile=%s/go-coverprofile", logDir),
 		"-run", fmt.Sprintf("^%s", testFilter),
-	}, nil, outWriter, errWriter,
-		process.WithDir(root))
+	}, nil, outWriter, errWriter, process.WithDir(root))
 	// The process has terminated; close the writer it had been writing into.
 	outWriter.Close()
 	errWriter.Close()
@@ -153,7 +164,18 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	// copying from c.Stdin into the process's standard input
 	// to complete.
 	wg.Wait()
-	return results, err
+
+	if results.Pass() && err != nil {
+		results = append(results, TestResult{
+			Time:    time.Now(),
+			Package: "<root>",
+			Name:    "compile",
+			Output:  errBuf.String(),
+		})
+		return results, err
+	}
+
+	return results, nil
 }
 
 // goTestEvent is defined at https://pkg.go.dev/cmd/test2json#hdr-Output_Format.
