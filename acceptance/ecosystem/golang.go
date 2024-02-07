@@ -28,7 +28,7 @@ func (r GoTestRunner) Detect(files fileset.FileSet) bool {
 	return files.Exists(`go.mod`, `module .*\n`)
 }
 
-func (r GoTestRunner) ListAll(files fileset.FileSet) (all []string) {
+func (r GoTestRunner) ListAll(ctx context.Context, files fileset.FileSet) (all []string) {
 	found, _ := files.FindAll(`_test.go`, `func (TestAcc\w+)\(t`)
 	for _, v := range found {
 		all = append(all, v...)
