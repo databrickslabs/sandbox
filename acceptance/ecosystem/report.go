@@ -20,6 +20,19 @@ type TestResult struct {
 	Elapsed float64   `json:"elapsed"`
 }
 
+func (tr TestResult) String() string {
+	return fmt.Sprintf("%s %s (%0.3fs)", tr.icon(), tr.Name, tr.Elapsed)
+}
+func (tr TestResult) icon() string {
+	if tr.Skip {
+		return "🦥"
+	}
+	if !tr.Pass {
+		return "❌"
+	}
+	return "✅"
+}
+
 type TestReport []TestResult
 
 func (r TestReport) Pass() bool {

@@ -11,13 +11,14 @@ const LogDirEnv = "DATABRICKS_LABS_LOG_DIR"
 
 type TestRunner interface {
 	Detect(files fileset.FileSet) bool
-	ListAll(files fileset.FileSet) []string
+	ListAll(ctx context.Context, files fileset.FileSet) []string
 	RunOne(ctx context.Context, files fileset.FileSet, one string) error
 	RunAll(ctx context.Context, files fileset.FileSet) (TestReport, error)
 }
 
 var runners = []TestRunner{
 	GoTestRunner{},
+	pyTestRunner{},
 }
 
 func RunAll(ctx context.Context, folder string) (TestReport, error) {
