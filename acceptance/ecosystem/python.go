@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/toolchain"
+	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 	"github.com/databrickslabs/sandbox/go-libs/process"
 )
@@ -43,13 +45,33 @@ type pyContext struct {
 	root   string
 }
 
+func (py *pyContext) start(script string, reply *localHookServer) error {
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+	defer reader.Close()
+	logDir := env.Get(py.ctx, LogDirEnv)
+	openFlags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
+	// Tee into file so we can debug issues with logic below.
+	tee, err := os.OpenFile(filepath.Join(logDir, "pytest.log"), openFlags, 0644)
+	if err != nil {
+		return fmt.Errorf("pytest.log: %w", err)
+	}
+	defer tee.Close()
+	go io.Copy(tee, reader)
+	return process.Forwarded(py.ctx,
+		[]string{py.binary, "-c", script},
+		nil, writer, writer,
+		process.WithDir(py.root),
+		process.WithEnv("REPLY_URL", reply.URL()))
+}
+
 func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 	errs := make(chan error)
 	go func() {
-		_, err := process.Background(py.ctx,
-			[]string{py.binary, "-c", script},
-			process.WithDir(py.root),
-			process.WithEnv("REPLY_URL", reply.URL()))
+		err := py.start(script, reply)
 		var processErr *process.ProcessError
 		if errors.As(err, &processErr) {
 			logger.Warnf(py.ctx, "collect: %s", processErr.Stderr)
@@ -69,7 +91,6 @@ func (r pyTestRunner) prepare(ctx context.Context, files fileset.FileSet) (*pyCo
 		return nil, fmt.Errorf("prepared: %w", err)
 	}
 	ctx = tc.WithPath(ctx, files.Root())
-
 	venvPython := filepath.Join(files.Root(), tc.PrependPath, "python")
 	testRoot := files.Root()
 	if tc.AcceptancePath != "" {
@@ -112,7 +133,7 @@ func (r pyTestRunner) RunOne(ctx context.Context, files fileset.FileSet, one str
 }
 
 func (r pyTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (TestReport, error) {
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Hour)
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
@@ -127,8 +148,14 @@ func (r pyTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (TestRe
 		case <-ctx.Done():
 			return report, err
 		case err := <-errs:
+			if err != nil {
+				err = fmt.Errorf("pytest: %w", err)
+			}
 			return report, err
 		case err := <-reply.errCh:
+			if err != nil {
+				err = fmt.Errorf("hook: %w", err)
+			}
 			return report, err
 		case raw := <-reply.hookCh:
 			var result TestResult
