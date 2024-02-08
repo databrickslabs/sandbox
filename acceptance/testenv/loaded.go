@@ -125,7 +125,12 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 }
 
 func (l *loadedEnv) replyJson(ctx context.Context, w http.ResponseWriter, status int, body any) {
-	logger.Debugf(ctx, "reply from metadata server: %d", status)
+	msg := "<token response>"
+	apiErrBody, ok := body.(apierr.APIErrorBody)
+	if ok {
+		msg = fmt.Sprintf("%s: %s", apiErrBody.ErrorCode, apiErrBody.Message)
+	}
+	logger.Debugf(ctx, "reply from metadata server: (%d) %s", status, msg)
 	raw, err := json.Marshal(body)
 	if err != nil {
 		logger.Errorf(ctx, "json write: %s", err)
