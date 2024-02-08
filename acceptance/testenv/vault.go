@@ -109,6 +109,7 @@ func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
 }
 
 func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
+	//.
 	clientAssertion, err := v.a.GetIDToken(ctx, "api://AzureADTokenExchange")
 	if err != nil {
 		return nil, fmt.Errorf("id token: %w", err)
