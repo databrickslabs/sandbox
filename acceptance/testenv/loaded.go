@@ -30,6 +30,11 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 			if !ok {
 				continue
 			}
+			if a.Sensitive && l.v.a != nil {
+				// mask out sensitive value from github actions output if any
+				// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-masking-and-passing-a-secret-between-jobs-or-workflows
+				l.v.a.AddMask(v)
+			}
 			err := a.SetS(cfg, v)
 			if err != nil {
 				return nil, fmt.Errorf("set %s: %w", a.Name, err)
@@ -104,6 +109,10 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Wrong Authorization header",
 			})
+		}
+		if l.v.a != nil {
+			// mask token if run from github actions
+			l.v.a.AddMask(accessToken)
 		}
 		l.replyJson(r.Context(), w, 200, msiToken{
 			TokenType:   tokenType,
