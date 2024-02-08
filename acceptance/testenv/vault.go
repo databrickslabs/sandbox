@@ -22,7 +22,7 @@ import (
 
 func New(a *githubactions.Action, vaultURI string) *vaultEnv {
 	return &vaultEnv{
-		// TODO: wrong dep for a *githubactions.Action
+		a:        a, // TODO: inject via Load(), when integrating with CLI
 		vaultURI: vaultURI,
 	}
 }
@@ -109,7 +109,6 @@ func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
 }
 
 func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
-	//.
 	clientAssertion, err := v.a.GetIDToken(ctx, "api://AzureADTokenExchange")
 	if err != nil {
 		return nil, fmt.Errorf("id token: %w", err)
