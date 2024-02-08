@@ -64,6 +64,8 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
 	for k, v := range l.vars {
 		if authVars[k] {
+			// empty out the irrelevant env vars, as `env.All(ctx)` merges the map with parent env
+			ctx = env.Set(ctx, k, "")
 			continue
 		}
 		ctx = env.Set(ctx, k, v)

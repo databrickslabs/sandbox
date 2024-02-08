@@ -143,11 +143,6 @@ func (v *vaultEnv) GetToken(ctx context.Context, options policy.TokenRequestOpti
 	}, nil
 }
 
-type oidcCredential struct {
-	a        *githubactions.Action
-	resource string
-}
-
 type msiToken struct {
 	TokenType    string      `json:"token_type"`
 	AccessToken  string      `json:"access_token,omitempty"`
