@@ -9,6 +9,7 @@ import (
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
+	"github.com/databrickslabs/sandbox/acceptance/testenv"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/sethvargo/go-githubactions"
 )
@@ -18,6 +19,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
+	vaultURI := b.Action.GetInput("vault_uri")
 	directory := b.Action.GetInput("directory")
 	project := b.Action.GetInput("project")
 	if project == "" {
@@ -32,6 +34,16 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("prepare artifacts: %w", err)
 	}
 	defer os.RemoveAll(artifactDir)
+	testEnv := testenv.New(b.Action, vaultURI)
+	loaded, err := testEnv.Load(ctx)
+	if err != nil {
+		return fmt.Errorf("load: %w", err)
+	}
+	ctx, stop, err := loaded.Start(ctx)
+	if err != nil {
+		return fmt.Errorf("start: %w", err)
+	}
+	defer stop()
 	// make sure that test logs leave their artifacts somewhere we can pickup
 	ctx = env.Set(ctx, ecosystem.LogDirEnv, artifactDir)
 	// detect and run all tests
@@ -51,8 +63,6 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return errors.Join(testErr, err)
 	}
 	return testErr
-	// also - there's OIDC integration:
-	// a.GetIDToken(ctx, "api://AzureADTokenExchange")
 }
 
 func main() {

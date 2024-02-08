@@ -13,7 +13,8 @@ permissions:
 jobs:
   acceptance:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    environment: tool
+    runs-on: larger
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,9 +25,12 @@ jobs:
           go-version: 1.21
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@actions/artifact
+        uses: databrickslabs/sandbox/acceptance@acceptance/vaults
         with:
           directory: go-libs
+          vault_uri: ${{ secrets.VAULT_URI }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         

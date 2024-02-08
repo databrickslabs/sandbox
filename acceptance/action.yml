@@ -3,13 +3,12 @@ name: 'Databricks Labs Acceptance Suite'
 description: 'Run relevant acceptance suite'
 author: Serge Smertin
 inputs:
+  vault_uri:
+    description: 'Vault URI'
+    required: true
   project:
     description: 'Project Name'
     required: false
-  go-version:
-    description: 'Go version'
-    required: false
-    default: 1.21.0
   directory:
     description: 'Working directory'
     required: false
