@@ -19,7 +19,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
-	vault := b.Action.GetInput("vault_uri")
+	vaultURI := b.Action.GetInput("vault_uri")
 	directory := b.Action.GetInput("directory")
 	project := b.Action.GetInput("project")
 	if project == "" {
@@ -34,7 +34,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("prepare artifacts: %w", err)
 	}
 	defer os.RemoveAll(artifactDir)
-	testEnv := testenv.New(vault)
+	testEnv := testenv.New(vaultURI)
 	loaded, err := testEnv.Load(ctx)
 	if err != nil {
 		return fmt.Errorf("load: %w", err)

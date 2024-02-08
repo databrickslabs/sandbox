@@ -13,7 +13,8 @@ permissions:
 jobs:
   acceptance:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    environment: tool
+    runs-on: larger
     steps:
       - name: Checkout
         uses: actions/checkout@v4
