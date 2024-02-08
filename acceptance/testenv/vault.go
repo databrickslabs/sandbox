@@ -101,7 +101,7 @@ func (v *vaultEnv) filterEnv(in map[string]string) (map[string]string, error) {
 
 func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
 	return v, nil // TODO: do it better
-	// azCli, err := azidentity.NewAzureCLICredential(nil)
+	// return azidentity.NewAzureCLICredential(nil)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -117,7 +117,7 @@ func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2
 	tenantID := v.a.Getenv("ARM_TENANT_ID")
 	return (&clientcredentials.Config{
 		ClientID: clientID,
-		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", tenantID),
+		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", tenantID),
 		EndpointParams: url.Values{
 			"client_assertion_type": []string{"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
 			"client_assertion":      []string{clientAssertion},
@@ -128,7 +128,8 @@ func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2
 
 // GetToken implements azcore.TokenCredential to talk to Azure Key Vault
 func (v *vaultEnv) GetToken(ctx context.Context, options policy.TokenRequestOptions) (azcore.AccessToken, error) {
-	ts, err := v.oidcTokenSource(ctx, options.Scopes[0])
+	scope := strings.TrimSuffix(options.Scopes[0], "/.default")
+	ts, err := v.oidcTokenSource(ctx, scope)
 	if err != nil {
 		return azcore.AccessToken{}, err
 	}
