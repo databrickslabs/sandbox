@@ -117,7 +117,7 @@ func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2
 	tenantID := v.a.Getenv("ARM_TENANT_ID")
 	return (&clientcredentials.Config{
 		ClientID: clientID,
-		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", tenantID),
+		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", tenantID),
 		EndpointParams: url.Values{
 			"client_assertion_type": []string{"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
 			"client_assertion":      []string{clientAssertion},
