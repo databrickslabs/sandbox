@@ -3,7 +3,7 @@ name: 'Databricks Labs Acceptance Suite'
 description: 'Run relevant acceptance suite'
 author: Serge Smertin
 inputs:
-  vault:
+  vault_uri:
     description: 'Vault URI'
     required: true
   project:

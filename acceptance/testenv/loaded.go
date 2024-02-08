@@ -44,10 +44,10 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 	return cfg, cfg.EnsureResolved()
 }
 
-func (l *loadedEnv) Start(ctx context.Context) (context.Context, error) {
+func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
 	cfg, err := l.getDatabricksConfig()
 	if err != nil {
-		return nil, fmt.Errorf("config: %w", err)
+		return nil, nil, fmt.Errorf("config: %w", err)
 	}
 	srv := l.metadataServer(cfg)
 	authVars := map[string]bool{}
@@ -60,14 +60,14 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, error) {
 		}
 	}
 	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
-	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv, l.mpath))
+	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
 	for k, v := range l.vars {
 		if authVars[k] {
 			continue
 		}
 		ctx = env.Set(ctx, k, v)
 	}
-	return ctx, err
+	return ctx, srv.Close, nil
 }
 
 func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {

@@ -19,7 +19,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
-	vault := b.Action.GetInput("vault")
+	vault := b.Action.GetInput("vault_uri")
 	directory := b.Action.GetInput("directory")
 	project := b.Action.GetInput("project")
 	if project == "" {
@@ -39,10 +39,11 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("load: %w", err)
 	}
-	ctx, err = loaded.Start(ctx)
+	ctx, stop, err := loaded.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("start: %w", err)
 	}
+	defer stop()
 	// make sure that test logs leave their artifacts somewhere we can pickup
 	ctx = env.Set(ctx, ecosystem.LogDirEnv, artifactDir)
 	// detect and run all tests
