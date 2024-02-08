@@ -20,7 +20,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-func New(vaultURI string) *vaultEnv {
+func New(a *githubactions.Action, vaultURI string) *vaultEnv {
 	return &vaultEnv{
 		// TODO: wrong dep for a *githubactions.Action
 		vaultURI: vaultURI,
