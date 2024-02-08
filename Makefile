@@ -6,13 +6,13 @@ clean:
 	rm -fr dist
 
 dist/acceptance:
-	sh build.sh acceptance
+	./build.sh acceptance
 
 dist/runtime-packages:
-	sh build.sh runtime-packages
+	./build.sh runtime-packages
 
 dist/metascan: $(wildcard metascan/*.go) $(wildcard metascan/internal/*.go) $(wildcard metascan/cmd/*.go)
-	sh build.sh metascan
+	./build.sh metascan
 
 compress: dist/acceptance dist/runtime-packages dist/metascan
 	for file in $(shell ls dist); do \
