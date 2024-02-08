@@ -9,6 +9,7 @@ import (
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
+	"github.com/databrickslabs/sandbox/acceptance/testenv"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/sethvargo/go-githubactions"
 )
@@ -18,6 +19,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
+	vault := b.Action.GetInput("vault")
 	directory := b.Action.GetInput("directory")
 	project := b.Action.GetInput("project")
 	if project == "" {
@@ -32,6 +34,15 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("prepare artifacts: %w", err)
 	}
 	defer os.RemoveAll(artifactDir)
+	testEnv := testenv.New(vault)
+	loaded, err := testEnv.Load(ctx)
+	if err != nil {
+		return fmt.Errorf("load: %w", err)
+	}
+	ctx, err = loaded.Start(ctx)
+	if err != nil {
+		return fmt.Errorf("start: %w", err)
+	}
 	// make sure that test logs leave their artifacts somewhere we can pickup
 	ctx = env.Set(ctx, ecosystem.LogDirEnv, artifactDir)
 	// detect and run all tests

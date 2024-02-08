@@ -3,81 +3,51 @@ package testenv
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
-	"github.com/databricks/databricks-sdk-go/logger"
+
 	"github.com/sethvargo/go-githubactions"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
-type oidcCredential struct {
+func New(vaultURI string) *vaultEnv {
+	return &vaultEnv{
+		// TODO: wrong dep for a *githubactions.Action
+		vaultURI: vaultURI,
+	}
+}
+
+type vaultEnv struct {
 	a *githubactions.Action
+
+	vaultURI string
 }
 
-func (o *oidcCredential) GetToken(ctx context.Context, options policy.TokenRequestOptions) (azcore.AccessToken, error) {
-	clientAssertion, err := o.a.GetIDToken(ctx, "api://AzureADTokenExchange")
+func (v *vaultEnv) Load(ctx context.Context) (*loadedEnv, error) {
+	cred, err := v.getMsalCredential()
 	if err != nil {
-		return azcore.AccessToken{}, err
+		return nil, fmt.Errorf("credential: %w", err)
 	}
-	/* python reference implementation
-	# get the ID Token with aud=api://AzureADTokenExchange sub=repo:org/repo:environment:name
-	response_json = response.json()
-	if 'value' not in response_json:
-		return None
-
-	logger.info("Configured AAD token for GitHub Actions OIDC (%s)", cfg.azure_client_id)
-	params = {
-		'client_assertion_type': 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-		'resource': cfg.effective_azure_login_app_id,
-		'client_assertion': response_json['value'],
-	}
-	aad_endpoint = cfg.arm_environment.active_directory_endpoint
-	if not cfg.azure_tenant_id:
-		# detect Azure AD Tenant ID if it's not specified directly
-		token_endpoint = cfg.oidc_endpoints.token_endpoint
-		cfg.azure_tenant_id = token_endpoint.replace(aad_endpoint, '').split('/')[0]
-	inner = ClientCredentials(client_id=cfg.azure_client_id,
-								client_secret="", # we have no (rotatable) secrets in OIDC flow
-								token_url=f"{aad_endpoint}{cfg.azure_tenant_id}/oauth2/token",
-								endpoint_params=params,
-								use_params=True)
-
-	def refreshed_headers() -> Dict[str, str]:
-		token = inner.token()
-		return {'Authorization': f'{token.token_type} {token.access_token}'}
-
-	return refreshed_headers
-	*/
-	return azcore.AccessToken{
-		Token: tok,
-	}, nil
-}
-
-// also - there's OIDC integration:
-// a.GetIDToken(ctx, "api://AzureADTokenExchange")
-
-func envVars(ctx context.Context, vaultURI string) (map[string]string, error) {
-	credential, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return nil, fmt.Errorf("azure default auth: %w", err)
-	}
-	logger.Infof(ctx, "Listing secrets from %s", vaultURI)
-	vault, err := azsecrets.NewClient(vaultURI, credential, nil)
+	vault, err := azsecrets.NewClient(v.vaultURI, cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("azsecrets.NewClient: %w", err)
 	}
 	pager := vault.NewListSecretsPager(nil)
 	vars := map[string]string{}
-	// implicit CLOUD_ENV var
-	vars["CLOUD_ENV"] = env.must().Cloud()
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("listing secrets from %s: %w", vaultURI, err)
+			return nil, fmt.Errorf("listing secrets from %s: %w", v.vaultURI, err)
 		}
 		for _, secret := range page.Value {
 			name := secret.ID.Name()
@@ -88,33 +58,28 @@ func envVars(ctx context.Context, vaultURI string) (map[string]string, error) {
 			vars[strings.ReplaceAll(name, "-", "_")] = *sv.Value
 		}
 	}
-	return filterEnv(vars)
-}
-
-func NewConfigFor(ctx context.Context) (*config.Config, error) {
-	vars, err := envVars(ctx)
+	vars, err = v.filterEnv(vars)
 	if err != nil {
-		return nil, fmt.Errorf("env vars: %w", err)
+		return nil, err
 	}
-	logger.Infof(ctx, "Creating *databricks.Config for %s env", env)
-	cfg := &config.Config{}
-	// TODO: add output redaction for secrets based on sensitive values
-	for _, a := range config.ConfigAttributes {
-		for _, ev := range a.EnvVars {
-			v, ok := vars[ev]
-			if !ok {
-				continue
-			}
-			err = a.SetS(cfg, v)
-			if err != nil {
-				return nil, fmt.Errorf("set %s: %w", a.Name, err)
-			}
-		}
-	}
-	return cfg, cfg.EnsureResolved()
+	return &loadedEnv{
+		v:     v,
+		vars:  vars,
+		mpath: v.randomString(32),
+	}, nil
 }
 
-func filterEnv(in map[string]string) (map[string]string, error) {
+func (v *vaultEnv) randomString(length int) string {
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[rnd.Intn(len(charset))]
+	}
+	return string(result)
+}
+
+func (v *vaultEnv) filterEnv(in map[string]string) (map[string]string, error) {
 	out := map[string]string{}
 	for k, v := range in {
 		if k == "github_token" {
@@ -133,4 +98,58 @@ func filterEnv(in map[string]string) (map[string]string, error) {
 		out[k] = v
 	}
 	return out, nil
+}
+
+func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
+	azCli, err := azidentity.NewAzureCLICredential(nil)
+	if err != nil {
+		return nil, err
+	}
+	return azidentity.NewChainedTokenCredential([]azcore.TokenCredential{azCli, v}, nil)
+}
+
+func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
+	clientAssertion, err := v.a.GetIDToken(ctx, "api://AzureADTokenExchange")
+	if err != nil {
+		return nil, fmt.Errorf("id token: %w", err)
+	}
+	clientID := v.a.Getenv("ARM_CLIENT_ID")
+	tenantID := v.a.Getenv("ARM_TENANT_ID")
+	return (&clientcredentials.Config{
+		ClientID: clientID,
+		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", tenantID),
+		EndpointParams: url.Values{
+			"client_assertion_type": []string{"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
+			"client_assertion":      []string{clientAssertion},
+			"resource":              []string{resource},
+		},
+	}).TokenSource(ctx), nil
+}
+
+// GetToken implements azcore.TokenCredential to talk to Azure Key Vault
+func (v *vaultEnv) GetToken(ctx context.Context, options policy.TokenRequestOptions) (azcore.AccessToken, error) {
+	ts, err := v.oidcTokenSource(ctx, options.Scopes[0])
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	token, err := ts.Token()
+	if err != nil {
+		return azcore.AccessToken{}, err
+	}
+	return azcore.AccessToken{
+		Token:     token.AccessToken,
+		ExpiresOn: token.Expiry,
+	}, nil
+}
+
+type oidcCredential struct {
+	a        *githubactions.Action
+	resource string
+}
+
+type msiToken struct {
+	TokenType    string      `json:"token_type"`
+	AccessToken  string      `json:"access_token,omitempty"`
+	RefreshToken string      `json:"refresh_token,omitempty"`
+	ExpiresOn    json.Number `json:"expires_on"`
 }
