@@ -61,6 +61,7 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 	}
 	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
 	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
+	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
 	for k, v := range l.vars {
 		if authVars[k] {
 			continue
@@ -80,7 +81,7 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 			})
 			return
 		}
-		if r.URL.Path != l.mpath {
+		if strings.TrimPrefix(r.URL.Path, "/") != l.mpath {
 			l.replyJson(r.Context(), w, 404, apierr.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "nope",

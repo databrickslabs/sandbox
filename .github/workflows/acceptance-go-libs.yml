@@ -24,9 +24,10 @@ jobs:
           go-version: 1.21
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@actions/artifact
+        uses: databrickslabs/sandbox/acceptance@acceptance/vaults
         with:
           directory: go-libs
+          vault_uri: ${{ secrets.VAULT_URI }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
