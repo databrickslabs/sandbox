@@ -12,7 +12,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 
 	"github.com/sethvargo/go-githubactions"
@@ -101,11 +100,12 @@ func (v *vaultEnv) filterEnv(in map[string]string) (map[string]string, error) {
 }
 
 func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
-	azCli, err := azidentity.NewAzureCLICredential(nil)
-	if err != nil {
-		return nil, err
-	}
-	return azidentity.NewChainedTokenCredential([]azcore.TokenCredential{azCli, v}, nil)
+	return v, nil // TODO: do it better
+	// azCli, err := azidentity.NewAzureCLICredential(nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return azidentity.NewChainedTokenCredential([]azcore.TokenCredential{azCli, v}, nil)
 }
 
 func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
