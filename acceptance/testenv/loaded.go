@@ -76,22 +76,24 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		ctx := r.Context()
+		logger.Debugf(ctx, "landed metadata server request")
 		if r.Header.Get("X-Databricks-Metadata-Version") != "1" {
-			l.replyJson(r.Context(), w, 400, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 400, apierr.APIErrorBody{
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Version mismatch",
 			})
 			return
 		}
 		if strings.TrimPrefix(r.URL.Path, "/") != l.mpath {
-			l.replyJson(r.Context(), w, 404, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 404, apierr.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "nope",
 			})
 			return
 		}
 		if r.Header.Get("X-Databricks-Host") != cfg.Host {
-			l.replyJson(r.Context(), w, 403, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
 				ErrorCode: "PERMISSION_DENIED",
 				Message:   "Host mismatch",
 			})
@@ -100,7 +102,7 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 		req := &http.Request{Header: http.Header{}}
 		err := cfg.Authenticate(req)
 		if err != nil {
-			l.replyJson(r.Context(), w, 403, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
 				ErrorCode: "PERMISSION_DENIED",
 				Message:   err.Error(),
 			})
@@ -108,16 +110,12 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 		}
 		tokenType, accessToken, ok := strings.Cut(req.Header.Get("Authorization"), " ")
 		if !ok {
-			l.replyJson(r.Context(), w, 400, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 400, apierr.APIErrorBody{
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Wrong Authorization header",
 			})
 		}
-		if l.v.a != nil {
-			// mask token if run from github actions
-			l.v.a.AddMask(accessToken)
-		}
-		l.replyJson(r.Context(), w, 200, msiToken{
+		l.replyJson(ctx, w, 200, msiToken{
 			TokenType:   tokenType,
 			AccessToken: accessToken,
 			// for the sake of simplicity, we always expire tokens within 2 minutes
@@ -127,6 +125,7 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 }
 
 func (l *loadedEnv) replyJson(ctx context.Context, w http.ResponseWriter, status int, body any) {
+	logger.Debugf(ctx, "reply from metadata server: %d", status)
 	raw, err := json.Marshal(body)
 	if err != nil {
 		logger.Errorf(ctx, "json write: %s", err)
