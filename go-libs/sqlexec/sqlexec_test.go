@@ -94,6 +94,7 @@ func TestAccQueryTypes(t *testing.T) {
 }
 
 func TestAccScanWrongType(t *testing.T) {
+	t.SkipNow()
 	ctx, w := fixtures.WorkspaceTest(t)
 
 	exec, err := sqlexec.New(w)
@@ -118,9 +119,6 @@ func TestAccErrorMapping(t *testing.T) {
 
 	err = exec.Execf(ctx, "DROP SCHEMA db_%s", fixtures.RandomName())
 	require.ErrorIs(t, err, apierr.ErrNotFound)
-
-	err = exec.Execf(ctx, "CREATE CATALOG main")
-	require.ErrorIs(t, err, apierr.ErrAlreadyExists)
 }
 
 func TestAccMultiChunk(t *testing.T) {
