@@ -22,7 +22,10 @@ type loadedEnv struct {
 }
 
 func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
-	cfg := &config.Config{}
+	cfg := &config.Config{
+		// ignore all environment variables
+		Loaders: []config.Loader{config.ConfigFile},
+	}
 	// TODO: add output redaction for secrets based on sensitive values
 	for _, a := range config.ConfigAttributes {
 		for _, ev := range a.EnvVars {
@@ -41,7 +44,33 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 			}
 		}
 	}
+	if cfg.IsAzure() && l.v.a != nil {
+		cfg.Credentials = &ghOidc{l.v}
+	}
 	return cfg, cfg.EnsureResolved()
+}
+
+type ghOidc struct {
+	v *vaultEnv
+}
+
+func (c *ghOidc) Name() string {
+	return "github-oidc"
+}
+
+func (c *ghOidc) Configure(ctx context.Context, cfg *config.Config) (func(*http.Request) error, error) {
+	ts, err := c.v.oidcTokenSource(ctx, cfg.Environment().AzureApplicationID)
+	if err != nil {
+		return nil, fmt.Errorf("oidc: %w", err)
+	}
+	return func(r *http.Request) error {
+		token, err := ts.Token()
+		if err != nil {
+			return fmt.Errorf("token: %w", err)
+		}
+		token.SetAuthHeader(r)
+		return nil
+	}, nil
 }
 
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
