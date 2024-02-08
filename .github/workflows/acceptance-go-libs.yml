@@ -23,9 +23,14 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.21
+      
+      - run: make dist
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@acceptance/vaults
+        uses: databrickslabs/sandbox/acceptance@artifacts
         with:
           directory: go-libs
           vault_uri: ${{ secrets.VAULT_URI }}

@@ -5,15 +5,23 @@ all: clean
 clean:
 	rm -fr dist
 
-dist/runtime-packages: runtime-packages/main.go runtime-packages/go.mod runtime-packages/discover.py
-	@go build -o dist/runtime-packages runtime-packages/main.go
-	@echo "Building runtime-packages"
+dist/acceptance:
+	sh build.sh acceptance
+
+dist/runtime-packages:
+	sh build.sh runtime-packages
 
 dist/metascan: $(wildcard metascan/*.go) $(wildcard metascan/internal/*.go) $(wildcard metascan/cmd/*.go)
-	@go build -o dist/metascan metascan/main.go
-	@echo "Building metascan"
+	sh build.sh metascan
 
-dist: dist/runtime-packages dist/metascan
+compress: dist/acceptance dist/runtime-packages dist/metascan
+	for file in $(shell ls dist); do \
+		zip -r "dist/$$file.zip" "dist/$$file"; \
+		rm dist/$$file; \
+	done
+
+dist: compress
+	cd dist && sha256sum * > SHA256SUMS
 
 .venv/bin/python:
 	python3.10 -m venv .venv
