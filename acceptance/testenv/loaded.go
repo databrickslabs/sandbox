@@ -23,8 +23,10 @@ type loadedEnv struct {
 
 func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 	cfg := &config.Config{
+		// TODO: properly implement config.Loader interface
 		// ignore all environment variables
-		Loaders: []config.Loader{config.ConfigFile},
+		Loaders:     []config.Loader{config.ConfigFile},
+		Credentials: l.v.creds,
 	}
 	// TODO: add output redaction for secrets based on sensitive values
 	for _, a := range config.ConfigAttributes {
@@ -33,44 +35,18 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 			if !ok {
 				continue
 			}
-			if a.Sensitive && l.v.a != nil {
-				// mask out sensitive value from github actions output if any
-				// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-masking-and-passing-a-secret-between-jobs-or-workflows
-				l.v.a.AddMask(v)
-			}
+			// if a.Sensitive && l.v.a != nil {
+			// 	// mask out sensitive value from github actions output if any
+			// 	// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-masking-and-passing-a-secret-between-jobs-or-workflows
+			// 	l.v.a.AddMask(v)
+			// }
 			err := a.SetS(cfg, v)
 			if err != nil {
 				return nil, fmt.Errorf("set %s: %w", a.Name, err)
 			}
 		}
 	}
-	if cfg.IsAzure() && l.v.a != nil {
-		cfg.Credentials = &ghOidc{l.v}
-	}
 	return cfg, cfg.EnsureResolved()
-}
-
-type ghOidc struct {
-	v *vaultEnv
-}
-
-func (c *ghOidc) Name() string {
-	return "github-oidc"
-}
-
-func (c *ghOidc) Configure(ctx context.Context, cfg *config.Config) (func(*http.Request) error, error) {
-	ts, err := c.v.oidcTokenSource(ctx, cfg.Environment().AzureApplicationID)
-	if err != nil {
-		return nil, fmt.Errorf("oidc: %w", err)
-	}
-	return func(r *http.Request) error {
-		token, err := ts.Token()
-		if err != nil {
-			return fmt.Errorf("token: %w", err)
-		}
-		token.SetAuthHeader(r)
-		return nil
-	}, nil
 }
 
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
@@ -102,7 +78,14 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 	return ctx, srv.Close, nil
 }
 
-func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
+func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
+	configurations := map[string]*config.Config{
+		seed.CanonicalHostName(): seed,
+		seed.Environment().DeploymentURL("accounts"): {
+			Loaders:     []config.Loader{config.ConfigFile},
+			Credentials: l.v.creds,
+		},
+	}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		ctx := r.Context()
@@ -121,15 +104,17 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 			})
 			return
 		}
-		if r.Header.Get("X-Databricks-Host") != cfg.Host {
+		hostInHeader := r.Header.Get("X-Databricks-Host")
+		configs, ok := configurations[hostInHeader]
+		if !ok {
 			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
 				ErrorCode: "PERMISSION_DENIED",
-				Message:   "Host mismatch",
+				Message:   fmt.Sprintf("Not allowed: %s", hostInHeader),
 			})
 			return
 		}
 		req := &http.Request{Header: http.Header{}}
-		err := cfg.Authenticate(req)
+		err := configs.Authenticate(req)
 		if err != nil {
 			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
 				ErrorCode: "PERMISSION_DENIED",
@@ -147,7 +132,7 @@ func (l *loadedEnv) metadataServer(cfg *config.Config) *httptest.Server {
 		l.replyJson(ctx, w, 200, msiToken{
 			TokenType:   tokenType,
 			AccessToken: accessToken,
-			// for the sake of simplicity, we always expire tokens within 2 minutes
+			// TODO: get the real expiry of the token (if we can)
 			ExpiresOn: json.Number(fmt.Sprint(time.Now().Add(2 * time.Minute).Unix())),
 		})
 	}))

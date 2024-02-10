@@ -3,41 +3,28 @@ package testenv
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/url"
 	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
-
-	"github.com/sethvargo/go-githubactions"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
+	"github.com/databricks/databricks-sdk-go/config"
 )
 
-func New(a *githubactions.Action, vaultURI string) *vaultEnv {
-	return &vaultEnv{
-		a:        a, // TODO: inject via Load(), when integrating with CLI
-		vaultURI: vaultURI,
-	}
+type creds interface {
+	config.CredentialsProvider
+	azcore.TokenCredential
 }
 
 type vaultEnv struct {
-	a *githubactions.Action
-
 	vaultURI string
+	creds    creds
 }
 
 func (v *vaultEnv) Load(ctx context.Context) (*loadedEnv, error) {
-	cred, err := v.getMsalCredential()
-	if err != nil {
-		return nil, fmt.Errorf("credential: %w", err)
-	}
-	vault, err := azsecrets.NewClient(v.vaultURI, cred, nil)
+	vault, err := azsecrets.NewClient(v.vaultURI, v.creds, nil)
 	if err != nil {
 		return nil, fmt.Errorf("azsecrets.NewClient: %w", err)
 	}
@@ -97,55 +84,4 @@ func (v *vaultEnv) filterEnv(in map[string]string) (map[string]string, error) {
 		out[k] = v
 	}
 	return out, nil
-}
-
-func (v *vaultEnv) getMsalCredential() (azcore.TokenCredential, error) {
-	return v, nil // TODO: do it better
-	// return azidentity.NewAzureCLICredential(nil)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return azidentity.NewChainedTokenCredential([]azcore.TokenCredential{azCli, v}, nil)
-}
-
-func (v *vaultEnv) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
-	clientAssertion, err := v.a.GetIDToken(ctx, "api://AzureADTokenExchange")
-	if err != nil {
-		return nil, fmt.Errorf("id token: %w", err)
-	}
-	clientID := v.a.Getenv("ARM_CLIENT_ID")
-	tenantID := v.a.Getenv("ARM_TENANT_ID")
-	return (&clientcredentials.Config{
-		ClientID: clientID,
-		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", tenantID),
-		EndpointParams: url.Values{
-			"client_assertion_type": []string{"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
-			"client_assertion":      []string{clientAssertion},
-			"resource":              []string{resource},
-		},
-	}).TokenSource(ctx), nil
-}
-
-// GetToken implements azcore.TokenCredential to talk to Azure Key Vault
-func (v *vaultEnv) GetToken(ctx context.Context, options policy.TokenRequestOptions) (azcore.AccessToken, error) {
-	scope := strings.TrimSuffix(options.Scopes[0], "/.default")
-	ts, err := v.oidcTokenSource(ctx, scope)
-	if err != nil {
-		return azcore.AccessToken{}, err
-	}
-	token, err := ts.Token()
-	if err != nil {
-		return azcore.AccessToken{}, err
-	}
-	return azcore.AccessToken{
-		Token:     token.AccessToken,
-		ExpiresOn: token.Expiry,
-	}, nil
-}
-
-type msiToken struct {
-	TokenType    string      `json:"token_type"`
-	AccessToken  string      `json:"access_token,omitempty"`
-	RefreshToken string      `json:"refresh_token,omitempty"`
-	ExpiresOn    json.Number `json:"expires_on"`
 }

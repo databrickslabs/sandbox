@@ -34,7 +34,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("prepare artifacts: %w", err)
 	}
 	defer os.RemoveAll(artifactDir)
-	testEnv := testenv.New(b.Action, vaultURI)
+	testEnv := testenv.NewWithGitHubOIDC(b.Action, vaultURI)
 	loaded, err := testEnv.Load(ctx)
 	if err != nil {
 		return fmt.Errorf("load: %w", err)

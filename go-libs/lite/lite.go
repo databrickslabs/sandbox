@@ -307,15 +307,16 @@ func (r *Root[T]) With(subs ...Registerable[T]) *Root[T] {
 }
 
 func (r *Root[T]) Run(ctx context.Context) {
-	if !r.Debug {
-		defer func() {
-			p := recover()
-			if p != nil {
-				fmt.Fprint(os.Stderr, color.RedString("PANIC: %s\n", p))
-				os.Exit(2)
-			}
-		}()
-	}
+	defer func() {
+		if r.Debug {
+			return
+		}
+		p := recover()
+		if p != nil {
+			fmt.Fprint(os.Stderr, color.RedString("PANIC: %s\n", p))
+			os.Exit(2)
+		}
+	}()
 	_, err := r.ExecuteContextC(ctx)
 	if err != nil {
 		fmt.Fprint(os.Stderr, color.RedString("ERROR: %s\n", err.Error()))
