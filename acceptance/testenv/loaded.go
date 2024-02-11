@@ -64,7 +64,6 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
 	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
 	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
-	// authVars := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
 		for _, envVar := range attr.EnvVars {
 			value, ok := l.vars[envVar]
@@ -93,7 +92,6 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		ctx := r.Context()
-		logger.Debugf(ctx, "landed metadata server request")
 		if r.Header.Get("X-Databricks-Metadata-Version") != "1" {
 			l.replyJson(ctx, w, 400, apierr.APIErrorBody{
 				ErrorCode: "BAD_REQUEST",
