@@ -19,6 +19,7 @@ import (
 	_ "embed"
 
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/acceptance/toolchain"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
@@ -41,6 +42,7 @@ func (r pyTestRunner) Detect(files fileset.FileSet) bool {
 
 type pyContext struct {
 	ctx    context.Context
+	redact redaction.Redaction
 	binary string
 	root   string
 }
@@ -60,7 +62,7 @@ func (py *pyContext) start(script string, reply *localHookServer) error {
 		return fmt.Errorf("pytest.log: %w", err)
 	}
 	defer tee.Close()
-	go io.Copy(tee, reader)
+	go py.redact.Copy(tee, reader)
 	return process.Forwarded(py.ctx,
 		[]string{py.binary, "-c", script},
 		nil, writer, writer,
@@ -81,7 +83,7 @@ func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 	return errs
 }
 
-func (r pyTestRunner) prepare(ctx context.Context, files fileset.FileSet) (*pyContext, error) {
+func (r pyTestRunner) prepare(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (*pyContext, error) {
 	tc, err := toolchain.FromFileset(files)
 	if err != nil {
 		return nil, fmt.Errorf("detect: %w", err)
@@ -98,6 +100,7 @@ func (r pyTestRunner) prepare(ctx context.Context, files fileset.FileSet) (*pyCo
 	}
 	return &pyContext{
 		ctx:    ctx,
+		redact: redact,
 		binary: venvPython,
 		root:   testRoot,
 	}, nil
@@ -108,7 +111,7 @@ func (r pyTestRunner) ListAll(ctx context.Context, files fileset.FileSet) []stri
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, files)
+	py, err := r.prepare(ctx, redaction.Redaction{}, files)
 	if err != nil {
 		logger.Warnf(ctx, ".codegen.json: %s", err)
 		return nil
@@ -128,16 +131,16 @@ func (r pyTestRunner) ListAll(ctx context.Context, files fileset.FileSet) []stri
 	return out
 }
 
-func (r pyTestRunner) RunOne(ctx context.Context, files fileset.FileSet, one string) error {
+func (r pyTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error {
 	return ErrNotImplemented
 }
 
-func (r pyTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (TestReport, error) {
+func (r pyTestRunner) RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (TestReport, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Hour)
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, files)
+	py, err := r.prepare(ctx, redact, files)
 	if err != nil {
 		return nil, fmt.Errorf(".codegen.json: %w", err)
 	}

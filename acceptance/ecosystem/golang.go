@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 	"github.com/databrickslabs/sandbox/go-libs/process"
@@ -36,7 +37,7 @@ func (r GoTestRunner) ListAll(ctx context.Context, files fileset.FileSet) (all [
 	return all
 }
 
-func (r GoTestRunner) RunOne(ctx context.Context, files fileset.FileSet, one string) error {
+func (r GoTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error {
 	found := files.FirstMatch(`_test.go`, fmt.Sprintf(`func %s\(`, one))
 	if found == nil {
 		return fmt.Errorf("not found: %s", one)
@@ -82,7 +83,7 @@ func (r GoTestRunner) RunOne(ctx context.Context, files fileset.FileSet, one str
 	)
 }
 
-func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (results TestReport, err error) {
+func (r GoTestRunner) RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (results TestReport, err error) {
 	goMod := files.FirstMatch(`go.mod`, `module .*\n`)
 	root := files.Root()
 	if goMod == nil {
@@ -130,7 +131,8 @@ func (r GoTestRunner) RunAll(ctx context.Context, files fileset.FileSet) (result
 	}
 	defer goTestStderr.Close()
 	teeErr := io.TeeReader(errReader, goTestStderr)
-	go io.Copy(errBuf, teeErr)
+	go redact.Copy(errBuf, teeErr)
+	// TODO: redact
 	teeOut := io.TeeReader(outReader, goTestStdout)
 	// We have to wait for the output to be fully processed before returning.
 	var wg sync.WaitGroup

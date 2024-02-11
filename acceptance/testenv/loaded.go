@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 )
 
@@ -53,6 +54,10 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 		Loaders: []config.Loader{l},
 	}
 	return cfg, cfg.EnsureResolved()
+}
+
+func (l *loadedEnv) Redaction() redaction.Redaction {
+	return redaction.Redaction(l.vars)
 }
 
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
