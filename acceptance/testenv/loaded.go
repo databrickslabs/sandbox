@@ -21,14 +21,13 @@ type loadedEnv struct {
 	vars  map[string]string
 }
 
-func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
-	cfg := &config.Config{
-		// TODO: properly implement config.Loader interface
-		// ignore all environment variables
-		Loaders:     []config.Loader{config.ConfigFile},
-		Credentials: l.v.creds,
-	}
-	// TODO: add output redaction for secrets based on sensitive values
+func (l *loadedEnv) Name() string {
+	return "azure-key-vault"
+}
+
+// Configure implemets config.Loader interface
+func (l *loadedEnv) Configure(cfg *config.Config) error {
+	cfg.Credentials = l.v.creds
 	for _, a := range config.ConfigAttributes {
 		for _, ev := range a.EnvVars {
 			v, ok := l.vars[ev]
@@ -42,9 +41,16 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 			// }
 			err := a.SetS(cfg, v)
 			if err != nil {
-				return nil, fmt.Errorf("set %s: %w", a.Name, err)
+				return fmt.Errorf("set %s: %w", a.Name, err)
 			}
 		}
+	}
+	return nil
+}
+
+func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
+	cfg := &config.Config{
+		Loaders: []config.Loader{l},
 	}
 	return cfg, cfg.EnsureResolved()
 }
@@ -55,25 +61,23 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 		return nil, nil, fmt.Errorf("config: %w", err)
 	}
 	srv := l.metadataServer(cfg)
-	authVars := map[string]bool{}
-	for _, a := range config.ConfigAttributes {
-		if a.Auth == "" {
-			continue
-		}
-		for _, ev := range a.EnvVars {
-			authVars[ev] = true
-		}
-	}
 	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
 	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
 	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
-	for k, v := range l.vars {
-		if authVars[k] {
-			// empty out the irrelevant env vars, as `env.All(ctx)` merges the map with parent env
-			ctx = env.Set(ctx, k, "")
-			continue
+	// authVars := map[string]bool{}
+	for _, attr := range config.ConfigAttributes {
+		for _, envVar := range attr.EnvVars {
+			value, ok := l.vars[envVar]
+			if !ok {
+				continue
+			}
+			if attr.Auth != "" {
+				// not to conflict with metadata service,
+				// erase any auth env vars
+				value = ""
+			}
+			ctx = env.Set(ctx, envVar, value)
 		}
-		ctx = env.Set(ctx, k, v)
 	}
 	return ctx, srv.Close, nil
 }
