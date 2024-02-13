@@ -6,6 +6,7 @@
 
 # Specific owners are listed last. Please keep this list in the alphabetical order
 
+acceptance                 @nfx
 database-diagram-builder   @alexott
 go-libs                    @nfx
 ip_access_list_analyzer    @alexott
