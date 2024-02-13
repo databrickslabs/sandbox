@@ -25,7 +25,7 @@ jobs:
           go-version: 1.21
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@acceptance/vaults
+        uses: databrickslabs/sandbox/acceptance@main
         with:
           directory: go-libs
           vault_uri: ${{ secrets.VAULT_URI }}
