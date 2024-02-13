@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 )
 
-const LogDirEnv = "DATABRICKS_LABS_LOG_DIR" 
+const LogDirEnv = "DATABRICKS_LABS_LOG_DIR"
 
 type TestRunner interface {
 	Detect(files fileset.FileSet) bool
 	ListAll(ctx context.Context, files fileset.FileSet) []string
-	RunOne(ctx context.Context, files fileset.FileSet, one string) error
-	RunAll(ctx context.Context, files fileset.FileSet) (TestReport, error)
+	RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error
+	RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (TestReport, error)
 }
 
 var runners = []TestRunner{
@@ -21,7 +22,7 @@ var runners = []TestRunner{
 	pyTestRunner{},
 }
 
-func RunAll(ctx context.Context, folder string) (TestReport, error) {
+func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (TestReport, error) {
 	files, err := fileset.RecursiveChildren(folder)
 	if err != nil {
 		return nil, fmt.Errorf("fileset: %w", err)
@@ -35,5 +36,5 @@ func RunAll(ctx context.Context, folder string) (TestReport, error) {
 	if runner == nil {
 		return nil, fmt.Errorf("no supported ecosystem detected")
 	}
-	return runner.RunAll(ctx, files)
+	return runner.RunAll(ctx, redact, files)
 }

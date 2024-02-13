@@ -34,7 +34,7 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("prepare artifacts: %w", err)
 	}
 	defer os.RemoveAll(artifactDir)
-	testEnv := testenv.New(b.Action, vaultURI)
+	testEnv := testenv.NewWithGitHubOIDC(b.Action, vaultURI)
 	loaded, err := testEnv.Load(ctx)
 	if err != nil {
 		return fmt.Errorf("load: %w", err)
@@ -46,13 +46,15 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	defer stop()
 	// make sure that test logs leave their artifacts somewhere we can pickup
 	ctx = env.Set(ctx, ecosystem.LogDirEnv, artifactDir)
+	redact := loaded.Redaction()
 	// detect and run all tests
-	report, testErr := ecosystem.RunAll(ctx, directory)
+	report, testErr := ecosystem.RunAll(ctx, redact, directory)
 	err = report.WriteReport(project, filepath.Join(artifactDir, "test-report.json"))
 	if err != nil {
 		return errors.Join(testErr, err)
 	}
-	summary := report.StepSummary()
+	// better be redacting twice, right?
+	summary := redact.ReplaceAll(report.StepSummary())
 	b.Action.AddStepSummary(summary)
 	err = b.Comment(ctx, summary)
 	if err != nil {
