@@ -113,8 +113,6 @@ func (r *Root[T]) initLogger() {
 	level := slog.LevelInfo
 	if r.Debug {
 		level = slog.LevelDebug
-	} else {
-		level = slog.LevelWarn
 	}
 	w := r.ErrOrStderr()
 	r.Logger = slog.New(&friendlyHandler{
@@ -129,7 +127,12 @@ func (r *Root[T]) initLogger() {
 func (r *Root[T]) preRun(init Init[T]) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		r.initLogger()
-		v := viper.NewWithOptions(viper.WithLogger(r.Logger))
+		v := viper.NewWithOptions(viper.WithLogger(slog.New(&remappingHandler{
+			Handler: r.Logger.Handler(),
+			overrides: map[slog.Level]slog.Level{
+				slog.LevelInfo: slog.LevelDebug,
+			},
+		})))
 		v.SetConfigName(init.Name)
 		v.SetConfigType("yaml")
 		if r.configPath != "" {
