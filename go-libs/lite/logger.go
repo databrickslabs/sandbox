@@ -10,9 +10,31 @@ import (
 	"github.com/fatih/color"
 )
 
+type remappingHandler struct {
+	slog.Handler
+	overrides map[slog.Level]slog.Level
+}
+
+func (r *remappingHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	newLevel, ok := r.overrides[level]
+	if ok {
+		return r.Handler.Enabled(ctx, newLevel)
+	}
+	return r.Handler.Enabled(ctx, level)
+}
+
+func (r *remappingHandler) Handle(ctx context.Context, rec slog.Record) error {
+	newLevel, ok := r.overrides[rec.Level]
+	if ok {
+		rec.Level = newLevel
+	}
+	return r.Handler.Handle(ctx, rec)
+}
+
 type friendlyHandler struct {
 	slog.Handler
-	w io.Writer
+	w     io.Writer
+	attrs []slog.Attr
 }
 
 var (
@@ -42,6 +64,7 @@ func (l *friendlyHandler) coloredLevel(rec slog.Record) string {
 func (l *friendlyHandler) Handle(ctx context.Context, rec slog.Record) error {
 	t := fmt.Sprintf("%02d:%02d", rec.Time.Hour(), rec.Time.Minute())
 	attrs := ""
+	rec.AddAttrs(l.attrs...)
 	rec.Attrs(func(a slog.Attr) bool {
 		attrs += fmt.Sprintf(" %s%s%s",
 			color.CyanString(a.Key),
@@ -56,6 +79,23 @@ func (l *friendlyHandler) Handle(ctx context.Context, rec slog.Record) error {
 		attrs)
 	_, err := l.w.Write([]byte(msg))
 	return err
+}
+
+func (l *friendlyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &friendlyHandler{
+		Handler: l.Handler.WithAttrs(attrs),
+		w:       l.w,
+		attrs:   attrs,
+	}
+}
+
+func (l *friendlyHandler) WithGroup(name string) slog.Handler {
+	// TODO: this is not so correct implementation, but is fine for now
+	return &friendlyHandler{
+		Handler: l.Handler.WithGroup(name),
+		w:       l.w,
+		attrs:   []slog.Attr{slog.String("group", name)},
+	}
 }
 
 // slogAdapter makes an slog.Logger usable with the Databricks SDK.
