@@ -69,28 +69,34 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
 	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
 	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
+	isAuth := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
 		for _, envVar := range attr.EnvVars {
-			value, ok := l.vars[envVar]
-			if !ok {
+			if attr.Auth == "" {
 				continue
 			}
-			if attr.Auth != "" {
-				// not to conflict with metadata service,
-				// erase any auth env vars
-				value = ""
-			}
-			ctx = env.Set(ctx, envVar, value)
+			isAuth[envVar] = true
 		}
+	}
+	for k, v := range l.vars {
+		if isAuth[k] {
+			// not to conflict with metadata service,
+			// erase any auth env vars
+			v = ""
+		}
+		ctx = env.Set(ctx, k, v)
 	}
 	return ctx, srv.Close, nil
 }
 
 func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
+	accountHost := seed.Environment().DeploymentURL("accounts")
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
-		seed.Environment().DeploymentURL("accounts"): {
+		accountHost: {
 			Loaders:     []config.Loader{config.ConfigFile},
+			Host:        accountHost,
+			AccountID:   seed.AccountID,
 			Credentials: l.v.creds,
 		},
 	}
