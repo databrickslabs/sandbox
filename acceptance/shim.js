@@ -50,7 +50,8 @@ function downloadFile(url) {
 async function main() {
     const version = 'v0.0.1'
     const platform = process.platform == 'win32' ? 'windows' : process.platform;
-    const artifact = `acceptance_${platform}_${process.arch}.gz`;
+    const arch = process.arch == 'x64' ? 'amd64' : process.arch;
+    const artifact = `acceptance_${platform}_${arch}.gz`;
     const downloadUrl = `https://github.com/databrickslabs/sandbox/releases/download/acceptance/${version}/${artifact}`;
     const binary = await downloadFile(downloadUrl);
     fs.chmodSync(binary, '755')
