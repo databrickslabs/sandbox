@@ -21,6 +21,9 @@ jobs:
 
       - name: Build
         run: /bin/bash .github/workflows/build.sh acceptance
+    
+      - name: Compress
+        run: /bin/bash .github/workflows/compress.sh
       
       - name: Draft release
         uses: softprops/action-gh-release@v1

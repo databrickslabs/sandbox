@@ -14,6 +14,8 @@ for GOOS in "${platforms[@]}"; do
         if [ "$GOOS" == "windows" ]; then
             target="$target.exe"
         fi
-        GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o $target $app/main.go
+        GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o $target $app/main.go &
     done
 done
+
+wait
