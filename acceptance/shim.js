@@ -12,26 +12,26 @@ console.log('env', process.env)
 
 const https = require('https');
 const fs = require('fs');
-const { exec } = require('child_process');
 const { createGunzip } = require('zlib');
+const { basename } = require('path');
+const { spawnSync } = require('child_process');
 const { pipeline } = require('stream');
+const { exit } = require('node:process');
 
-const downloadUrl = 'https://github.com/databrickslabs/sandbox/releases/download/acceptance/v0.0.1/acceptance_linux_amd64.zip';
-const zipFilePath = './acceptance_linux_amd64.zip';
-const unzipDir = './unzipped';
 
 // Function to download file
-function downloadFile(url, dest) {
-    const file = fs.createWriteStream(dest);
+function downloadFile(url) {
+    const filename = basename(url).split('.')[0]
+    const dest = fs.createWriteStream(filename);
     const request = (url, resolve, reject) => {
         https.get(url, (response) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
-                pipeline(response, file, (err) => {
+                pipeline(response, createGunzip(), dest, (err) => {
                     if (err) {
                         reject(err);
                         return;
                     }
-                    resolve();
+                    resolve(filename);
                 });
             } else if (response.headers.location) {
                 request(response.headers.location, resolve, reject);
@@ -47,49 +47,17 @@ function downloadFile(url, dest) {
     });
 }
 
-function unzipFile(zipFilePath, targetDir) {
-    return new Promise((resolve, reject) => {
-        const fileStream = fs.createReadStream(zipFilePath);
-        const targetStream = fs.createWriteStream(targetDir);
-        fileStream.pipe(createGunzip()).pipe(targetStream)
-    });
-}
-
-// Function to execute subprocess
-function executeSubprocess(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            console.log(stdout);
-            console.error(stderr);
-            resolve();
-        });
-    });
-}
-
-// Main function
 async function main() {
-    try {
-        // Download the zip file
-        await downloadFile(downloadUrl, zipFilePath);
-        console.log('Zip file downloaded successfully.');
-
-        // Unzip the file
-        await unzipFile(zipFilePath, unzipDir);
-        console.log('Zip file extracted successfully.');
-
-        // Execute the extracted file as a subprocess
-        const executablePath = `${unzipDir}/your_executable_file`; // Adjust this path accordingly
-        await executeSubprocess(executablePath);
-    } catch (error) {
-        console.error('Error:', error);
-    }
+    const version = 'v0.0.1'
+    const platform = process.platform == 'win32' ? 'windows' : process.platform;
+    const artifact = `acceptance_${platform}_${process.arch}.gz`;
+    const downloadUrl = `https://github.com/databrickslabs/sandbox/releases/download/acceptance/${version}/${artifact}`;
+    const binary = await downloadFile(downloadUrl);
+    fs.chmodSync(binary, '755')
+    const { status } = spawnSync(binary, [], { stdio: 'inherit' });
+    exit(status);
 }
 
-// Run the main function
 main();
 
 
