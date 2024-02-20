@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -17,7 +18,10 @@ import (
 type FileSet []File
 
 func (fi FileSet) Root() string {
-	return strings.TrimSuffix(fi[0].Absolute, "/"+fi[0].Relative)
+	if len(fi) == 0 {
+		return "."
+	}
+	return fi[0].Dir()
 }
 
 func (fi FileSet) FirstMatch(pathRegex, needleRegex string) *File {
@@ -160,15 +164,18 @@ func RecursiveChildren(dir string) (found FileSet, err error) {
 func ReadDir(dir string) (queue []File, err error) {
 	f, err := os.Open(dir)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("open: %w", err)
 	}
 	defer f.Close()
 	dirs, err := f.ReadDir(-1)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("read dir: %w", err)
 	}
 	for _, v := range dirs {
-		absolute := path.Join(dir, v.Name())
+		absolute, err := filepath.Abs(path.Join(dir, v.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("abs: %w", err)
+		}
 		queue = append(queue, File{v, absolute, ""})
 	}
 	return
