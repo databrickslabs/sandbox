@@ -28,3 +28,11 @@ test-acceptance:
 	cd acceptance && make test
 
 test: test-acceptance test-go-libs
+
+fmt-go-libs:
+	cd go-libs && make fmt
+
+fmt-acceptance:
+	cd acceptance && make fmt
+
+fmt: fmt-acceptance fmt-go-libs
