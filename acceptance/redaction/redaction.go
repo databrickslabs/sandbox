@@ -3,14 +3,30 @@ package redaction
 import (
 	"bufio"
 	"io"
+	"sort"
 	"strings"
 )
 
-type Redaction map[string]string
+type pair struct {
+	k, v string
+}
+
+func New(m map[string]string) (r Redaction) {
+	for k, v := range m {
+		r = append(r, pair{k, v})
+	}
+	// otherwise we have things like https://adb-XXXX.YY.CLOUD_ENVdatabricks.net
+	sort.Slice(r, func(i, j int) bool {
+		return len(r[i].v) > len(r[j].v)
+	})
+	return
+}
+
+type Redaction []pair
 
 func (r Redaction) ReplaceAll(in string) string {
-	for key, secret := range r {
-		in = strings.ReplaceAll(in, secret, key)
+	for _, p := range r {
+		in = strings.ReplaceAll(in, p.v, p.k)
 	}
 	return in
 }

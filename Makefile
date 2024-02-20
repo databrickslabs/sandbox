@@ -20,3 +20,11 @@ dist: dist/runtime-packages dist/metascan
 
 dev: .venv/bin/python
 	.venv/bin/python -m pip install .
+
+test-go-libs:
+	cd go-libs && make test
+
+test-acceptance:
+	cd acceptance && make test
+
+test: test-acceptance test-go-libs
