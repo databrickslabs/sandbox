@@ -1,7 +1,5 @@
 const version = 'v0.0.1';
 
-console.log('env', process.env)
-
 const { createWriteStream, chmodSync } = require('fs');
 const { createGunzip } = require('zlib');
 const { basename } = require('path');
@@ -27,8 +25,3 @@ const pipelineAsync = promisify(pipeline);
     const { status } = spawnSync(`${process.cwd()}/${filename}`, [], { stdio: 'inherit' });
     exit(status);
 })();
-
-// const { spawnSync } = require('child_process');
-// const { exit } = require('node:process');
-// const { status } = spawnSync('go', ['run', `${__dirname}/main.go`], { stdio: 'inherit' });
-// exit(status);

@@ -22,6 +22,7 @@ tags:
     - [`go-test.out`](#go-testout)
     - [`go-test.err`](#go-testerr)
   - [Troubleshooting](#troubleshooting)
+  - [Releasing](#releasing)
 
 Executes tests, comments on PR, links to worflow run, uploads artifacts for later analysis. Only once comment is created per PR and gets edited with subsequent runs.
 
@@ -161,3 +162,12 @@ When you need to troubleshoot not the tests, but rather the action itself, locat
 
 ... so that you could view debug level output from this action:
 ![debug level](docs/debug-level.png)
+
+## Releasing
+
+As long as https://github.com/databrickslabs/sandbox is a monorepo, the `acceptance` action has to get a two-step release process:
+
+1. NodeJS shim - edit version file in `shim.js` to pick `v0.0.1` as version in the top of the file.
+2. Go module - `git tag acceptance/v0.0.1` and wait till https://github.com/databrickslabs/sandbox/actions/workflows/acceptance-release.yml is complete.
+
+Tag names must start with `acceptance/` in order for [acceptance-release](../.github/workflows/acceptance-release.yml) to trigger and this folder to be used as Go module.
