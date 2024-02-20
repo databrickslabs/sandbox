@@ -1,99 +1,27 @@
-// function chooseBinary() {
-//     // ...
-//     if (platform === 'linux' && arch === 'x64') {
-//         return `main-linux-amd64-${VERSION}`
-//     }
-//     // ...
-// }
-// const binary = chooseBinary()
-// const mainScript = `${__dirname}/${binary}`
-// TODO: try calling the result of GOOS=js GOARCH=wasm go build -o acceptance.wasm
-console.log('env', process.env)
+const version = 'v0.0.1';
 
-const https = require('https');
-const fs = require('fs');
-const { exec } = require('child_process');
+const { createWriteStream, chmodSync } = require('fs');
 const { createGunzip } = require('zlib');
+const { basename } = require('path');
+const { spawnSync } = require('child_process');
 const { pipeline } = require('stream');
+const { exit } = require('node:process');
+const { promisify } = require('util');
+const pipelineAsync = promisify(pipeline);
 
-const downloadUrl = 'https://github.com/databrickslabs/sandbox/releases/download/acceptance/v0.0.1/acceptance_linux_amd64.zip';
-const zipFilePath = './acceptance_linux_amd64.zip';
-const unzipDir = './unzipped';
-
-// Function to download file
-function downloadFile(url, dest) {
-    const file = fs.createWriteStream(dest);
-    const request = (url, resolve, reject) => {
-        https.get(url, (response) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
-                pipeline(response, file, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
-                });
-            } else if (response.headers.location) {
-                request(response.headers.location, resolve, reject);
-            } else {
-                reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
-            }
-        }).on('error', (err) => {
-            reject(err);
-        });
-    }
-    return new Promise((resolve, reject) => {
-        request(url, resolve, reject);
-    });
-}
-
-function unzipFile(zipFilePath, targetDir) {
-    return new Promise((resolve, reject) => {
-        const fileStream = fs.createReadStream(zipFilePath);
-        const targetStream = fs.createWriteStream(targetDir);
-        fileStream.pipe(createGunzip()).pipe(targetStream)
-    });
-}
-
-// Function to execute subprocess
-function executeSubprocess(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            console.log(stdout);
-            console.error(stderr);
-            resolve();
-        });
-    });
-}
-
-// Main function
-async function main() {
-    try {
-        // Download the zip file
-        await downloadFile(downloadUrl, zipFilePath);
-        console.log('Zip file downloaded successfully.');
-
-        // Unzip the file
-        await unzipFile(zipFilePath, unzipDir);
-        console.log('Zip file extracted successfully.');
-
-        // Execute the extracted file as a subprocess
-        const executablePath = `${unzipDir}/your_executable_file`; // Adjust this path accordingly
-        await executeSubprocess(executablePath);
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-// Run the main function
-main();
-
-
-// const { spawnSync } = require('child_process');
-// const { exit } = require('node:process');
-// const { status } = spawnSync('go', ['run', `${__dirname}/main.go`], { stdio: 'inherit' });
-// exit(status);
+(async () => {
+    const platform = process.platform == 'win32' ? 'windows' : process.platform;
+    const arch = process.arch == 'x64' ? 'amd64' : process.arch;
+    const artifact = `acceptance_${platform}_${arch}.gz`;
+    const downloadUrl = `https://github.com/databrickslabs/sandbox/releases/download/acceptance/${version}/${artifact}`;
+    const filename = basename(downloadUrl).split('.')[0];
+    const dest = createWriteStream(filename);
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+        throw new Error(`Failed to download file (status ${response.status}): ${response.statusText}`);
+    }   
+    await pipelineAsync(response.body, createGunzip(), dest)
+    chmodSync(filename, '755')
+    const { status } = spawnSync(`${process.cwd()}/${filename}`, [], { stdio: 'inherit' });
+    exit(status);
+})();

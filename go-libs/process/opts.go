@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+
+	"github.com/databricks/databricks-sdk-go/logger"
 )
 
 type execOption func(context.Context, *exec.Cmd) error
@@ -31,7 +33,8 @@ func WithEnvs(envs map[string]string) execOption {
 }
 
 func WithDir(dir string) execOption {
-	return func(_ context.Context, c *exec.Cmd) error {
+	return func(ctx context.Context, c *exec.Cmd) error {
+		logger.Debugf(ctx, "Working directory: %s", dir)
 		c.Dir = dir
 		return nil
 	}

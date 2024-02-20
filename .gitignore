@@ -182,3 +182,5 @@ cython_debug/
 .idea/
 
 coverage.txt
+
+*_arm64

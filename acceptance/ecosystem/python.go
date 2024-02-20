@@ -168,6 +168,7 @@ func (r pyTestRunner) RunAll(ctx context.Context, redact redaction.Redaction, fi
 			}
 			result.Time = time.Now()
 			logger.Infof(ctx, "%s", result)
+			result.Output = redact.ReplaceAll(result.Output)
 			report = append(report, result)
 		}
 	}

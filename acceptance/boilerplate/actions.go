@@ -19,14 +19,11 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 		return env.Get(ctx, key)
 	}))
 	a := githubactions.New(opts...)
-	// token, err := a.GetIDToken(context.Background(), "")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("oidc: %w", err)
-	// }
 	context, err := a.Context()
 	if err != nil {
 		return nil, err
 	}
+	logger.DefaultLogger = &actionsLogger{a}
 	return &boilerplate{
 		Action:  a,
 		context: context,
