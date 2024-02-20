@@ -57,7 +57,7 @@ func (l *loadedEnv) getDatabricksConfig() (*config.Config, error) {
 }
 
 func (l *loadedEnv) Redaction() redaction.Redaction {
-	return redaction.Redaction(l.vars)
+	return redaction.New(l.vars)
 }
 
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {

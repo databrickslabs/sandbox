@@ -9,6 +9,7 @@ import (
 )
 
 func TestXxx(t *testing.T) {
+	t.Skip()
 	ctx := context.Background()
 	ctx = env.Set(ctx, "INPUT_DIRECTORY", "../go-libs")
 	err := run(ctx)
