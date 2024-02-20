@@ -1,4 +1,4 @@
-name: build
+name: build-acceptance
 
 on:
   pull_request:

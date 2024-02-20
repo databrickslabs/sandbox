@@ -1,4 +1,4 @@
-name: build
+name: build-go-libs
 
 on:
   pull_request:
