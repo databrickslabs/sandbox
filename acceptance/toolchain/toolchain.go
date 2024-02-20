@@ -70,7 +70,7 @@ func (tc *Toolchain) RunPrepare(ctx context.Context, dir string) (err error) {
 			"bash", "-c", fmt.Sprintf("which %s", required),
 		}, process.WithDir(dir))
 		if err != nil {
-			return err
+			return fmt.Errorf("toolchain.required: %w", err)
 		}
 	}
 	err = tc.runCmds(ctx, dir, "toolchain.pre_setup", tc.PreSetup)
