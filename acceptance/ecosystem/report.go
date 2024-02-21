@@ -21,7 +21,14 @@ type TestResult struct {
 }
 
 func (tr TestResult) String() string {
-	return fmt.Sprintf("%s %s (%0.3fs)", tr.icon(), tr.Name, tr.Elapsed)
+	summary := ""
+	if !tr.Pass {
+		header, _, ok := strings.Cut(tr.Output, "\n")
+		if ok {
+			summary = fmt.Sprintf(": %s", header)
+		}
+	}
+	return fmt.Sprintf("%s %s%s (%0.3fs)", tr.icon(), tr.Name, summary, tr.Elapsed)
 }
 func (tr TestResult) icon() string {
 	if tr.Skip {
