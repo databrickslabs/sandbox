@@ -11,30 +11,33 @@ import (
 const LogDirEnv = "DATABRICKS_LABS_LOG_DIR"
 
 type TestRunner interface {
-	Detect(files fileset.FileSet) bool
-	ListAll(ctx context.Context, files fileset.FileSet) []string
-	RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error
-	RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (TestReport, error)
+	Detect() bool
+	ListAll(ctx context.Context) []string
+	RunOne(ctx context.Context, redact redaction.Redaction, one string) error
+	RunAll(ctx context.Context, redact redaction.Redaction) (TestReport, error)
 }
 
-var runners = []TestRunner{
-	GoTestRunner{},
-	pyTestRunner{},
-}
-
-func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (TestReport, error) {
+func New(folder string) (TestRunner, error) {
 	files, err := fileset.RecursiveChildren(folder)
 	if err != nil {
 		return nil, fmt.Errorf("fileset: %w", err)
 	}
-	var runner TestRunner
+	var runners = []TestRunner{
+		goTestRunner{files},
+		pyTestRunner{files},
+	}
 	for _, v := range runners {
-		if v.Detect(files) {
-			runner = v
+		if v.Detect() {
+			return v, nil
 		}
 	}
-	if runner == nil {
-		return nil, fmt.Errorf("no supported ecosystem detected")
+	return nil, fmt.Errorf("no supported ecosystem detected")
+}
+
+func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (TestReport, error) {
+	runner, err := New(folder)
+	if err != nil {
+		return nil, fmt.Errorf("ecosystem: %w", err)
 	}
-	return runner.RunAll(ctx, redact, files)
+	return runner.RunAll(ctx, redact)
 }
