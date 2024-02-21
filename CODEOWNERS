@@ -13,3 +13,4 @@ ip_access_list_analyzer    @alexott
 metascan                   @nfx
 runtime-packages           @nfx
 uc-catalog-cloning         @esiol-db @vasco-lopes
+.github                    @nfx
