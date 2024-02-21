@@ -25,9 +25,7 @@ jobs:
       - name: Compress
         run: /bin/bash .github/workflows/compress.sh
       
-      - name: Draft release
+      - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
-          files: |
-            dist/*
+          files: dist/*
