@@ -2,8 +2,11 @@ package ecosystem
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os/exec"
 
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 )
@@ -39,5 +42,26 @@ func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (Tes
 	if err != nil {
 		return nil, fmt.Errorf("ecosystem: %w", err)
 	}
-	return runner.RunAll(ctx, redact)
+	report, err := runner.RunAll(ctx, redact)
+	// 0 - all passed, 1 - some failed, 2 - interrupted
+	// See: https://docs.pytest.org/en/4.6.x/usage.html
+	// See: https://github.com/golang/go/issues/25989
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && exitErr.ExitCode() > 1 {
+		return nil, exitErr
+	}
+	// sequential de-flake loop
+	for i, result := range report {
+		if result.Pass || result.Skip {
+			continue
+		}
+		logger.Infof(ctx, "⛑️ re-running: %s", result.Name)
+		rerunErr := runner.RunOne(ctx, redact, result.Name)
+		if rerunErr == nil {
+			report[i].Flaky = true
+			report[i].Pass = true
+			logger.Warnf(ctx, "🥴 flaky test detected: %s", result.Name)
+		}
+	}
+	return report, nil
 }

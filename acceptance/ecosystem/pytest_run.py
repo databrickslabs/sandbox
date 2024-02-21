@@ -1,4 +1,5 @@
 import os
+import sys
 import pytest
 import requests
 import collections
@@ -47,4 +48,9 @@ class RunReport:
 
 
 if __name__ == '__main__':
-    pytest.main(['-n', '10'], plugins=[RunReport()])
+    sys.exit(pytest.main([
+        '-n', '10',
+        "--log-disable", "urllib3.connectionpool",
+        "--log-format", "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        "--log-date-format", "%H:%M",
+    ], plugins=[RunReport()]))
