@@ -121,9 +121,6 @@ func (r TestReport) String() string {
 }
 
 func (r TestReport) StepSummary() string {
-	if r.Pass() {
-		return r.String()
-	}
 	res := []string{r.String()}
 	for _, v := range r {
 		if v.Pass || v.Skip {
