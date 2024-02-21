@@ -40,7 +40,7 @@ func (r Redaction) Copy(dst io.Writer, src io.Reader) (written int64, err error)
 		// less risks of a secret spanning multiple lines
 		// (unless it's a base64-encoded key)
 		line := r.ReplaceAll(string(scanner.Bytes()))
-		n, err := dst.Write([]byte(line))
+		n, err := dst.Write([]byte(line + "\n"))
 		if err != nil {
 			return written, err
 		}

@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	_ "embed"
@@ -24,6 +25,7 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 	"github.com/databrickslabs/sandbox/go-libs/process"
+	"github.com/nxadm/tail"
 )
 
 //go:embed pytest_collect.py
@@ -32,48 +34,53 @@ var pyTestCollect string
 //go:embed pytest_run.py
 var pyTestRun string
 
+//go:embed pytest_run_one.py
+var pyTestRunOne string
+
 var ErrNotImplemented = errors.New("not implemented")
 
-type pyTestRunner struct{}
+type pyTestRunner struct {
+	files fileset.FileSet
+}
 
-func (r pyTestRunner) Detect(files fileset.FileSet) bool {
-	return files.Exists("pyproject.toml", "pytest")
+func (r pyTestRunner) Detect() bool {
+	return r.files.Exists("pyproject.toml", "pytest")
 }
 
 type pyContext struct {
-	ctx    context.Context
-	redact redaction.Redaction
-	binary string
-	root   string
+	ctx     context.Context
+	redact  redaction.Redaction
+	root    string
+	venv    string
+	logfile string
 }
 
-func (py *pyContext) start(script string, reply *localHookServer) error {
+func (py *pyContext) start(args []string) error {
 	reader, writer, err := os.Pipe()
 	if err != nil {
 		return err
 	}
 	defer writer.Close()
 	defer reader.Close()
-	logDir := env.Get(py.ctx, LogDirEnv)
 	openFlags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
-	// Tee into file so we can debug issues with logic below.
-	tee, err := os.OpenFile(filepath.Join(logDir, "pytest.log"), openFlags, 0644)
+	tee, err := os.OpenFile(py.logfile, openFlags, 0644)
 	if err != nil {
 		return fmt.Errorf("pytest.log: %w", err)
 	}
 	defer tee.Close()
 	go py.redact.Copy(tee, reader)
-	return process.Forwarded(py.ctx,
-		[]string{py.binary, "-c", script},
+	return process.Forwarded(py.ctx, args,
 		nil, writer, writer,
-		process.WithDir(py.root),
-		process.WithEnv("REPLY_URL", reply.URL()))
+		process.WithDir(py.root))
 }
 
 func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 	errs := make(chan error)
 	go func() {
-		err := py.start(script, reply)
+		py.ctx = env.Set(py.ctx, "REPLY_URL", reply.URL())
+		err := py.start([]string{
+			filepath.Join(py.venv, "python"), "-c", script,
+		})
 		var processErr *process.ProcessError
 		if errors.As(err, &processErr) {
 			logger.Warnf(py.ctx, "collect: %s", processErr.Stderr)
@@ -83,35 +90,40 @@ func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 	return errs
 }
 
-func (r pyTestRunner) prepare(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (*pyContext, error) {
-	tc, err := toolchain.FromFileset(files)
+func (r pyTestRunner) prepare(ctx context.Context, redact redaction.Redaction, logfile string) (*pyContext, error) {
+	tc, err := toolchain.FromFileset(r.files)
 	if err != nil {
 		return nil, fmt.Errorf("detect: %w", err)
 	}
-	err = tc.RunPrepare(ctx, files.Root())
+	testRoot := r.files.Root()
+	err = tc.RunPrepare(ctx, testRoot)
 	if err != nil {
 		return nil, fmt.Errorf("prepared: %w", err)
 	}
-	ctx = tc.WithPath(ctx, files.Root())
-	venvPython := filepath.Join(files.Root(), tc.PrependPath, "python")
-	testRoot := files.Root()
-	if tc.AcceptancePath != "" {
-		testRoot = filepath.Join(files.Root(), tc.AcceptancePath)
+	prepend, err := filepath.Abs(filepath.Join(testRoot, tc.PrependPath))
+	if err != nil {
+		return nil, fmt.Errorf("prepend: %w", err)
 	}
+	ctx = tc.WithPath(ctx, testRoot)
+	if tc.AcceptancePath != "" {
+		testRoot = filepath.Join(testRoot, tc.AcceptancePath)
+	}
+	logDir := env.Get(ctx, LogDirEnv)
 	return &pyContext{
-		ctx:    ctx,
-		redact: redact,
-		binary: venvPython,
-		root:   testRoot,
+		ctx:     ctx,
+		redact:  redact,
+		root:    testRoot,
+		venv:    prepend,
+		logfile: filepath.Join(logDir, logfile),
 	}, nil
 }
 
-func (r pyTestRunner) ListAll(ctx context.Context, files fileset.FileSet) []string {
+func (r pyTestRunner) ListAll(ctx context.Context) []string {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, redaction.Redaction{}, files)
+	py, err := r.prepare(ctx, redaction.Redaction{}, "pytest.log")
 	if err != nil {
 		logger.Warnf(ctx, ".codegen.json: %s", err)
 		return nil
@@ -131,16 +143,35 @@ func (r pyTestRunner) ListAll(ctx context.Context, files fileset.FileSet) []stri
 	return out
 }
 
-func (r pyTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error {
-	return ErrNotImplemented
+var nonAlphanumRegex = regexp.MustCompile(`[^a-zA-Z0-9-]+`)
+
+func (r pyTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, one string) error {
+	logfile := fmt.Sprintf("debug-%s.log", nonAlphanumRegex.ReplaceAllString(one, "_"))
+	py, err := r.prepare(ctx, redact, logfile)
+	if err != nil {
+		return fmt.Errorf(".codegen.json: %w", err)
+	}
+	tailer, err := tail.TailFile(py.logfile, tail.Config{Follow: true})
+	if err != nil {
+		return err
+	}
+	go func() {
+		for line := range tailer.Lines {
+			os.Stdout.WriteString(line.Text + "\n")
+		}
+	}()
+	py.ctx = env.Set(py.ctx, "TEST_FILTER", one)
+	return py.start([]string{
+		filepath.Join(py.venv, "python"), "-c", pyTestRunOne,
+	})
 }
 
-func (r pyTestRunner) RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (TestReport, error) {
+func (r pyTestRunner) RunAll(ctx context.Context, redact redaction.Redaction) (TestReport, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Hour)
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, redact, files)
+	py, err := r.prepare(ctx, redact, "pytest.log")
 	if err != nil {
 		return nil, fmt.Errorf(".codegen.json: %w", err)
 	}

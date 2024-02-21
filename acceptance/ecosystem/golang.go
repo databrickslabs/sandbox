@@ -23,22 +23,24 @@ import (
 	"github.com/nxadm/tail"
 )
 
-type GoTestRunner struct{}
-
-func (r GoTestRunner) Detect(files fileset.FileSet) bool {
-	return files.Exists(`go.mod`, `module .*\n`)
+type goTestRunner struct {
+	files fileset.FileSet
 }
 
-func (r GoTestRunner) ListAll(ctx context.Context, files fileset.FileSet) (all []string) {
-	found, _ := files.FindAll(`_test.go`, `func (TestAcc\w+)\(t`)
+func (r goTestRunner) Detect() bool {
+	return r.files.Exists(`go.mod`, `module .*\n`)
+}
+
+func (r goTestRunner) ListAll(ctx context.Context) (all []string) {
+	found, _ := r.files.FindAll(`_test.go`, `func (TestAcc\w+)\(t`)
 	for _, v := range found {
 		all = append(all, v...)
 	}
 	return all
 }
 
-func (r GoTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, files fileset.FileSet, one string) error {
-	found := files.FirstMatch(`_test.go`, fmt.Sprintf(`func %s\(`, one))
+func (r goTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, one string) error {
+	found := r.files.FirstMatch(`_test.go`, fmt.Sprintf(`func %s\(`, one))
 	if found == nil {
 		return fmt.Errorf("not found: %s", one)
 	}
@@ -83,9 +85,9 @@ func (r GoTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, fi
 	)
 }
 
-func (r GoTestRunner) RunAll(ctx context.Context, redact redaction.Redaction, files fileset.FileSet) (results TestReport, err error) {
-	goMod := files.FirstMatch(`go.mod`, `module .*\n`)
-	root := files.Root()
+func (r goTestRunner) RunAll(ctx context.Context, redact redaction.Redaction) (results TestReport, err error) {
+	goMod := r.files.FirstMatch(`go.mod`, `module .*\n`)
+	root := r.files.Root()
 	if goMod == nil {
 		return nil, fmt.Errorf("%s has no module file", root)
 	}
