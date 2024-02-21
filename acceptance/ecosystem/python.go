@@ -123,7 +123,7 @@ func (r pyTestRunner) ListAll(ctx context.Context) []string {
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, redaction.Redaction{}, "pytest.log")
+	py, err := r.prepare(ctx, redaction.Redaction{}, "pytest-collect.out")
 	if err != nil {
 		logger.Warnf(ctx, ".codegen.json: %s", err)
 		return nil
@@ -146,7 +146,7 @@ func (r pyTestRunner) ListAll(ctx context.Context) []string {
 var nonAlphanumRegex = regexp.MustCompile(`[^a-zA-Z0-9-]+`)
 
 func (r pyTestRunner) RunOne(ctx context.Context, redact redaction.Redaction, one string) error {
-	logfile := fmt.Sprintf("debug-%s.log", nonAlphanumRegex.ReplaceAllString(one, "_"))
+	logfile := fmt.Sprintf("pytest-%s.out", nonAlphanumRegex.ReplaceAllString(one, "_"))
 	py, err := r.prepare(ctx, redact, logfile)
 	if err != nil {
 		return fmt.Errorf(".codegen.json: %w", err)
@@ -171,7 +171,7 @@ func (r pyTestRunner) RunAll(ctx context.Context, redact redaction.Redaction) (T
 	defer cancel()
 	reply := newLocalHookServer(ctx)
 	defer reply.Close()
-	py, err := r.prepare(ctx, redact, "pytest.log")
+	py, err := r.prepare(ctx, redact, "pytest-all.out")
 	if err != nil {
 		return nil, fmt.Errorf(".codegen.json: %w", err)
 	}

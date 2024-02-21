@@ -21,6 +21,8 @@ tags:
     - [`go-coverprofile`](#go-coverprofile)
     - [`go-test.out`](#go-testout)
     - [`go-test.err`](#go-testerr)
+    - [`pytest-*.out`](#pytest-out)
+  - [Usage as library](#usage-as-library)
   - [Troubleshooting](#troubleshooting)
   - [Releasing](#releasing)
 
@@ -150,6 +152,37 @@ go: downloading github.com/fatih/color v1.16.0
 go: downloading github.com/spf13/pflag v1.0.5
 go: downloading github.com/spf13/viper v1.18.2
 go: downloading github.com/stretchr/testify v1.8.4
+```
+
+### `pytest-*.out`
+
+Standard output from `pytest`.
+
+## Usage as library
+
+See [`main.go`](main.go) for the example on how to use it within GitHub Action. This is how you can use it in your CLI:
+
+```go
+testEnv := testenv.NewWithAzureCLI(vaultURI)
+loaded, err := testEnv.Load(ctx)
+if err != nil {
+  return fmt.Errorf("load: %w", err)
+}
+ctx, stop, err := loaded.Start(ctx)
+if err != nil {
+  return fmt.Errorf("start: %w", err)
+}
+defer stop()
+cwd, err := os.Getwd()
+if err != nil {
+  return fmt.Errorf("cwd: %w", err)
+}
+// detect and run all tests
+report, err := ecosystem.RunAll(ctx, loaded.Redaction(), cwd)
+if err != nil {
+  return fmt.Errorf("test: %w", err)
+}
+return fmt.Errorf("failed: %s", report.String())
 ```
 
 ## Troubleshooting
