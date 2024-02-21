@@ -43,7 +43,7 @@ class RunReport:
             self._failed[report.location] = True
         if report.skipped:
             self._skipped[report.location] = True
-            self._duration[report.location] += report.duration
+        self._duration[report.location] += report.duration
 
 
 if __name__ == '__main__':
