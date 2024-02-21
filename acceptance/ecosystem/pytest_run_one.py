@@ -1,4 +1,5 @@
 import os
+import sys
 import pytest
 
 class RunOne:
@@ -20,7 +21,7 @@ class RunOne:
         items[:] = remaining
 
 if __name__ == '__main__':
-    pytest.main([
+    sys.exit(pytest.main([
         "-n0",                                      # no xdist, single-threaded
 		"--timeout", "1800",                        # fail in 30 minutes
 		"--log-cli-level", "DEBUG",                 # log everything
@@ -30,4 +31,4 @@ if __name__ == '__main__':
 		"--log-date-format", "%H:%M",
 		"--no-header",
 		"--no-summary",
-    ], plugins=[RunOne()])
+    ], plugins=[RunOne()]))

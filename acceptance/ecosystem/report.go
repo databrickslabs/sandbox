@@ -16,6 +16,7 @@ type TestResult struct {
 	Name    string    `json:"name"`
 	Pass    bool      `json:"pass"`
 	Skip    bool      `json:"skip"`
+	Flaky   bool      `json:"flaky"`
 	Output  string    `json:"output"`
 	Elapsed float64   `json:"elapsed"`
 }
@@ -30,9 +31,13 @@ func (tr TestResult) String() string {
 	}
 	return fmt.Sprintf("%s %s%s (%0.3fs)", tr.icon(), tr.Name, summary, tr.Elapsed)
 }
+
 func (tr TestResult) icon() string {
 	if tr.Skip {
 		return "🦥"
+	}
+	if tr.Flaky {
+		return "🤪"
 	}
 	if !tr.Pass {
 		return "❌"
@@ -59,14 +64,33 @@ func (r TestReport) Pass() bool {
 	return passed == run
 }
 
+func (r TestReport) Flaky() bool {
+	for _, v := range r {
+		if v.Flaky {
+			return true
+		}
+	}
+	return false
+}
+
+func (r TestReport) Failed() error {
+	if r.Pass() {
+		return nil
+	}
+	return fmt.Errorf(r.String())
+}
+
 func (r TestReport) String() string {
-	var passed, failed, run, skipped int
+	var passed, failed, flaky, run, skipped int
 	for _, v := range r {
 		if v.Skip {
 			skipped++
 			continue
 		}
 		run++
+		if v.Flaky {
+			flaky++
+		}
 		if v.Pass {
 			passed++
 			continue
@@ -74,12 +98,18 @@ func (r TestReport) String() string {
 		failed++
 	}
 	emoji := "❌"
+	if len(r) == 0 {
+		return fmt.Sprintf("%s no tests were run", emoji)
+	}
 	if r.Pass() {
 		emoji = "✅"
 	}
 	var parts []string
 	if passed > 0 {
 		parts = append(parts, fmt.Sprintf("%d/%d passed", passed, run))
+	}
+	if flaky > 0 {
+		parts = append(parts, fmt.Sprintf("%d flaky", flaky))
 	}
 	if failed > 0 {
 		parts = append(parts, fmt.Sprintf("%d failed", failed))
@@ -92,20 +122,27 @@ func (r TestReport) String() string {
 
 func (r TestReport) StepSummary() string {
 	if r.Pass() {
-		return "# " + r.String()
+		return r.String()
 	}
-	res := []string{"# " + r.String()}
-	res = append(res, "<table>")
+	res := []string{r.String()}
 	for _, v := range r {
 		if v.Pass || v.Skip {
 			continue
 		}
-		res = append(res, "<tr><td>")
-		res = append(res, fmt.Sprintf("❌ %s.%s (%0.3fs)<br/>", v.Package, v.Name, v.Elapsed))
-		res = append(res, fmt.Sprintf("<pre><code>%s</code></pre>", v.Output))
-		res = append(res, "</td></tr>")
+		res = append(res, "<details>")
+		res = append(res, fmt.Sprintf("<summary>%s</summary>", v))
+		res = append(res, fmt.Sprintf("\n```\n%s\n```\n", v.Output))
+		res = append(res, "</details>")
 	}
-	res = append(res, "</table>")
+	if r.Flaky() {
+		res = append(res, "\nFlaky tests:\n")
+		for _, v := range r {
+			if !v.Flaky {
+				continue
+			}
+			res = append(res, fmt.Sprintf(" - %s", v))
+		}
+	}
 	return strings.Join(res, "\n")
 }
 

@@ -113,8 +113,8 @@ GitHub Actions raw event information. Example:
 Normalised integration test execution report across all ecosystems. Example:
 
 ```json
-{"ts":"2024-02-03T15:28:16.940198637Z","project":"go-libs","package":"sqlexec","name":"TestAccErrorMapping","pass":false,"skip":true,"output":"=== RUN   TestAccErrorMapping\n    init.go:96: Environment variable CLOUD_ENV is missing\n--- SKIP: TestAccErrorMapping (0.00s)\n","elapsed":0}
-{"ts":"2024-02-03T15:28:16.940348556Z","project":"go-libs","package":"sqlexec","name":"TestAccMultiChunk","pass":false,"skip":true,"output":"=== RUN   TestAccMultiChunk\n    init.go:96: Environment variable CLOUD_ENV is missing\n--- SKIP: TestAccMultiChunk (0.00s)\n","elapsed":0}
+{"ts":"2024-02-03T15:28:16.940198637Z","project":"go-libs","package":"sqlexec","name":"TestAccErrorMapping","flaky":false,"pass":false,"skip":true,"output":"=== RUN   TestAccErrorMapping\n    init.go:96: Environment variable CLOUD_ENV is missing\n--- SKIP: TestAccErrorMapping (0.00s)\n","elapsed":0}
+{"ts":"2024-02-03T15:28:16.940348556Z","project":"go-libs","package":"sqlexec","name":"TestAccMultiChunk","flaky":true,"pass":true,"skip":false,"output":"...","elapsed":0}
 ```
 
 ### `go-coverprofile`
