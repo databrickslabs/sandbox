@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
@@ -42,6 +43,7 @@ func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (Tes
 	if err != nil {
 		return nil, fmt.Errorf("ecosystem: %w", err)
 	}
+	started := time.Now()
 	report, err := runner.RunAll(ctx, redact)
 	// 0 - all passed, 1 - some failed, 2 - interrupted
 	// See: https://docs.pytest.org/en/4.6.x/usage.html
@@ -63,5 +65,6 @@ func RunAll(ctx context.Context, redact redaction.Redaction, folder string) (Tes
 			logger.Warnf(ctx, "🥴 flaky test detected: %s", result.Name)
 		}
 	}
+	logger.Infof(ctx, "%s, took %s", report, time.Since(started).Round(time.Second))
 	return report, nil
 }
