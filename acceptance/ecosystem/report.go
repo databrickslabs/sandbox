@@ -21,6 +21,10 @@ type TestResult struct {
 	Elapsed float64   `json:"elapsed"`
 }
 
+func (tr TestResult) Duration() time.Duration {
+	return time.Duration(tr.Elapsed * float64(time.Second))
+}
+
 func (tr TestResult) String() string {
 	summary := ""
 	if !tr.Pass {
@@ -29,12 +33,14 @@ func (tr TestResult) String() string {
 			summary = fmt.Sprintf(": %s", header)
 		}
 	}
-	return fmt.Sprintf("%s %s%s (%0.3fs)", tr.icon(), tr.Name, summary, tr.Elapsed)
+	return fmt.Sprintf("%s %s%s (%s)",
+		tr.icon(), tr.Name, summary,
+		tr.Duration().Round(time.Millisecond))
 }
 
 func (tr TestResult) icon() string {
 	if tr.Skip {
-		return "🦥"
+		return "⏭️"
 	}
 	if tr.Flaky {
 		return "🤪"
@@ -46,6 +52,14 @@ func (tr TestResult) icon() string {
 }
 
 type TestReport []TestResult
+
+func (r TestReport) Total() time.Duration {
+	var elapsed time.Duration
+	for _, v := range r {
+		elapsed += v.Duration()
+	}
+	return elapsed
+}
 
 func (r TestReport) Pass() bool {
 	var passed, run int
@@ -117,6 +131,7 @@ func (r TestReport) String() string {
 	if skipped > 0 {
 		parts = append(parts, fmt.Sprintf("%d skipped", skipped))
 	}
+	parts = append(parts, fmt.Sprintf("%s total", r.Total().Round(time.Second)))
 	return fmt.Sprintf("%s %s", emoji, strings.Join(parts, ", "))
 }
 
