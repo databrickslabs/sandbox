@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
@@ -19,6 +20,16 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	if err != nil {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
+	timeoutRaw := b.Action.GetInput("timeout")
+	if timeoutRaw == "" {
+		timeoutRaw = "1h"
+	}
+	timeout, err := time.ParseDuration(timeoutRaw)
+	if err != nil {
+		return fmt.Errorf("timeout: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	vaultURI := b.Action.GetInput("vault_uri")
 	directory := b.Action.GetInput("directory")
 	project := b.Action.GetInput("project")

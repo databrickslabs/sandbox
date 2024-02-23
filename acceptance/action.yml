@@ -16,6 +16,10 @@ inputs:
   slack_webhook:
     description: 'Slack Webhook'
     required: false
+  timeout:
+    description: 'Maximum suite execution time. Defaults to 1h'
+    required: false
+    default: 1h
 outputs:
   sample:
     description: 'Sample output'
