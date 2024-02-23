@@ -28,18 +28,16 @@ func (l *loadedEnv) Name() string {
 
 // Configure implemets config.Loader interface
 func (l *loadedEnv) Configure(cfg *config.Config) error {
-	cfg.Credentials = l.v.creds
+	if cfg.IsAzure() {
+		cfg.Credentials = l.v.creds
+	}
 	for _, a := range config.ConfigAttributes {
 		for _, ev := range a.EnvVars {
 			v, ok := l.vars[ev]
 			if !ok {
 				continue
 			}
-			// if a.Sensitive && l.v.a != nil {
-			// 	// mask out sensitive value from github actions output if any
-			// 	// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-masking-and-passing-a-secret-between-jobs-or-workflows
-			// 	l.v.a.AddMask(v)
-			// }
+			// TODO: redact only sensitive values out
 			err := a.SetS(cfg, v)
 			if err != nil {
 				return fmt.Errorf("set %s: %w", a.Name, err)
