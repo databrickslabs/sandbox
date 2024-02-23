@@ -128,6 +128,10 @@ func (a *boilerplate) Comment(ctx context.Context, commentText string) error {
 	if err != nil {
 		return fmt.Errorf("pr: %w", err)
 	}
+	if pr == nil {
+		logger.Infof(ctx, "running from a nightly workflow, no pull request to comment")
+		return nil
+	}
 	tag := a.tag()
 	org, repo := a.context.Repo()
 	it := a.GitHub.GetIssueComments(ctx, org, repo, pr.Number)
