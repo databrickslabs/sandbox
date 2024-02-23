@@ -69,15 +69,15 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	}
 	slackWebhook := b.Action.GetInput("slack_webhook")
 	if !report.Pass() && slackWebhook != "" {
-		cloud := loaded.Cloud()
 		runUrl, err := b.RunURL(ctx)
 		if err != nil {
 			return fmt.Errorf("run url: %w", err)
 		}
 		err = notify.Notification{
 			Project: project,
-			Cloud:   cloud,
 			Report:  report,
+			Cloud:   loaded.Cloud(),
+			RunName: b.WorkflowRunName(),
 			WebHook: slackWebhook,
 			RunURL:  runUrl,
 		}.ToSlack()

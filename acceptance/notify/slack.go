@@ -3,6 +3,7 @@ package notify
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/openapi/code"
@@ -13,6 +14,7 @@ import (
 type Notification struct {
 	Project string
 	Cloud   config.Cloud
+	RunName string
 	Report  ecosystem.TestReport
 	WebHook string
 	RunURL  string
@@ -25,7 +27,7 @@ var icons = map[config.Cloud]string{
 }
 
 func (n Notification) ToSlack() error {
-	res := []string{}
+	var failures, flakes []string
 	for _, v := range n.Report {
 		if v.Skip {
 			continue
@@ -37,8 +39,28 @@ func (n Notification) ToSlack() error {
 		// in order to fit in mobile messages, we normalize the names
 		// of tests by tokeinizing them and turning into sentences.
 		sentence := n.TrimPrefix("test").TitleName()
-		// TODO: duration
-		res = append(res, fmt.Sprintf("%s %s", v.Icon(), sentence))
+		msg := fmt.Sprintf("%s _(%s)_", sentence, v.Duration().Round(time.Second))
+		if v.Flaky {
+			flakes = append(flakes, msg)
+		} else {
+			failures = append(failures, msg)
+		}
+	}
+	var fields []slack.Field
+	if len(failures) > 0 {
+		fields = append(fields, slack.Field{
+			Title: fmt.Sprintf("😔 %d failing", len(failures)),
+			Value: strings.Join(failures, "\n"),
+		})
+	}
+	if len(flakes) > 0 {
+		fields = append(fields, slack.Field{
+			Title: fmt.Sprintf("🤪 %d flaky", len(flakes)),
+			Value: strings.Join(flakes, "\n"),
+		})
+	}
+	if n.RunName == "" {
+		n.RunName = string(n.Cloud)
 	}
 	hook := slack.Webhook(n.WebHook)
 	return hook.Notify(slack.Message{
@@ -47,10 +69,10 @@ func (n Notification) ToSlack() error {
 		IconEmoji: ":facepalm:",
 		Attachments: []slack.Attachment{
 			{
-				AuthorName: string(n.Cloud),
+				AuthorName: n.RunName,
 				AuthorIcon: icons[n.Cloud],
 				AuthorLink: n.RunURL,
-				Footer:     strings.Join(res, "\n"),
+				Fields:     fields,
 			},
 		},
 	})
