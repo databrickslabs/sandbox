@@ -28,7 +28,9 @@ func (l *loadedEnv) Name() string {
 
 // Configure implemets config.Loader interface
 func (l *loadedEnv) Configure(cfg *config.Config) error {
+	ctx := context.Background()
 	if cfg.IsAzure() {
+		logger.Debugf(ctx, "Setting credentials for Azure Databricks")
 		cfg.Credentials = l.v.creds
 	}
 	for _, a := range config.ConfigAttributes {
@@ -37,6 +39,7 @@ func (l *loadedEnv) Configure(cfg *config.Config) error {
 			if !ok {
 				continue
 			}
+			logger.Debugf(ctx, "Loaded from environment variable: %s", ev)
 			// TODO: redact only sensitive values out
 			err := a.SetS(cfg, v)
 			if err != nil {
@@ -89,6 +92,7 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 			// not to conflict with metadata service,
 			// erase any auth env vars
 			v = ""
+			logger.Debugf(ctx, "Erasing auth variable for subprocess: %s", k)
 		}
 		ctx = env.Set(ctx, k, v)
 	}
@@ -132,6 +136,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 			})
 			return
 		}
+		logger.Debugf(ctx, "Metadata for host: %s", hostInHeader)
 		req := &http.Request{Header: http.Header{}}
 		err := configs.Authenticate(req)
 		if err != nil {
