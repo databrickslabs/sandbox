@@ -1,8 +1,8 @@
 go 1.21.0
 
 use (
+	./acceptance
 	./go-libs
 	./metascan
 	./runtime-packages
-	./acceptance
 )
