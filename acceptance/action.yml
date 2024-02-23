@@ -13,6 +13,9 @@ inputs:
     description: 'Working directory'
     required: false
     default: .
+  slack_webhook:
+    description: 'Slack Webhook'
+    required: false
 outputs:
   sample:
     description: 'Sample output'

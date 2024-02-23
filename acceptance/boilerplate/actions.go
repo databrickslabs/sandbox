@@ -65,7 +65,7 @@ func (a *boilerplate) Upload(ctx context.Context, folder string) error {
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)
 	}
-	logger.Infof(ctx, "Uploaded artifact: %s", res.ArtifactID)
+	logger.Debugf(ctx, "Uploaded artifact: %s", res.ArtifactID)
 	return nil
 }
 
@@ -97,8 +97,12 @@ func (a *boilerplate) taggedComment(ctx context.Context, body string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("run url: %w", err)
 	}
-	return fmt.Sprintf("%s\n\n<sub>Running from [%s #%d](%s)</sub>%s",
-		body, a.context.Workflow, a.context.RunNumber, runUrl, a.tag()), nil
+	return fmt.Sprintf("%s\n\n<sub>Running from [%s](%s)</sub>%s",
+		body, a.WorkflowRunName(), runUrl, a.tag()), nil
+}
+
+func (a *boilerplate) WorkflowRunName() string {
+	return fmt.Sprintf("%s #%d", a.context.Workflow, a.context.RunNumber)
 }
 
 func (a *boilerplate) currentPullRequest(ctx context.Context) (*github.PullRequest, error) {

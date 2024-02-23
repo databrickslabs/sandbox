@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
+	"github.com/databrickslabs/sandbox/acceptance/notify"
 	"github.com/databrickslabs/sandbox/acceptance/testenv"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/sethvargo/go-githubactions"
@@ -65,6 +66,24 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 	err = b.Upload(ctx, artifactDir)
 	if err != nil {
 		return fmt.Errorf("upload artifact: %w", err)
+	}
+	slackWebhook := b.Action.GetInput("slack_webhook")
+	if !report.Pass() && slackWebhook != "" {
+		runUrl, err := b.RunURL(ctx)
+		if err != nil {
+			return fmt.Errorf("run url: %w", err)
+		}
+		err = notify.Notification{
+			Project: project,
+			Report:  report,
+			Cloud:   loaded.Cloud(),
+			RunName: b.WorkflowRunName(),
+			WebHook: slackWebhook,
+			RunURL:  runUrl,
+		}.ToSlack()
+		if err != nil {
+			return fmt.Errorf("slack: %w", err)
+		}
 	}
 	return report.Failed()
 }
