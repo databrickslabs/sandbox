@@ -1,4 +1,4 @@
-const version = 'v0.1.0';
+const version = 'v0.1.1';
 
 const { createWriteStream, chmodSync } = require('fs');
 const { createGunzip } = require('zlib');
