@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,7 +62,12 @@ func (a *boilerplate) PrepareArtifacts() (string, error) {
 }
 
 func (a *boilerplate) Upload(ctx context.Context, folder string) error {
-	res, err := a.uploader.Upload(ctx, "acceptance", folder)
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	suffix := make([]byte, 12)
+	for i := range suffix {
+		suffix[i] = charset[rand.Intn(len(suffix))]
+	}
+	res, err := a.uploader.Upload(ctx, fmt.Sprintf("acceptance-%s", suffix), folder)
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)
 	}
