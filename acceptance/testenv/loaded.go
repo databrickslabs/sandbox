@@ -29,10 +29,6 @@ func (l *loadedEnv) Name() string {
 // Configure implemets config.Loader interface
 func (l *loadedEnv) Configure(cfg *config.Config) error {
 	ctx := context.Background()
-	if cfg.IsAzure() {
-		logger.Debugf(ctx, "Setting credentials for Azure Databricks")
-		cfg.Credentials = l.v.creds
-	}
 	for _, a := range config.ConfigAttributes {
 		for _, ev := range a.EnvVars {
 			v, ok := l.vars[ev]
@@ -46,6 +42,10 @@ func (l *loadedEnv) Configure(cfg *config.Config) error {
 				return fmt.Errorf("set %s: %w", a.Name, err)
 			}
 		}
+	}
+	if cfg.IsAzure() {
+		logger.Debugf(ctx, "Setting GitHub OIDC credentials for Azure Databricks")
+		cfg.Credentials = l.v.creds
 	}
 	return nil
 }
