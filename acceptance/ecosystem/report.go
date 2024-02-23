@@ -34,11 +34,11 @@ func (tr TestResult) String() string {
 		}
 	}
 	return fmt.Sprintf("%s %s%s (%s)",
-		tr.icon(), tr.Name, summary,
+		tr.Icon(), tr.Name, summary,
 		tr.Duration().Round(time.Millisecond))
 }
 
-func (tr TestResult) icon() string {
+func (tr TestResult) Icon() string {
 	if tr.Skip {
 		return "⏭️"
 	}

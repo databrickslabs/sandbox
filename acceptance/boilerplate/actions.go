@@ -65,7 +65,7 @@ func (a *boilerplate) Upload(ctx context.Context, folder string) error {
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)
 	}
-	logger.Infof(ctx, "Uploaded artifact: %s", res.ArtifactID)
+	logger.Debugf(ctx, "Uploaded artifact: %s", res.ArtifactID)
 	return nil
 }
 

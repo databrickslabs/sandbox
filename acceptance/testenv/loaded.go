@@ -60,6 +60,14 @@ func (l *loadedEnv) Redaction() redaction.Redaction {
 	return redaction.New(l.vars)
 }
 
+func (l *loadedEnv) Cloud() config.Cloud {
+	cfg, err := l.getDatabricksConfig()
+	if err != nil {
+		return config.CloudAWS
+	}
+	return cfg.Environment().Cloud
+}
+
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
 	cfg, err := l.getDatabricksConfig()
 	if err != nil {

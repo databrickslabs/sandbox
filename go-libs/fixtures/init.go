@@ -22,7 +22,7 @@ const hexCharset = "0123456789abcdef"
 
 // WorkspaceTest is the prelude for all workspace-level tests
 func WorkspaceTest(t *testing.T) (context.Context, *databricks.WorkspaceClient) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	LoadDebugEnvIfRunsFromIDE(t, "workspace")
 	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 	t.Parallel()
 	ctx := context.Background()
@@ -31,7 +31,7 @@ func WorkspaceTest(t *testing.T) (context.Context, *databricks.WorkspaceClient) 
 
 // UcwsTest is the prelude for all workspace-level UC tests
 func UcwsTest(t *testing.T) (context.Context, *databricks.WorkspaceClient) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+	LoadDebugEnvIfRunsFromIDE(t, "ucws")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
 		skipf(t)("Skipping workspace test on account level")
 	}
@@ -43,7 +43,7 @@ func UcwsTest(t *testing.T) (context.Context, *databricks.WorkspaceClient) {
 
 // AccountTest is the prelude for all account-level tests
 func AccountTest(t *testing.T) (context.Context, *databricks.AccountClient) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
+	LoadDebugEnvIfRunsFromIDE(t, "account")
 	cfg := &config.Config{
 		AccountID: GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID"),
 	}
@@ -63,7 +63,7 @@ func AccountTest(t *testing.T) (context.Context, *databricks.AccountClient) {
 
 // UcacctTest is the prelude for all UC account-level tests
 func UcacctTest(t *testing.T) (context.Context, *databricks.AccountClient) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	LoadDebugEnvIfRunsFromIDE(t, "ucacct")
 	cfg := &config.Config{
 		AccountID: GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID"),
 	}
@@ -145,7 +145,7 @@ func isInDebug() bool {
 }
 
 // loads debug environment from ~/.databricks/debug-env.json
-func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
+func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	if !isInDebug() {
 		return
 	}
