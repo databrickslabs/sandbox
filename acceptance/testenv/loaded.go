@@ -100,7 +100,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
 		accountHost: {
-			Loaders:     []config.Loader{config.ConfigFile},
+			Loaders:     []config.Loader{l},
 			Host:        accountHost,
 			AccountID:   seed.AccountID,
 			Credentials: l.v.creds,
