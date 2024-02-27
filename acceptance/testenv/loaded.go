@@ -97,10 +97,11 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 
 func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	accountHost := seed.Environment().DeploymentURL("accounts")
+	logger.Debugf(context.Background(), "hosts are: %s and %s", accountHost, seed.CanonicalHostName())
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
 		accountHost: {
-			Loaders:     []config.Loader{l},
+			Loaders:     seed.Loaders,
 			Host:        accountHost,
 			AccountID:   seed.AccountID,
 			Credentials: l.v.creds,
