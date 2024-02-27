@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/databrickslabs/sandbox/go-libs/lite"
 	"github.com/databrickslabs/sandbox/go-libs/llnotes"
@@ -46,7 +47,7 @@ func main() {
 	}).With(&lite.Command[settings, any]{
 		Name: "generate",
 		Run: func(cmd *lite.Root[settings], req *any) error {
-			_, err := (&llnotes.ChangeDetector{
+			out, err := (&llnotes.ChangeDetector{
 				Model:  cmd.Config.Model,
 				GitHub: github.NewClient(&cmd.Config.GitHub),
 				Databricks: &config.Config{
@@ -55,7 +56,13 @@ func main() {
 				Org:  cmd.Config.Org,
 				Repo: cmd.Config.Repo,
 			}).Run(ctx)
-			return err
+			if err != nil {
+				return err
+			}
+			for _, v := range out {
+				logger.Infof(ctx, v)
+			}
+			return nil
 		},
 	}).Run(ctx)
 }

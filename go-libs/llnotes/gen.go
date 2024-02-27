@@ -3,11 +3,14 @@ package llnotes
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 )
 
@@ -18,7 +21,7 @@ type ChangeDetector struct {
 	Model      string
 }
 
-func (c *ChangeDetector) Run(ctx context.Context) ([]any, error) {
+func (c *ChangeDetector) Run(ctx context.Context) ([]string, error) {
 	versions, err := listing.ToSlice(ctx, c.GitHub.Versions(ctx, c.Org, c.Repo))
 	if err != nil {
 		return nil, fmt.Errorf("versions: %w", err)
@@ -39,11 +42,39 @@ func (c *ChangeDetector) Run(ctx context.Context) ([]any, error) {
 	if c.Model == "" {
 		c.Model = "databricks-mixtral-8x7b-instruct"
 	}
-	client, err := client.New(c.Databricks)
+	return c.tryChat2(ctx, commits)
+}
+
+func (c *ChangeDetector) tryChat2(ctx context.Context, commits []github.RepositoryCommit) ([]string, error) {
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.Databricks))
 	if err != nil {
-		return nil, fmt.Errorf("databricks client: %w", err)
+		return nil, err
 	}
-	return []any{}, c.tryChat(ctx, client, commits)
+	x := []string{}
+	for _, c := range commits {
+		x = append(x, c.Commit.Message)
+	}
+	response, err := w.ServingEndpoints.Query(ctx, serving.QueryEndpointInput{
+		Name: c.Model,
+		Messages: []serving.ChatMessage{
+			{
+				Role:    "system",
+				Content: blogPrompt,
+			},
+			{
+				Role:    "user",
+				Content: strings.Join(x, "\n"),
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := []string{}
+	for _, v := range response.Choices {
+		out = append(out, v.Message.Content)
+	}
+	return out, nil
 }
 
 func (c *ChangeDetector) tryChat(ctx context.Context, client *client.DatabricksClient, commits []github.RepositoryCommit) error {
