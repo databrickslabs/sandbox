@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/databrickslabs/sandbox/go-libs/sed"
@@ -62,6 +63,7 @@ type llNotes struct {
 }
 
 func (lln *llNotes) Talk(ctx context.Context, h History) (History, error) {
+	logger.Debugf(ctx, "Talking with AI:\n%s", h.Excerpt(80))
 	response, err := lln.w.ServingEndpoints.Query(ctx, serving.QueryEndpointInput{
 		Name:      lln.model,
 		Messages:  h.Messages(),

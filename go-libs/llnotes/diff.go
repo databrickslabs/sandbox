@@ -40,7 +40,7 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 	chunks := []string{}
-	for _, fd := range prDiff {
+	for i, fd := range prDiff {
 		singleFileDiff, err := diff.PrintFileDiff(fd)
 		if err != nil {
 			return nil, err
@@ -53,13 +53,14 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 			// this is auto-generated data, not really useful
 			continue
 		}
-		logger.Debugf(ctx, "file diff for %s: %s", fd.NewName, singleFileDiff)
+		fileInfo := fmt.Sprintf("file %d/%d", i+1, len(prDiff))
+		logger.Debugf(ctx, "%s: %s", fileInfo, singleFileDiff)
 		history, err = lln.Talk(ctx, history.With(UserMessage(singleFileDiff)))
 		if err != nil {
 			return nil, fmt.Errorf("file diff: %w", err)
 		}
 		response := history.Last()
-		logger.Debugf(ctx, "LLM summary for %s: %s", fd.NewName, response)
+		logger.Debugf(ctx, "%s: summary for %s:\n%s", fileInfo, fd.NewName, response)
 		// add file-level summaries for further summarization in the chain
 		chunks = append(chunks, lln.normalizedResponse(response))
 	}

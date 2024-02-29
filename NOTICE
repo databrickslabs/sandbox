@@ -11,3 +11,10 @@ This Software contains code from the following projects, licensed under the BSD-
 go-github
 Copyright 2013 The go-github AUTHORS. All rights reserved.
 License - https://github.com/google/go-github/blob/master/LICENSE
+
+This Software contains code from the following projects, licensed under the MIT license:
+
+go-diff
+Copyright (c) 2014 Sourcegraph, Inc.
+Copyright (c) 2012 Matias Bordese
+https://github.com/sourcegraph/go-diff/blob/master/LICENSE

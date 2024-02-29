@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"fmt"
+	"io"
+	"os"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/lite"
 	"github.com/databrickslabs/sandbox/go-libs/llnotes"
+	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 )
 
@@ -35,7 +41,6 @@ func main() {
 	}).With(
 		newPullRequest(),
 		newReleaseNotes(),
-		newCommit(),
 	).Run(ctx)
 }
 
@@ -53,12 +58,23 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 			if err != nil {
 				return err
 			}
-			h, err := lln.PullRequest(root.Context(), req.number)
+			ctx := root.Context()
+			h, err := lln.PullRequest(ctx, req.number)
 			if err != nil {
 				return err
 			}
-			logger.Infof(root.Context(), h.Last())
-			return nil
+			for {
+				logger.Infof(ctx, h.Last())
+				msg := fmt.Sprintf(" %s $ Tell me if I should rewrite it? Empty response would mean I stop.\n $", strings.ToUpper(root.Config.Model))
+				reply := askFor(msg)
+				if reply == "" {
+					return nil
+				}
+				h, err = lln.Talk(ctx, h.With(llnotes.UserMessage(reply)))
+				if err != nil {
+					return err
+				}
+			}
 		},
 	}
 }
@@ -77,36 +93,39 @@ func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 			if err != nil {
 				return err
 			}
-			h, err := lln.ReleaseNotes(root.Context(), req.newVersion)
+			ctx := root.Context()
+			h, err := lln.ReleaseNotes(ctx, req.newVersion)
 			if err != nil {
 				return err
 			}
-			logger.Infof(root.Context(), h.Last())
-			return nil
+			for {
+				logger.Infof(ctx, h.Last())
+				msg := fmt.Sprintf(" $ %s > Tell me if I should rewrite it? Empty response would mean I stop.\n $ >", strings.ToUpper(root.Config.Model))
+				reply := askFor(msg)
+				if reply == "" {
+					return nil
+				}
+				h, err = lln.Talk(ctx, h.With(llnotes.UserMessage(reply)))
+				if err != nil {
+					return err
+				}
+			}
 		},
 	}
 }
 
-func newCommit() lite.Registerable[llnotes.Settings] {
-	type req struct {
-		sha string
+var cliInput io.Reader = os.Stdin
+var cliOutput io.Writer = os.Stdout
+
+func askFor(prompt string) string {
+	var s string
+	r := bufio.NewReader(cliInput)
+	for {
+		fmt.Fprint(cliOutput, color.GreenString(prompt)+" ")
+		s, _ = r.ReadString('\n')
+		if s != "" {
+			break
+		}
 	}
-	return &lite.Command[llnotes.Settings, req]{
-		Name: "commit",
-		Flags: func(flags *pflag.FlagSet, req *req) {
-			flags.StringVar(&req.sha, "sha", "", "Commit hash")
-		},
-		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
-			lln, err := llnotes.New(&root.Config)
-			if err != nil {
-				return err
-			}
-			h, err := lln.CommitBySHA(root.Context(), req.sha)
-			if err != nil {
-				return err
-			}
-			logger.Infof(root.Context(), h.Last())
-			return nil
-		},
-	}
+	return strings.TrimSpace(s)
 }
