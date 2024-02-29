@@ -65,15 +65,19 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 
 func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 	type req struct {
+		newVersion string
 	}
 	return &lite.Command[llnotes.Settings, req]{
 		Name: "release-notes",
+		Flags: func(flags *pflag.FlagSet, req *req) {
+			flags.StringVar(&req.newVersion, "new-version", "NEW_VERSION", "New version")
+		},
 		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
 			lln, err := llnotes.New(&root.Config)
 			if err != nil {
 				return err
 			}
-			h, err := lln.ReleaseNotes(root.Context())
+			h, err := lln.ReleaseNotes(root.Context(), req.newVersion)
 			if err != nil {
 				return err
 			}

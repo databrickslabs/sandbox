@@ -9,14 +9,15 @@ import (
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databrickslabs/sandbox/go-libs/github"
+	"github.com/databrickslabs/sandbox/go-libs/sed"
 )
 
 type Settings struct {
 	GitHub     github.GitHubConfig
 	Databricks config.Config
 	Org, Repo  string
-	Start, End string
 	Model      string
+	MaxTokens  int
 }
 
 func New(cfg *Settings) (*llNotes, error) {
@@ -28,29 +29,43 @@ func New(cfg *Settings) (*llNotes, error) {
 	if cfg.Model == "" {
 		cfg.Model = "databricks-mixtral-8x7b-instruct"
 	}
+	if cfg.MaxTokens == 0 {
+		cfg.MaxTokens = 4000
+	}
 	return &llNotes{
 		http:  httpclient.NewApiClient(httpclient.ClientConfig{}),
 		gh:    github.NewClient(&cfg.GitHub),
 		w:     w,
+		cfg:   cfg,
 		model: cfg.Model,
 		org:   cfg.Org,
 		repo:  cfg.Repo,
+		norm: sed.Pipeline{
+			sed.Rule(`\\_`, `_`),
+			sed.Rule(`\n([0-9])\. `, ` `),
+			sed.Rule(`\n\s?- `, ` `),
+			sed.Rule(`\n\s?\* `, ` `),
+			sed.Rule(`\s+`, ` `),
+		},
 	}, nil
 }
 
 type llNotes struct {
+	cfg   *Settings
 	w     *databricks.WorkspaceClient
 	gh    *github.GitHubClient
 	http  *httpclient.ApiClient
 	model string
 	org   string
 	repo  string
+	norm  sed.Pipeline
 }
 
 func (lln *llNotes) Talk(ctx context.Context, h History) (History, error) {
 	response, err := lln.w.ServingEndpoints.Query(ctx, serving.QueryEndpointInput{
-		Name:     lln.model,
-		Messages: h.Messages(),
+		Name:      lln.model,
+		Messages:  h.Messages(),
+		MaxTokens: lln.cfg.MaxTokens,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("llm: %w", err)

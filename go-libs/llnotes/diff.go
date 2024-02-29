@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/logger"
@@ -30,16 +29,9 @@ You receive a change description from your software engineering team about the n
 Write a one-paragraph summary of this change for the release notes. 
 It has to be one paragraph of text, because it will be included in a bigger document.`
 
-var repeatedWhitespace = regexp.MustCompile(`\s+`)
-var orderedListAbuse = regexp.MustCompile(`\n([0-9]+)\. `)
-var unorderedListAbuse = regexp.MustCompile(`\n\s?- `)
-
 func (lln *llNotes) normalizedResponse(response string) string {
 	// add file-level summaries for further summarization in the chain
-	normalizedResponse := strings.TrimSpace(orderedListAbuse.ReplaceAllString("\n"+response, " "))
-	normalizedResponse = unorderedListAbuse.ReplaceAllString(normalizedResponse, " ")
-	normalizedResponse = repeatedWhitespace.ReplaceAllString(normalizedResponse, " ")
-	return normalizedResponse
+	return strings.TrimSpace(lln.norm.Apply("\n" + response))
 }
 
 func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes.Buffer) (History, error) {
@@ -61,17 +53,17 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 			// this is auto-generated data, not really useful
 			continue
 		}
-		logger.Debugf(ctx, "file diff: %s", singleFileDiff)
+		logger.Debugf(ctx, "file diff for %s: %s", fd.NewName, singleFileDiff)
 		history, err = lln.Talk(ctx, history.With(UserMessage(singleFileDiff)))
 		if err != nil {
 			return nil, fmt.Errorf("file diff: %w", err)
 		}
 		response := history.Last()
-		logger.Debugf(ctx, "LLM file summary: %s", response)
+		logger.Debugf(ctx, "LLM summary for %s: %s", fd.NewName, response)
 		// add file-level summaries for further summarization in the chain
 		chunks = append(chunks, lln.normalizedResponse(response))
 	}
-	details := strings.Join(chunks, "\n\n")
+	details := strings.Join(chunks, "\n")
 	logger.Debugf(ctx, "LLM overall summary: %s", details)
 	history, err = lln.Talk(ctx, History{
 		SystemMessage(reduceDiffPrompt),
