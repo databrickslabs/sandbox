@@ -31,11 +31,11 @@ func main() {
 			flags.StringVar(&cfg.Model, "model", "databricks-mixtral-8x7b-instruct", "Serving chat model")
 			flags.StringVar(&cfg.Org, "org", "databrickslabs", "GitHub org")
 			flags.StringVar(&cfg.Repo, "repo", "ucx", "GitHub repository")
-			flags.StringVar(&cfg.Start, "start", "", "Comparison start")
 		},
 	}).With(
 		newPullRequest(),
 		newReleaseNotes(),
+		newCommit(),
 	).Run(ctx)
 }
 
@@ -62,6 +62,7 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 		},
 	}
 }
+
 func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 	type req struct {
 	}
@@ -73,6 +74,30 @@ func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 				return err
 			}
 			h, err := lln.ReleaseNotes(root.Context())
+			if err != nil {
+				return err
+			}
+			logger.Infof(root.Context(), h.Last())
+			return nil
+		},
+	}
+}
+
+func newCommit() lite.Registerable[llnotes.Settings] {
+	type req struct {
+		sha string
+	}
+	return &lite.Command[llnotes.Settings, req]{
+		Name: "commit",
+		Flags: func(flags *pflag.FlagSet, req *req) {
+			flags.StringVar(&req.sha, "sha", "", "Commit hash")
+		},
+		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
+			lln, err := llnotes.New(&root.Config)
+			if err != nil {
+				return err
+			}
+			h, err := lln.CommitBySHA(root.Context(), req.sha)
 			if err != nil {
 				return err
 			}

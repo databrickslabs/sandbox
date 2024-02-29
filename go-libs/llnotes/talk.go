@@ -2,6 +2,7 @@ package llnotes
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -52,7 +53,7 @@ func (lln *llNotes) Talk(ctx context.Context, h History) (History, error) {
 		Messages: h.Messages(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("llm: %w", err)
 	}
 	for _, v := range response.Choices {
 		h = h.With(AssistantMessage(v.Message.Content))
