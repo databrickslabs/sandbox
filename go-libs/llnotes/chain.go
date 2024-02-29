@@ -1,6 +1,12 @@
 package llnotes
 
-import "github.com/databricks/databricks-sdk-go/service/serving"
+import (
+	"context"
+	"strings"
+
+	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/databricks-sdk-go/service/serving"
+)
 
 type message interface {
 	ChatMessage() serving.ChatMessage
@@ -42,7 +48,32 @@ func (h History) Messages() (out []serving.ChatMessage) {
 	return
 }
 
+func (h History) messageTokens(m message) int {
+	// this is good enough approximation of message token count
+	content := m.ChatMessage().Content
+	return len(strings.Split(content, " "))
+}
+
+func (h History) totalTokens() int {
+	totalTokens := 0
+	for _, m := range h {
+		totalTokens += h.messageTokens(m)
+	}
+	return totalTokens
+}
+
 func (h History) With(m message) History {
+	maxContextSize := 32768 - 2000
+	increment := h.messageTokens(m)
+	if increment > maxContextSize {
+		logger.Infof(context.Background(), "HUGE PROMPT (%d) - %s", increment, m)
+	}
+	// prompt token count ... cannot equal or exceed 32768
+	for (h.totalTokens() + increment) > maxContextSize {
+		// discard the e
+		copied := History{h[0]}      // a system message, right?...
+		h = append(copied, h[3:]...) // skip two messages
+	}
 	return append(h, m)
 }
 
