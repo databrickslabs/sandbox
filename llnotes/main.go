@@ -49,7 +49,8 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 		number int
 	}
 	return &lite.Command[llnotes.Settings, req]{
-		Name: "pull-request",
+		Name:  "pull-request",
+		Short: "Generates a description for a pull request",
 		Flags: func(flags *pflag.FlagSet, req *req) {
 			flags.IntVar(&req.number, "number", 0, "Pull request number")
 		},
@@ -65,10 +66,15 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 			}
 			for {
 				logger.Infof(ctx, h.Last())
-				msg := fmt.Sprintf(" %s $ Tell me if I should rewrite it? Empty response would mean I stop.\n $", strings.ToUpper(root.Config.Model))
+				msg := fmt.Sprintf(
+					" %s $ Tell me if I should rewrite it? Empty response would mean I stop. Type `save` to modify description.\n $",
+					strings.ToUpper(root.Config.Model))
 				reply := askFor(msg)
 				if reply == "" {
 					return nil
+				}
+				if strings.ToLower(reply) == "save" {
+					return lln.EditPullRequest(ctx, req.number, h)
 				}
 				h, err = lln.Talk(ctx, h.With(llnotes.UserMessage(reply)))
 				if err != nil {
@@ -84,7 +90,8 @@ func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 		newVersion string
 	}
 	return &lite.Command[llnotes.Settings, req]{
-		Name: "release-notes",
+		Name:  "release-notes",
+		Short: "generates release notes",
 		Flags: func(flags *pflag.FlagSet, req *req) {
 			flags.StringVar(&req.newVersion, "new-version", "NEW_VERSION", "New version")
 		},

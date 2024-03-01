@@ -60,3 +60,9 @@ func (lln *llNotes) PullRequest(ctx context.Context, number int) (History, error
 		}),
 	}, &buf)
 }
+
+func (lln *llNotes) EditPullRequest(ctx context.Context, number int, h History) error {
+	return lln.gh.EditPullRequest(ctx, lln.org, lln.repo, number, github.UpdatePullRequest{
+		Body: h.Last(),
+	})
+}

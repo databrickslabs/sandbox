@@ -19,6 +19,7 @@ type Settings struct {
 	Org, Repo  string
 	Model      string
 	MaxTokens  int
+	Workers    int
 }
 
 func New(cfg *Settings) (*llNotes, error) {
@@ -32,6 +33,9 @@ func New(cfg *Settings) (*llNotes, error) {
 	}
 	if cfg.MaxTokens == 0 {
 		cfg.MaxTokens = 4000
+	}
+	if cfg.Workers == 0 {
+		cfg.Workers = 15
 	}
 	return &llNotes{
 		http:  httpclient.NewApiClient(httpclient.ClientConfig{}),
