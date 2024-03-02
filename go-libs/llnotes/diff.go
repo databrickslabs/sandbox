@@ -26,7 +26,7 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-	// TODO: bring back rst files after we can explain 
+	// TODO: bring back rst files after we can explain
 	// https://github.com/databrickslabs/mosaic/commit/7cfcfcef709f6065cc3ad7ba208aa71664a10dfd
 	ignoreSuffixes := []string{"go.sum", "go.work.sum", ".ipynb", ".rst"}
 	var tasks []diffTask
