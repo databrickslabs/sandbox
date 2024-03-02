@@ -3,6 +3,7 @@ package llnotes
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/listing"
@@ -50,7 +51,7 @@ func (lln *llNotes) ReleaseNotesDiff(ctx context.Context, since, until string) (
 		sed.Rule(`#(\d+)`, fmt.Sprintf("[#$1](https://github.com/%s/%s/issues/$1)", lln.org, lln.repo)),
 		sed.Rule(`\. \(`, ` (`),
 	}
-	return parallel.Tasks(ctx, lln.cfg.Workers, commits,
+	notes, err := parallel.Tasks(ctx, lln.cfg.Workers, commits,
 		func(ctx context.Context, commit github.RepositoryCommit) (string, error) {
 			history, err := lln.Commit(ctx, &commit)
 			if err != nil {
@@ -62,4 +63,9 @@ func (lln *llNotes) ReleaseNotesDiff(ctx context.Context, since, until string) (
 			line = cleanup.Apply(line)
 			return line, nil
 		})
+	if err != nil {
+		return nil, fmt.Errorf("parallel: %w", err)
+	}
+	sort.Strings(notes)
+	return notes, nil
 }
