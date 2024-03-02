@@ -211,6 +211,13 @@ func (c *GitHubClient) ListCommits(ctx context.Context, org, repo string, req *L
 	})
 }
 
+func (c *GitHubClient) GetCommit(ctx context.Context, org, repo string, sha string) (*RepositoryCommit, error) {
+	var res RepositoryCommit
+	path := fmt.Sprintf("%s/repos/%s/%s/commits/%s", gitHubAPI, org, repo, sha)
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
 func (c *GitHubClient) CompareCommits(ctx context.Context, org, repo, base, head string) listing.Iterator[RepositoryCommit] {
 	type response struct {
 		Commits []RepositoryCommit `json:"commits,omitempty"`

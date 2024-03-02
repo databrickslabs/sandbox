@@ -1,12 +1,16 @@
 default: build
 
-fmt:
+fmt: lint
 	@echo "✓ Formatting source code with goimports ..."
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-test: 
+lint: vendor
+	@echo "✓ Linting source code with https://staticcheck.io/ ..."
+	@staticcheck ./...
+
+test:
 	@echo "✓ Running tests ..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
@@ -19,4 +23,4 @@ vendor:
 	@go mod tidy
 	@go mod vendor
 
-.PHONY: build vendor coverage test fmt
+.PHONY: build vendor coverage test lint fmt

@@ -35,4 +35,7 @@ fmt-go-libs:
 fmt-acceptance:
 	cd acceptance && make fmt
 
-fmt: fmt-acceptance fmt-go-libs
+fmt-llnotes:
+	cd llnotes && make fmt
+
+fmt: fmt-acceptance fmt-go-libs fmt-llnotes
