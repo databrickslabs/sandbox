@@ -25,3 +25,7 @@ updates:
     directory: "/acceptance"
     schedule:
       interval: "hourly"
+  - package-ecosystem: "gomod"
+    directory: "/llnotes"
+    schedule:
+      interval: "hourly"
