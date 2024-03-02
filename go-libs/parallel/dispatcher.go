@@ -93,10 +93,18 @@ func (p *pool[T, R]) worker(ctx context.Context) {
 		case task := <-p.work:
 			result, err := p.mapper(ctx, task)
 			if err != nil {
-				p.errs <- err
-				continue
+				select {
+				case <-ctx.Done():
+					return
+				case p.errs <- err:
+					continue
+				}
 			}
-			p.replies <- result
+			select {
+			case <-ctx.Done():
+				return
+			case p.replies <- result:
+			}
 		}
 	}
 }

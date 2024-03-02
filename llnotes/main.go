@@ -22,7 +22,7 @@ const productVersion = "0.0.2"
 func main() {
 	ctx := context.Background()
 	databricks.WithProduct(productName, productVersion)
-	lite.New[llnotes.Settings](ctx, lite.Init[llnotes.Settings]{
+	lite.New(ctx, lite.Init[llnotes.Settings]{
 		Name:       productName,
 		Short:      "Release notes assistant",
 		Version:    productVersion,
@@ -33,14 +33,16 @@ func main() {
 			flags.IntVar(&cfg.GitHub.InstallationID, "github-app-installation-id", 0, "GitHub App Installation ID")
 			flags.StringVar(&cfg.GitHub.PrivateKeyPath, "github-app-private-key-path", "", "GitHub App Private Key file (*.pem) path")
 			flags.StringVar(&cfg.GitHub.PrivateKeyBase64, "github-app-private-key", "", "GitHub App Private Key encoded in base64")
-			flags.StringVar(&cfg.Databricks.Profile, "profile", "DEFAULT", "Databricks config profile")
+			flags.StringVar(&cfg.Databricks.Profile, "profile", "", "Databricks config profile")
 			flags.StringVar(&cfg.Model, "model", "databricks-mixtral-8x7b-instruct", "Serving chat model")
 			flags.StringVar(&cfg.Org, "org", "databrickslabs", "GitHub org")
 			flags.StringVar(&cfg.Repo, "repo", "ucx", "GitHub repository")
 		},
 	}).With(
 		newPullRequest(),
-		newReleaseNotes(),
+		newUpcomingRelease(),
+		newDiff(),
+		newAnnounce(),
 	).Run(ctx)
 }
 
@@ -85,15 +87,40 @@ func newPullRequest() lite.Registerable[llnotes.Settings] {
 	}
 }
 
-func newReleaseNotes() lite.Registerable[llnotes.Settings] {
+func newUpcomingRelease() lite.Registerable[llnotes.Settings] {
 	type req struct {
-		newVersion string
 	}
 	return &lite.Command[llnotes.Settings, req]{
-		Name:  "release-notes",
+		Name:  "upcoming-release",
 		Short: "generates release notes",
+		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
+			lln, err := llnotes.New(&root.Config)
+			if err != nil {
+				return err
+			}
+			ctx := root.Context()
+			notes, err := lln.UpcomingRelease(ctx)
+			if err != nil {
+				return err
+			}
+			for _, v := range notes {
+				fmt.Fprintf(root.OutOrStdout(), " * %s\n", v)
+			}
+			return nil
+		},
+	}
+}
+
+func newDiff() lite.Registerable[llnotes.Settings] {
+	type req struct {
+		since, until string
+	}
+	return &lite.Command[llnotes.Settings, req]{
+		Name:  "diff",
+		Short: "generates release notes between --since and --until",
 		Flags: func(flags *pflag.FlagSet, req *req) {
-			flags.StringVar(&req.newVersion, "new-version", "NEW_VERSION", "New version")
+			flags.StringVar(&req.since, "since", "", "Starting git reference (commit, tag, branch)")
+			flags.StringVar(&req.until, "until", "main", "Ending git reference (commit, tag, branch)")
 		},
 		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
 			lln, err := llnotes.New(&root.Config)
@@ -101,13 +128,49 @@ func newReleaseNotes() lite.Registerable[llnotes.Settings] {
 				return err
 			}
 			ctx := root.Context()
-			h, err := lln.ReleaseNotes(ctx, req.newVersion)
+			notes, err := lln.ReleaseNotesDiff(ctx, req.since, req.until)
+			if err != nil {
+				return err
+			}
+			for _, v := range notes {
+				if strings.HasPrefix(v, "Release ") {
+					continue
+				}
+				if strings.HasPrefix(v, "Bump ") {
+					continue
+				}
+				fmt.Fprintf(root.OutOrStdout(), " * %s\n", v)
+			}
+			return nil
+		},
+	}
+}
+
+func newAnnounce() lite.Registerable[llnotes.Settings] {
+	type req struct {
+		version string
+	}
+	return &lite.Command[llnotes.Settings, req]{
+		Name:  "announce",
+		Short: "Generates release announcement",
+		Flags: func(flags *pflag.FlagSet, req *req) {
+			flags.StringVar(&req.version, "version", "", "Version to announce")
+		},
+		Run: func(root *lite.Root[llnotes.Settings], req *req) error {
+			lln, err := llnotes.New(&root.Config)
+			if err != nil {
+				return err
+			}
+			ctx := root.Context()
+			h, err := lln.Announce(ctx, req.version)
 			if err != nil {
 				return err
 			}
 			for {
 				logger.Infof(ctx, h.Last())
-				msg := fmt.Sprintf(" $ %s > Tell me if I should rewrite it? Empty response would mean I stop.\n $ >", strings.ToUpper(root.Config.Model))
+				msg := fmt.Sprintf(
+					" %s $ Tell me if I should rewrite it? Empty response would mean I stop.\n $",
+					strings.ToUpper(root.Config.Model))
 				reply := askFor(msg)
 				if reply == "" {
 					return nil

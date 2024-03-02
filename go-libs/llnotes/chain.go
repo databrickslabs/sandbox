@@ -54,6 +54,24 @@ func (h History) messageTokens(m message) int {
 	return len(strings.Split(content, " "))
 }
 
+func (h History) truncated(m message, maxTokens int) message {
+	// this is good enough approximation of message token count
+	cm := m.ChatMessage()
+	tokens := strings.Split(cm.Content, " ")
+	if len(tokens) < maxTokens {
+		return m
+	}
+	switch m.(type) {
+	case UserMessage:
+		return UserMessage(strings.Join(tokens[:maxTokens-100], " "))
+	case SystemMessage:
+		return SystemMessage(strings.Join(tokens[:maxTokens-100], " "))
+	case AssistantMessage:
+		return AssistantMessage(strings.Join(tokens[:maxTokens-100], " "))
+	}
+	panic("cannot truncate message")
+}
+
 func (h History) totalTokens() int {
 	totalTokens := 0
 	for _, m := range h {
@@ -63,13 +81,10 @@ func (h History) totalTokens() int {
 }
 
 func (h History) With(m message) History {
-	maxContextSize := 32768 - 2000
+	maxContextSize := 32768
 	increment := h.messageTokens(m)
-	// prompt token count ... cannot equal or exceed 32768
-	for (h.totalTokens() + increment) > maxContextSize {
-		// discard the e
-		copied := History{h[0]}      // a system message, right?...
-		h = append(copied, h[3:]...) // skip two messages
+	if increment > maxContextSize {
+		m = h.truncated(m, 32000)
 	}
 	return append(h, m)
 }

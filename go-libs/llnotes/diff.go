@@ -26,14 +26,18 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
+	// TODO: bring back rst files after we can explain 
+	// https://github.com/databrickslabs/mosaic/commit/7cfcfcef709f6065cc3ad7ba208aa71664a10dfd
+	ignoreSuffixes := []string{"go.sum", "go.work.sum", ".ipynb", ".rst"}
 	var tasks []diffTask
 	for i, fd := range prDiff {
-		if strings.HasSuffix(fd.NewName, "go.sum") {
-			// this is auto-generated data, not really useful
-			continue
+		var ignore bool
+		for _, suffix := range ignoreSuffixes {
+			if strings.HasSuffix(fd.NewName, suffix) {
+				ignore = true
+			}
 		}
-		if strings.HasSuffix(fd.NewName, "go.work.sum") {
-			// this is auto-generated data, not really useful
+		if ignore {
 			continue
 		}
 		tasks = append(tasks, diffTask{i, len(prDiff), fd, history})
@@ -50,6 +54,9 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 		notes = append(notes, v.message)
 	}
 	rawSummary := strings.Join(notes, "\n")
+	if len(rawSummary) == 0 {
+		rawSummary = "this commit was empty"
+	}
 	logger.Debugf(ctx, "LLM overall summary: %s", rawSummary)
 	history, err = lln.Talk(ctx, History{
 		SystemMessage(reduceDiffPrompt),
@@ -64,13 +71,18 @@ func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes
 func (lln *llNotes) fileDiffWork(ctx context.Context, t diffTask) (*diffReply, error) {
 	singleFileDiff, err := diff.PrintFileDiff(t.diff)
 	if err != nil {
-		return nil, fmt.Errorf("print diff: %w", err)
+		return nil, fmt.Errorf("print: %s: %w", t.diff.NewName, err)
 	}
 	fileInfo := fmt.Sprintf("file %d/%d", t.index+1, t.total)
 	logger.Debugf(ctx, "%s: %s", fileInfo, singleFileDiff)
+	tokens := strings.Split(string(singleFileDiff), " ")
+	if len(tokens) > 15_000 {
+		tokens = tokens[:15_000]
+		singleFileDiff = []byte(strings.Join(tokens, " "))
+	}
 	history, err := lln.Talk(ctx, t.history.With(UserMessage(singleFileDiff)))
 	if err != nil {
-		return nil, fmt.Errorf("file diff: %w", err)
+		return nil, fmt.Errorf("summary: %s: %w", t.diff.NewName, err)
 	}
 	response := history.Last()
 	logger.Debugf(ctx, "%s: summary for %s:\n%s", fileInfo, t.diff.NewName, response)

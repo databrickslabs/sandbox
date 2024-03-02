@@ -6,27 +6,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/listing"
-	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/databrickslabs/sandbox/go-libs/parallel"
 	"github.com/databrickslabs/sandbox/go-libs/sed"
 )
 
-const blogPrompt = `SYSTEM:
-You are professional technical writer and you receive draft release notes for %s of project called %s in a markdown format from multiple team members. 
-Project can be described as "%s"
-
-You write a long post announcement that takes 5 minutes to read, summarize the most important features, and mention them on top. Keep the markdown links when relevant.
-Do not use headings. Write fluent paragraphs, that are at least few sentences long. Blog post title should nicely summarize the feature increments of this release.
-
-Don't abuse lists. paragraphs should have at least 3-4 sentences. The title should be one-sentence summary of the incremental updates for this release
-
-You aim at driving more adoption of the project on Medium.
-
-USER:
-`
-
-func (lln *llNotes) ReleaseNotes(ctx context.Context, newVersion string) (History, error) {
+func (lln *llNotes) UpcomingRelease(ctx context.Context) ([]string, error) {
 	versions, err := listing.ToSlice(ctx, lln.gh.Versions(ctx, lln.org, lln.repo))
 	if err != nil {
 		return nil, fmt.Errorf("versions: %w", err)
@@ -39,41 +24,42 @@ func (lln *llNotes) ReleaseNotes(ctx context.Context, newVersion string) (Histor
 	if len(versions) > 0 {
 		latestTag = versions[0].Version
 	}
-	commits, err := listing.ToSlice(ctx, lln.gh.CompareCommits(ctx, lln.org, lln.repo, latestTag, repo.DefaultBranch))
+	return lln.ReleaseNotesDiff(ctx, latestTag, repo.DefaultBranch)
+}
+
+func (lln *llNotes) ReleaseNotesDiff(ctx context.Context, since, until string) ([]string, error) {
+	commits, err := listing.ToSlice(ctx, lln.gh.CompareCommits(ctx, lln.org, lln.repo, since, until))
 	if err != nil {
 		return nil, fmt.Errorf("commits: %w", err)
 	}
 	var cleanup = sed.Pipeline{
-		sed.Rule("Add ", "Added "),
-		sed.Rule("Adding ", "Added "),
-		sed.Rule("Change ", "Changed "),
-		sed.Rule("Enable ", "Enabled "),
-		sed.Rule("Handle ", "Added handling for "),
-		sed.Rule("Enforce ", "Enforced "),
-		sed.Rule("Migrate ", "Added migration for "),
-		sed.Rule("Fix ", "Fixed "),
-		sed.Rule("Move ", "Moved "),
-		sed.Rule("Update ", "Updated "),
-		sed.Rule("Remove ", "Removed "),
+		sed.Rule("^Add ", "Added "),
+		sed.Rule("^Adding ", "Added "),
+		sed.Rule("^Apply ", "Applied "),
+		sed.Rule("^Change ", "Changed "),
+		sed.Rule("^Enable ", "Enabled "),
+		sed.Rule("^Handle ", "Added handling for "),
+		sed.Rule("^Enforce ", "Enforced "),
+		sed.Rule("^Migrate ", "Added migration for "),
+		sed.Rule("^Fix ", "Fixed "),
+		sed.Rule("^Move ", "Moved "),
+		sed.Rule("^Update ", "Updated "),
+		sed.Rule("^Remove ", "Removed "),
+		sed.Rule(` '([\w\s_-]+)' `, " `$1` "),
+		sed.Rule(` "([\w\s_-]+)" `, " `$1` "),
+		sed.Rule(`#(\d+)`, fmt.Sprintf("[#$1](https://github.com/%s/%s/issues/$1)", lln.org, lln.repo)),
 		sed.Rule(`\. \(`, ` (`),
 	}
-	notes, err := parallel.Tasks(ctx, lln.cfg.Workers, commits,
+	return parallel.Tasks(ctx, lln.cfg.Workers, commits,
 		func(ctx context.Context, commit github.RepositoryCommit) (string, error) {
 			history, err := lln.Commit(ctx, &commit)
 			if err != nil {
-				return "", fmt.Errorf("commit: %w", err)
+				return "", fmt.Errorf("commit: %s: %w", commit.SHA, err)
 			}
-			short := cleanup.Apply(strings.Split(commit.Commit.Message, "\n")[0])
-			message := lln.norm.Apply(history.Last())
-			return fmt.Sprintf(" * %s. %s", short, message), nil
+			short := strings.Split(commit.Commit.Message, "\n")[0]
+			line := fmt.Sprintf("%s. %s", short, history.Last())
+			line = lln.norm.Apply(line)
+			line = cleanup.Apply(line)
+			return line, nil
 		})
-	if err != nil {
-		return nil, fmt.Errorf("parallel: %w", err)
-	}
-	rawNotes := strings.Join(notes, "\n")
-	logger.Debugf(ctx, "Raw notes: %s", rawNotes)
-	return lln.Talk(ctx, History{
-		SystemMessage(fmt.Sprintf(blogPrompt, newVersion, repo.Name, repo.Description)),
-		UserMessage(rawNotes),
-	})
 }
