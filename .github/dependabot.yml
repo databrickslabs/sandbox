@@ -12,20 +12,20 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/go-libs"
     schedule:
-      interval: "hourly"
+      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/metascan"
     schedule:
-      interval: "hourly"
+      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/runtime-packages"
     schedule:
-      interval: "hourly"
+      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/acceptance"
     schedule:
-      interval: "hourly"
+      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/llnotes"
     schedule:
-      interval: "hourly"
+      interval: "daily"
