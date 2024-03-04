@@ -97,16 +97,22 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 
 func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	accountHost := seed.Environment().DeploymentURL("accounts")
+	accountConfig := &config.Config{
+		Loaders:   []config.Loader{},
+		Host:      accountHost,
+		AccountID: seed.AccountID,
+	}
+	if seed.IsAzure() {
+		accountConfig.Credentials = l.v.creds
+	}
+	if seed.IsAws() {
+		accountConfig.ClientID = seed.ClientID
+		accountConfig.ClientSecret = seed.ClientSecret
+		accountConfig.Credentials = seed.Credentials
+	}
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
-		accountHost: {
-			Loaders:      []config.Loader{},
-			Host:         accountHost,
-			AccountID:    seed.AccountID,
-			ClientID:     seed.ClientID,
-			ClientSecret: seed.ClientSecret,
-			Credentials:  seed.Credentials,
-		},
+		accountHost:              accountConfig,
 	}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
