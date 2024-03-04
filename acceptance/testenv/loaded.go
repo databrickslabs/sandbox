@@ -103,6 +103,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 		AccountID: seed.AccountID,
 	}
 	if seed.IsAzure() {
+		accountConfig.Loaders = []config.Loader{config.ConfigFile}
 		accountConfig.Credentials = l.v.creds
 	}
 	if seed.IsAws() {
