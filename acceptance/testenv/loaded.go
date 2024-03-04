@@ -28,9 +28,6 @@ func (l *loadedEnv) Name() string {
 
 // Configure implemets config.Loader interface
 func (l *loadedEnv) Configure(cfg *config.Config) error {
-	if cfg.IsAzure() {
-		cfg.Credentials = l.v.creds
-	}
 	for _, a := range config.ConfigAttributes {
 		if !a.IsZero(cfg) {
 			continue
@@ -46,6 +43,9 @@ func (l *loadedEnv) Configure(cfg *config.Config) error {
 				return fmt.Errorf("set %s: %w", a.Name, err)
 			}
 		}
+	}
+	if cfg.IsAzure() {
+		cfg.Credentials = l.v.creds
 	}
 	return nil
 }
@@ -103,10 +103,9 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
 		accountHost: {
-			Loaders:     []config.Loader{l},
-			Host:        accountHost,
-			AccountID:   seed.AccountID,
-			Credentials: l.v.creds,
+			Loaders:   []config.Loader{l},
+			Host:      accountHost,
+			AccountID: seed.AccountID,
 		},
 	}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
