@@ -101,7 +101,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	if seed.IsAzure() {
 		logger.Debugf(context.Background(), "Configuring on Azure: (%s)", accountHost)
 		accountConfig = &config.Config{
-			Loaders:     []config.Loader{},
+			Loaders:     []config.Loader{config.ConfigFile},
 			Host:        accountHost,
 			AccountID:   seed.AccountID,
 			Credentials: l.v.creds,
