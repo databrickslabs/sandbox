@@ -32,6 +32,9 @@ func (l *loadedEnv) Configure(cfg *config.Config) error {
 		cfg.Credentials = l.v.creds
 	}
 	for _, a := range config.ConfigAttributes {
+		if !a.IsZero(cfg) {
+			continue
+		}
 		for _, ev := range a.EnvVars {
 			v, ok := l.vars[ev]
 			if !ok {
@@ -97,31 +100,13 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 
 func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 	accountHost := seed.Environment().DeploymentURL("accounts")
-	accountConfig := &config.Config{}
-	if seed.IsAzure() {
-		logger.Debugf(context.Background(), "Configuring on Azure: (%s)", accountHost)
-		accountConfig = &config.Config{
-			Loaders:     []config.Loader{config.ConfigFile},
-			Host:        accountHost,
-			AccountID:   seed.AccountID,
-			Credentials: l.v.creds,
-		}
-	}
-	if seed.IsAws() {
-		logger.Debugf(context.Background(), "Configuring on AWS: (%s)", seed.ClientID)
-		accountConfig = &config.Config{
-			Loaders:      []config.Loader{},
-			Host:         accountHost,
-			AccountID:    seed.AccountID,
-			ClientID:     seed.ClientID,
-			ClientSecret: seed.ClientSecret,
-			Credentials:  seed.Credentials,
-			AuthType:     "oauth-m2m",
-		}
-	}
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
-		accountHost:              accountConfig,
+		accountHost: {
+			Loaders:   []config.Loader{l},
+			Host:      accountHost,
+			AccountID: seed.AccountID,
+		},
 	}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
