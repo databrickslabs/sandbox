@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/briandowns/spinner v1.23.0
-	github.com/databricks/databricks-sdk-go v0.33.0
+	github.com/databricks/databricks-sdk-go v0.34.0
 	github.com/fatih/color v1.16.0
 	github.com/google/go-querystring v1.1.0
 	github.com/nwidger/jsoncolor v0.3.2
