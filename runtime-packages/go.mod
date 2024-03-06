@@ -3,7 +3,7 @@ module github.com/databrickslabs/sandbox/runtime-packages
 go 1.21.0
 
 require (
-	github.com/databricks/databricks-sdk-go v0.33.0
+	github.com/databricks/databricks-sdk-go v0.34.0
 	github.com/databrickslabs/sandbox/go-libs v0.2.0
 	github.com/fatih/color v1.16.0
 	github.com/spf13/cobra v1.8.0
