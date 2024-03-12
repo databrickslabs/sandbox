@@ -3,6 +3,7 @@ package llnotes
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -46,6 +47,12 @@ func (lln *llNotes) Commit(ctx context.Context, commit *github.RepositoryCommit)
 	err := lln.http.Do(ctx, "GET",
 		fmt.Sprintf("https://github.com/%s/%s/commit/%s.diff", lln.org, lln.repo, commit.SHA),
 		httpclient.WithResponseUnmarshal(&buf))
+	var httpErr *httpclient.HttpError
+	if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+		return History{
+			AssistantMessage(fmt.Sprintf("Commit %s was not found", commit.SHA)),
+		}, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("fetch diff: %w", err)
 	}
