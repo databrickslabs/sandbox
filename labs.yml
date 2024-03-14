@@ -5,7 +5,7 @@ install:
   script: install.py
 description: Databricks Labs Sandbox
 entrypoint: cli.py
-min_python: 3.8
+min_python: 3.10
 commands:
   - name: ip-access-list-analyzer
     description: "Analyzer/Fixer for Databricks IP Access Lists"
@@ -17,3 +17,10 @@ commands:
       - name: apply
         description: "If script should do the changes"
         default: false
+  - name: repl
+    description: "Interactively run Python/SQL/Scala/R on a Databricks cluster"
+    require_running_cluster: true
+    flags:
+      - name: test
+        description: "test flag"
+        default: ''

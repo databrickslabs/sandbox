@@ -1,5 +1,5 @@
 from prompt_toolkit import PromptSession
-from databricks.labs.dbx_repl.context_handler import ContextHandler
+from .context_handler import ContextHandler
 
 def repl(client, language, cluster_id):
     prompt = f"[{cluster_id}][{language.value}]>"

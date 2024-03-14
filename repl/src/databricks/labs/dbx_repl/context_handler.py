@@ -1,7 +1,6 @@
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import compute
-from databricks.labs.dbx_repl.helpers import Language
-from databricks.labs.dbx_repl.helpers import parse_command_output
+from .helpers import Language, parse_command_output
 
 
 class ContextHandler:

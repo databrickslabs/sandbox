@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import os
 import webbrowser
 
 logger = logging.getLogger("databricks.labs.sandbox")
@@ -10,13 +11,19 @@ def ip_access_list_analyzer(**args):
     import ip_access_list_analyzer.ip_acl_analyzer as analyzer
     analyzer.main(args)
 
+def repl(**args):
+    from repl.src.databricks.labs.dbx_repl import labs_main
+    print("args: ", args)
+    #main(**args)
 
 MAPPING = {
-    "ip-access-list-analyzer": ip_access_list_analyzer
+    "ip-access-list-analyzer": ip_access_list_analyzer,
+    "repl": repl
 }
 
-
 def main(raw):
+    print("raw: ", raw)
+
     payload = json.loads(raw)
     command = payload["command"]
     if command not in MAPPING:
