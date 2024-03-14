@@ -21,8 +21,6 @@ MAPPING = {
 }
 
 def main(raw):
-    print("raw: ", raw)
-
     payload = json.loads(raw)
     command = payload["command"]
     if command not in MAPPING:
