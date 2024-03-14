@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "dbx-repl"
+version = "0.1.0"
+description = "REPL for Databricks Compute"
+authors = ["Zac Davies <zac@databricks.com>"]
+readme = "README.md"
+packages = [
+    { include = "databricks", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+prompt-toolkit = "^3.0.43"
+click = "^8.1.7"
+cli-helpers = "^2.3.1"
+databricks-sdk = "^0.21.0"
+matplotlib = "^3.8.3"
+ipython = "^8.22.2"
+databricks-labs-blueprint = "^0.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+databricks = "databricks.labs.dbx_repl.main:databricks"
