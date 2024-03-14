@@ -13,8 +13,7 @@ def ip_access_list_analyzer(**args):
 
 def repl(**args):
     from repl.src.databricks.labs.dbx_repl import labs_main
-    print("args: ", args)
-    #main(**args)
+    labs_main.labs_main(args["lang"], args["cluster_id"])
 
 MAPPING = {
     "ip-access-list-analyzer": ip_access_list_analyzer,

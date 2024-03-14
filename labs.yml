@@ -19,8 +19,11 @@ commands:
         default: false
   - name: repl
     description: "Interactively run Python/SQL/Scala/R on a Databricks cluster"
-    require_running_cluster: true
+    require_running_cluster: false
     flags:
-      - name: test
-        description: "test flag"
+      - name: lang
+        description: "Language to use. One of python, sql, scala, r"
+        default: 'python'
+      - name: cluster_id
+        description: "Cluster ID to use"
         default: ''

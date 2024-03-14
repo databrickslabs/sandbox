@@ -2,7 +2,7 @@ from prompt_toolkit import PromptSession
 from .context_handler import ContextHandler
 
 def repl(client, language, cluster_id):
-    prompt = f"[{cluster_id}][{language.value}]>"
+    prompt = f"[{cluster_id}][{language.value}]> "
     session = PromptSession()
 
     handler = ContextHandler(client, cluster_id, language)
