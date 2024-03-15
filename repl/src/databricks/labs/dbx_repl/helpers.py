@@ -43,9 +43,13 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
 
 
 def cluster_ready(client: WorkspaceClient, cluster_id: str) -> str:
-    if cluster_id and client.clusters.get(cluster_id):
+    cluster_info = client.clusters.get(cluster_id)
+    print(f"Connecting to '{cluster_id}'...")
+    if cluster_id and cluster_info:
         client.clusters.ensure_cluster_is_running(cluster_id)
         return cluster_id
+    else:
+        raise Exception(f"couldn't connect to {cluster_id}")
 
 
 # TODO: probably can be reworked
