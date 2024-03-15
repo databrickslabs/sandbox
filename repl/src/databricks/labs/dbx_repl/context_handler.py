@@ -1,3 +1,4 @@
+import os
 from databricks.sdk import WorkspaceClient
 from .helpers import (
     Language,
@@ -7,9 +8,8 @@ from .helpers import (
     repl_styled_prompt,
     prompt_continuation,
 )
-from .keybinds import repl_keybinds
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.patch_stdout import patch_stdout
 
@@ -32,11 +32,13 @@ class ContextHandler:
         ).id
         # self._multiline = multiline
 
+        os.makedirs(os.path.expanduser("~/.databricks"), exist_ok=True)
+        history=FileHistory(os.path.expanduser('~/.databricks/repl_history'))
+
         # Setup keybinds and prompt session
-        self._key_bindings = repl_keybinds(self)
         self._prompt_session = PromptSession(
-            key_bindings=self._key_bindings,
             lexer=PygmentsLexer(get_lexer(self._language)),
+            history=history,
             # multiline=self._multiline
         )
 
