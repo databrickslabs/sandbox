@@ -3,6 +3,7 @@ name: sandbox
 install:
   min_runtime_version: 13.1
   script: install.py
+  require_databricks_connect: false
 description: Databricks Labs Sandbox
 entrypoint: cli.py
 min_python: 3.10
@@ -10,6 +11,7 @@ commands:
   - name: ip-access-list-analyzer
     description: "Analyzer/Fixer for Databricks IP Access Lists"
     require_running_cluster: false
+    require_databricks_connect: false
     flags:
       - name: json_file
         description: "Optional JSON file with dump of IP Access Lists"
@@ -20,6 +22,7 @@ commands:
   - name: repl
     description: "Interactively run Python/SQL/Scala/R on a Databricks cluster"
     require_running_cluster: false
+    require_databricks_connect: false
     flags:
       - name: lang
         description: "Language to use. One of python, sql, scala, r"

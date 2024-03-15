@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 from typing import Optional, List, Tuple
+from uuid import uuid4
 from databricks.sdk import WorkspaceClient
 from enum import Enum
 from databricks.sdk.service.compute import CommandStatusResponse, State
@@ -36,6 +37,17 @@ class Language(Enum):
     R = "r"
 
 
+def create_serverless_cluster(client: WorkspaceClient) -> str:
+    token = uuid4()
+    body = {
+        "kind": "SERVERLESS_REPL_VM",
+        "idempotency_token": str(token)
+    }
+    # print(body)
+    res = client.api_client.do('POST', f'/api/2.0/clusters/create', body=body)
+    return res['cluster_id']
+
+
 def serverless_available(client: WorkspaceClient) -> Optional[str]:
     client = WorkspaceClient()
     current_user = client.current_user.me().emails[0].value
@@ -45,6 +57,11 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
     for cluster in client.clusters.list():
         if cluster.cluster_name == "" and cluster.creator_user_name == current_user:
             return cluster.cluster_id
+        
+    try:
+        return create_serverless_cluster(client)
+    except Exception as e:
+        print(f"Failed to create serverless cluster: {e}")
 
     return None
 
@@ -120,10 +137,10 @@ def cluster_setup(
         pass
 
     # Check if serverless is available for SQL/Python
-    if language.value in ["sql", "python"]:
-        serverless_cluster_id = serverless_available(client)
-        if serverless_cluster_id:
-            return serverless_cluster_id
+    # if language.value in ["sql", "python"]:
+    serverless_cluster_id = serverless_available(client)
+    if serverless_cluster_id:
+        return serverless_cluster_id
 
     # TODO: ask user to pick a cluster from a list that is compatible
 

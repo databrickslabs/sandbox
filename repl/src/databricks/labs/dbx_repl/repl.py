@@ -11,7 +11,7 @@ def welcome():
     })
 
     print_formatted_text(HTML('''<welcome>Welcome to the Databricks REPL!
- * Press Ctrl-D or Ctrl-C to exit
+ * Press Ctrl-D to exit
  * Type <code>:python</code>, <code>:r</code>, <code>:sql</code>, or <code>:scala</code> to switch languages
 </welcome>'''), style=style)
 
@@ -28,5 +28,5 @@ def repl(client, language, cluster_id):
             continue
         except EOFError:
             handler.close()
-            break  # Exit the loop if Ctrl-D or Ctrl-C is pressed
+            break  # Exit the loop if Ctrl-D is pressed
     print("Exiting REPL...")
