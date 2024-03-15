@@ -65,16 +65,19 @@ class ContextHandler:
             print(e)
 
     def execute(self, cmd: str) -> str:
-        result_raw = self._client.command_execution.execute_and_wait(
-            cluster_id=self._cluster_id,
-            command=cmd,
-            context_id=self._context_id,
-            language=self._language,
-        )
-        result_parsed = parse_command_output(result_raw, self._language)
-        if result_parsed is not None:
-            print(result_parsed)
-        return result_parsed
+        try:
+            result_raw = self._client.command_execution.execute_and_wait(
+                cluster_id=self._cluster_id,
+                command=cmd,
+                context_id=self._context_id,
+                language=self._language
+            )
+            result_parsed = parse_command_output(result_raw, self._language)
+            if result_parsed is not None:
+                print(result_parsed)
+            return result_parsed
+        except Exception as e:
+            return None
 
     def prompt_and_execute(self) -> str:
         text = self.prompt()
