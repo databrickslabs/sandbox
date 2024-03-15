@@ -24,6 +24,6 @@ commands:
       - name: lang
         description: "Language to use. One of python, sql, scala, r"
         default: "python"
-      - name: cluster_id
+      - name: cluster-id
         description: "Cluster ID to use"
         default: ''
