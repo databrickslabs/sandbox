@@ -1,3 +1,6 @@
+import os
+import subprocess
+import tempfile
 from typing import Optional, List, Tuple
 from databricks.sdk import WorkspaceClient
 from enum import Enum
@@ -90,16 +93,45 @@ def validate_language(language: str) -> Language:
     )
 
 
-def display_image_from_base64_string(encoded_image: str) -> Image:
+def display_image_from_base64_string(encoded_image: str):
     # Assuming `encoded_image` is the Base64 string and has a prefix like 'data:image/png;base64,'
     # Remove the prefix and decode the Base64 string
-    base64_str = encoded_image.split(",", 1)[1]
+    mime, base64_str = encoded_image.split(",", 1)
     image_data = base64.b64decode(base64_str)
 
-    # Read the decoded data into an image
-    img = Image.open(BytesIO(image_data))
-    img.show()
-    return img
+    try:
+        display_image_vscode(mime, image_data)
+    except:
+        # Read the decoded data into an image
+        img = Image.open(BytesIO(image_data))
+        img.show()
+
+def display_image_vscode(mime: str, image_data: BytesIO):
+    if os.environ.get("VSCODE_INJECTION") is None:
+        raise RuntimeError("This function is only available in VSCode")
+
+    mime = mime.split(":")[1].split(";")[0]
+    if mime == "image/png":
+        file_extension = ".png"
+    elif mime == "image/jpeg":
+        file_extension = ".jpeg"
+    else:
+        raise ValueError(f"Unsupported image type: {mime}")
+        
+    # write image_data to a temporary file
+    tmp = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=file_extension)
+    tmp.write(image_data)
+
+    is_insiders = os.environ.get("VSCODE_GIT_ASKPASS_MAIN").index("Insiders") != -1
+    
+    if is_insiders:
+        cmd = "code-insiders"
+    else:
+        cmd = "code"
+
+    command = [cmd, "-r", tmp.name]
+    process = subprocess.Popen(command)
+    process.wait()
 
 
 def parse_cmd_error(command_result: CommandStatusResponse, language: Language) -> str:
@@ -135,14 +167,13 @@ def parse_cmd_table(command_result: CommandStatusResponse) -> str:
     return table
 
 
-def parse_cmd_image(command_result: CommandStatusResponse) -> Image:
+def parse_cmd_image(command_result: CommandStatusResponse):
     result_type = command_result.results.result_type.value
     if result_type == "images":
         base64_str = command_result.results.file_names[0]
     else:
         base64_str = command_result.results.file_name
-    image = display_image_from_base64_string(base64_str)
-    return image
+    display_image_from_base64_string(base64_str)
 
 
 def parse_cmd_result(
@@ -199,7 +230,7 @@ def repl_styled_prompt(cluster_id, language: Language) -> Tuple[List[Tuple], Sty
         ("class:bracket", "]"),
         ("class:bracket", "["),
         ("class:language", language.value),
-        ("class:bracket", "]>"),
+        ("class:bracket", "]> "),
     ]
 
     style = Style.from_dict(
