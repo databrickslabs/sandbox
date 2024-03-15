@@ -23,7 +23,7 @@ commands:
     flags:
       - name: lang
         description: "Language to use. One of python, sql, scala, r"
-        default: 'python'
+        default: "python"
       - name: cluster_id
         description: "Cluster ID to use"
         default: ''

@@ -9,14 +9,24 @@ def databricks():
     """Databricks CLI group."""
     pass
 
-@databricks.command(name='repl')
-@click.argument("language")
+
+@databricks.command(name="repl")
+@click.argument(
+    "language"
+)
 @click.option("--cluster-id", default=None, help="Cluster ID to use")
-@click.option("--profile", default="DEFAULT", help="Profile to use from .databrickscfg")
+# @click.option(
+#     "--multiline",
+#     "-ml",
+#     is_flag=True,
+#     show_default=True,
+#     default=False,
+#     help="Enable multiline mode for REPL",
+# )
 def main(language, cluster_id, profile):
 
     client = WorkspaceClient(profile=profile)
-    
+
     language = validate_language(language)
     cluster_id = cluster_setup(client, cluster_id, language)
 

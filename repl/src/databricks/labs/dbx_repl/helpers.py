@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Tuple
 from databricks.sdk import WorkspaceClient
 from enum import Enum
 from databricks.sdk.service.compute import CommandStatusResponse
@@ -8,6 +8,15 @@ from PIL import Image
 from io import BytesIO
 import re
 from IPython.display import display, HTML
+from prompt_toolkit.lexers import PygmentsLexer
+from pygments.lexers.sql import SqlLexer
+from pygments.lexers.r import SLexer
+from pygments.lexers.python import Python3Lexer
+from pygments.lexers.jvm import ScalaLexer
+from pygments.lexer import Lexer
+from prompt_toolkit.shortcuts import prompt
+from prompt_toolkit.styles import Style
+
 
 formatter = TabularOutputFormatter()
 
@@ -145,6 +154,9 @@ def parse_cmd_result(
             out = None
 
     # For other languages 'out' is simply taken from the command result
+    if out == "":
+        return None
+
     return out
 
 
@@ -162,3 +174,43 @@ def parse_command_output(
         return None
 
     return parse_cmd_result(command_result, language)
+
+
+def get_lexer(language: Language) -> Optional[Lexer]:
+    lexer_map = {
+        "python": Python3Lexer,
+        "sql": SqlLexer,
+        "r": SLexer,
+        "scala": ScalaLexer,
+    }
+    lexer_class = lexer_map.get(language.value)
+    return lexer_class if lexer_class else None
+
+
+def repl_styled_prompt(cluster_id, language: Language) -> Tuple[List[Tuple], Style]:
+
+    message = [
+        ("class:bracket", "["),
+        ("class:cluster", cluster_id),
+        ("class:bracket", "]"),
+        ("class:bracket", "["),
+        ("class:language", language.value),
+        ("class:bracket", "]>"),
+    ]
+
+    style = Style.from_dict(
+        {
+            # User input (default text).
+            "": "#fafafa",
+            # Prompt.
+            "bracket": "#bdbdbd",
+            "cluster": "#559c51",
+            "language": "#cf215e",
+        }
+    )
+
+    return (message, style)
+
+
+def prompt_continuation(width, line_number, is_soft_wrap):
+    return ">"

@@ -18,5 +18,6 @@ Command line tool that opens an interactive REPL against a Databricks cluster.
  * `--lang` Language REPL starts as (`r`/`python`/`sql`/`scala`)
  * `--cluster-id` Cluster to attach to
  * `--profile` Profile in `.databrickscfg` to look for credentials
+ <!-- * `--multiline` REPL is in multiline mode and needs to `Meta`+`Enter` to submit commands (or `Esc` > `Enter`) -->
 
 Use `repl --help` for more information about a command.
