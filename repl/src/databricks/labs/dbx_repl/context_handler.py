@@ -55,9 +55,22 @@ class ContextHandler:
             )
             return result
 
-    def switch_language(self):
-        langs = WordCompleter(["r", "python", "sql", "scala"])
-        new_language = self._prompt_session.prompt("Choose Language: ", completer=langs)
+    def is_language_switch_command(self, cmd: str):
+        cmd = cmd.strip().lower()
+        if not cmd.startswith(":"):
+            return False
+        
+        try:
+            validate_language(cmd[1:])
+        except ValueError:
+            return False
+        return True
+
+    def switch_language(self, new_language):
+        # langs = WordCompleter(["r", "python", "sql", "scala"])
+        # new_language = self._prompt_session.prompt("Choose Language: ", completer=langs)
+        new_language = new_language.strip().lower().split(":")[1]
+
         try:
             self._language = validate_language(new_language)
             print(f"Switched to {self._language.value}")
@@ -65,6 +78,10 @@ class ContextHandler:
             print(e)
 
     def execute(self, cmd: str) -> str:
+        if self.is_language_switch_command(cmd):
+            self.switch_language(cmd)
+            return None
+
         try:
             result_raw = self._client.command_execution.execute_and_wait(
                 cluster_id=self._cluster_id,
