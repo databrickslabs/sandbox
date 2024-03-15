@@ -4,9 +4,13 @@ import tempfile
 from typing import Optional, List, Tuple
 from databricks.sdk import WorkspaceClient
 from enum import Enum
-from databricks.sdk.service.compute import CommandStatusResponse
+from databricks.sdk.service.compute import CommandStatusResponse, State
+from databricks.sdk.mixins.compute import ClustersExt
+from databricks.sdk.errors.base import DatabricksError
 from cli_helpers.tabular_output import TabularOutputFormatter
 import base64
+import datetime
+import time
 from PIL import Image
 from io import BytesIO
 import re
@@ -44,12 +48,55 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
 
     return None
 
+def print_cluster_state(c):
+    # clear current line and overwrite it with the state message
+    message = f"Starting cluster '{c.cluster_id}' [{c.state}]: {c.state_message}"
+    print(f"\033[2K\r{message}", end="")
+
+def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> None:
+    """Ensures that given cluster is running, regardless of the current state"""
+    timeout = datetime.timedelta(minutes=20)
+    deadline = time.time() + timeout.total_seconds()
+    while time.time() < deadline:
+        try:
+            state = State
+            info = clusterClient.get(cluster_id)
+            if info.state == state.RUNNING:
+                return
+            elif info.state == state.TERMINATED:
+                print(f"Starting cluster '{cluster_id}'...")
+                clusterClient.start(cluster_id).result(print_cluster_state)
+                return
+            elif info.state == state.TERMINATING:
+                print(f"Waiting for cluster '{cluster_id}' to terminate...")
+                clusterClient.wait_get_cluster_terminated(cluster_id)
+                clusterClient.start(cluster_id).result(print_cluster_state)
+                return
+            elif info.state in (state.PENDING, state.RESIZING, state.RESTARTING):
+                print(f"Waiting for cluster '{cluster_id}' to start...")
+                clusterClient.wait_get_cluster_running(cluster_id, datetime.timedelta(minutes=20), print_cluster_state)
+                return
+            elif info.state in (state.ERROR, state.UNKNOWN):
+                raise RuntimeError(f'Cluster {cluster_id} is {info.state}: {info.state_message}')
+        except DatabricksError as e:
+            if e.error_code == 'INVALID_STATE':
+                print(f'Cluster was started by other process: {e} Retrying.')
+                continue
+            raise e
+        except ValueError as e:
+            continue
+        except e:
+            print('Operation failed, retrying', e)
+        
+    raise TimeoutError(f'timed out after {timeout}')
+
 
 def cluster_ready(client: WorkspaceClient, cluster_id: str) -> str:
     cluster_info = client.clusters.get(cluster_id)
     print(f"Connecting to '{cluster_id}'...")
     if cluster_id and cluster_info:
-        client.clusters.ensure_cluster_is_running(cluster_id)
+        ensure_cluster_is_running(client.clusters, cluster_id)
+        print()
         return cluster_id
     else:
         raise Exception(f"couldn't connect to {cluster_id}")
@@ -248,4 +295,4 @@ def repl_styled_prompt(cluster_id, language: Language) -> Tuple[List[Tuple], Sty
 
 
 def prompt_continuation(width, line_number, is_soft_wrap):
-    return ">"
+    return "> "
