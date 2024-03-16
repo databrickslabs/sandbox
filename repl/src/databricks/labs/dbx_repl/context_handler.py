@@ -33,12 +33,12 @@ class ContextHandler:
         # self._multiline = multiline
 
         os.makedirs(os.path.expanduser("~/.databricks"), exist_ok=True)
-        history=FileHistory(os.path.expanduser('~/.databricks/repl_history'))
+        self._history = FileHistory(os.path.expanduser("~/.databricks/repl_history"))
 
         # Setup keybinds and prompt session
         self._prompt_session = PromptSession(
             lexer=PygmentsLexer(get_lexer(self._language)),
-            history=history,
+            history=self._history,
             # multiline=self._multiline
         )
 
@@ -61,27 +61,26 @@ class ContextHandler:
         cmd = cmd.strip().lower()
         if not cmd.startswith(":"):
             return False
-        
+
         try:
             validate_language(cmd[1:])
         except ValueError:
             return False
         return True
 
-    def switch_language(self, new_language):
-        # langs = WordCompleter(["r", "python", "sql", "scala"])
-        # new_language = self._prompt_session.prompt("Choose Language: ", completer=langs)
+    def set_language(self, new_language):
         new_language = new_language.strip().lower().split(":")[1]
 
-        try:
-            self._language = validate_language(new_language)
-            print(f"Switched to {self._language.value}")
-        except ValueError as e:
-            print(e)
+        if new_language != self._language.value:
+            try:
+                self._language = validate_language(new_language)
+                self._prompt_session.lexer = PygmentsLexer(get_lexer(self._language))
+            except ValueError as e:
+                print(e)
 
     def execute(self, cmd: str) -> str:
         if self.is_language_switch_command(cmd):
-            self.switch_language(cmd)
+            self.set_language(cmd)
             return None
 
         try:
@@ -89,7 +88,7 @@ class ContextHandler:
                 cluster_id=self._cluster_id,
                 command=cmd,
                 context_id=self._context_id,
-                language=self._language
+                language=self._language,
             )
             result_parsed = parse_command_output(result_raw, self._language)
             if result_parsed is not None:

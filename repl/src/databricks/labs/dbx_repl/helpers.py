@@ -39,17 +39,13 @@ class Language(Enum):
 
 def create_serverless_cluster(client: WorkspaceClient) -> str:
     token = uuid4()
-    body = {
-        "kind": "SERVERLESS_REPL_VM",
-        "idempotency_token": str(token)
-    }
+    body = {"kind": "SERVERLESS_REPL_VM", "idempotency_token": str(token)}
     # print(body)
-    res = client.api_client.do('POST', f'/api/2.0/clusters/create', body=body)
-    return res['cluster_id']
+    res = client.api_client.do("POST", f"/api/2.0/clusters/create", body=body)
+    return res["cluster_id"]
 
 
 def serverless_available(client: WorkspaceClient) -> Optional[str]:
-    client = WorkspaceClient()
     current_user = client.current_user.me().emails[0].value
 
     # TODO: its possible for there to be multiple for a given user (if they exist)
@@ -57,7 +53,7 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
     for cluster in client.clusters.list():
         if cluster.cluster_name == "" and cluster.creator_user_name == current_user:
             return cluster.cluster_id
-        
+
     try:
         return create_serverless_cluster(client)
     except Exception as e:
@@ -65,10 +61,12 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
 
     return None
 
+
 def print_cluster_state(c):
     # clear current line and overwrite it with the state message
-    message = f"Starting cluster '{c.cluster_id}' [{c.state}]: {c.state_message}"
+    message = f"Starting cluster '{c.cluster_id}' [{c.state.value}]: {c.state_message}"
     print(f"\033[2K\r{message}", end="")
+
 
 def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> None:
     """Ensures that given cluster is running, regardless of the current state"""
@@ -91,21 +89,25 @@ def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> No
                 return
             elif info.state in (state.PENDING, state.RESIZING, state.RESTARTING):
                 print(f"Waiting for cluster '{cluster_id}' to start...")
-                clusterClient.wait_get_cluster_running(cluster_id, datetime.timedelta(minutes=20), print_cluster_state)
+                clusterClient.wait_get_cluster_running(
+                    cluster_id, datetime.timedelta(minutes=20), print_cluster_state
+                )
                 return
             elif info.state in (state.ERROR, state.UNKNOWN):
-                raise RuntimeError(f'Cluster {cluster_id} is {info.state}: {info.state_message}')
+                raise RuntimeError(
+                    f"Cluster {cluster_id} is {info.state}: {info.state_message}"
+                )
         except DatabricksError as e:
-            if e.error_code == 'INVALID_STATE':
-                print(f'Cluster was started by other process: {e} Retrying.')
+            if e.error_code == "INVALID_STATE":
+                print(f"Cluster was started by other process: {e} Retrying.")
                 continue
             raise e
         except ValueError as e:
             continue
         except e:
-            print('Operation failed, retrying', e)
-        
-    raise TimeoutError(f'timed out after {timeout}')
+            print("Operation failed, retrying", e)
+
+    raise TimeoutError(f"timed out after {timeout}")
 
 
 def cluster_ready(client: WorkspaceClient, cluster_id: str) -> str:
@@ -170,6 +172,7 @@ def display_image_from_base64_string(encoded_image: str):
         img = Image.open(BytesIO(image_data))
         img.show()
 
+
 def display_image_vscode(mime: str, image_data: BytesIO):
     if os.environ.get("VSCODE_INJECTION") is None:
         raise RuntimeError("This function is only available in VSCode")
@@ -181,13 +184,13 @@ def display_image_vscode(mime: str, image_data: BytesIO):
         file_extension = ".jpeg"
     else:
         raise ValueError(f"Unsupported image type: {mime}")
-        
+
     # write image_data to a temporary file
-    tmp = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=file_extension)
+    tmp = tempfile.NamedTemporaryFile(mode="w+b", delete=False, suffix=file_extension)
     tmp.write(image_data)
 
     is_insiders = os.environ.get("VSCODE_GIT_ASKPASS_MAIN").index("Insiders") != -1
-    
+
     if is_insiders:
         cmd = "code-insiders"
     else:
