@@ -42,6 +42,8 @@ class ContextHandler:
             # multiline=self._multiline
         )
 
+        self._active_command_id = None
+
     def close(self):
         self._client.command_execution.destroy(self._cluster_id, self._context_id)
         pass
@@ -84,18 +86,30 @@ class ContextHandler:
             return None
 
         try:
-            result_raw = self._client.command_execution.execute_and_wait(
+            command = self._client.command_execution.execute(
                 cluster_id=self._cluster_id,
                 command=cmd,
                 context_id=self._context_id,
                 language=self._language,
             )
+            if command.command_id:
+                self._active_command_id = command.command_id
+            result_raw = command.result()
             result_parsed = parse_command_output(result_raw, self._language)
             if result_parsed is not None:
                 print(result_parsed)
+            self._active_command_id = None
             return result_parsed
         except Exception as e:
             return None
+
+    def cancel_active_command(self):
+        self._client.command_execution.cancel_and_wait(
+            cluster_id=self._cluster_id,
+            command_id=self._active_command_id,
+            context_id=self._context_id
+        )
+        return None
 
     def prompt_and_execute(self) -> str:
         text = self.prompt()

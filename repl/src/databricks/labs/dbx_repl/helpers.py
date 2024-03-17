@@ -5,24 +5,22 @@ from typing import Optional, List, Tuple
 from uuid import uuid4
 from databricks.sdk import WorkspaceClient
 from enum import Enum
-from databricks.sdk.service.compute import CommandStatusResponse, State
+from databricks.sdk.service.compute import CommandStatusResponse, State, ClustersAPI
 from databricks.sdk.mixins.compute import ClustersExt
 from databricks.sdk.errors.base import DatabricksError
 from cli_helpers.tabular_output import TabularOutputFormatter
 import base64
-import datetime
+from datetime import timedelta
 import time
 from PIL import Image
 from io import BytesIO
 import re
 from IPython.display import display, HTML
-from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.sql import SqlLexer
 from pygments.lexers.r import SLexer
 from pygments.lexers.python import Python3Lexer
 from pygments.lexers.jvm import ScalaLexer
 from pygments.lexer import Lexer
-from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.styles import Style
 
 
@@ -64,13 +62,14 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
 
 def print_cluster_state(c):
     # clear current line and overwrite it with the state message
-    message = f"Starting cluster '{c.cluster_id}' [{c.state.value}]: {c.state_message}"
+    message = f"[{c.cluster_id}][{c.state.value}]: {c.state_message}"
     print(f"\033[2K\r{message}", end="")
 
 
 def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> None:
     """Ensures that given cluster is running, regardless of the current state"""
-    timeout = datetime.timedelta(minutes=20)
+    timeout = timedelta(minutes=10)
+    timeout.total_seconds()
     deadline = time.time() + timeout.total_seconds()
     while time.time() < deadline:
         try:
@@ -80,18 +79,21 @@ def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> No
                 return
             elif info.state == state.TERMINATED:
                 print(f"Starting cluster '{cluster_id}'...")
-                clusterClient.start(cluster_id).result(print_cluster_state)
+                clusterClient.start(cluster_id).result(callback=print_cluster_state)
+                print("")
                 return
             elif info.state == state.TERMINATING:
                 print(f"Waiting for cluster '{cluster_id}' to terminate...")
                 clusterClient.wait_get_cluster_terminated(cluster_id)
-                clusterClient.start(cluster_id).result(print_cluster_state)
+                clusterClient.start(cluster_id).result(callback=print_cluster_state)
+                print("")
                 return
             elif info.state in (state.PENDING, state.RESIZING, state.RESTARTING):
                 print(f"Waiting for cluster '{cluster_id}' to start...")
                 clusterClient.wait_get_cluster_running(
-                    cluster_id, datetime.timedelta(minutes=20), print_cluster_state
+                    cluster_id, timeout, callback=print_cluster_state
                 )
+                print("")
                 return
             elif info.state in (state.ERROR, state.UNKNOWN):
                 raise RuntimeError(
@@ -115,11 +117,9 @@ def cluster_ready(client: WorkspaceClient, cluster_id: str) -> str:
     print(f"Connecting to '{cluster_id}'...")
     if cluster_id and cluster_info:
         ensure_cluster_is_running(client.clusters, cluster_id)
-        print()
         return cluster_id
     else:
         raise Exception(f"couldn't connect to {cluster_id}")
-
 
 # TODO: probably can be reworked
 def cluster_setup(
