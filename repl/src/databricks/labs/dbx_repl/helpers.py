@@ -22,6 +22,8 @@ from pygments.lexers.python import Python3Lexer
 from pygments.lexers.jvm import ScalaLexer
 from pygments.lexer import Lexer
 from prompt_toolkit.styles import Style
+from prompt_toolkit import print_formatted_text, HTML, ANSI
+from prompt_toolkit.formatted_text import FormattedText
 
 
 formatter = TabularOutputFormatter()
@@ -34,11 +36,9 @@ class Language(Enum):
     SQL = "sql"
     R = "r"
 
-
 def create_serverless_cluster(client: WorkspaceClient) -> str:
     token = uuid4()
     body = {"kind": "SERVERLESS_REPL_VM", "idempotency_token": str(token)}
-    # print(body)
     res = client.api_client.do("POST", f"/api/2.0/clusters/create", body=body)
     return res["cluster_id"]
 
@@ -61,9 +61,25 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
 
 
 def print_cluster_state(c):
-    # clear current line and overwrite it with the state message
-    message = f"[{c.cluster_id}][{c.state.value}]: {c.state_message}"
-    print(f"\033[2K\r{message}", end="")
+
+    # NOTE: this is hacky, need to fine a better way to clear line later
+    if len(c.state_message) < 80:
+        c.state_message = c.state_message + ((80 - len(c.state_message)) * " ")
+    message = FormattedText(
+        [
+            ("", "\b\r" * 180),
+            ("#bdbdbd", "["),
+            ("#559c51", c.cluster_id),
+            ("#bdbdbd", "]"),
+            ("#bdbdbd", "["),
+            ("#ebab34", c.state.value),
+            ("#bdbdbd", "]"),
+            ("#bec2bf", ": "),
+            ("#bec2bf", c.state_message),
+        ]
+    )
+    
+    print_formatted_text(message, end="")
 
 
 def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> None:
@@ -78,22 +94,19 @@ def ensure_cluster_is_running(clusterClient: ClustersExt, cluster_id: str) -> No
             if info.state == state.RUNNING:
                 return
             elif info.state == state.TERMINATED:
-                print(f"Starting cluster '{cluster_id}'...")
                 clusterClient.start(cluster_id).result(callback=print_cluster_state)
-                print("")
+                print(("\b" * 200) + "\r", end="")
                 return
             elif info.state == state.TERMINATING:
-                print(f"Waiting for cluster '{cluster_id}' to terminate...")
                 clusterClient.wait_get_cluster_terminated(cluster_id)
                 clusterClient.start(cluster_id).result(callback=print_cluster_state)
-                print("")
+                print(("\b" * 200) + "\r", end="")
                 return
             elif info.state in (state.PENDING, state.RESIZING, state.RESTARTING):
-                print(f"Waiting for cluster '{cluster_id}' to start...")
                 clusterClient.wait_get_cluster_running(
                     cluster_id, timeout, callback=print_cluster_state
                 )
-                print("")
+                print(("\b" * 200) + "\r", end="")
                 return
             elif info.state in (state.ERROR, state.UNKNOWN):
                 raise RuntimeError(
@@ -120,6 +133,7 @@ def cluster_ready(client: WorkspaceClient, cluster_id: str) -> str:
         return cluster_id
     else:
         raise Exception(f"couldn't connect to {cluster_id}")
+
 
 # TODO: probably can be reworked
 def cluster_setup(
@@ -216,7 +230,7 @@ def parse_cmd_error(command_result: CommandStatusResponse, language: Language) -
     if lang == "r":
         # R errors can sometimes have a prefix that is unhelpful
         if "DATABRICKS_CURRENT_TEMP_CMD__" in cause:
-            return cause[62:]
+            return cause[61:]
         else:
             return cause
 

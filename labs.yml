@@ -30,3 +30,6 @@ commands:
       - name: cluster-id
         description: "Cluster ID to use"
         default: ''
+      - name: profile
+        description: Profile to use from `~.databrickscfg`
+        default: 'DEFAULT'
