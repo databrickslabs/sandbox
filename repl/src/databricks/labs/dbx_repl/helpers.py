@@ -37,6 +37,7 @@ class Language(Enum):
     R = "r"
 
 def create_serverless_cluster(client: WorkspaceClient) -> str:
+    print(f"Creating serverless cluster...")
     token = uuid4()
     body = {"kind": "SERVERLESS_REPL_VM", "idempotency_token": str(token)}
     res = client.api_client.do("POST", f"/api/2.0/clusters/create", body=body)
@@ -50,6 +51,7 @@ def serverless_available(client: WorkspaceClient) -> Optional[str]:
     # returning first serverless cluster for the current user
     for cluster in client.clusters.list():
         if cluster.cluster_name == "" and cluster.creator_user_name == current_user:
+            print(f"Connecting to existing serverless cluster...")
             return cluster.cluster_id
 
     try:
@@ -203,7 +205,8 @@ def display_image_vscode(mime: str, image_data: BytesIO):
     tmp = tempfile.NamedTemporaryFile(mode="w+b", delete=False, suffix=file_extension)
     tmp.write(image_data)
 
-    is_insiders = os.environ.get("VSCODE_GIT_ASKPASS_MAIN").index("Insiders") != -1
+    # is_insiders = os.environ.get("VSCODE_GIT_ASKPASS_MAIN").indexOf("Insiders") != -1
+    is_insiders = False
 
     if is_insiders:
         cmd = "code-insiders"

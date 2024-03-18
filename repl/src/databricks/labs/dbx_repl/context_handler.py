@@ -39,6 +39,7 @@ class ContextHandler:
         self._prompt_session = PromptSession(
             lexer=PygmentsLexer(get_lexer(self._language)),
             history=self._history,
+            wrap_lines=False,
             # multiline=self._multiline
         )
 
@@ -92,24 +93,32 @@ class ContextHandler:
                 context_id=self._context_id,
                 language=self._language,
             )
-            if command.command_id:
-                self._active_command_id = command.command_id
+            # if command.command_id:
+            #     self._active_command_id = command.command_id
             result_raw = command.result()
             result_parsed = parse_command_output(result_raw, self._language)
             if result_parsed is not None:
                 print(result_parsed)
-            self._active_command_id = None
+            # self._active_command_id = None
             return result_parsed
+        # except KeyboardInterrupt:
+        #     print("interrupt")
+        #     self.cancel_active_command()
         except Exception as e:
             return None
 
-    def cancel_active_command(self):
-        self._client.command_execution.cancel_and_wait(
-            cluster_id=self._cluster_id,
-            command_id=self._active_command_id,
-            context_id=self._context_id
-        )
-        return None
+    # def cancel_active_command(self):
+    #     try:
+    #         self._client.command_execution.cancel_and_wait(
+    #             cluster_id=self._cluster_id,
+    #             command_id=self._active_command_id,
+    #             context_id=self._context_id,
+    #         )
+    #         self._active_command_id = None
+    #     except Exception as e:
+    #         print(e)
+    #     finally:
+    #         return None
 
     def prompt_and_execute(self) -> str:
         text = self.prompt()
