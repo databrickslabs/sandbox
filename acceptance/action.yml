@@ -20,6 +20,10 @@ inputs:
     description: 'Maximum suite execution time. Defaults to 1h'
     required: false
     default: 1h
+  create_issues:
+    description: 'Create issues in the repository for failed tests'
+    required: false
+    default: false
 outputs:
   sample:
     description: 'Sample output'

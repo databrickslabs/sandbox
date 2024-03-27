@@ -1,0 +1,36 @@
+name: nightly-acceptance
+
+on:
+  workflow_dispatch:
+    # ...
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  acceptance:
+    environment: tool
+    runs-on: larger
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21
+
+      - name: Acceptance
+        uses: databrickslabs/sandbox/acceptance@acceptance/v0.2.0
+        with:
+          directory: go-libs
+          vault_uri: ${{ secrets.VAULT_URI }}
+          create_issues: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        

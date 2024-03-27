@@ -15,6 +15,13 @@ type ListIssues struct {
 	PageOptions
 }
 
+type NewIssue struct {
+	Title     string   `json:"title,omitempty"`
+	Body      string   `json:"body,omitempty"`
+	Assignees []string `json:"assignees,omitempty"`
+	Labels    []string `json:"labels,omitempty"`
+}
+
 type Issue struct {
 	ID                int64      `json:"id,omitempty"`
 	Number            int        `json:"number,omitempty"`

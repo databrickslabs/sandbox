@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/databrickslabs/sandbox/acceptance/boilerplate"
@@ -12,6 +13,7 @@ import (
 	"github.com/databrickslabs/sandbox/acceptance/notify"
 	"github.com/databrickslabs/sandbox/acceptance/testenv"
 	"github.com/databrickslabs/sandbox/go-libs/env"
+	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/sethvargo/go-githubactions"
 )
 
@@ -79,21 +81,43 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("upload artifact: %w", err)
 	}
 	slackWebhook := b.Action.GetInput("slack_webhook")
-	if !report.Pass() && slackWebhook != "" {
+	createIssues := strings.ToLower(b.Action.GetInput("create_issues"))
+	needsSlack := slackWebhook != ""
+	needsIssues := createIssues == "true" || createIssues == "yes"
+	needsNotification := needsSlack || needsIssues
+	if !report.Pass() && needsNotification {
 		runUrl, err := b.RunURL(ctx)
 		if err != nil {
 			return fmt.Errorf("run url: %w", err)
 		}
-		err = notify.Notification{
+		alert := notify.Notification{
 			Project: project,
 			Report:  report,
 			Cloud:   loaded.Cloud(),
 			RunName: b.WorkflowRunName(),
 			WebHook: slackWebhook,
 			RunURL:  runUrl,
-		}.ToSlack()
-		if err != nil {
-			return fmt.Errorf("slack: %w", err)
+		}
+		if needsSlack {
+			err = alert.ToSlack()
+			if err != nil {
+				return fmt.Errorf("slack: %w", err)
+			}
+		}
+		if needsIssues {
+			for _, v := range report {
+				if !v.Failed() {
+					continue
+				}
+				err = b.CreateIssueIfNotOpen(ctx, github.NewIssue{
+					Title: fmt.Sprintf("Test failure: `%s`", v.Name),
+					Body:  v.Summary(),
+					Labels: []string{"bug"},
+				})
+				if err != nil {
+					return fmt.Errorf("create issue: %w", err)
+				}
+			}
 		}
 	}
 	return report.Failed()
