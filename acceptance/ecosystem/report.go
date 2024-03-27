@@ -25,6 +25,19 @@ func (tr TestResult) Duration() time.Duration {
 	return time.Duration(tr.Elapsed * float64(time.Second))
 }
 
+func (tr TestResult) Failed() bool {
+	return !tr.Pass && !tr.Skip
+}
+
+func (tr TestResult) Summary() string {
+	res := []string{}
+	res = append(res, "<details>")
+	res = append(res, fmt.Sprintf("<summary>%s</summary>", tr))
+	res = append(res, fmt.Sprintf("\n```\n%s\n```\n", tr.Output))
+	res = append(res, "</details>")
+	return strings.Join(res, "\n")
+}
+
 func (tr TestResult) String() string {
 	summary := ""
 	if !tr.Pass {
@@ -138,13 +151,10 @@ func (r TestReport) String() string {
 func (r TestReport) StepSummary() string {
 	res := []string{r.String()}
 	for _, v := range r {
-		if v.Pass || v.Skip {
+		if !v.Failed() {
 			continue
 		}
-		res = append(res, "<details>")
-		res = append(res, fmt.Sprintf("<summary>%s</summary>", v))
-		res = append(res, fmt.Sprintf("\n```\n%s\n```\n", v.Output))
-		res = append(res, "</details>")
+		res = append(res, v.Summary())
 	}
 	if r.Flaky() {
 		res = append(res, "\nFlaky tests:\n")

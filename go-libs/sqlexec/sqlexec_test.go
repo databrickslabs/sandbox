@@ -82,7 +82,7 @@ func TestAccQueryTypes(t *testing.T) {
 	require.NoError(t, result.Err())
 
 	require.Equal(t, []int{1, 2}, arrayType)
-	require.Equal(t, []byte("a"), binaryType)
+	require.Equal(t, []byte("a..."), binaryType)
 	require.Equal(t, true, booleanType)
 	require.Equal(t, time.Now().UTC().Truncate(24*time.Hour), dateType)
 	require.InDelta(t, 3, decimalType, 0.01)

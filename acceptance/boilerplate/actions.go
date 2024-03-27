@@ -92,6 +92,40 @@ func (a *boilerplate) RunURL(ctx context.Context) (string, error) {
 	return "", fmt.Errorf("id not found for current run: %s", a.context.Job)
 }
 
+func (a *boilerplate) CreateIssueIfNotOpen(ctx context.Context, newIssue github.NewIssue) error {
+	org, repo := a.context.Repo()
+	it := a.GitHub.ListRepositoryIssues(ctx, org, repo, &github.ListIssues{
+		State: "open",
+	})
+	created := map[string]bool{}
+	for it.HasNext(ctx) {
+		issue, err := it.Next(ctx)
+		if err != nil {
+			return fmt.Errorf("issue: %w", err)
+		}
+		created[issue.Title] = true
+	}
+	if created[newIssue.Title] {
+		return nil
+	}
+	body, err := a.taggedComment(ctx, newIssue.Body)
+	if err != nil {
+		return fmt.Errorf("tagged comment: %w", err)
+	}
+	// with the tagged comment, which has the workflow ref, we can link to the run
+	issue, err := a.GitHub.CreateIssue(ctx, org, repo, github.NewIssue{
+		Title:     newIssue.Title,
+		Assignees: newIssue.Assignees,
+		Labels:    newIssue.Labels,
+		Body:      body,
+	})
+	if err != nil {
+		return fmt.Errorf("new issue: %w", err)
+	}
+	logger.Infof(ctx, "Created issue: https://github.com/%s/%s/issues/%d", issue.Number)
+	return nil
+}
+
 func (a *boilerplate) tag() string {
 	// The ref path to the workflow. For example,
 	// octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch.

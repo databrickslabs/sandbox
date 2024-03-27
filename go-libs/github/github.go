@@ -292,6 +292,18 @@ func (c *GitHubClient) GetIssueComments(ctx context.Context, org, repo string, n
 	})
 }
 
+func (c *GitHubClient) CreateIssue(ctx context.Context, org, repo string, body NewIssue) (*Issue, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/issues", gitHubAPI, org, repo)
+	var res Issue
+	err := c.api.Do(ctx, "POST", path,
+		httpclient.WithRequestData(body),
+		httpclient.WithResponseUnmarshal(&res))
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (c *GitHubClient) CreateIssueComment(ctx context.Context, org, repo string, number int, body string) (*IssueComment, error) {
 	path := fmt.Sprintf("%s/repos/%s/%s/issues/%d/comments", gitHubAPI, org, repo, number)
 	var res IssueComment

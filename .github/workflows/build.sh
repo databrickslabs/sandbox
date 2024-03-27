@@ -3,8 +3,8 @@
 app=$1
 
 # Define platforms and architectures
-platforms=("windows" "linux" "darwin")
-architectures=("amd64" "arm64")
+platforms=("linux")
+architectures=("amd64")
 mkdir -p dist
 
 # Build binaries for each platform and architecture combination
