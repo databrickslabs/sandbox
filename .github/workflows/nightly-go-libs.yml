@@ -1,4 +1,4 @@
-name: acceptance
+name: nightly-acceptance
 
 on:
   workflow_dispatch:
