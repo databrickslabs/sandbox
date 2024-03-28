@@ -1,4 +1,5 @@
-const version = 'v0.2.0';
+const version = 'v0.2.1';
+const action = 'acceptance';
 
 const { createWriteStream, chmodSync } = require('fs');
 const { createGunzip } = require('zlib');
@@ -12,8 +13,8 @@ const pipelineAsync = promisify(pipeline);
 (async () => {
     const platform = process.platform == 'win32' ? 'windows' : process.platform;
     const arch = process.arch == 'x64' ? 'amd64' : process.arch;
-    const artifact = `acceptance_${platform}_${arch}.gz`;
-    const downloadUrl = `https://github.com/databrickslabs/sandbox/releases/download/acceptance/${version}/${artifact}`;
+    const artifact = `${action}_${platform}_${arch}.gz`;
+    const downloadUrl = `https://github.com/databrickslabs/sandbox/releases/download/${action}/${version}/${artifact}`;
     const filename = basename(downloadUrl).split('.')[0];
     const dest = createWriteStream(filename);
     const response = await fetch(downloadUrl);

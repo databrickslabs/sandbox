@@ -15,7 +15,7 @@ import (
 	"github.com/sethvargo/go-githubactions"
 )
 
-func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error) {
+func New(ctx context.Context, opts ...githubactions.Option) (*Boilerplate, error) {
 	opts = append(opts, githubactions.WithGetenv(func(key string) string {
 		return env.Get(ctx, key)
 	}))
@@ -25,7 +25,7 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 		return nil, err
 	}
 	logger.DefaultLogger = &actionsLogger{a}
-	return &boilerplate{
+	return &Boilerplate{
 		Action:  a,
 		context: context,
 		GitHub: github.NewClient(&github.GitHubConfig{
@@ -35,14 +35,14 @@ func New(ctx context.Context, opts ...githubactions.Option) (*boilerplate, error
 	}, nil
 }
 
-type boilerplate struct {
+type Boilerplate struct {
 	Action   *githubactions.Action
 	context  *githubactions.GitHubContext
 	GitHub   *github.GitHubClient
 	uploader *artifactUploader
 }
 
-func (a *boilerplate) PrepareArtifacts() (string, error) {
+func (a *Boilerplate) PrepareArtifacts() (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "artifacts-*")
 	if err != nil {
 		return "", fmt.Errorf("tmp: %w", err)
@@ -61,7 +61,7 @@ func (a *boilerplate) PrepareArtifacts() (string, error) {
 	return tempDir, nil
 }
 
-func (a *boilerplate) Upload(ctx context.Context, folder string) error {
+func (a *Boilerplate) Upload(ctx context.Context, folder string) error {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	suffix := make([]byte, 12)
 	for i := range suffix {
@@ -75,7 +75,7 @@ func (a *boilerplate) Upload(ctx context.Context, folder string) error {
 	return nil
 }
 
-func (a *boilerplate) RunURL(ctx context.Context) (string, error) {
+func (a *Boilerplate) RunURL(ctx context.Context) (string, error) {
 	org, repo := a.context.Repo()
 	workflowJobs := a.GitHub.ListWorkflowJobs(ctx, org, repo, a.context.RunID)
 	for workflowJobs.HasNext(ctx) {
@@ -92,27 +92,32 @@ func (a *boilerplate) RunURL(ctx context.Context) (string, error) {
 	return "", fmt.Errorf("id not found for current run: %s", a.context.Job)
 }
 
-func (a *boilerplate) CreateIssueIfNotOpen(ctx context.Context, newIssue github.NewIssue) error {
+func (a *Boilerplate) CreateOrCommentOnIssue(ctx context.Context, newIssue github.NewIssue) error {
 	org, repo := a.context.Repo()
 	it := a.GitHub.ListRepositoryIssues(ctx, org, repo, &github.ListIssues{
 		State: "open",
 	})
-	created := map[string]bool{}
+	created := map[string]int{}
 	for it.HasNext(ctx) {
 		issue, err := it.Next(ctx)
 		if err != nil {
 			return fmt.Errorf("issue: %w", err)
 		}
-		created[issue.Title] = true
+		created[issue.Title] = issue.Number
 	}
-	if created[newIssue.Title] {
-		return nil
-	}
+	// with the tagged comment, which has the workflow ref, we can link to the run
 	body, err := a.taggedComment(ctx, newIssue.Body)
 	if err != nil {
 		return fmt.Errorf("tagged comment: %w", err)
 	}
-	// with the tagged comment, which has the workflow ref, we can link to the run
+	number, ok := created[newIssue.Title]
+	if ok {
+		_, err = a.GitHub.CreateIssueComment(ctx, org, repo, number, body)
+		if err != nil {
+			return fmt.Errorf("new comment: %w", err)
+		}
+		return nil
+	}
 	issue, err := a.GitHub.CreateIssue(ctx, org, repo, github.NewIssue{
 		Title:     newIssue.Title,
 		Assignees: newIssue.Assignees,
@@ -122,17 +127,17 @@ func (a *boilerplate) CreateIssueIfNotOpen(ctx context.Context, newIssue github.
 	if err != nil {
 		return fmt.Errorf("new issue: %w", err)
 	}
-	logger.Infof(ctx, "Created issue: https://github.com/%s/%s/issues/%d", issue.Number)
+	logger.Infof(ctx, "Created new issue: https://github.com/%s/%s/issues/%d", org, repo, issue.Number)
 	return nil
 }
 
-func (a *boilerplate) tag() string {
+func (a *Boilerplate) tag() string {
 	// The ref path to the workflow. For example,
 	// octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch.
 	return fmt.Sprintf("\n<!-- workflow:%s -->", a.Action.Getenv("GITHUB_WORKFLOW_REF"))
 }
 
-func (a *boilerplate) taggedComment(ctx context.Context, body string) (string, error) {
+func (a *Boilerplate) taggedComment(ctx context.Context, body string) (string, error) {
 	runUrl, err := a.RunURL(ctx)
 	if err != nil {
 		return "", fmt.Errorf("run url: %w", err)
@@ -141,11 +146,11 @@ func (a *boilerplate) taggedComment(ctx context.Context, body string) (string, e
 		body, a.WorkflowRunName(), runUrl, a.tag()), nil
 }
 
-func (a *boilerplate) WorkflowRunName() string {
+func (a *Boilerplate) WorkflowRunName() string {
 	return fmt.Sprintf("%s #%d", a.context.Workflow, a.context.RunNumber)
 }
 
-func (a *boilerplate) currentPullRequest(ctx context.Context) (*github.PullRequest, error) {
+func (a *Boilerplate) currentPullRequest(ctx context.Context) (*github.PullRequest, error) {
 	if a.context.Event == nil {
 		return nil, fmt.Errorf("missing actions event")
 	}
@@ -163,7 +168,7 @@ func (a *boilerplate) currentPullRequest(ctx context.Context) (*github.PullReque
 	return event.PullRequest, nil
 }
 
-func (a *boilerplate) Comment(ctx context.Context, commentText string) error {
+func (a *Boilerplate) AddOrUpdateComment(ctx context.Context, commentText string) error {
 	pr, err := a.currentPullRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("pr: %w", err)

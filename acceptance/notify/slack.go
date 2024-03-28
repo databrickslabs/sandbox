@@ -16,7 +16,6 @@ type Notification struct {
 	Cloud   config.Cloud
 	RunName string
 	Report  ecosystem.TestReport
-	WebHook string
 	RunURL  string
 }
 
@@ -26,7 +25,7 @@ var icons = map[config.Cloud]string{
 	config.CloudGCP:   "https://cloud.google.com/favicon.ico",
 }
 
-func (n Notification) ToSlack() error {
+func (n Notification) ToSlack(hook slack.Webhook) error {
 	var failures, flakes []string
 	for _, v := range n.Report {
 		if v.Skip {
@@ -62,7 +61,6 @@ func (n Notification) ToSlack() error {
 	if n.RunName == "" {
 		n.RunName = string(n.Cloud)
 	}
-	hook := slack.Webhook(n.WebHook)
 	return hook.Notify(slack.Message{
 		Text:      n.Report.String(),
 		UserName:  n.Project,

@@ -28,6 +28,7 @@ type ghOidcCreds struct {
 }
 
 func (c *ghOidcCreds) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
+	// TODO: at the moment, ID token expires in 1 hour, so we need to rewrite the logic to refresh it
 	clientAssertion, err := c.a.GetIDToken(ctx, "api://AzureADTokenExchange")
 	if err != nil {
 		return nil, fmt.Errorf("id token: %w", err)
