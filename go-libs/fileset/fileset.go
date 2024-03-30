@@ -85,6 +85,15 @@ func (fi FileSet) Exists(pathRegex, needleRegex string) bool {
 	return m != nil
 }
 
+func (fi FileSet) Has(needle string) bool {
+	for _, v := range fi {
+		if v.Relative == needle {
+			return true
+		}
+	}
+	return false
+}
+
 type File struct {
 	fs.DirEntry
 	Absolute string

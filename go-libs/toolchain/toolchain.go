@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -103,6 +104,22 @@ func (tc *Toolchain) RunTest(ctx context.Context, dir string) (err error) {
 	err = tc.runCmds(ctx, dir, "toolchain.test", tc.Test)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (tc *Toolchain) ForwardTests(ctx context.Context, dir string) (err error) {
+	ctx = tc.WithPath(ctx, dir)
+	for _, cmd := range tc.Test {
+		err := process.Forwarded(ctx, []string{
+			"bash", "-c", cmd,
+		}, os.Stdin, os.Stdout, os.Stderr, process.WithDir(dir))
+		var processErr *process.ProcessError
+		if errors.As(err, &processErr) {
+			return fmt.Errorf("unit tests: %s", processErr.Stderr)
+		} else if err != nil {
+			return err
+		}
 	}
 	return nil
 }

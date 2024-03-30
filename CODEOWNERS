@@ -8,6 +8,7 @@
 
 acceptance                 @nfx
 database-diagram-builder   @alexott
+downstreams                @nfx
 go-libs                    @nfx
 ip_access_list_analyzer    @alexott
 metascan                   @nfx
