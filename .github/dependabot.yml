@@ -8,7 +8,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "hourly"
+      interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/go-libs"
     schedule:
@@ -23,6 +23,10 @@ updates:
       interval: "daily"
   - package-ecosystem: "gomod"
     directory: "/acceptance"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gomod"
+    directory: "/downstreams"
     schedule:
       interval: "daily"
   - package-ecosystem: "gomod"
