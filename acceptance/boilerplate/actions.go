@@ -40,6 +40,7 @@ type Boilerplate struct {
 	context  *githubactions.GitHubContext
 	GitHub   *github.GitHubClient
 	uploader *artifactUploader
+	ExtraTag string
 }
 
 func (a *Boilerplate) PrepareArtifacts() (string, error) {
@@ -134,7 +135,7 @@ func (a *Boilerplate) CreateOrCommentOnIssue(ctx context.Context, newIssue githu
 func (a *Boilerplate) tag() string {
 	// The ref path to the workflow. For example,
 	// octocat/hello-world/.github/workflows/my-workflow.yml@refs/heads/my_branch.
-	return fmt.Sprintf("\n<!-- workflow:%s -->", a.Action.Getenv("GITHUB_WORKFLOW_REF"))
+	return fmt.Sprintf("\n<!-- workflow:%s %s -->", a.Action.Getenv("GITHUB_WORKFLOW_REF"), a.ExtraTag)
 }
 
 func (a *Boilerplate) taggedComment(ctx context.Context, body string) (string, error) {

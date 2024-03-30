@@ -1,0 +1,16 @@
+---
+name: 'Check downstream dependencies'
+description: 'Re-runs unit tests over downstream dependencies'
+author: Serge Smertin
+inputs:
+  org:
+    description: 'GitHub Organization'
+    default: databrickslabs
+    required: true
+  repo:
+    description: 'GitHub Repository'
+    required: true
+
+runs:
+  using: node20
+  main: shim.js
