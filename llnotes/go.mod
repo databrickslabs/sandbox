@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/databricks/databricks-sdk-go v0.33.0
-	github.com/databrickslabs/sandbox/go-libs v0.1.1-0.20240302144648-95c3fdc8edfb
+	github.com/databrickslabs/sandbox/go-libs v0.2.0
 	github.com/fatih/color v1.16.0
 	github.com/spf13/pflag v1.0.5
 )
