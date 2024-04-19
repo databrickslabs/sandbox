@@ -204,6 +204,49 @@ func (c *GitHubClient) ListWorkflowJobs(ctx context.Context, org, repo string, r
 	})
 }
 
+func (c *GitHubClient) GetRepositoryPublicKey(ctx context.Context, org, repo string) (*RepositoryPublicKey, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/secrets/public-key", gitHubAPI, org, repo)
+	var res RepositoryPublicKey
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
+func (c *GitHubClient) OverrideRepositorySecret(ctx context.Context, org, repo, secretName, secretText string) error {
+	pk, err := c.GetRepositoryPublicKey(ctx, org, repo)
+	if err != nil {
+		return fmt.Errorf("public key: %w", err)
+	}
+	encryptedValue, err := c.encryptSecretWithSodium(pk.Key, secretText)
+	if err != nil {
+		return fmt.Errorf("encrypt: %w", err)
+	}
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/secrets/%s", gitHubAPI, org, repo, secretName)
+	return c.api.Do(ctx, "PUT", path,
+		httpclient.WithRequestData(OverrideRepositorySecret{
+			EncryptedValue: encryptedValue,
+			KeyID:          pk.KeyID,
+		}))
+}
+
+func (c *GitHubClient) ListRepositorySecrets(ctx context.Context, org, repo string) (*RepositorySecrets, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/secrets", gitHubAPI, org, repo)
+	var res RepositorySecrets
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
+func (c *GitHubClient) GetRepositorySecret(ctx context.Context, org, repo, secretName string) (*RepositorySecret, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/secrets/%s", gitHubAPI, org, repo, secretName)
+	var res RepositorySecret
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&res))
+	return &res, err
+}
+
+func (c *GitHubClient) DeleteRepositorySecret(ctx context.Context, org, repo, secretName string) error {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/secrets/%s", gitHubAPI, org, repo, secretName)
+	return c.api.Do(ctx, "DELETE", path)
+}
+
 func (c *GitHubClient) ListCommits(ctx context.Context, org, repo string, req *ListCommits) listing.Iterator[RepositoryCommit] {
 	path := fmt.Sprintf("%s/repos/%s/%s/commits", gitHubAPI, org, repo)
 	return paginator[RepositoryCommit, string](ctx, c, path, req, func(rc RepositoryCommit) string {
