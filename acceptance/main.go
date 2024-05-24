@@ -77,16 +77,16 @@ func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) 
 	if err != nil {
 		return nil, fmt.Errorf("report: %w", err)
 	}
+	err = a.Upload(ctx, artifactDir)
+	if err != nil {
+		return nil, fmt.Errorf("upload artifact: %w", err)
+	}
 	// better be redacting twice, right?
 	summary := redact.ReplaceAll(report.StepSummary())
 	a.Action.AddStepSummary(summary)
 	err = a.AddOrUpdateComment(ctx, summary)
 	if err != nil {
 		return nil, fmt.Errorf("comment: %w", err)
-	}
-	err = a.Upload(ctx, artifactDir)
-	if err != nil {
-		return nil, fmt.Errorf("upload artifact: %w", err)
 	}
 	runUrl, err := a.RunURL(ctx)
 	if err != nil {
