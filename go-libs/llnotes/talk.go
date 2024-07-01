@@ -14,12 +14,14 @@ import (
 )
 
 type Settings struct {
-	GitHub     github.GitHubConfig
-	Databricks config.Config
-	Org, Repo  string
-	Model      string
-	MaxTokens  int
-	Workers    int
+	GitHub      github.GitHubConfig
+	Databricks  config.Config
+	Org, Repo   string
+	Model       string
+	MaxTokens   int
+	Workers     int
+	SkipLabels  []string
+	SkipCommits []string
 }
 
 func New(cfg *Settings) (*llNotes, error) {
@@ -36,6 +38,9 @@ func New(cfg *Settings) (*llNotes, error) {
 	}
 	if cfg.Workers == 0 {
 		cfg.Workers = 15
+	}
+	if len(cfg.SkipLabels) == 0 {
+		cfg.SkipLabels = []string{"internal"}
 	}
 	return &llNotes{
 		http:  httpclient.NewApiClient(httpclient.ClientConfig{}),
