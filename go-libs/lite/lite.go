@@ -221,6 +221,12 @@ func (r *Root[T]) bindViperToFlags(v *viper.Viper, flags *pflag.FlagSet, prefix 
 				for _, y := range x {
 					sliceValue.Append(fmt.Sprint(y))
 				}
+			case []string:
+				sliceValue, ok := f.Value.(pflag.SliceValue)
+				if !ok {
+					err = fmt.Errorf("%s: expected string slice, but got %s", propName, f.Value.String())
+				}
+				sliceValue.Replace(x)
 			default:
 				f.Value.Set(fmt.Sprintf("%v", x))
 			}
