@@ -19,7 +19,7 @@ inputs:
   timeout:
     description: 'Maximum suite execution time. Defaults to 1h'
     required: false
-    default: 1h
+    default: 55m
   create_issues:
     description: 'Create issues in the repository for failed tests'
     required: false
