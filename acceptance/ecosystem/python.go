@@ -105,7 +105,7 @@ func (r pyTestRunner) prepare(ctx context.Context, redact redaction.Redaction, l
 		return nil, fmt.Errorf("prepend: %w", err)
 	}
 	ctx = tc.WithPath(ctx, testRoot)
-	if tc.AcceptancePath != "" {
+	if tc.AcceptancePath != "" { // TODO: make it scale for unit tests as well.
 		testRoot = filepath.Join(testRoot, tc.AcceptancePath)
 	}
 	logDir := env.Get(ctx, LogDirEnv)

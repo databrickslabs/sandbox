@@ -171,6 +171,13 @@ func (c *GitHubClient) ListArtifacts(ctx context.Context, org, repo string) list
 	})
 }
 
+func (c *GitHubClient) DownloadArtifact(ctx context.Context, org, repo string, id int64) (*bytes.Buffer, error) {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/artifacts/%d/zip", gitHubAPI, org, repo, id)
+	var buf bytes.Buffer
+	err := c.api.Do(ctx, "GET", path, httpclient.WithResponseUnmarshal(&buf))
+	return &buf, err
+}
+
 func (c *GitHubClient) GetWorkflowRunLogs(ctx context.Context, org, repo string, runID int64) (*bytes.Buffer, error) {
 	var location string
 	path := fmt.Sprintf("%s/repos/%v/%v/actions/runs/%v/logs", gitHubAPI, org, repo, runID)

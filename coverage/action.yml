@@ -1,0 +1,20 @@
+---
+name: 'Databricks Labs Coverage Suite'
+description: 'Run relevant coverage suite'
+author: Serge Smertin
+inputs:
+  project:
+    description: 'Project Name'
+    required: false
+  directory:
+    description: 'Working directory'
+    required: false
+    default: .
+outputs:
+  sample:
+    description: 'Sample output'
+    value: ${{ steps.invoke.outputs.sample }}
+
+runs:
+  using: node20
+  main: shim.js
