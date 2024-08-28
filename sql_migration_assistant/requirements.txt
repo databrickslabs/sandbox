@@ -1,0 +1,6 @@
+databricks-sdk
+gradio==4.27.0
+pyyaml
+scipy
+mlflow[databricks]
+databricks-labs-blueprint
