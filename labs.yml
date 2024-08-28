@@ -16,7 +16,7 @@ commands:
       - name: apply
         description: "If script should do the changes"
         default: false
-  - name: sql-migration-copilot
+  - name: sql-migration-assistant
     description: "GenAI enabled SQL Migration tool"
     flags:
       - name: json_file
