@@ -18,15 +18,23 @@ class RunReviewApp():
             cluster_id_provider= self.cluster_id_getter,
             language = compute.Language.PYTHON,
         )
+        self.libraries = [
+            'gradio==4.27.0'
+            , 'pyyaml'
+            , 'databricks-sdk==0.30.0'
+            , 'aiohttp'
+            , 'databricks-labs-blueprint==0.8.2'
+            , "dbtunnel==0.14.6"
+        ]
 
     def cluster_id_getter(self):
         return self.config.get("SERVING_CLUSTER_ID")
 
     def _library_install(self):
-        libraries = ['gradio==4.27.0', 'pyyaml', 'databricks-sdk', 'aiohttp']
-        for l in libraries:
+
+        for l in self.libraries:
             self.executor.install_notebook_library(l)
-        self.executor.install_notebook_library("dbtunnel==0.14.6")
+        #self.executor.install_notebook_library("dbtunnel==0.14.6")
         self.executor.run("dbutils.library.restartPython()")
 
     def _path_updates(self):

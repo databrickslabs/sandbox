@@ -7,8 +7,10 @@
 # MAGIC If you want to share the app with users outside of Databricks, for example so non technical SMEs can contribute to LLM prompt development, the notebook needs to run on a no isolation shared cluster.
 
 # COMMAND ----------
+pip install databricks-sdk -U
 
-pip install gradio==4.27.0 pyyaml databricks-sdk aiohttp
+# COMMAND ----------
+pip install gradio==4.27.0 pyyaml aiohttp databricks-labs-blueprint==0.8.2
 
 # COMMAND ----------
 pip install dbtunnel==0.14.6
@@ -18,4 +20,6 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 from utils.runindatabricks import run_app
+# set debug=True to print the app logs in this cell.
+# run_app(debug=True)
 run_app()

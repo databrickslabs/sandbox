@@ -128,6 +128,7 @@ class SetUpMigrationAssistant:
             "sql_migration_assistant/gradio_app.py",
             "sql_migration_assistant/run_app_from_databricks_notebook.py",
             "sql_migration_assistant/utils/configloader.py",
+            "sql_migration_assistant/utils/run_review_app.py",
             "sql_migration_assistant/config.yml",
         ]
         files_to_upload.extend(
