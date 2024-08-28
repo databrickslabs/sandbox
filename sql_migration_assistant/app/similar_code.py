@@ -1,8 +1,17 @@
 from databricks.sdk import WorkspaceClient
 
-class SimilarCode():
 
-    def __init__(self, catalog, schema, code_intent_table_name, VS_index_name, VS_endpoint_name, sql_warehouse_id):
+class SimilarCode:
+
+    def __init__(
+        self,
+        catalog,
+        schema,
+        code_intent_table_name,
+        VS_index_name,
+        VS_endpoint_name,
+        sql_warehouse_id,
+    ):
         self.w = WorkspaceClient()
 
         self.warehouseID = sql_warehouse_id
@@ -19,19 +28,16 @@ class SimilarCode():
             warehouse_id=self.warehouseID,
             catalog=self.catalog,
             schema=self.schema,
-            statement=f"INSERT INTO {self.code_intent_table_name} VALUES ({code_hash}, \"{code}\", \"{intent}\")"
+            statement=f'INSERT INTO {self.code_intent_table_name} VALUES ({code_hash}, "{code}", "{intent}")',
         )
 
     def get_similar_code(self, chat_history):
-        intent=chat_history[-1][1]
+        intent = chat_history[-1][1]
         results = self.w.vector_search_indexes.query_index(
             index_name=f"{self.catalog}.{self.schema}.{self.vs_index_name}",
             columns=["code", "intent"],
             query_text=intent,
-            num_results=1
+            num_results=1,
         )
         docs = results.result.data_array
-        return(docs[0][0], docs[0][1])
-
-
-
+        return (docs[0][0], docs[0][1])

@@ -4,38 +4,45 @@ from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
 from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
 from sql_migration_assistant.infra.chat_infra import ChatInfra
 from sql_migration_assistant.infra.secrets_infra import SecretsInfra
-from sql_migration_assistant.infra.app_serving_cluster_infra import AppServingClusterInfra
+from sql_migration_assistant.infra.app_serving_cluster_infra import (
+    AppServingClusterInfra,
+)
 
 import logging
 import os
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
 
+
 class SetUpMigrationAssistant:
 
-
-# this is a decorator to handle errors and do a retry where user is asked to choose an existing resource
+    # this is a decorator to handle errors and do a retry where user is asked to choose an existing resource
     def _handle_errors(func):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
             except PermissionDenied:
-                logging.error("You do not have permission to create the requested resource. Please ask your admin to grant"
-                              " you permission or choose an existing resource.")
+                logging.error(
+                    "You do not have permission to create the requested resource. Please ask your admin to grant"
+                    " you permission or choose an existing resource."
+                )
                 return func(*args, **kwargs)
             except ResourceAlreadyExists:
-                logging.error("Resource already exists. Please choose an alternative resource.")
+                logging.error(
+                    "Resource already exists. Please choose an alternative resource."
+                )
                 return func(*args, **kwargs)
             except BadRequest as e:
                 if "Cannot write secrets" in str(e):
-                    logging.error("Cannot write secrets to Azure KeyVault-backed scope. Please choose an alternative "
-                                  "secret scope.")
+                    logging.error(
+                        "Cannot write secrets to Azure KeyVault-backed scope. Please choose an alternative "
+                        "secret scope."
+                    )
                     return func(*args, **kwargs)
                 else:
                     raise e
 
         return wrapper
-
 
     @_handle_errors
     def set_up_cluster(self, config, w):
@@ -87,7 +94,6 @@ class SetUpMigrationAssistant:
         secrets_infra.create_secret_PAT()
         return secrets_infra.config
 
-
     def setup_migration_assistant(self, w):
         logging.info("Setting up infrastructure")
         # create empty config dict to fill in
@@ -118,11 +124,10 @@ class SetUpMigrationAssistant:
 
         return config
 
-
     def upload_files(self, w, config):
         logging.info("Uploading files to workspace")
         uploader = FileUploader(w)
-        #uploader.save_config(config)
+        # uploader.save_config(config)
         files_to_upload = [
             "sql_migration_assistant/utils/runindatabricks.py",
             "sql_migration_assistant/gradio_app.py",
@@ -132,15 +137,18 @@ class SetUpMigrationAssistant:
             "sql_migration_assistant/config.yml",
         ]
         files_to_upload.extend(
-            [f"sql_migration_assistant/app/{x}" for x in os.listdir("sql_migration_assistant/app") if x[-3:] == ".py"]
+            [
+                f"sql_migration_assistant/app/{x}"
+                for x in os.listdir("sql_migration_assistant/app")
+                if x[-3:] == ".py"
+            ]
         )
         for f in files_to_upload:
             uploader.upload(f)
 
-
     def launch_review_app(self, w, config):
-        logging.info("Launching review app, please wait. A URL will be provided when the app is ready...")
+        logging.info(
+            "Launching review app, please wait. A URL will be provided when the app is ready..."
+        )
         app_runner = RunReviewApp(w, config)
         app_runner.launch_review_app()
-
-

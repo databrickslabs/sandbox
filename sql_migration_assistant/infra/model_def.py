@@ -1,5 +1,5 @@
 from langchain_community.chat_models import ChatDatabricks
-from langchain_core.runnables import RunnableLambda,RunnableBranch,RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnableBranch, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -12,6 +12,8 @@ from mlflow.tracking import MlflowClient
 
 import os
 from operator import itemgetter
+
+
 def create_langchain_chat_model():
     # ## Enable MLflow Tracing
     mlflow.login()
@@ -28,7 +30,9 @@ def create_langchain_chat_model():
 
     # check if the model already exists and if so, return
     client = MlflowClient()
-    model_version_infos = client.search_model_versions("name = '%s'" % fully_qualified_name)
+    model_version_infos = client.search_model_versions(
+        "name = '%s'" % fully_qualified_name
+    )
     if len(model_version_infos) > 0:
         return
 
@@ -46,8 +50,6 @@ def create_langchain_chat_model():
     # Return the chat history, which is everything before the last question
     def extract_chat_history(chat_messages_array):
         return chat_messages_array[1:-1]
-
-
 
     ############
     # Prompt Template for generation
@@ -92,7 +94,6 @@ def create_langchain_chat_model():
         ]
     )
 
-
     # Format the converastion history to fit into the prompt template above.
     def format_chat_history_for_prompt(chat_messages_array):
         history = extract_chat_history(chat_messages_array)
@@ -109,61 +110,56 @@ def create_langchain_chat_model():
                     )
         return formatted_chat_history
 
-
     ############
     # FM for generation
     ############
     model = ChatDatabricks(endpoint=FOUNDATION_MODEL)
 
-
     ############
     # Guard Rail chain
     ############
-
-
 
     ############
     # RAG Chain
     ############
     is_question_about_sql_chain = (
         {
-            "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
-            "formatted_chat_history": itemgetter("messages") | RunnableLambda(extract_chat_history),
+            "question": itemgetter("messages")
+            | RunnableLambda(extract_user_query_string),
+            "formatted_chat_history": itemgetter("messages")
+            | RunnableLambda(extract_chat_history),
         }
         | is_question_relevant_prompt
         | model
-        | StrOutputParser())
+        | StrOutputParser()
+    )
 
-    irrelevant_question_chain =  (
-    RunnableLambda(lambda x:{
-    "id": "null",
-    "object": "mock.chat.completion",
-    "created": 1722193932,
-    "model": "irrelevant_call",
-    "choices": [
-        {
-            "index": 0,
-            "message": {
-                "role": "assistant",
-                "content": "I cannot answer questions that are not about Databricks or Spark SQL"
-            },
-            "finish_reason": "Standard response"
+    irrelevant_question_chain = RunnableLambda(
+        lambda x: {
+            "id": "null",
+            "object": "mock.chat.completion",
+            "created": 1722193932,
+            "model": "irrelevant_call",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "I cannot answer questions that are not about Databricks or Spark SQL",
+                    },
+                    "finish_reason": "Standard response",
+                }
+            ],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
         }
-    ],
-    "usage": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-    }
-
-} ))
+    )
 
     chain = (
-        RunnablePassthrough() |
-        {
-            "system": itemgetter("system") ,
-            "question": itemgetter("question") ,
-            "formatted_chat_history": itemgetter("chat_history")
+        RunnablePassthrough()
+        | {
+            "system": itemgetter("system"),
+            "question": itemgetter("question"),
+            "formatted_chat_history": itemgetter("chat_history"),
         }
         | prompt
         | model
@@ -171,21 +167,24 @@ def create_langchain_chat_model():
     )
 
     branch_node = RunnableBranch(
-        (lambda x: "yes" in x["question_is_relevant"].lower(), RunnablePassthrough() |chain),
-        (lambda x: "no" in x["question_is_relevant"].lower(), irrelevant_question_chain),
-        irrelevant_question_chain)
+        (
+            lambda x: "yes" in x["question_is_relevant"].lower(),
+            RunnablePassthrough() | chain,
+        ),
+        (
+            lambda x: "no" in x["question_is_relevant"].lower(),
+            irrelevant_question_chain,
+        ),
+        irrelevant_question_chain,
+    )
 
-    full_chain = (
-    {
+    full_chain = {
         "question_is_relevant": is_question_about_sql_chain,
         "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
         "system": itemgetter("messages") | RunnableLambda(extract_system_prompt_string),
-        "chat_history": itemgetter("messages") | RunnableLambda(format_chat_history_for_prompt),
-    }
-    | branch_node
-    )
-
-
+        "chat_history": itemgetter("messages")
+        | RunnableLambda(format_chat_history_for_prompt),
+    } | branch_node
 
     mlflow.models.set_model(model=full_chain)
 
@@ -197,22 +196,25 @@ def create_langchain_chat_model():
         mlflow.set_experiment(experiment_name)
     with mlflow.start_run():
         logged_chain_info = mlflow.langchain.log_model(
-            lc_model=full_chain
-            ,artifact_path="chain"  # Required by MLflow
-            ,input_example=  {"messages": [
-                            {
-                                "role": "System",
-                                "content": "You are a helpful assistant",
-                            },
-                            {
-                                "role": "user",
-                                "content": "What is RAG?",
-                            },
-                        ]
-                    }
+            lc_model=full_chain,
+            artifact_path="chain",  # Required by MLflow
+            input_example={
+                "messages": [
+                    {
+                        "role": "System",
+                        "content": "You are a helpful assistant",
+                    },
+                    {
+                        "role": "user",
+                        "content": "What is RAG?",
+                    },
+                ]
+            },
         )
 
-    mlflow.set_registry_uri('databricks-uc')
+    mlflow.set_registry_uri("databricks-uc")
 
     # Register the model
-    uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=fully_qualified_name)
+    uc_registered_model_info = mlflow.register_model(
+        model_uri=logged_chain_info.model_uri, name=fully_qualified_name
+    )

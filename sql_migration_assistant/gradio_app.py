@@ -25,8 +25,9 @@ CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
 
 
-
-translation_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS)
+translation_llm = LLMCalls(
+    foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS
+)
 intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS)
 similar_code_helper = SimilarCode(
     catalog=CATALOG,
@@ -34,33 +35,34 @@ similar_code_helper = SimilarCode(
     code_intent_table_name=CODE_INTENT_TABLE_NAME,
     VS_index_name=VS_INDEX_NAME,
     VS_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-    sql_warehouse_id=SQL_WAREHOUSE_ID
-
+    sql_warehouse_id=SQL_WAREHOUSE_ID,
 )
 
 ################################################################################
 ################################################################################
 
 # this is the app UI. it uses gradio blocks https://www.gradio.app/docs/gradio/blocks
-# each gr.{} call adds a new element to UI, top to bottom. 
+# each gr.{} call adds a new element to UI, top to bottom.
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     # title with Databricks image
-    gr.Markdown("""<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
+    gr.Markdown(
+        """<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
 
 ## A migration assistant for explaining the intent of SQL code and conversion to Spark SQL
 
 #### This demo relies on the tables and columns referenced in the SQL query being present in Unity Catalogue and having their table comments and column comments populated. For the purpose of the demo, this was generated using the Databricks AI Generated Comments tool. 
 
-""")
-    
-################################################################################
-#### TRANSLATION ADVANCED OPTIONS PANE
-################################################################################
+"""
+    )
+
+    ################################################################################
+    #### TRANSLATION ADVANCED OPTIONS PANE
+    ################################################################################
     with gr.Accordion(label="Translation Advanced Settings", open=False):
         with gr.Row():
             transation_system_prompt = gr.Textbox(
-                label="Instructions for the LLM translation tool."
-                ,value="""
+                label="Instructions for the LLM translation tool.",
+                value="""
                           You are an expert in multiple SQL dialects. You only reply with SQL code and with no other text. 
                           Your purpose is to translate the given SQL query to Databricks Spark SQL. 
                           You must follow these rules:
@@ -87,34 +89,32 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         - Using the proper columns for joins
                         
                         Return the final translated query only. Include comments. Include only SQL.
-                        """
-                .strip()
-                ,lines=40
+                        """.strip(),
+                lines=40,
             )
 
-################################################################################
-#### TRANSLATION PANE
-################################################################################
+    ################################################################################
+    #### TRANSLATION PANE
+    ################################################################################
     # subheader
 
-
-
     with gr.Accordion(label="Translation Pane", open=True):
-        gr.Markdown(""" ### Input your T-SQL code here for automatic translation to Spark-SQL and use AI to generate a statement of intent for the code's purpose."""
-                    )
+        gr.Markdown(
+            """ ### Input your T-SQL code here for automatic translation to Spark-SQL and use AI to generate a statement of intent for the code's purpose."""
+        )
         # hidden chat interface - to enable chatbot functionality
         translation_chat = gr.Chatbot(visible=False)
         with gr.Row():
             with gr.Column():
                 gr.Markdown(
                     """ ### Input your T-SQL code here for translation to Spark-SQL."""
-                    )
-                
+                )
+
                 # input box for SQL code with nice formatting
                 input_code = gr.Code(
-                        label="Input SQL"
-                        ,language='sql-msSQL'
-                        ,value="""SELECT
+                    label="Input SQL",
+                    language="sql-msSQL",
+                    value="""SELECT
   c.[country_name],
   AVG([dep_count]) AS average_dependents
 FROM
@@ -136,8 +136,8 @@ FROM
 GROUP BY
   c.[country_name]
 ORDER BY
-  c.[country_name]"""
-                        )
+  c.[country_name]""",
+                )
                 # a button labelled translate
                 translate_button = gr.Button("Translate")
 
@@ -146,18 +146,14 @@ ORDER BY
                 gr.Markdown(""" ### Your Code Translated to Spark-SQL""")
                 # output box of the T-SQL translated to Spark SQL
                 translated = gr.Code(
-                    label="Your code translated to Spark SQL"
-                    ,language="sql-sparkSQL"
-                    )
-                translation_prompt = gr.Textbox(
-                    label = "Adjustments for translation"
+                    label="Your code translated to Spark SQL", language="sql-sparkSQL"
                 )
+                translation_prompt = gr.Textbox(label="Adjustments for translation")
 
         def translate_respond(system_prompt, message, chat_history):
             bot_message = translation_llm.llm_chat(system_prompt, message, chat_history)
             chat_history.append([message, bot_message])
             return chat_history, chat_history[-1][1]
-
 
         # helper function to take the output from llm_translate and return outputs for chatbox and textbox
         # chatbox input is a list of lists, each list is a message from the user and the response from the LLM
@@ -171,109 +167,99 @@ ORDER BY
 
         # reset hidden chat history and prompt
         translate_button.click(
-            fn=lambda: ([['', '']], '')
-            ,inputs=None
-            ,outputs=[translation_chat, translation_prompt]
+            fn=lambda: ([["", ""]], ""),
+            inputs=None,
+            outputs=[translation_chat, translation_prompt],
         )
         # do translation
         translate_button.click(
-              fn=llm_translate_wrapper
-            , inputs=[transation_system_prompt, input_code]
-            , outputs=[translation_chat, translated]
+            fn=llm_translate_wrapper,
+            inputs=[transation_system_prompt, input_code],
+            outputs=[translation_chat, translated],
         )
         # refine translation
         translation_prompt.submit(
-            fn=translate_respond
-            , inputs=[transation_system_prompt, translation_prompt, translation_chat]
-            , outputs=[translation_chat, translated]
-
+            fn=translate_respond,
+            inputs=[transation_system_prompt, translation_prompt, translation_chat],
+            outputs=[translation_chat, translated],
         )
 
-################################################################################
-#### AI GENERATED INTENT PANE
-################################################################################
+    ################################################################################
+    #### AI GENERATED INTENT PANE
+    ################################################################################
     # divider subheader
     with gr.Accordion(label="Advanced Intent Settings", open=False):
-        gr.Markdown(""" ### Advanced settings for the generating the intent of the input code.""")
+        gr.Markdown(
+            """ ### Advanced settings for the generating the intent of the input code."""
+        )
         with gr.Row():
             intent_system_prompt = gr.Textbox(
-                label="System prompt of the LLM to generate the intent. Editing will reset the intent."
-                , value="""Your job is to explain intent of the provided SQL code.
-                        """
-                .strip()
+                label="System prompt of the LLM to generate the intent. Editing will reset the intent.",
+                value="""Your job is to explain intent of the provided SQL code.
+                        """.strip(),
             )
     with gr.Accordion(label="Intent Pane", open=True):
-        gr.Markdown(""" ## AI generated intent of what your code aims to do. 
+        gr.Markdown(
+            """ ## AI generated intent of what your code aims to do. 
                     
                     Intent is determined by an LLM which uses the code and table & column metadata. 
 
                     ***If the intent is incorrect, please edit***. Once you are happy that the description is correct, please click the button below to save the intent.
                      
-                    """)
-        # a box to give the LLM generated intent of the code. This is editable as well. 
+                    """
+        )
+        # a box to give the LLM generated intent of the code. This is editable as well.
         explain_button = gr.Button("Explain code intent using AI.")
         explained = gr.Textbox(label="AI generated intent of your code.", visible=False)
 
-        chatbot = gr.Chatbot(
-            label = "AI Chatbot for Intent Extraction"
-            ,height="70%"
-            )
-        
+        chatbot = gr.Chatbot(label="AI Chatbot for Intent Extraction", height="70%")
+
         msg = gr.Textbox(label="Instruction")
         clear = gr.ClearButton([msg, chatbot])
-
 
         def intent_respond(system_prompt, message, chat_history):
             bot_message = intent_llm.llm_chat(system_prompt, message, chat_history)
             chat_history.append([message, bot_message])
-            return chat_history, '', bot_message
+            return chat_history, "", bot_message
 
         def llm_chat_wrapper(system_prompt, input_code):
             # call the LLM to translate the code
             intent = intent_llm.llm_intent(system_prompt, input_code)
             # wrap the translated code in a list of lists for the chatbot
             chat_history = [[input_code, intent]]
-            return chat_history, '', intent
+            return chat_history, "", intent
 
         explain_button.click(
-            fn=llm_chat_wrapper
-            , inputs=[
-                intent_system_prompt
-                , input_code
-                ]
-            , outputs=[chatbot, msg, explained]
-            )
+            fn=llm_chat_wrapper,
+            inputs=[intent_system_prompt, input_code],
+            outputs=[chatbot, msg, explained],
+        )
         msg.submit(
-            fn=intent_respond
-            ,inputs = [
-                intent_system_prompt
-                , msg
-                , chatbot
-                ],
-            outputs= [chatbot, msg, explained])
-        clear.click(lambda : None, None, chatbot, queue=False)
+            fn=intent_respond,
+            inputs=[intent_system_prompt, msg, chatbot],
+            outputs=[chatbot, msg, explained],
+        )
+        clear.click(lambda: None, None, chatbot, queue=False)
 
-
-
-
-################################################################################
-#### SIMILAR CODE PANE
-################################################################################
+    ################################################################################
+    #### SIMILAR CODE PANE
+    ################################################################################
     # divider subheader
 
     with gr.Accordion(label="Similar Code Pane", open=True):
-        gr.Markdown(""" ## Similar code 
+        gr.Markdown(
+            """ ## Similar code 
                     
                     This code is thought to be similar to what you are doing, based on comparing the intent of your code with the intent of this code.
-                    """)    
+                    """
+        )
         # a button
-        find_similar_code=gr.Button("Find similar code")
+        find_similar_code = gr.Button("Find similar code")
         # a row with an code and text box to show the similar code
         with gr.Row():
             similar_code = gr.Code(
-                label="Similar code to yours."
-                ,language="sql-sparkSQL"
-                )
+                label="Similar code to yours.", language="sql-sparkSQL"
+            )
             similar_intent = gr.Textbox(label="The similar codes intent.")
 
         # a button
@@ -281,24 +267,22 @@ ORDER BY
 
         # assign actions to buttons when clicked.
     find_similar_code.click(
-        fn= similar_code_helper.get_similar_code
-        , inputs=chatbot
-        , outputs=[similar_code, similar_intent])
+        fn=similar_code_helper.get_similar_code,
+        inputs=chatbot,
+        outputs=[similar_code, similar_intent],
+    )
 
     def save_intent_wrapper(input_code, explained):
         gr.Info("Saving intent")
         similar_code_helper.save_intent(input_code, explained)
         gr.Info("Intent saved")
 
-    submit.click(
-        save_intent_wrapper
-        , inputs=[input_code, explained]
-    )
+    submit.click(save_intent_wrapper, inputs=[input_code, explained])
 
 
 # for local dev
 try:
-    if os.environ["LOCALE"] =="local_dev":
+    if os.environ["LOCALE"] == "local_dev":
         demo.queue().launch()
 except KeyError:
     pass
@@ -306,6 +290,6 @@ except KeyError:
 # this is necessary to get the app to run on databricks
 if __name__ == "__main__":
     demo.queue().launch(
-    server_name=os.getenv("GRADIO_SERVER_NAME"), 
-    server_port=int(os.getenv("GRADIO_SERVER_PORT")),
-  )
+        server_name=os.getenv("GRADIO_SERVER_NAME"),
+        server_port=int(os.getenv("GRADIO_SERVER_PORT")),
+    )

@@ -5,7 +5,7 @@ from app.llm import LLMCalls
 
 class TestLLMCalls(unittest.TestCase):
 
-    @patch('app.llm.OpenAI')
+    @patch("app.llm.OpenAI")
     def setUp(self, MockOpenAI):
         """
         Set up the test environment before each test method.
@@ -16,8 +16,12 @@ class TestLLMCalls(unittest.TestCase):
         # Ensure the OpenAI client constructor returns the mock client
         MockOpenAI.return_value = self.mock_client
         # Initialize the LLMCalls instance with dummy parameters
-        self.llm = LLMCalls(databricks_host="dummy_host", databricks_token="dummy_token", model_name="dummy_model",
-                            max_tokens=100)
+        self.llm = LLMCalls(
+            databricks_host="dummy_host",
+            databricks_token="dummy_token",
+            model_name="dummy_model",
+            max_tokens=100,
+        )
 
     def test_call_llm(self):
         """
@@ -34,8 +38,9 @@ class TestLLMCalls(unittest.TestCase):
         response = self.llm.call_llm(messages)
 
         # Verify that the OpenAI client was called with the correct parameters
-        self.mock_client.chat.completions.create.assert_called_once_with(messages=messages, model="dummy_model",
-                                                                         max_tokens=100)
+        self.mock_client.chat.completions.create.assert_called_once_with(
+            messages=messages, model="dummy_model", max_tokens=100
+        )
         # Check that the response matches the expected value
         self.assertEqual(response, "Test response")
 
@@ -50,7 +55,7 @@ class TestLLMCalls(unittest.TestCase):
             {"role": "user", "content": "Hello"},
             {"role": "assistant", "content": "Hi there!"},
             {"role": "user", "content": "How are you?"},
-            {"role": "assistant", "content": "I'm good, thank you!"}
+            {"role": "assistant", "content": "I'm good, thank you!"},
         ]
 
         result = self.llm.convert_chat_to_llm_input(system_prompt, chat)
@@ -58,7 +63,7 @@ class TestLLMCalls(unittest.TestCase):
         self.assertEqual(result, expected_output)
 
     # Test the LLM functions for translating code, chatting, and determining intent
-    @patch.object(LLMCalls, 'call_llm', return_value="Final answer:\nTranslated code")
+    @patch.object(LLMCalls, "call_llm", return_value="Final answer:\nTranslated code")
     def test_llm_translate(self, mock_call_llm):
         system_prompt = "Translate this code"
         input_code = "SELECT * FROM table"
@@ -66,7 +71,7 @@ class TestLLMCalls(unittest.TestCase):
         response = self.llm.llm_translate(system_prompt, input_code)
         self.assertEqual(response, "Translated code")
 
-    @patch.object(LLMCalls, 'call_llm', return_value="Chat response")
+    @patch.object(LLMCalls, "call_llm", return_value="Chat response")
     def test_llm_chat(self, mock_call_llm):
         system_prompt = "You are a helpful assistant."
         query = "What is the weather today?"
@@ -75,7 +80,7 @@ class TestLLMCalls(unittest.TestCase):
         response = self.llm.llm_chat(system_prompt, query, chat_history)
         self.assertEqual(response, "Chat response")
 
-    @patch.object(LLMCalls, 'call_llm', return_value="Intent response")
+    @patch.object(LLMCalls, "call_llm", return_value="Intent response")
     def test_llm_intent(self, mock_call_llm):
         system_prompt = "Determine the intent of this code"
         input_code = "SELECT * FROM table"
@@ -84,5 +89,5 @@ class TestLLMCalls(unittest.TestCase):
         self.assertEqual(response, "Intent response")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

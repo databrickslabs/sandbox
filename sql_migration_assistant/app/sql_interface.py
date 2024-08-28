@@ -1,6 +1,7 @@
 from databricks.sdk import WorkspaceClient
 
-class SQLInterface():
+
+class SQLInterface:
 
     def __init__(self, warehouseID, catalog, schema):
         self.w = WorkspaceClient()
@@ -13,5 +14,5 @@ class SQLInterface():
             warehouse_id=self.warehouseID,
             catalog=self.catalog,
             schema=self.schema,
-            statement=sql
+            statement=sql,
         )

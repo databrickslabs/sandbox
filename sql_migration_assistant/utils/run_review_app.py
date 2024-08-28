@@ -6,7 +6,8 @@ from databricks.sdk.mixins.compute import ClustersExt
 from databricks.labs.blueprint.commands import CommandExecutor
 from urllib.parse import urlparse
 
-class RunReviewApp():
+
+class RunReviewApp:
     def __init__(self, w: WorkspaceClient, config: dict):
         self.w = w
         self.config = config
@@ -14,17 +15,17 @@ class RunReviewApp():
         self.cet = ClustersExt(w.api_client)
         self.executor = CommandExecutor(
             clusters=self.cet,
-            command_execution= self.cep,
-            cluster_id_provider= self.cluster_id_getter,
-            language = compute.Language.PYTHON,
+            command_execution=self.cep,
+            cluster_id_provider=self.cluster_id_getter,
+            language=compute.Language.PYTHON,
         )
         self.libraries = [
-            'gradio==4.27.0'
-            , 'pyyaml'
-            , 'databricks-sdk==0.30.0'
-            , 'aiohttp'
-            , 'databricks-labs-blueprint==0.8.2'
-            , "dbtunnel==0.14.6"
+            "gradio==4.27.0",
+            "pyyaml",
+            "databricks-sdk==0.30.0",
+            "aiohttp",
+            "databricks-labs-blueprint==0.8.2",
+            "dbtunnel==0.14.6",
         ]
 
     def cluster_id_getter(self):
@@ -34,7 +35,7 @@ class RunReviewApp():
 
         for l in self.libraries:
             self.executor.install_notebook_library(l)
-        #self.executor.install_notebook_library("dbtunnel==0.14.6")
+        # self.executor.install_notebook_library("dbtunnel==0.14.6")
         self.executor.run("dbutils.library.restartPython()")
 
     def _path_updates(self):
@@ -50,13 +51,15 @@ os.chdir(path)
         )
 
     def _get_org_id(self):
-        org_id = self.executor.run('spark.conf.get("spark.databricks.clusterUsageTags.clusterOwnerOrgId")')
-        org_id = org_id.strip().replace("'", '')
+        org_id = self.executor.run(
+            'spark.conf.get("spark.databricks.clusterUsageTags.clusterOwnerOrgId")'
+        )
+        org_id = org_id.strip().replace("'", "")
         return int(org_id)
 
     def _launch_app(self):
         self.executor.run(
-            code = """
+            code="""
             from utils.runindatabricks import run_app
             run_app()
             """
@@ -64,7 +67,9 @@ os.chdir(path)
 
     def _get_proxy_url(self, organisation_id):
 
-        def get_cloud_proxy_settings(cloud: str, host: str, org_id: str, cluster_id: str, port: int):
+        def get_cloud_proxy_settings(
+            cloud: str, host: str, org_id: str, cluster_id: str, port: int
+        ):
             cloud_norm = cloud.lower()
             if cloud_norm not in ["aws", "azure"]:
                 raise Exception("only supported in aws or azure")
@@ -95,14 +100,14 @@ os.chdir(path)
         def remove_lowest_subdomain_from_host(url):
             parsed_url = urlparse(url)
             host = parsed_url.netloc if parsed_url.netloc else parsed_url.path
-            parts = host.split('.')
+            parts = host.split(".")
             # Check if there are subdomains to remove
             if len(parts) > 2:
                 # Remove the lowest subdomain
                 parts.pop(0)
 
             # Reconstruct the modified host
-            modified_host = '.'.join(parts)
+            modified_host = ".".join(parts)
 
             return modified_host
 
@@ -111,17 +116,21 @@ os.chdir(path)
             host=self.w.config.host,
             org_id=organisation_id,
             cluster_id=self.cluster_id_getter(),
-            port=8080
+            port=8080,
         )
         return proxy_url
+
     def launch_review_app(self):
         self._library_install()
         self._path_updates()
         org_id = self._get_org_id()
         proxy_url = self._get_proxy_url(org_id)
-        logging.info(f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}")
-        print(f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}")
+        logging.info(
+            f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}"
+        )
+        print(
+            f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}"
+        )
         self._launch_app()
 
         return
-

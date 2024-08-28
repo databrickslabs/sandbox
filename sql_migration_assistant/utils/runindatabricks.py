@@ -9,7 +9,7 @@ import yaml
 
 def thread_func():
     dbtunnel.kill_port(8080)
-    app = 'gradio_app.py'
+    app = "gradio_app.py"
     dbtunnel.gradio(path=app).run()
 
 
@@ -21,7 +21,7 @@ def run_app(debug=False):
     else:
         cl = ConfigLoader()
         cl.read_yaml_to_env("config.yml")
-        with open("config.yml", 'r') as f:
+        with open("config.yml", "r") as f:
             config = yaml.safe_load(f)
         w = WorkspaceClient()
 
@@ -31,5 +31,5 @@ def run_app(debug=False):
         x = threading.Thread(target=thread_func)
         x.start()
         print(
-            f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}")
-
+            f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}"
+        )
