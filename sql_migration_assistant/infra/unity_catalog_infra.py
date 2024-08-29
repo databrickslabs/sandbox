@@ -47,7 +47,7 @@ class UnityCatalogInfra:
 
         catalogs = [f"CREATE NEW CATALOG: {self.default_UC_catalog}"]
         # Create a list of all catalogs in the workspace. Returns a generator
-        catalogs.extend(list(self.w.catalogs.list()))
+        catalogs.extend([x.name for x in self.w.catalogs.list()])
 
         question = "Choose a catalog:"
         choice = self.prompts.choice(question, catalogs)
@@ -64,10 +64,11 @@ class UnityCatalogInfra:
             self.config["CATALOG"] = self.migration_assistant_UC_catalog
 
     def choose_schema_name(self):
-        use_default_schema_name = input(
-            f"Would you like to use the default schema name: {self.default_UC_schema}? (y/n)"
+
+        use_default_schema_name =  self.prompts.confirm(
+            f"Would you like to use the default schema name: {self.default_UC_schema}? (yes/no)"
         )
-        if use_default_schema_name.lower() == "y":
+        if use_default_schema_name:
             self.migration_assistant_UC_schema = self.default_UC_schema
         else:
             # Ask the user to enter a schema name, and validate it.
