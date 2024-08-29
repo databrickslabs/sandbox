@@ -8,10 +8,10 @@ import logging
 
 class SqlWarehouseInfra:
 
-    def __init__(self, config, workspace_client: WorkspaceClient):
+    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
         self.config = config
-        self.prompts = Prompts()
+        self.prompts = p
         self.default_sql_warehouse_name = "sql_migration_assistant_warehouse"
 
     def choose_compute(self):

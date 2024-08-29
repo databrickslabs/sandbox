@@ -35,7 +35,6 @@ class RunReviewApp:
 
         for l in self.libraries:
             self.executor.install_notebook_library(l)
-        # self.executor.install_notebook_library("dbtunnel==0.14.6")
         self.executor.run("dbutils.library.restartPython()")
 
     def _path_updates(self):
@@ -51,11 +50,7 @@ os.chdir(path)
         )
 
     def _get_org_id(self):
-        org_id = self.executor.run(
-            'spark.conf.get("spark.databricks.clusterUsageTags.clusterOwnerOrgId")'
-        )
-        org_id = org_id.strip().replace("'", "")
-        return int(org_id)
+        return self.w.get_workspace_id()
 
     def _launch_app(self):
         self.executor.run(

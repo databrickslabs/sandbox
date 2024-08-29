@@ -17,10 +17,10 @@ upload app file to databricks
 
 
 class UnityCatalogInfra:
-    def __init__(self, config, workspace_client: WorkspaceClient):
+    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
         self.config = config
-        self.prompts = Prompts()
+        self.prompts = p
 
         # get defaults from config file
         self.default_UC_catalog = "sql_migration_assistant"

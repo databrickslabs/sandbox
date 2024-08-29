@@ -16,10 +16,10 @@ from sql_migration_assistant.utils.uc_model_version import get_latest_model_vers
 
 
 class VectorSearchInfra:
-    def __init__(self, config, workspace_client: WorkspaceClient):
+    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
         self.config = config
-        self.prompts = Prompts()
+        self.prompts = p
 
         # set defaults for user to override if they choose
         self.default_VS_endpoint_name = "sql_migration_assistant_vs_endpoint"

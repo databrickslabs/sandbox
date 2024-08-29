@@ -45,22 +45,22 @@ class SetUpMigrationAssistant:
         return wrapper
 
     @_handle_errors
-    def set_up_cluster(self, config, w):
-        app_cluster_infra = AppServingClusterInfra(config, w)
+    def set_up_cluster(self, config, w, p):
+        app_cluster_infra = AppServingClusterInfra(config, w, p)
         logging.info("Choose or create app serving cluster")
         app_cluster_infra.choose_serving_cluster()
         return app_cluster_infra.config
 
     @_handle_errors
-    def create_sql_warehouse(self, config, w):
-        sql_infra = SqlWarehouseInfra(config, w)
+    def create_sql_warehouse(self, config, w, p):
+        sql_infra = SqlWarehouseInfra(config, w, p)
         logging.info("Choose or create warehouse")
         sql_infra.choose_compute()
         return sql_infra.config
 
     @_handle_errors
-    def setup_uc_infra(self, config, w):
-        uc_infra = UnityCatalogInfra(config, w)
+    def setup_uc_infra(self, config, w, p):
+        uc_infra = UnityCatalogInfra(config, w, p)
         logging.info("Choose or create catalog")
         uc_infra.choose_UC_catalog()
         logging.info("Choose or create schema")
@@ -70,8 +70,8 @@ class SetUpMigrationAssistant:
         return uc_infra.config
 
     @_handle_errors
-    def setup_vs_infra(self, config, w):
-        vs_infra = VectorSearchInfra(config, w)
+    def setup_vs_infra(self, config, w, p):
+        vs_infra = VectorSearchInfra(config, w, p)
         logging.info("Choose or create VS endpoint")
         vs_infra.choose_VS_endpoint()
         logging.info("Choose or create embedding model")
@@ -81,53 +81,52 @@ class SetUpMigrationAssistant:
         return vs_infra.config
 
     @_handle_errors
-    def setup_chat_infra(self, config, w):
-        chat_infra = ChatInfra(config, w)
+    def setup_chat_infra(self, config, w, p):
+        chat_infra = ChatInfra(config, w, p)
         logging.info("Choose or create foundation model infra")
         chat_infra.setup_foundation_model_infra()
         return chat_infra.config
 
     @_handle_errors
-    def setup_secrets_infra(self, config, w):
-        secrets_infra = SecretsInfra(config, w)
+    def setup_secrets_infra(self, config, w, p):
+        secrets_infra = SecretsInfra(config, w, p)
         logging.info("Set up secret")
         secrets_infra.create_secret_PAT()
         return secrets_infra.config
 
-    def setup_migration_assistant(self, w):
+    def setup_migration_assistant(self, w, p):
         logging.info("Setting up infrastructure")
         # create empty config dict to fill in
         config = {}
         ############################################################
         logging.info("Choose or create cluster to host review app")
-        config = self.set_up_cluster(config, w)
+        config = self.set_up_cluster(config, w, p)
 
         ############################################################
         logging.info("***Choose a Databricks SQL Warehouse***")
-        config = self.create_sql_warehouse(config, w)
+        config = self.create_sql_warehouse(config, w, p)
 
         ############################################################
         logging.info("Setting up Unity Catalog infrastructure")
-        config = self.setup_uc_infra(config, w)
+        config = self.setup_uc_infra(config, w, p)
 
         ############################################################
         logging.info("Setting up Vector Search infrastructure")
-        config = self.setup_vs_infra(config, w)
+        config = self.setup_vs_infra(config, w, p)
 
         ############################################################
         logging.info("Setting up Chat infrastructure")
-        config = self.setup_chat_infra(config, w)
+        config = self.setup_chat_infra(config, w, p)
 
         ############################################################
         logging.info("Setting up secrets")
-        config = self.setup_secrets_infra(config, w)
+        config = self.setup_secrets_infra(config, w, p)
 
         return config
 
-    def upload_files(self, w, config):
+    def upload_files(self, w):
         logging.info("Uploading files to workspace")
         uploader = FileUploader(w)
-        # uploader.save_config(config)
         files_to_upload = [
             "sql_migration_assistant/utils/runindatabricks.py",
             "sql_migration_assistant/gradio_app.py",

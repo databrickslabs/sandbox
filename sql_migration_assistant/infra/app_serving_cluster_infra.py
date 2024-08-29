@@ -6,10 +6,11 @@ import logging
 
 
 class AppServingClusterInfra:
-    def __init__(self, config, workspace_client: WorkspaceClient):
+
+    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
         self.config = config
-        self.prompts = Prompts()
+        self.prompts = p
         self.node_types = {
             "azure": "Standard_DS3_v2",
             "aws": "m5d.xlarge",

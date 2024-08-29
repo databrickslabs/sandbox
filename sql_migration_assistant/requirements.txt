@@ -1,6 +1,4 @@
 databricks-sdk==0.30.0
-gradio==4.27.0
 pyyaml
-scipy
 mlflow[databricks]
 databricks-labs-blueprint==0.8.2

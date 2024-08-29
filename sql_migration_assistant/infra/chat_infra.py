@@ -7,10 +7,11 @@ from sql_migration_assistant.utils.uc_model_version import get_latest_model_vers
 
 
 class ChatInfra:
-    def __init__(self, config, workspace_client: WorkspaceClient):
+
+    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
         self.config = config
-        self.prompts = Prompts()
+        self.prompts = p
 
         # get values from config file
         self.migration_assistant_UC_catalog = self.config.get("CATALOG")
