@@ -26,6 +26,8 @@ def run_app(debug=False):
         w = WorkspaceClient()
 
         app_runner = RunReviewApp(w, config)
+        #TODO - this will give the wrong URL if the user attaches to a different cluster as it reads the config file
+        # not the cluster that is attached to
         proxy_url = app_runner._get_proxy_url(app_runner._get_org_id())
 
         x = threading.Thread(target=thread_func)
