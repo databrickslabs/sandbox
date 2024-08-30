@@ -3,6 +3,7 @@ from utils.configloader import ConfigLoader
 from utils.run_review_app import RunReviewApp
 from dbtunnel import dbtunnel
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.runtime import *
 import threading
 import yaml
 
@@ -26,9 +27,12 @@ def run_app(debug=False):
         w = WorkspaceClient()
 
         app_runner = RunReviewApp(w, config)
-        #TODO - this will give the wrong URL if the user attaches to a different cluster as it reads the config file
-        # not the cluster that is attached to
         proxy_url = app_runner._get_proxy_url(app_runner._get_org_id())
+        cluster_id = spark.conf.get("spark.databricks.clusterUsageTags.clusterId")
+        proxy_url_split = proxy_url.split("/")
+        # replace the cluster id from config which may not be the same as the current cluster id
+        proxy_url_split[-3] = cluster_id
+        proxy_url = "/".join(proxy_url_split)
 
         x = threading.Thread(target=thread_func)
         x.start()
