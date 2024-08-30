@@ -1,6 +1,7 @@
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors.platform import BadRequest
 from databricks.labs.blueprint.tui import Prompts
+from databricks.labs.lsql.core import StatementExecutionExt
 import logging
 import time
 
@@ -17,10 +18,17 @@ upload app file to databricks
 
 
 class UnityCatalogInfra:
-    def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
+    def __init__(
+        self,
+        config,
+        workspace_client: WorkspaceClient,
+        p: Prompts,
+        see: StatementExecutionExt,
+    ):
         self.w = workspace_client
         self.config = config
         self.prompts = p
+        self.see = see
 
         # get defaults from config file
         self.default_UC_catalog = "sql_migration_assistant"
@@ -33,7 +41,7 @@ class UnityCatalogInfra:
 
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
-        self.warehouseID = self.config.get("SQL_WAREHOUSE_ID")
+        self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
         # add code intent table name to config
         self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
@@ -65,7 +73,7 @@ class UnityCatalogInfra:
 
     def choose_schema_name(self):
 
-        use_default_schema_name =  self.prompts.confirm(
+        use_default_schema_name = self.prompts.confirm(
             f"Would you like to use the default schema name: {self.default_UC_schema}? (yes/no)"
         )
         if use_default_schema_name:
@@ -115,31 +123,10 @@ class UnityCatalogInfra:
 
         table_name = self.code_intent_table_name
 
-        _ = self.w.statement_execution.execute_statement(
-            warehouse_id=self.warehouseID,
-            catalog=self.migration_assistant_UC_catalog,
-            schema=self.migration_assistant_UC_schema,
-            statement=f"CREATE TABLE IF NOT EXISTS `{table_name}` (id BIGINT, code STRING, intent STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)",
+        _ = self.see(
+            f"CREATE TABLE IF NOT EXISTS "
+            f"`{self.migration_assistant_UC_catalog}.{self.migration_assistant_UC_schema}.{table_name}`"
+            f" (id BIGINT, code STRING, intent STRING) "
+            f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
         )
-        elapsed_time = 0
-        while elapsed_time < 60:
-            status = self.w.statement_execution.get_statement(_.statement_id)
-            if status.status.state.value == "SUCCEEDED":
-                break
-            elif status.status.state.value == "FAILED":
-                logging.error(
-                    f"Table creation failed with error\n{status.status.error.message}"
-                )
-                break
-            elif (
-                status.status.state.value == "PENDING"
-                or status.status.state.value == "RUNNING"
-            ):
-                time.sleep(5)
-                elapsed_time += 0
-            elif status.status.state.value == "CANCELED":
-                logging.error(f"Table creation was cancelled.")
-                break
-            elif status.status.state.value == "CLOSED":
-                logging.info(f"Table creation query not fetchable.")
-                break
+

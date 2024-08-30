@@ -1,20 +1,21 @@
 from databricks.sdk import WorkspaceClient
+from databricks.labs.lsql.core import StatementExecutionExt
 
 
 class SimilarCode:
 
     def __init__(
         self,
+        workspace_client: WorkspaceClient,
+        see: StatementExecutionExt,
         catalog,
         schema,
         code_intent_table_name,
         VS_index_name,
         VS_endpoint_name,
-        sql_warehouse_id,
     ):
-        self.w = WorkspaceClient()
-
-        self.warehouseID = sql_warehouse_id
+        self.w = workspace_client
+        self.see = see
         self.catalog = catalog
         self.schema = schema
         self.code_intent_table_name = code_intent_table_name
@@ -23,12 +24,8 @@ class SimilarCode:
 
     def save_intent(self, code, intent):
         code_hash = hash(code)
-
-        _ = self.w.statement_execution.execute_statement(
-            warehouse_id=self.warehouseID,
-            catalog=self.catalog,
-            schema=self.schema,
-            statement=f'INSERT INTO {self.code_intent_table_name} VALUES ({code_hash}, "{code}", "{intent}")',
+        _ = self.see(
+            statement=f'INSERT INTO {self.catalog}.{self.schema}.{self.code_intent_table_name} VALUES ({code_hash}, "{code}", "{intent}")',
         )
 
     def get_similar_code(self, chat_history):

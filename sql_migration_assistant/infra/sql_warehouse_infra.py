@@ -65,5 +65,5 @@ class SqlWarehouseInfra:
             warehouse_name = choice.split(",\t")[0].replace("Name: ", "")
             warehouseID = warehouse_dict[warehouse_name]
         # update config with user choice
-        self.config["SQL_WAREHOUSE_ID"] = warehouseID
+        self.config["DATABRICKS_WAREHOUSE_ID"] = warehouseID
         self.config["SQL_WAREHOUSE_NAME"] = self.default_sql_warehouse_name

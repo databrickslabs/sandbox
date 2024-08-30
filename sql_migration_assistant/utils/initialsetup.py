@@ -1,3 +1,4 @@
+from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk.errors import PermissionDenied, ResourceAlreadyExists, BadRequest
 from sql_migration_assistant.infra.sql_warehouse_infra import SqlWarehouseInfra
 from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
@@ -59,8 +60,8 @@ class SetUpMigrationAssistant:
         return sql_infra.config
 
     @_handle_errors
-    def setup_uc_infra(self, config, w, p):
-        uc_infra = UnityCatalogInfra(config, w, p)
+    def setup_uc_infra(self, config, w, p, see):
+        uc_infra = UnityCatalogInfra(config, w, p, see)
         logging.info("Choose or create catalog")
         uc_infra.choose_UC_catalog()
         logging.info("Choose or create schema")
@@ -105,10 +106,12 @@ class SetUpMigrationAssistant:
         ############################################################
         logging.info("***Choose a Databricks SQL Warehouse***")
         config = self.create_sql_warehouse(config, w, p)
+        # create a StatementExecutionExt object to execute SQL commands with the warehouse just created / assigned
+        see = StatementExecutionExt(w, config["DATABRICKS_WAREHOUSE_ID"])
 
         ############################################################
         logging.info("Setting up Unity Catalog infrastructure")
-        config = self.setup_uc_infra(config, w, p)
+        config = self.setup_uc_infra(config, w, p, see)
 
         ############################################################
         logging.info("Setting up Vector Search infrastructure")

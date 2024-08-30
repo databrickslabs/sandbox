@@ -26,6 +26,7 @@ class RunReviewApp:
             "aiohttp",
             "databricks-labs-blueprint==0.8.2",
             "dbtunnel==0.14.6",
+            "databricks-labs-lsql==0.9.0",
         ]
 
     def cluster_id_getter(self):

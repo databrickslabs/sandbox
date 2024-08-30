@@ -1,10 +1,10 @@
 import os
-
+from databricks.labs.lsql.core import StatementExecutionExt
+from databricks.sdk import WorkspaceClient
 import gradio as gr
 
 from app.llm import LLMCalls
 from app.similar_code import SimilarCode
-from app.sql_interface import SQLInterface
 import logging  # For printing translation attempts in console (debugging)
 
 # Setting up logger
@@ -17,25 +17,27 @@ logger.setLevel(logging.DEBUG)
 
 FOUNDATION_MODEL_NAME = os.environ.get("SERVED_FOUNDATION_MODEL_NAME")
 MAX_TOKENS = os.environ.get("MAX_TOKENS")
-SQL_WAREHOUSE_ID = os.environ.get("SQL_WAREHOUSE_ID")
+SQL_WAREHOUSE_ID = os.environ.get("DATABRICKS_WAREHOUSE_ID")
 VECTOR_SEARCH_ENDPOINT_NAME = os.environ.get("VECTOR_SEARCH_ENDPOINT_NAME")
 VS_INDEX_NAME = os.environ.get("VS_INDEX_NAME")
 CODE_INTENT_TABLE_NAME = os.environ.get("CODE_INTENT_TABLE_NAME")
 CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
 
-
+w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
+see = StatementExecutionExt(w, SQL_WAREHOUSE_ID)
 translation_llm = LLMCalls(
     foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS
 )
 intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS)
 similar_code_helper = SimilarCode(
+    workspace_client=w,
+    see=see,
     catalog=CATALOG,
     schema=SCHEMA,
     code_intent_table_name=CODE_INTENT_TABLE_NAME,
     VS_index_name=VS_INDEX_NAME,
     VS_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-    sql_warehouse_id=SQL_WAREHOUSE_ID,
 )
 
 ################################################################################
