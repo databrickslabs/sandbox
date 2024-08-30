@@ -123,7 +123,7 @@ class UnityCatalogInfra:
 
         table_name = self.code_intent_table_name
 
-        _ = self.see(
+        _ = self.see.execute(
             f"CREATE TABLE IF NOT EXISTS "
             f"`{self.migration_assistant_UC_catalog}.{self.migration_assistant_UC_schema}.{table_name}`"
             f" (id BIGINT, code STRING, intent STRING) "

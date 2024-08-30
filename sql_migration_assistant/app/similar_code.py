@@ -24,8 +24,8 @@ class SimilarCode:
 
     def save_intent(self, code, intent):
         code_hash = hash(code)
-        _ = self.see(
-            statement=f'INSERT INTO {self.catalog}.{self.schema}.{self.code_intent_table_name} VALUES ({code_hash}, "{code}", "{intent}")',
+        _ = self.see.execute(
+            f'INSERT INTO {self.catalog}.{self.schema}.{self.code_intent_table_name} VALUES ({code_hash}, "{code}", "{intent}")',
         )
 
     def get_similar_code(self, chat_history):
