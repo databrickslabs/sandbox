@@ -2,3 +2,4 @@ databricks-sdk==0.30.0
 pyyaml
 mlflow[databricks]
 databricks-labs-blueprint==0.8.2
+databricks-labs-lsql==0.9.0

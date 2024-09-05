@@ -107,7 +107,7 @@ class SetUpMigrationAssistant:
         logging.info("***Choose a Databricks SQL Warehouse***")
         config = self.create_sql_warehouse(config, w, p)
         # create a StatementExecutionExt object to execute SQL commands with the warehouse just created / assigned
-        see = StatementExecutionExt(w, config["DATABRICKS_WAREHOUSE_ID"])
+        see = StatementExecutionExt(w, warehouse_id=config["DATABRICKS_WAREHOUSE_ID"])
 
         ############################################################
         logging.info("Setting up Unity Catalog infrastructure")
