@@ -28,16 +28,21 @@ on and own. This allows you to present a project to upskill your employees, leve
 customise the application to their needs and entirely own the IP.
 
 ## Installation
-
+![Install video](docs/sql-migration-assistant-set-up.mov)
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
 (https://docs.databricks.com/en/dev-tools/cli/index.html) installed and configured with the correct workspace. Install 
 the [Databricks Labs Sandbox](https://github.com/databrickslabs/sandbox). 
 
+First, navigate to where you have installed the Databricks Labs Sandbox. For example
+```bash
+cd /Documents/sandbox
+```
+
 You'll need to install the python requirements in the `requirements.txt` file in the root of the project. 
 You may wish to do this in a virtual environment. 
 ```bash
-pip install -r sandbox/sql-migration-assistant/requirements.txt
+pip install -r sql-migration-assistant/requirements.txt -q
 ```
 Run the following command to start the installation process, creating all the necessary resources in your workspace.
 ```bash 
