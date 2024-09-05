@@ -28,6 +28,7 @@ on and own. This allows you to present a project to upskill your employees, leve
 customise the application to their needs and entirely own the IP.
 
 ## Installation
+
 ![Install video](docs/sql-migration-assistant-set-up.mov)
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
