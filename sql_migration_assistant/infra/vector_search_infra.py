@@ -7,13 +7,13 @@ from databricks.sdk.service.vectorsearch import (
     EmbeddingSourceColumn,
     VectorIndexType,
 )
-from databricks.sdk.errors.platform import ResourceAlreadyExists
+from databricks.sdk.errors.platform import ResourceAlreadyExists, NotFound
 
 from databricks.labs.blueprint.tui import Prompts
 
 import logging
 from sql_migration_assistant.utils.uc_model_version import get_latest_model_version
-
+import time
 
 class VectorSearchInfra:
     def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
@@ -63,7 +63,6 @@ class VectorSearchInfra:
         question = "Choose a Vector Search endpoint. Endpoints cannot have more than 50 indices."
         choice = self.prompts.choice(question, endpoints)
         # need only the endpoint name
-        choice = choice.split(" ")[0]
         if "CREATE NEW VECTOR SEARCH ENDPOINT" in choice:
             self.migration_assistant_VS_endpoint = self.default_VS_endpoint_name
             logging.info(
@@ -71,8 +70,14 @@ class VectorSearchInfra:
                 f"This will take a few minutes."
                 f"Check status here: {self.w.config.host}/compute/vector-search/{self.migration_assistant_VS_endpoint}"
             )
+            print(
+                f"Creating new VS endpoint {self.migration_assistant_VS_endpoint}."
+                f"This will take a few minutes."
+                f"Check status here: {self.w.config.host}/compute/vector-search/{self.migration_assistant_VS_endpoint}"
+            )
             self._create_VS_endpoint()
         else:
+            choice = choice.split(" ")[0] #need to remove the (num indices) part of the string
             self.migration_assistant_VS_endpoint = choice
             # update config with user choice
             self.config["VECTOR_SEARCH_ENDPOINT_NAME"] = (
@@ -167,3 +172,11 @@ class VectorSearchInfra:
             print(
                 f"Index {self.migration_assistant_VS_index} already exists. Using existing index."
             )
+        except NotFound as e:
+            if f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found" in str(e):
+                logging.info(f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds.")
+                print(f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds.")
+                time.sleep(30)
+                self.create_VS_index()
+            else:
+                raise e

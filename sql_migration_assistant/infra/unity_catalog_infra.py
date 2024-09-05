@@ -53,23 +53,15 @@ class UnityCatalogInfra:
         # metastore_grants = self.w.grants.get_effective(SecurableType.CATALOG, metastore.metastore_id)
         # w.grants.get_effective(SecurableType.SCHEMA, "robert_whiffin.migration_assistant")
 
-        catalogs = [f"CREATE NEW CATALOG: {self.default_UC_catalog}"]
+        catalogs = [x.name for x in self.w.catalogs.list()]
         # Create a list of all catalogs in the workspace. Returns a generator
-        catalogs.extend([x.name for x in self.w.catalogs.list()])
 
         question = "Choose a catalog:"
         choice = self.prompts.choice(question, catalogs)
-        if choice == f"CREATE NEW CATALOG: {self.default_UC_catalog}":
-            self.migration_assistant_UC_catalog = self.default_UC_catalog
-            logging.info(
-                f"Creating new UC catalog {self.migration_assistant_UC_catalog}."
-            )
-            print(f"Creating new UC catalog {self.migration_assistant_UC_catalog}.")
-            self._create_UC_catalog()
-        else:
-            self.migration_assistant_UC_catalog = choice
-            # update config with user choice
-            self.config["CATALOG"] = self.migration_assistant_UC_catalog
+
+        self.migration_assistant_UC_catalog = choice
+        # update config with user choice
+        self.config["CATALOG"] = self.migration_assistant_UC_catalog
 
     def choose_schema_name(self):
 

@@ -97,38 +97,46 @@ class SetUpMigrationAssistant:
 
     def setup_migration_assistant(self, w, p):
         logging.info("Setting up infrastructure")
+        print("\nSetting up infrastructure")
         # create empty config dict to fill in
         config = {}
         ############################################################
         logging.info("Choose or create cluster to host review app")
+        print("\nChoose or create cluster to host review app")
         config = self.set_up_cluster(config, w, p)
 
         ############################################################
         logging.info("***Choose a Databricks SQL Warehouse***")
+        print("\n***Choose a Databricks SQL Warehouse***")
         config = self.create_sql_warehouse(config, w, p)
         # create a StatementExecutionExt object to execute SQL commands with the warehouse just created / assigned
         see = StatementExecutionExt(w, warehouse_id=config["DATABRICKS_WAREHOUSE_ID"])
 
         ############################################################
         logging.info("Setting up Unity Catalog infrastructure")
+        print("\nSetting up Unity Catalog infrastructure")
         config = self.setup_uc_infra(config, w, p, see)
 
         ############################################################
         logging.info("Setting up Vector Search infrastructure")
+        print("\nSetting up Vector Search infrastructure")
         config = self.setup_vs_infra(config, w, p)
 
         ############################################################
         logging.info("Setting up Chat infrastructure")
+        print("\nSetting up Chat infrastructure")
         config = self.setup_chat_infra(config, w, p)
 
         ############################################################
         logging.info("Setting up secrets")
+        print("\nSetting up secrets")
         config = self.setup_secrets_infra(config, w, p)
 
         return config
 
     def upload_files(self, w):
         logging.info("Uploading files to workspace")
+        print("\nUploading files to workspace")
         uploader = FileUploader(w)
         files_to_upload = [
             "sql_migration_assistant/utils/runindatabricks.py",
@@ -151,6 +159,9 @@ class SetUpMigrationAssistant:
     def launch_review_app(self, w, config):
         logging.info(
             "Launching review app, please wait. A URL will be provided when the app is ready..."
+        )
+        print(
+            "\nLaunching review app, please wait. A URL will be provided when the app is ready..."
         )
         app_runner = RunReviewApp(w, config)
         app_runner.launch_review_app()

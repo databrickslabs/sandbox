@@ -81,7 +81,7 @@ class ChatInfra:
         """
         endpoints = self.w.serving_endpoints.list()
         endpoint_names = set([ep.name for ep in endpoints])
-        pay_per_token_exists = set(self.pay_per_token_models).issubset(endpoint_names)
+        pay_per_token_exists = max([x in endpoint_names for x in self.pay_per_token_models])
         return pay_per_token_exists
 
     def _create_provisioned_throughput_endpoint(self, model_name):
