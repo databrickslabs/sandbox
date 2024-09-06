@@ -14,7 +14,6 @@ import os
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
 
-
 class SetUpMigrationAssistant:
 
     # this is a decorator to handle errors and do a retry where user is asked to choose an existing resource
@@ -134,22 +133,26 @@ class SetUpMigrationAssistant:
 
         return config
 
-    def upload_files(self, w):
+    def upload_files(self, w, path):
+        # all this nastiness becomes unnecessary with lakehouse apps, or if we upload a whl it simplifies things.
+        # But for now, this is the way.
+        # TODO - MAKE THIS NICE!!
         logging.info("Uploading files to workspace")
         print("\nUploading files to workspace")
         uploader = FileUploader(w)
         files_to_upload = [
             "utils/runindatabricks.py",
-            "sql_migration_assistant/gradio_app.py",
-            "sql_migration_assistant/run_app_from_databricks_notebook.py",
-            "sql_migration_assistant/utils/configloader.py",
-            "sql_migration_assistant/utils/run_review_app.py",
-            "sql_migration_assistant/config.yml",
+            "gradio_app.py",
+            "run_app_from_databricks_notebook.py",
+            "utils/configloader.py",
+            "utils/run_review_app.py",
+            "config.yml",
         ]
+        files_to_upload = [os.path.join(path, x) for x in files_to_upload]
         files_to_upload.extend(
             [
                 f"app/{x}"
-                for x in os.listdir("sql_migration_assistant/app")
+                for x in os.listdir(os.path.join(path, "app"))
                 if x[-3:] == ".py"
             ]
         )

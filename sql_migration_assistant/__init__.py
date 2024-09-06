@@ -9,11 +9,9 @@ def hello():
     w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
     p = Prompts()
     setter_upper = SetUpMigrationAssistant()
-    current_path = Path(__file__).parent.resolve()
-    print(current_path)
     final_config = setter_upper.setup_migration_assistant(w, p)
     current_path = Path(__file__).parent.resolve()
-    print(current_path)
+
     local_config = str(current_path) + "/config.yml"
     with open(local_config, "w") as f:
         yaml.dump(final_config, f)
