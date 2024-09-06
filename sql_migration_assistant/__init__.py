@@ -12,7 +12,7 @@ def hello():
     final_config = setter_upper.setup_migration_assistant(w, p)
     current_path = Path(__file__).parent.resolve()
 
-    local_config = current_path + "/sql_migration_assistant/config.yml"
+    local_config = str(current_path) + "/sql_migration_assistant/config.yml"
     with open(local_config, "w") as f:
         yaml.dump(final_config, f)
     setter_upper.upload_files(w)
