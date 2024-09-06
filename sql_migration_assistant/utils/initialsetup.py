@@ -151,7 +151,7 @@ class SetUpMigrationAssistant:
         files_to_upload = [os.path.join(path, x) for x in files_to_upload]
         files_to_upload.extend(
             [
-                f"app/{x}"
+                os.path.join(path, "app", x)
                 for x in os.listdir(os.path.join(path, "app"))
                 if x[-3:] == ".py"
             ]
