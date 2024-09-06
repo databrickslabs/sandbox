@@ -29,13 +29,13 @@ customise the application to their needs and entirely own the IP.
 
 ## Installation Videos
 
-![Installation Video 1](https://github.com/user-attachments/assets/de2e0528-3f7a-438f-b2f8-dc660c1906d2)
+[![Installation Video 1](https://github.com/user-attachments/assets/de2e0528-3f7a-438f-b2f8-dc660c1906d2)
 
 
-![Installation Video 2](https://github.com/user-attachments/assets/87eda912-0d89-4d62-b0a4-ea5881a4f389)
+[![Installation Video 2](https://github.com/user-attachments/assets/87eda912-0d89-4d62-b0a4-ea5881a4f389)
 
 
-![Installation Video 3](https://github.com/user-attachments/assets/9deb2b61-43c0-4c4b-ba1a-a88b2f30ddf2)
+[![Installation Video 3](https://github.com/user-attachments/assets/9deb2b61-43c0-4c4b-ba1a-a88b2f30ddf2)
 
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
