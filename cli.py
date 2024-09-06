@@ -10,9 +10,13 @@ def ip_access_list_analyzer(**args):
     import ip_access_list_analyzer.ip_acl_analyzer as analyzer
     analyzer.main(args)
 
+def sql_migration_assistant(**args):
+    from sql_migration_assistant import hello
+    hello()
 
 MAPPING = {
-    "ip-access-list-analyzer": ip_access_list_analyzer
+    "ip-access-list-analyzer": ip_access_list_analyzer,
+    "sql-migration-assistant": sql_migration_assistant
 }
 
 
