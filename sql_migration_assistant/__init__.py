@@ -11,7 +11,7 @@ def hello():
     setter_upper = SetUpMigrationAssistant()
     final_config = setter_upper.setup_migration_assistant(w, p)
     local_config = Path(__file__).name + '/config.yml'
-    with local_config.open() as f:
+    with open(local_config, "w") as f:
         yaml.dump(final_config, f)
     setter_upper.upload_files(w)
     setter_upper.launch_review_app(w, final_config)
