@@ -10,7 +10,9 @@ def hello():
     p = Prompts()
     setter_upper = SetUpMigrationAssistant()
     final_config = setter_upper.setup_migration_assistant(w, p)
-    local_config = Path(__file__).name + '/config.yml'
+    current_path = Path(__file__).parent.resolve()
+
+    local_config = current_path + "/sql_migration_assistant/config.yml"
     with open(local_config, "w") as f:
         yaml.dump(final_config, f)
     setter_upper.upload_files(w)
