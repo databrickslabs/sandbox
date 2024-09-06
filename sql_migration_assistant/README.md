@@ -29,7 +29,7 @@ customise the application to their needs and entirely own the IP.
 
 ## Installation
 
-![Install video](docs/sql-migration-assistant-set-up.mov)
+<video src='docs/sql-migration-assistant-set-up.mov' />
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
 (https://docs.databricks.com/en/dev-tools/cli/index.html) installed and configured with the correct workspace. Install 
