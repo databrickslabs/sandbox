@@ -2,6 +2,7 @@ from sql_migration_assistant.utils.initialsetup import SetUpMigrationAssistant
 from databricks.sdk import WorkspaceClient
 from databricks.labs.blueprint.tui import Prompts
 import yaml
+from pathlib import Path
 
 
 def hello():
@@ -9,7 +10,8 @@ def hello():
     p = Prompts()
     setter_upper = SetUpMigrationAssistant()
     final_config = setter_upper.setup_migration_assistant(w, p)
-    with open("sql_migration_assistant/config.yml", "w") as f:
+    local_config = Path(__file__).name + '/config.yml'
+    with local_config.open() as f:
         yaml.dump(final_config, f)
     setter_upper.upload_files(w)
     setter_upper.launch_review_app(w, final_config)
