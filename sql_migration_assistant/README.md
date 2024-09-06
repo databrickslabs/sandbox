@@ -28,7 +28,6 @@ on and own. This allows you to present a project to upskill your employees, leve
 customise the application to their needs and entirely own the IP.
 
 ## Installation
-
 <video width="752" height="382" controls>
   <source src="docs/sql-migration-assistant-set-up.mov" type="video/mp4">
 </video>
