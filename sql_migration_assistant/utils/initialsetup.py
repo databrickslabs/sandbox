@@ -149,7 +149,7 @@ class SetUpMigrationAssistant:
         files_to_upload.extend(
             [
                 f"app/{x}"
-                for x in os.listdir("app")
+                for x in os.listdir("sql_migration_assistant/app")
                 if x[-3:] == ".py"
             ]
         )
