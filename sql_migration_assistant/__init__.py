@@ -15,5 +15,5 @@ def hello():
     local_config = str(current_path) + "/config.yml"
     with open(local_config, "w") as f:
         yaml.dump(final_config, f)
-    setter_upper.upload_files(w)
+    setter_upper.upload_files(w, current_path)
     setter_upper.launch_review_app(w, final_config)
