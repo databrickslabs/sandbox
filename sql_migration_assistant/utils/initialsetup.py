@@ -139,7 +139,7 @@ class SetUpMigrationAssistant:
         print("\nUploading files to workspace")
         uploader = FileUploader(w)
         files_to_upload = [
-            "sql_migration_assistant/utils/runindatabricks.py",
+            "utils/runindatabricks.py",
             "sql_migration_assistant/gradio_app.py",
             "sql_migration_assistant/run_app_from_databricks_notebook.py",
             "sql_migration_assistant/utils/configloader.py",
