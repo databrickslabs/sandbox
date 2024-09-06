@@ -27,13 +27,16 @@ Legion is a solution accelerator - it is *not* a fully baked solution. This is s
 on and own. This allows you to present a project to upskill your employees, leverage GenAI for a real use case, 
 customise the application to their needs and entirely own the IP.
 
-## Installation
+## Installation Videos
 
-![](docs/sql-migration-assistant-set-up.mov)
+https://github.com/user-attachments/assets/de2e0528-3f7a-438f-b2f8-dc660c1906d2
 
-![Installation video 1](docs/sql-migration-assistant-set-up1.mov)
 
-![Installation video 2](docs/sql-migration-assistant-set-up2.mov)
+https://github.com/user-attachments/assets/87eda912-0d89-4d62-b0a4-ea5881a4f389
+
+
+https://github.com/user-attachments/assets/9deb2b61-43c0-4c4b-ba1a-a88b2f30ddf2
+
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
 (https://docs.databricks.com/en/dev-tools/cli/index.html) installed and configured with the correct workspace. Install 
