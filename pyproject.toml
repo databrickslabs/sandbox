@@ -4,20 +4,20 @@ version = "0.0.1"
 description = "Experimental and low-maturity scripts"
 authors = ["Databricks Labs"]
 packages = [
-    {include = "ip_access_list_analyzer"}
+    {include = "ip_access_list_analyzer"},
+    {include = "sql_migration_assistant"}
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
-databricks-sdk = "^0.25.1"
+python = ">=3.10,<3.12"
+databricks-sdk = "0.30.0"
+pyyaml = "^6.0.2"
+mlflow = {extras = ["databricks"], version = "^2.16.0"}
+databricks-labs-blueprint = "0.8.2"
+databricks-labs-lsql = "0.9.0"
 
 [build-system]
 requires = [
-    "poetry-core>=1.0.0",
-    "databricks-sdk==0.30.0",
-    "pyyaml",
-    "mlflow[databricks]",
-    "databricks-labs-blueprint==0.8.1",# test, should be 0.8.2
-    "databricks-labs-lsql==0.9.0",
+    "poetry-core>=1.0.0"
 ]
 build-backend = "poetry.core.masonry.api"
