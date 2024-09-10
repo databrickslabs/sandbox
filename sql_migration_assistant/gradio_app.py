@@ -26,7 +26,7 @@ SCHEMA = os.environ.get("SCHEMA")
 
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
-see = StatementExecutionExt(w, SQL_WAREHOUSE_ID)
+see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
 translation_llm = LLMCalls(
     foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS
 )
