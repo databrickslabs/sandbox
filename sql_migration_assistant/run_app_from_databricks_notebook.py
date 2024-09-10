@@ -10,10 +10,10 @@
 pip install databricks-sdk -U
 
 # COMMAND ----------
-pip install gradio==4.27.0 pyyaml aiohttp databricks-labs-blueprint==0.8.2 databricks-labs-lsql==0.9.0
+pip install gradio==4.27.0 pyyaml aiohttp==3.10.5 databricks-labs-blueprint==0.8.2 databricks-labs-lsql==0.9.0
 
 # COMMAND ----------
-pip install dbtunnel==0.14.6
+pip install fastapi==0.112.2 pydantic==2.8.2 dbtunnel==0.14.6
 
 # COMMAND ----------
 dbutils.library.restartPython()

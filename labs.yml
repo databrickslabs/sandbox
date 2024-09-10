@@ -4,7 +4,7 @@ install:
   script: install.py
 description: Databricks Labs Sandbox
 entrypoint: cli.py
-min_python: 3.8
+min_python: 3.10
 commands:
   - name: ip-access-list-analyzer
     description: "Analyzer/Fixer for Databricks IP Access Lists"

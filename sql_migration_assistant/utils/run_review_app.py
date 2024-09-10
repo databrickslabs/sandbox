@@ -23,8 +23,10 @@ class RunReviewApp:
             "gradio==4.27.0",
             "pyyaml",
             "databricks-sdk==0.30.0",
-            "aiohttp",
+            "aiohttp==3.10.5",
             "databricks-labs-blueprint==0.8.2",
+            "fastapi==0.112.2",
+            "pydantic==2.8.2",
             "dbtunnel==0.14.6",
             "databricks-labs-lsql==0.9.0",
         ]
