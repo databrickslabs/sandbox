@@ -38,27 +38,17 @@ https://github.com/user-attachments/assets/1a58a1b5-2dcf-4624-b93f-214735162584
 
 
 Setting Legion up is a simple and automated process. Ensure you have the [Databricks CLI]
-(https://docs.databricks.com/en/dev-tools/cli/index.html) installed and configured with the correct workspace. Install 
-the [Databricks Labs Sandbox](https://github.com/databrickslabs/sandbox). 
+(https://docs.databricks.com/en/dev-tools/cli/index.html) installed and configured with the correct workspace.
 
-First, navigate to where you have installed the Databricks Labs Sandbox. For example
+Once the Databricks CLI has been installed and configured, run the following command to install the Databricks Labs 
+Sandbox and the SQL Migration Assistant.
 ```bash
-cd /Documents/sandbox
-```
-
-You'll need to install the python requirements in the `requirements.txt` file in the root of the project. 
-You may wish to do this in a virtual environment. 
-```bash
-pip install -r sql-migration-assistant/requirements.txt -q
-```
-Run the following command to start the installation process, creating all the necessary resources in your workspace.
-```bash 
-databricks labs sandbox sql-migration-assistant
+databricks labs install sandbox && databricks labs sandbox sql-migration-assistant
 ```
 
 ### What Legion needs - during setup above you will create or choose existing resources for the following:
 
-- A no-isolation shared cluster running the ML runtime (tested on DBR 15.0 ML) to host the front end application.
+- A no-isolation shared cluster to host the front end application.
 - A catalog and schema in Unity Catalog. 
 - A table to store the code intent statements and their embeddings.
 - A vector search endpoint and an embedding model: see docs 
