@@ -142,7 +142,7 @@ class SetUpMigrationAssistant:
         uploader = FileUploader(w)
         files_to_upload = [
             "utils/runindatabricks.py",
-            "gradio_app.py",
+            "gradio_app_backup.py",
             "run_app_from_databricks_notebook.py",
             "utils/configloader.py",
             "utils/run_review_app.py",

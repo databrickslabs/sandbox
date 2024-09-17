@@ -1,6 +1,6 @@
 """
 This code is called after the user has run through the configutation steps in initialsetup.py.
-This uploads the config, runindatabricks.py, and gradio_app.py files to the Databricks workspace.
+This uploads the config, runindatabricks.py, and gradio_app_backup.py files to the Databricks workspace.
 """
 
 from databricks.labs.blueprint.installation import Installation

@@ -1,6 +1,7 @@
 import os
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.errors import InvalidParameterValue
 import gradio as gr
 
 from app.llm import LLMCalls
@@ -27,10 +28,8 @@ SCHEMA = os.environ.get("SCHEMA")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
-translation_llm = LLMCalls(
-    foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS
-)
-intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME, max_tokens=MAX_TOKENS)
+translation_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
+intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
 similar_code_helper = SimilarCode(
     workspace_client=w,
     see=see,
@@ -46,242 +45,307 @@ similar_code_helper = SimilarCode(
 
 # this is the app UI. it uses gradio blocks https://www.gradio.app/docs/gradio/blocks
 # each gr.{} call adds a new element to UI, top to bottom.
-with gr.Blocks(theme=gr.themes.Soft()) as demo:
+with (gr.Blocks(theme=gr.themes.Soft()) as demo):
     # title with Databricks image
     gr.Markdown(
         """<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
 
-## A migration assistant for explaining the intent of SQL code and conversion to Spark SQL
+# Databricks Legion Migration Accelerator
 
-#### This demo relies on the tables and columns referenced in the SQL query being present in Unity Catalogue and having their table comments and column comments populated. For the purpose of the demo, this was generated using the Databricks AI Generated Comments tool. 
+Legion is an AI powered tool that aims to accelerate the migration of code to Databricks for low cost and effort. It 
+does this by using AI to translate, explain, and make discoverable your code. 
+
+This interface is the Legion Control Panel. Here you are able to configure the AI agents for translation and explanation
+to fit your needs, incorporating your expertise and knowledge of the codebase by adjusting the AI agents' instructions.
+
+Please select a tab to get started.   
 
 """
     )
+    ################################################################################
+    #### STORAGE SETTINGS TAB
+    ################################################################################
+    with gr.Tab(label="Storage Settings"):
+        gr.Markdown(
+            """## Configure where your code is stored.
+            
+            Legion needs to know where your code is stored. This must be a Unity Catalog Volume. 
+            Please provide the full path to where your code is stored. Legion will list the code files in the volume for
+             you to select a file to evaluate the AI agents on.
+            """
+        )
+        volume_path = gr.Textbox(label="Volume Path", placeholder="/Volumes/catalog/schema/volume/folder1/...")
+        load_files = gr.Button("Load Filenames from Volume")
+        select_code_file = gr.Radio(label="Select Code File")
+        selected_file = gr.Code(label="Selected Code File", language="sql-msSQL")
+
+        def list_files(path_to_volume):
+            if path_to_volume == "":
+                raise gr.Error("Invalid path to volume. Please check the path and try again. Path must be an absolute path "
+                        "to a Unity Catalog Volume, e.g. /Volumes/catalog/schema/volume/folder1/"
+                                )
+            elif path_to_volume[:8] != "/Volumes":
+                raise gr.Error("Invalid path to volume. Please check the path and try again. Path must be an absolute path "
+                        "to a Unity Catalog Volume, e.g. /Volumes/catalog/schema/volume/folder1/"
+                                )
+            else:
+                file_infos = w.dbutils.fs.ls(path_to_volume)
+                file_names = [x.name for x in file_infos]
+                file_name_radio = gr.Radio(
+                    label="Select Code File"
+                    , choices=file_names
+
+                )
+                return file_name_radio
+
+        load_files.click(list_files, volume_path, select_code_file)
+
+        def read_code_file(volume_path, file_name):
+            file_name = os.path.join(volume_path, file_name)
+            file = w.files.download(file_name)
+            code = file.contents.read().decode("utf-8")
+            return code
 
     ################################################################################
-    #### TRANSLATION ADVANCED OPTIONS PANE
+    #### EXPLANATION TAB
     ################################################################################
-    with gr.Accordion(label="Translation Advanced Settings", open=False):
-        with gr.Row():
-            transation_system_prompt = gr.Textbox(
-                label="Instructions for the LLM translation tool.",
-                value="""
-                          You are an expert in multiple SQL dialects. You only reply with SQL code and with no other text. 
-                          Your purpose is to translate the given SQL query to Databricks Spark SQL. 
-                          You must follow these rules:
-                          - You must keep all original catalog, schema, table, and field names.
-                          - Convert all dates to dd-MMM-yyyy format using the date_format() function.
-                          - Subqueries must end with a semicolon.
-                          - Ensure queries do not have # or @ symbols.
-                          - ONLY if the original query uses temporary tables (e.g. "INTO #temptable"), re-write these as either CREATE OR REPLACE TEMPORARY VIEW or CTEs. .
-                          - Square brackets must be replaced with backticks.
-                          - Custom field names should be surrounded by backticks. 
-                          - Ensure queries do not have # or @ symbols.
-                          - Only if the original query contains DECLARE and SET statements, re-write them according to the following format:
-                                DECLARE VARIABLE variable TYPE DEFAULT value; For example: DECLARE VARIABLE number INT DEFAULT 9;
-                                SET VAR variable = value; For example: SET VAR number = 9;
-                          
-                        Write an initial draft of the translated query. Then double check the output for common mistakes, including:
-                        - Using NOT IN with NULL values
-                        - Using UNION when UNION ALL should have been used
-                        - Using BETWEEN for exclusive ranges
-                        - Data type mismatch in predicates
-                        - Properly quoting identifiers
-                        - Using the correct number of arguments for functions
-                        - Casting to the correct data type
-                        - Using the proper columns for joins
-                        
-                        Return the final translated query only. Include comments. Include only SQL.
-                        """.strip(),
-                lines=40,
+    with gr.Tab(label="Code Explanation"):
+        gr.Markdown("""
+        ## An AI tool to generate the intent of your code.
+
+        In this panel you need to iterate on the system prompt to refine the intent the AI generates for your code.
+        This intent will be stored in Unity Catalog, and can be used for finding similar code, for documentation, 
+         and to help with writing new code in Databricks to achieve the same goal.
+        """)
+        with gr.Accordion(label="Advanced Intent Settings", open=True):
+            gr.Markdown(
+                """ ### Advanced settings for the generating the intent of the input code.
+                
+                The *Temperature* paramater controls the randomness of the AI's response. Higher values will result in 
+                more creative responses, while lower values will result in more predictable responses.
+                """
             )
 
-    ################################################################################
-    #### TRANSLATION PANE
-    ################################################################################
-    # subheader
+            with gr.Row():
+                intent_temperature = gr.Number(label="Temperature. Float between 0.0 and 2.0", value=1)
+                intent_max_tokens = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
+            with gr.Row():
+                intent_system_prompt = gr.Textbox(
+                    label="System prompt of the LLM to generate the intent.",
+                    value="""Your job is to explain intent of the provided SQL code.
+                            """.strip(),
+                )
+        with gr.Accordion(label="Intent Pane", open=True):
+            gr.Markdown(
+                """ ## AI generated intent of what your code aims to do. 
+                        """
+            )
+            explain_button = gr.Button("Explain")
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown(
+                        """ ## Code loaded from Unity Catalog."""
+                    )
 
-    with gr.Accordion(label="Translation Pane", open=True):
-        gr.Markdown(
-            """ ### Input your T-SQL code here for automatic translation to Spark-SQL and use AI to generate a statement of intent for the code's purpose."""
-        )
-        # hidden chat interface - to enable chatbot functionality
-        translation_chat = gr.Chatbot(visible=False)
-        with gr.Row():
-            with gr.Column():
+                    # input box for SQL code with nice formatting
+                    intent_input_code = gr.Code(
+                        label="Input SQL",
+                        language="sql-msSQL",
+                    )
+                    # a button labelled translate
+
+                with gr.Column():
+                    # divider subheader
+                    gr.Markdown(""" ## Code intent""")
+                    # output box of the T-SQL translated to Spark SQL
+                    explained = gr.Textbox(
+                        label="AI generated intent of your code."
+                    )
+
+
+            def llm_intent_wrapper(system_prompt, input_code, max_tokens, temperature):
+                # call the LLM to translate the code
+                intent = intent_llm.llm_intent(system_prompt, input_code, max_tokens, temperature)
+                return intent
+
+
+            # reset hidden chat history and prompt
+            # do translation
+            explain_button.click(
+                fn=llm_intent_wrapper,
+                inputs=[intent_system_prompt, intent_input_code, intent_max_tokens, intent_temperature],
+                outputs=explained,
+            )
+    ################################################################################
+    #### TRANSLATION TAB
+    ################################################################################
+    with gr.Tab(label="Translation"):
+        gr.Markdown("""
+        ## An AI tool to translate your code.
+
+        In this panel you need to iterate on the system prompt to refine the translation the AI generates for your code.
+      
+        """)
+        with gr.Accordion(label="Translation Advanced Settings", open=True):
+            with gr.Row():
                 gr.Markdown(
-                    """ ### Input your T-SQL code here for translation to Spark-SQL."""
-                )
+                    """ ### Advanced settings for the translating the input code.
 
-                # input box for SQL code with nice formatting
-                input_code = gr.Code(
-                    label="Input SQL",
-                    language="sql-msSQL",
-                    value="""SELECT
-  c.[country_name],
-  AVG([dep_count]) AS average_dependents
-FROM
-  (
-    SELECT
-      e.[employee_id]
-      ,e.[department_id]
-      ,COUNT(d.[dependent_id]) AS dep_count
-    FROM
-      [robert_whiffin].[code_assistant].[employees] e
-      LEFT JOIN [robert_whiffin].[code_assistant].[dependents] d ON e.[employee_id] = d.[employee_id]
-    GROUP BY
-      e.[employee_id]
-      ,e.[department_id]
-  ) AS subquery
-  JOIN [robert_whiffin].[code_assistant].[departments] dep ON subquery.[department_id] = dep.[department_id]
-  JOIN [robert_whiffin].[code_assistant].[locations] l ON dep.[location_id] = l.[location_id]
-  JOIN [robert_whiffin].[code_assistant].[countries] c ON l.[country_id] = c.[country_id]
-GROUP BY
-  c.[country_name]
-ORDER BY
-  c.[country_name]""",
-                )
-                # a button labelled translate
-                translate_button = gr.Button("Translate")
-
-            with gr.Column():
-                # divider subheader
-                gr.Markdown(""" ### Your Code Translated to Spark-SQL""")
-                # output box of the T-SQL translated to Spark SQL
-                translated = gr.Code(
-                    label="Your code translated to Spark SQL", language="sql-sparkSQL"
-                )
-                translation_prompt = gr.Textbox(label="Adjustments for translation")
-
-        def translate_respond(system_prompt, message, chat_history):
-            bot_message = translation_llm.llm_chat(system_prompt, message, chat_history)
-            chat_history.append([message, bot_message])
-            return chat_history, chat_history[-1][1]
-
-        # helper function to take the output from llm_translate and return outputs for chatbox and textbox
-        # chatbox input is a list of lists, each list is a message from the user and the response from the LLM
-        # textbox input is a string
-        def llm_translate_wrapper(system_prompt, input_code):
-            # call the LLM to translate the code
-            translated_code = translation_llm.llm_translate(system_prompt, input_code)
-            # wrap the translated code in a list of lists for the chatbot
-            chat_history = [[input_code, translated_code]]
-            return chat_history, translated_code
-
-        # reset hidden chat history and prompt
-        translate_button.click(
-            fn=lambda: ([["", ""]], ""),
-            inputs=None,
-            outputs=[translation_chat, translation_prompt],
-        )
-        # do translation
-        translate_button.click(
-            fn=llm_translate_wrapper,
-            inputs=[transation_system_prompt, input_code],
-            outputs=[translation_chat, translated],
-        )
-        # refine translation
-        translation_prompt.submit(
-            fn=translate_respond,
-            inputs=[transation_system_prompt, translation_prompt, translation_chat],
-            outputs=[translation_chat, translated],
-        )
-
-    ################################################################################
-    #### AI GENERATED INTENT PANE
-    ################################################################################
-    # divider subheader
-    with gr.Accordion(label="Advanced Intent Settings", open=False):
-        gr.Markdown(
-            """ ### Advanced settings for the generating the intent of the input code."""
-        )
-        with gr.Row():
-            intent_system_prompt = gr.Textbox(
-                label="System prompt of the LLM to generate the intent. Editing will reset the intent.",
-                value="""Your job is to explain intent of the provided SQL code.
-                        """.strip(),
-            )
-    with gr.Accordion(label="Intent Pane", open=True):
-        gr.Markdown(
-            """ ## AI generated intent of what your code aims to do. 
-                    
-                    Intent is determined by an LLM which uses the code and table & column metadata. 
-
-                    ***If the intent is incorrect, please edit***. Once you are happy that the description is correct, please click the button below to save the intent.
-                     
+                    The *Temperature* paramater controls the randomness of the AI's response. Higher values will result in 
+                    more creative responses, while lower values will result in more predictable responses.
                     """
-        )
-        # a box to give the LLM generated intent of the code. This is editable as well.
-        explain_button = gr.Button("Explain code intent using AI.")
-        explained = gr.Textbox(label="AI generated intent of your code.", visible=False)
+                )
+                translation_temperature = gr.Number(label="Temperature. Float between 0.0 and 2.0", value=1)
+                translation_max_tokenss = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
+            with gr.Row():
+                translation_system_prompt = gr.Textbox(
+                    label="Instructions for the LLM translation tool.",
+                    value="""
+                              You are an expert in multiple SQL dialects. You only reply with SQL code and with no other text. 
+                              Your purpose is to translate the given SQL query to Databricks Spark SQL. 
+                              You must follow these rules:
+                              - You must keep all original catalog, schema, table, and field names.
+                              - Convert all dates to dd-MMM-yyyy format using the date_format() function.
+                              - Subqueries must end with a semicolon.
+                              - Ensure queries do not have # or @ symbols.
+                              - ONLY if the original query uses temporary tables (e.g. "INTO #temptable"), re-write these as either CREATE OR REPLACE TEMPORARY VIEW or CTEs. .
+                              - Square brackets must be replaced with backticks.
+                              - Custom field names should be surrounded by backticks. 
+                              - Ensure queries do not have # or @ symbols.
+                              - Only if the original query contains DECLARE and SET statements, re-write them according to the following format:
+                                    DECLARE VARIABLE variable TYPE DEFAULT value; For example: DECLARE VARIABLE number INT DEFAULT 9;
+                                    SET VAR variable = value; For example: SET VAR number = 9;
+                              
+                            Write an initial draft of the translated query. Then double check the output for common mistakes, including:
+                            - Using NOT IN with NULL values
+                            - Using UNION when UNION ALL should have been used
+                            - Using BETWEEN for exclusive ranges
+                            - Data type mismatch in predicates
+                            - Properly quoting identifiers
+                            - Using the correct number of arguments for functions
+                            - Casting to the correct data type
+                            - Using the proper columns for joins
+                            
+                            Return the final translated query only. Include comments. Include only SQL.
+                            """.strip(),
+                    lines=20,
+                )
 
-        chatbot = gr.Chatbot(label="AI Chatbot for Intent Extraction", height="70%")
-
-        msg = gr.Textbox(label="Instruction")
-        clear = gr.ClearButton([msg, chatbot])
-
-        def intent_respond(system_prompt, message, chat_history):
-            bot_message = intent_llm.llm_chat(system_prompt, message, chat_history)
-            chat_history.append([message, bot_message])
-            return chat_history, "", bot_message
-
-        def llm_chat_wrapper(system_prompt, input_code):
-            # call the LLM to translate the code
-            intent = intent_llm.llm_intent(system_prompt, input_code)
-            # wrap the translated code in a list of lists for the chatbot
-            chat_history = [[input_code, intent]]
-            return chat_history, "", intent
-
-        explain_button.click(
-            fn=llm_chat_wrapper,
-            inputs=[intent_system_prompt, input_code],
-            outputs=[chatbot, msg, explained],
-        )
-        msg.submit(
-            fn=intent_respond,
-            inputs=[intent_system_prompt, msg, chatbot],
-            outputs=[chatbot, msg, explained],
-        )
-        clear.click(lambda: None, None, chatbot, queue=False)
-
-    ################################################################################
-    #### SIMILAR CODE PANE
-    ################################################################################
-    # divider subheader
-
-    with gr.Accordion(label="Similar Code Pane", open=True):
-        gr.Markdown(
-            """ ## Similar code 
-                    
-                    This code is thought to be similar to what you are doing, based on comparing the intent of your code with the intent of this code.
-                    """
-        )
-        # a button
-        find_similar_code = gr.Button("Find similar code")
-        # a row with an code and text box to show the similar code
-        with gr.Row():
-            similar_code = gr.Code(
-                label="Similar code to yours.", language="sql-sparkSQL"
+        with gr.Accordion(label="Translation Pane", open=True):
+            gr.Markdown(
+                """ ### Input your code here for translation to Spark-SQL."""
             )
-            similar_intent = gr.Textbox(label="The similar codes intent.")
+            # a button labelled translate
+            translate_button = gr.Button("Translate")
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown(
+                        """ ## Code loaded from Unity Catalog."""
+                    )
 
-        # a button
-        submit = gr.Button("Save code and intent")
+                    # input box for SQL code with nice formatting
+                    translation_input_code = gr.Code(
+                        label="Input SQL",
+                        language="sql-msSQL",
+                    )
 
-        # assign actions to buttons when clicked.
-    find_similar_code.click(
-        fn=similar_code_helper.get_similar_code,
-        inputs=chatbot,
-        outputs=[similar_code, similar_intent],
-    )
+                with gr.Column():
+                    # divider subheader
+                    gr.Markdown(""" ## Translated Code""")
+                    # output box of the T-SQL translated to Spark SQL
+                    translated = gr.Code(label="Your code translated to Spark SQL", language="sql-sparkSQL")
 
-    def save_intent_wrapper(input_code, explained):
-        gr.Info("Saving intent")
-        similar_code_helper.save_intent(input_code, explained)
-        gr.Info("Intent saved")
+            # helper function to take the output from llm_translate and return outputs for chatbox and textbox
+            # chatbox input is a list of lists, each list is a message from the user and the response from the LLM
+            # textbox input is a string
+            def llm_translate_wrapper(system_prompt, input_code):
+                # call the LLM to translate the code
+                translated_code = translation_llm.llm_translate(system_prompt, input_code)
+                return translated_code
 
-    submit.click(save_intent_wrapper, inputs=[input_code, explained])
+            # reset hidden chat history and prompt
+            # do translation
+            translate_button.click(
+                fn=llm_translate_wrapper,
+                inputs=[translation_system_prompt, translation_input_code],
+                outputs= translated,
+            )
 
+    ################################################################################
+    #### SIMILAR CODE TAB
+    ################################################################################
+    with gr.Tab(label="Find Similar Code"):
+        gr.Markdown("""
+        # ** Work in Progress **
+        ## An AI tool to find similar code.
+        """)
+        with gr.Accordion(label="Similar Code Pane", open=True):
+            gr.Markdown(
+                """ ## Similar code 
+                        
+                        This code is thought to be similar to what you are doing, based on comparing the intent of your code with the intent of this code.
+                        """
+            )
+            # a button
+            find_similar_code = gr.Button("Find similar code")
+            # a row with an code and text box to show the similar code
+            with gr.Row():
+                similar_code_input = gr.Code(
+                    label="Input Code.", language="sql-sparkSQL"
+                )
+                similar_code_output = gr.Code(
+                    label="Similar code to yours.", language="sql-sparkSQL"
+                )
+                similar_intent = gr.Textbox(label="The similar codes intent.")
+
+            # a button
+            submit = gr.Button("Save code and intent")
+
+            # assign actions to buttons when clicked.
+        find_similar_code.click(
+            fn=similar_code_helper.get_similar_code,
+            inputs=similar_code_input,
+            outputs=[similar_code_output, similar_intent],
+        )
+
+        def save_intent_wrapper(input_code, explained):
+            gr.Info("Saving intent")
+            similar_code_helper.save_intent(input_code, explained)
+            gr.Info("Intent saved")
+
+        submit.click(save_intent_wrapper, inputs=[translation_input_code, explained])
+
+    ################################################################################
+    #### EXECUTE JOB TAB
+    ################################################################################
+    with gr.Tab(label="Execute Job"):
+        gr.Markdown(
+            """ ## Execute Job
+
+            This tab is for executing the job to covert the code files in the Unity Catalog Volume to Databricks 
+            Notebooks. Once you are happy with your system prompts and and the explanation and translation outputs, 
+            click the execute button below. 
+            
+            This will kick off a Workflow which will ingest the code files, write them to a Delta Table, apply the AI
+            agents, and output a Databricks Notebook per input code file. This notebook will have the intent at the top 
+            of the notebook in a markdown cell, and the translated code in the cell below.
+            
+            The intent will also be stored in a Unity Catalog table and vector search index for finding similar code. 
+            """
+        )
+        gr.Button(
+            value="EXECUTE CODE TRANSFORMATION",
+            size="lg",
+
+        )
+
+    # read the selected code file and put it into the other panes
+    for output in [selected_file, translation_input_code, intent_input_code, similar_code_input]:
+        select_code_file.select(
+            fn=read_code_file
+            , inputs=[volume_path, select_code_file]
+            ,outputs=output
+        )
 
 # for local dev
 try:
