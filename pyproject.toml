@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.10"
 databricks-sdk = "0.30.0"
 pyyaml = "^6.0.2"
 mlflow = {extras = ["databricks"], version = "^2.16.0"}
