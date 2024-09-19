@@ -5,6 +5,7 @@ from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
 from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
 from sql_migration_assistant.infra.chat_infra import ChatInfra
 from sql_migration_assistant.infra.secrets_infra import SecretsInfra
+from sql_migration_assistant.infra.jobs_infra import JobsInfra
 from sql_migration_assistant.infra.app_serving_cluster_infra import (
     AppServingClusterInfra,
 )
@@ -80,6 +81,12 @@ class SetUpMigrationAssistant:
         vs_infra.create_VS_index()
         return vs_infra.config
 
+    # no need to handle errors, no user input
+    def setup_job(self, config, w, p):
+        job_infra = JobsInfra(config, w, p)
+        logging.info("Create transformation job")
+        job_infra.create_transformation_job()
+        return job_infra.config
     @_handle_errors
     def setup_chat_infra(self, config, w, p):
         chat_infra = ChatInfra(config, w, p)
@@ -130,6 +137,11 @@ class SetUpMigrationAssistant:
         logging.info("Setting up secrets")
         print("\nSetting up secrets")
         config = self.setup_secrets_infra(config, w, p)
+
+        ############################################################
+        logging.info("Setting up job")
+        print("\nSetting up job")
+        config = self.setup_job(config, w, p)
 
         return config
 

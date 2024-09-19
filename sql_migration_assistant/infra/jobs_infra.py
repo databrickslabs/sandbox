@@ -30,11 +30,12 @@ class JobsInfra:
         self.see = see
 
         self.job_name ="sql_migration_transformation"
+        self.job_notebook_name="job"
         self.job_tasks = [
             Task(
                 task_key="transform_code",
                 notebook_task=NotebookTask(
-                    notebook_path=f"/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/sql_migration_assistant/job.py"
+                    notebook_path=f"/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/sql_migration_assistant/{self.job_notebook_name}"
                 ),
             )
         ]
