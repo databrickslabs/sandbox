@@ -22,9 +22,9 @@ class LLMCalls:
 
         max_tokens = int(max_tokens)
         temperature = float(temperature)
-        # check to make sure temperature is between 0.0 and 2.0
-        if temperature < 0.0 or temperature > 2.0:
-            raise gr.Error("Temperature must be between 0.0 and 2.0")
+        # check to make sure temperature is between 0.0 and 1.0
+        if temperature < 0.0 or temperature > 1.0:
+            raise gr.Error("Temperature must be between 0.0 and 1.0")
         response = self.w.serving_endpoints.query(
             name=self.foundation_llm_name, max_tokens=max_tokens, messages=messages, temperature=temperature
         )

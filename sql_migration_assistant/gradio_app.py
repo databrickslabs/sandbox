@@ -1,3 +1,4 @@
+import json
 import os
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk import WorkspaceClient
@@ -127,7 +128,7 @@ Please select a tab to get started.
             )
 
             with gr.Row():
-                intent_temperature = gr.Number(label="Temperature. Float between 0.0 and 2.0", value=1)
+                intent_temperature = gr.Number(label="Temperature. Float between 0.0 and 1.0", value=0.0)
                 intent_max_tokens = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
             with gr.Row():
                 intent_system_prompt = gr.Textbox(
@@ -187,16 +188,16 @@ Please select a tab to get started.
       
         """)
         with gr.Accordion(label="Translation Advanced Settings", open=True):
-            with gr.Row():
-                gr.Markdown(
-                    """ ### Advanced settings for the translating the input code.
+            gr.Markdown(
+                """ ### Advanced settings for the translating the input code.
 
-                    The *Temperature* paramater controls the randomness of the AI's response. Higher values will result in 
-                    more creative responses, while lower values will result in more predictable responses.
-                    """
-                )
-                translation_temperature = gr.Number(label="Temperature. Float between 0.0 and 2.0", value=1)
-                translation_max_tokenss = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
+                The *Temperature* paramater controls the randomness of the AI's response. Higher values will result in 
+                more creative responses, while lower values will result in more predictable responses.
+                """
+            )
+            with gr.Row():
+                translation_temperature = gr.Number(label="Temperature. Float between 0.0 and 1.0", value=0.0)
+                translation_max_tokens = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
             with gr.Row():
                 translation_system_prompt = gr.Textbox(
                     label="Instructions for the LLM translation tool.",
@@ -258,16 +259,16 @@ Please select a tab to get started.
             # helper function to take the output from llm_translate and return outputs for chatbox and textbox
             # chatbox input is a list of lists, each list is a message from the user and the response from the LLM
             # textbox input is a string
-            def llm_translate_wrapper(system_prompt, input_code):
+            def llm_translate_wrapper(system_prompt, input_code, max_tokens, temperature):
                 # call the LLM to translate the code
-                translated_code = translation_llm.llm_translate(system_prompt, input_code)
+                translated_code = translation_llm.llm_translate(system_prompt, input_code, max_tokens, temperature)
                 return translated_code
 
             # reset hidden chat history and prompt
             # do translation
             translate_button.click(
                 fn=llm_translate_wrapper,
-                inputs=[translation_system_prompt, translation_input_code],
+                inputs=[translation_system_prompt, translation_input_code, translation_max_tokens, translation_temperature],
                 outputs= translated,
             )
 
@@ -333,10 +334,58 @@ Please select a tab to get started.
             The intent will also be stored in a Unity Catalog table and vector search index for finding similar code. 
             """
         )
-        gr.Button(
+        execute = gr.Button(
             value="EXECUTE CODE TRANSFORMATION",
             size="lg",
 
+        )
+        def exectute_workflow(
+                intent_prompt,
+                intent_temperature,
+                intent_max_tokens,
+                translation_prompt,
+                translation_temperature,
+                translation_max_tokens,
+                volume_path,
+        ):
+            gr.Info("Beginning code transformation workflow")
+            agent_config_payload = [
+                {"translation_agent":
+                     {"system_prompt":translation_prompt,
+                      "endpoint":FOUNDATION_MODEL_NAME,
+                      "max_tokens": translation_max_tokens,
+                      "temperature": translation_temperature
+                      }
+                 },
+                {"explanation_agent":
+                     {"system_prompt":intent_prompt,
+                      "endpoint":FOUNDATION_MODEL_NAME,
+                      "max_tokens": intent_max_tokens,
+                      "temperature": intent_temperature
+                      }
+                 }
+            ]
+            agent_config = json.dumps(agent_config_payload)
+
+            w.jobs.run_now(
+                job_id=753510090378702,
+                notebook_params={
+                    "agent_configs": agent_config,
+                    "volume_path": volume_path
+                }
+
+            )
+        execute.click(
+            exectute_workflow,
+            inputs=[
+                intent_system_prompt,
+                intent_temperature,
+                intent_max_tokens,
+                translation_system_prompt,
+                translation_temperature,
+                translation_max_tokens,
+                volume_path
+            ],
         )
 
     # read the selected code file and put it into the other panes

@@ -2,9 +2,8 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors.platform import BadRequest
 from databricks.labs.blueprint.tui import Prompts
 from databricks.labs.lsql.core import StatementExecutionExt
-import logging
-import time
-
+from databricks.sdk.service.catalog import VolumeType
+import os
 """
 Approach
 
@@ -41,10 +40,13 @@ class UnityCatalogInfra:
 
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
+        self.volume_name = "sql_migration_assistant_volume"
+        self.volume_dirs = ["code_ingestion_checkpoints", "input_code", "output_code"]
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
-        # add code intent table name to config
+        # add values to config
         self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
+        self.config["VOLUME_NAME"] = self.volume_name
 
     def choose_UC_catalog(self):
         """Ask the user to choose an existing Unity Catalog or create a new one."""
@@ -89,11 +91,13 @@ class UnityCatalogInfra:
         self.config["SCHEMA"] = self.migration_assistant_UC_schema
         try:
             self._create_UC_schema()
+            self._create_UC_volume(self.migration_assistant_UC_schema)
         except BadRequest as e:
             if "already exists" in str(e):
                 print(
                     f"Schema already exists. Using existing schema {self.migration_assistant_UC_schema}."
                 )
+                self._create_UC_volume(self.migration_assistant_UC_schema)
 
     def _create_UC_catalog(self):
         """Create a new Unity Catalog."""
@@ -109,6 +113,19 @@ class UnityCatalogInfra:
             catalog_name=self.migration_assistant_UC_catalog,
             comment="Schema for storing assets related to the SQL migration assistant.",
         )
+
+    def _create_UC_volume(self, schema):
+        self.w.volumes.create(
+            name=self.volume_name,
+            catalog_name=self.migration_assistant_UC_catalog,
+            schema_name=schema,
+            comment="Volume for storing assets related to the SQL migration assistant.",
+            volume_type= VolumeType.MANAGED
+        )
+        for dir_ in self.volume_dirs:
+            self.w.dbutils.fs.mkdirs(
+                f"/Volumes/{self.migration_assistant_UC_catalog}/{schema}/{self.volume_name}/{dir_}"
+            )
 
     def create_code_intent_table(self):
         """Create a new table to store code intent data."""
