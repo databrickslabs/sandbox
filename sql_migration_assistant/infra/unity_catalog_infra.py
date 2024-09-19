@@ -1,8 +1,11 @@
+import logging
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors.platform import BadRequest
 from databricks.labs.blueprint.tui import Prompts
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk.service.catalog import VolumeType
+from databricks.sdk.errors import PermissionDenied
 import os
 """
 Approach
@@ -41,12 +44,12 @@ class UnityCatalogInfra:
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
         self.volume_name = "sql_migration_assistant_volume"
-        self.volume_dirs = ["code_ingestion_checkpoints", "input_code", "output_code"]
+        self.volume_dirs = {"checkpoint":"code_ingestion_checkpoints", "input":"input_code", "output":"output_code"}
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
         # add values to config
         self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
-        self.config["VOLUME_NAME"] = self.volume_name
+
 
     def choose_UC_catalog(self):
         """Ask the user to choose an existing Unity Catalog or create a new one."""
@@ -115,16 +118,28 @@ class UnityCatalogInfra:
         )
 
     def _create_UC_volume(self, schema):
-        self.w.volumes.create(
-            name=self.volume_name,
-            catalog_name=self.migration_assistant_UC_catalog,
-            schema_name=schema,
-            comment="Volume for storing assets related to the SQL migration assistant.",
-            volume_type= VolumeType.MANAGED
-        )
-        for dir_ in self.volume_dirs:
-            self.w.dbutils.fs.mkdirs(
-                f"/Volumes/{self.migration_assistant_UC_catalog}/{schema}/{self.volume_name}/{dir_}"
+        try:
+            self.w.volumes.create(
+                name=self.volume_name,
+                catalog_name=self.migration_assistant_UC_catalog,
+                schema_name=schema,
+                comment="Volume for storing assets related to the SQL migration assistant.",
+                volume_type= VolumeType.MANAGED
+            )
+            for key in self.volume_dirs.keys():
+                dir_ = self.volume_dirs[key]
+                volume_path = f"/Volumes/{self.migration_assistant_UC_catalog}/{schema}/{self.volume_name}/{dir_}"
+                self.w.dbutils.fs.mkdirs(volume_path)
+                self.config[f"VOLUME_NAME_{key}_PATH"] = volume_path
+            self.config["VOLUME_NAME"] = self.volume_name
+        except PermissionDenied:
+            print(
+                "You do not have permission to create a volume. A volume will not be created. You will need to create a "
+                "volume to run the batch code transformation process."
+            )
+            logging.error(
+                "You do not have permission to create a volume. A volume will not be created. You will need to create a "
+                "volume to run the batch code transformation process."
             )
 
     def create_code_intent_table(self):
