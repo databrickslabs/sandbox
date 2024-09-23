@@ -84,8 +84,8 @@ Please select a tab to get started.
         select_code_file = gr.Radio(label="Select Code File")
         selected_file = gr.Code(label="Selected Code File", language="sql-msSQL")
 
-        def list_files(path_to_volume):
-            file_infos = w.dbutils.fs.ls(path_to_volume)
+        def list_files():
+            file_infos = w.dbutils.fs.ls(volume_path)
             file_names = [x.name for x in file_infos]
             file_name_radio = gr.Radio(
                 label="Select Code File"
@@ -94,7 +94,8 @@ Please select a tab to get started.
             )
             return file_name_radio
 
-        load_files.click(list_files, volume_path, select_code_file)
+        load_files.click(
+            outputs=list_files, fn=select_code_file)
 
         def read_code_file(volume_path, file_name):
             file_name = os.path.join(volume_path, file_name)
