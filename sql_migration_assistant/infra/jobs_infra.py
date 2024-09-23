@@ -110,7 +110,3 @@ class JobsInfra:
             return "gcp"
         else:
             return "aws"
-
-w=WorkspaceClient()
-joi = JobsInfra({},w)
-joi.create_transformation_job()
