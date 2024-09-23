@@ -26,6 +26,7 @@ CODE_INTENT_TABLE_NAME = os.environ.get("CODE_INTENT_TABLE_NAME")
 CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
 INPUT_VOLUME = os.environ.get("VOLUME_NAME_INPUT_PATH")
+TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
@@ -376,7 +377,7 @@ Please select a tab to get started.
             agent_configs = json.dumps(agent_config_payload)
 
             w.jobs.run_now(
-                job_id=753510090378702,
+                job_id=int(TRANSFORMATION_JOB_ID),
                 job_parameters={
                     "agent_configs": agent_configs,
                     "app_configs": app_configs
