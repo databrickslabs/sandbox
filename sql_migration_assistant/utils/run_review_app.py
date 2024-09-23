@@ -44,10 +44,10 @@ class RunReviewApp:
         self.executor.run(
             code=f"""
 import sys
-sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/sql_migration_assistant/utils')
-sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/sql_migration_assistant/app')
+sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/utils')
+sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/app')
 import os
-path = '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/sql_migration_assistant'
+path = '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant'
 os.chdir(path)
 """
         )

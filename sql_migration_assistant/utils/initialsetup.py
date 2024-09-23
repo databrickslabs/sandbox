@@ -154,22 +154,21 @@ class SetUpMigrationAssistant:
         uploader = FileUploader(w)
         files_to_upload = [
             "utils/runindatabricks.py",
-            "gradio_app_backup.py",
-            "run_app_from_databricks_notebook.py",
             "utils/configloader.py",
             "utils/run_review_app.py",
+            "app/llm.py",
+            "app/similar_code.py",
+            "gradio_app.py",
+            "run_app_from_databricks_notebook.py",
             "config.yml",
         ]
-        files_to_upload = [os.path.join(path, x) for x in files_to_upload]
-        files_to_upload.extend(
-            [
-                os.path.join(path, "app", x)
-                for x in os.listdir(os.path.join(path, "app"))
-                if x[-3:] == ".py"
-            ]
-        )
+        def inner(f):
+            full_file_path = os.path.join(path, f)
+            logging.info(f"Uploading {full_file_path} to {uploader.installer._install_folder}/{f}")
+            uploader.upload(full_file_path, f)
+
         for f in files_to_upload:
-            uploader.upload(f)
+            inner(f)
 
     def launch_review_app(self, w, config):
         logging.info(

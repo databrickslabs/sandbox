@@ -12,13 +12,14 @@ import os
 class FileUploader:
     def __init__(self, workspace_client: WorkspaceClient):
         self.w = workspace_client
-        self.installer = Installation(self.w, "sql_migration_assistant")
+        self.installer = Installation(ws=self.w, product="sql_migration_assistant")
 
     def upload(
         self,
+        file_path,
         file_name,
     ):
-        with open(file_name, "rb") as file:
+        with open(file_path, "rb") as file:
             contents = file.read()
             self.installer.upload(file_name, contents)
 
