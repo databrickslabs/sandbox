@@ -100,7 +100,7 @@ class JobsInfra:
             job_clusters=self.job_clusters,
             parameters=self.job_parameters
         )
-        self.config["TRANSFORMATION_JOB_ID"] = job_id
+        self.config["TRANSFORMATION_JOB_ID"] = job_id.job_id
 
     def _get_cloud(self):
         host = self.w.config.host
