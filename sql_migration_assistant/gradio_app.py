@@ -25,7 +25,9 @@ VS_INDEX_NAME = os.environ.get("VS_INDEX_NAME")
 CODE_INTENT_TABLE_NAME = os.environ.get("CODE_INTENT_TABLE_NAME")
 CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
-INPUT_VOLUME = os.environ.get("VOLUME_NAME_INPUT_PATH")
+VOLUME_NAME_INPUT_PATH = os.environ.get("VOLUME_NAME_INPUT_PATH")
+VOLUME_NAME = os.environ.get("VOLUME_NAME")
+DATABRICKS_HOST=os.environ.get('DATABRICKS_HOST')
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
@@ -72,13 +74,13 @@ Please select a tab to get started.
         gr.Markdown(
             f"""## Select a file to test your agents on.   
            
-           Legion can batch process a volume of files to generate Databricks notebooks. The input files are stored in
-           the UC Volume _{INPUT_VOLUME}_. 
+           Legion can batch process a volume of files to generate Databricks notebooks. The files to translate must be 
+           added to the *Input Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/{VOLUME_NAME_INPUT_PATH}). 
            
            Here you can select a file to fine tune your agent prompts against. 
             """
         )
-        volume_path = gr.Textbox(value=INPUT_VOLUME, visible=False)
+        volume_path = gr.Textbox(value=VOLUME_NAME_INPUT_PATH, visible=False)
 
         load_files = gr.Button("Load Files from Volume")
         select_code_file = gr.Radio(label="Select Code File")
@@ -370,7 +372,7 @@ Please select a tab to get started.
                 "VOLUME_NAME_CHECKPOINT_PATH": os.environ.get("VOLUME_NAME_CHECKPOINT_PATH"),
                 "CATALOG": os.environ.get("CATALOG"),
                 "SCHEMA": os.environ.get("SCHEMA"),
-                "DATABRICKS_HOST": os.environ.get("DATABRICKS_HOST"),
+                "DATABRICKS_HOST": DATABRICKS_HOST,
                 "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get("DATABRICKS_TOKEN_SECRET_SCOPE"),
                 "DATABRICKS_TOKEN_SECRET_KEY": os.environ.get("DATABRICKS_TOKEN_SECRET_KEY"),
                 "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME")
@@ -389,7 +391,7 @@ Please select a tab to get started.
             )
             run_id = response.run_id
 
-            job_url = f"{os.environ.get('DATABRICKS_HOST')}/jobs/{TRANSFORMATION_JOB_ID}"
+            job_url = f"{DATABRICKS_HOST}/jobs/{TRANSFORMATION_JOB_ID}"
             textbox_message = f"Job run initiated. Click [here]({job_url}) to view the job status. You just executed the run with run_id: {run_id}"
             return textbox_message
 
