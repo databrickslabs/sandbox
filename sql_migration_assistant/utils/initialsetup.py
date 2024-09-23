@@ -67,7 +67,7 @@ class SetUpMigrationAssistant:
         logging.info("Choose or create schema")
         uc_infra.choose_schema_name()
         logging.info("Create code intent table")
-        uc_infra.create_code_intent_table()
+        uc_infra.create_tables()
         return uc_infra.config
 
     @_handle_errors
@@ -139,9 +139,9 @@ class SetUpMigrationAssistant:
         config = self.setup_secrets_infra(config, w, p)
 
         ############################################################
-        logging.info("Setting up job")
-        print("\nSetting up job")
-        config = self.setup_job(config, w, p)
+        # logging.info("Setting up job")
+        # print("\nSetting up job")
+        # config = self.setup_job(config, w, p)
 
         return config
 

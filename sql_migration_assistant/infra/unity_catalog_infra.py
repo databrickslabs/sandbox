@@ -130,7 +130,7 @@ class UnityCatalogInfra:
                 dir_ = self.volume_dirs[key]
                 volume_path = f"/Volumes/{self.migration_assistant_UC_catalog}/{schema}/{self.volume_name}/{dir_}"
                 self.w.dbutils.fs.mkdirs(volume_path)
-                self.config[f"VOLUME_NAME_{key}_PATH"] = volume_path
+                self.config[f"VOLUME_NAME_{key.upper()}_PATH"] = volume_path
             self.config["VOLUME_NAME"] = self.volume_name
         except PermissionDenied:
             print(
@@ -142,7 +142,7 @@ class UnityCatalogInfra:
                 "volume to run the batch code transformation process."
             )
 
-    def create_code_intent_table(self):
+    def create_tables(self):
         """Create a new table to store code intent data."""
 
         table_name = self.code_intent_table_name

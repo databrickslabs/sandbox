@@ -350,28 +350,43 @@ Please select a tab to get started.
         ):
             gr.Info("Beginning code transformation workflow")
             agent_config_payload = [
-                {"translation_agent":
+                [{"translation_agent":
                      {"system_prompt":translation_prompt,
                       "endpoint":FOUNDATION_MODEL_NAME,
                       "max_tokens": translation_max_tokens,
                       "temperature": translation_temperature
                       }
-                 },
-                {"explanation_agent":
+                 }],
+                [{"explanation_agent":
                      {"system_prompt":intent_prompt,
                       "endpoint":FOUNDATION_MODEL_NAME,
                       "max_tokens": intent_max_tokens,
                       "temperature": intent_temperature
                       }
-                 }
+                 }]
             ]
-            agent_config = json.dumps(agent_config_payload)
+
+            app_config_payload = {
+                "VOLUME_NAME_OUTPUT_PATH": os.environ.get("VOLUME_NAME_OUTPUT_PATH"),
+                "VOLUME_NAME_INPUT_PATH": os.environ.get("VOLUME_NAME_INPUT_PATH"),
+                "VOLUME_NAME_CHECKPOINT_PATH": os.environ.get("VOLUME_NAME_CHECKPOINT_PATH"),
+                "CATALOG": os.environ.get("CATALOG"),
+                "SCHEMA": os.environ.get("SCHEMA"),
+                "DATABRICKS_HOST": os.environ.get("DATABRICKS_HOST"),
+                "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get("DATABRICKS_TOKEN_SECRET_SCOPE"),
+                "DATABRICKS_TOKEN_SECRET_KEY": os.environ.get("DATABRICKS_TOKEN_SECRET_KEY"),
+                "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME")
+            }
+
+
+            app_configs = json.dumps(app_config_payload)
+            agent_configs = json.dumps(agent_config_payload)
 
             w.jobs.run_now(
                 job_id=753510090378702,
-                notebook_params={
-                    "agent_configs": agent_config,
-                    "volume_path": volume_path
+                job_parameters={
+                    "agent_configs": agent_configs,
+                    "app_configs": app_configs
                 }
 
             )
