@@ -25,7 +25,7 @@ VS_INDEX_NAME = os.environ.get("VS_INDEX_NAME")
 CODE_INTENT_TABLE_NAME = os.environ.get("CODE_INTENT_TABLE_NAME")
 CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
-
+INPUT_VOLUME = os.environ.get("VOLUME_NAME_INPUT_PATH")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
@@ -66,38 +66,32 @@ Please select a tab to get started.
     ################################################################################
     #### STORAGE SETTINGS TAB
     ################################################################################
-    with gr.Tab(label="Storage Settings"):
+    with gr.Tab(label="Test file"):
+
         gr.Markdown(
-            """## Configure where your code is stored.
-            
-            Legion needs to know where your code is stored. This must be a Unity Catalog Volume. 
-            Please provide the full path to where your code is stored. Legion will list the code files in the volume for
-             you to select a file to evaluate the AI agents on.
+            f"""## Select a file to test your agents on.   
+           
+           Legion can batch process a volume of files to generate Databricks notebooks. The input files are stored in
+           the UC Volume _{INPUT_VOLUME}_. 
+           
+           Here you can select a file to fine tune your agent prompts against. 
             """
         )
-        volume_path = gr.Textbox(label="Volume Path", placeholder="/Volumes/catalog/schema/volume/folder1/...")
-        load_files = gr.Button("Load Filenames from Volume")
+        volume_path = INPUT_VOLUME
+
+        load_files = gr.Button("Load Files from Volume")
         select_code_file = gr.Radio(label="Select Code File")
         selected_file = gr.Code(label="Selected Code File", language="sql-msSQL")
 
         def list_files(path_to_volume):
-            if path_to_volume == "":
-                raise gr.Error("Invalid path to volume. Please check the path and try again. Path must be an absolute path "
-                        "to a Unity Catalog Volume, e.g. /Volumes/catalog/schema/volume/folder1/"
-                                )
-            elif path_to_volume[:8] != "/Volumes":
-                raise gr.Error("Invalid path to volume. Please check the path and try again. Path must be an absolute path "
-                        "to a Unity Catalog Volume, e.g. /Volumes/catalog/schema/volume/folder1/"
-                                )
-            else:
-                file_infos = w.dbutils.fs.ls(path_to_volume)
-                file_names = [x.name for x in file_infos]
-                file_name_radio = gr.Radio(
-                    label="Select Code File"
-                    , choices=file_names
+            file_infos = w.dbutils.fs.ls(path_to_volume)
+            file_names = [x.name for x in file_infos]
+            file_name_radio = gr.Radio(
+                label="Select Code File"
+                , choices=file_names
 
-                )
-                return file_name_radio
+            )
+            return file_name_radio
 
         load_files.click(list_files, volume_path, select_code_file)
 
@@ -345,8 +339,7 @@ Please select a tab to get started.
                 intent_max_tokens,
                 translation_prompt,
                 translation_temperature,
-                translation_max_tokens,
-                volume_path,
+                translation_max_tokens
         ):
             gr.Info("Beginning code transformation workflow")
             agent_config_payload = [
@@ -398,8 +391,7 @@ Please select a tab to get started.
                 intent_max_tokens,
                 translation_system_prompt,
                 translation_temperature,
-                translation_max_tokens,
-                volume_path
+                translation_max_tokens
             ],
         )
 

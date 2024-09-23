@@ -82,8 +82,8 @@ class SetUpMigrationAssistant:
         return vs_infra.config
 
     # no need to handle errors, no user input
-    def setup_job(self, config, w, p):
-        job_infra = JobsInfra(config, w, p)
+    def setup_job(self, config, w):
+        job_infra = JobsInfra(config, w)
         logging.info("Create transformation job")
         job_infra.create_transformation_job()
         return job_infra.config
@@ -139,9 +139,9 @@ class SetUpMigrationAssistant:
         config = self.setup_secrets_infra(config, w, p)
 
         ############################################################
-        # logging.info("Setting up job")
-        # print("\nSetting up job")
-        # config = self.setup_job(config, w, p)
+        logging.info("Setting up job")
+        print("\nSetting up job")
+        config = self.setup_job(config, w)
 
         return config
 
@@ -156,6 +156,9 @@ class SetUpMigrationAssistant:
             "utils/runindatabricks.py",
             "utils/configloader.py",
             "utils/run_review_app.py",
+            "jobs/bronze_to_silver.py",
+            "jobs/call_agents.py",
+            "jobs/silver_to_gold.py",
             "app/llm.py",
             "app/similar_code.py",
             "gradio_app.py",
@@ -179,3 +182,12 @@ class SetUpMigrationAssistant:
         )
         app_runner = RunReviewApp(w, config)
         app_runner.launch_review_app()
+
+    def check_cloud(self, w):
+        host = w.config.host
+        if "https://adb" in host:
+            pass
+        elif ".gcp.databricks" in host:
+            raise Exception("GCP is not supported")
+        else:
+            pass

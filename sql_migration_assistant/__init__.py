@@ -9,6 +9,7 @@ def hello():
     w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
     p = Prompts()
     setter_upper = SetUpMigrationAssistant()
+    setter_upper.check_cloud(w)
     final_config = setter_upper.setup_migration_assistant(w, p)
     current_path = Path(__file__).parent.resolve()
 
