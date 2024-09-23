@@ -75,7 +75,7 @@ Please select a tab to get started.
             f"""## Select a file to test your agents on.   
            
            Legion can batch process a volume of files to generate Databricks notebooks. The files to translate must be 
-           added to the *Input Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/{VOLUME_NAME_INPUT_PATH}). 
+           added to the *Input Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME}). 
            
            Here you can select a file to fine tune your agent prompts against. 
             """

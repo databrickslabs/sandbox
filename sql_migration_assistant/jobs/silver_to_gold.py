@@ -81,7 +81,6 @@ gold_df = (
     "notebookAsString",
     "outputPath"
   )
-  .cache()
 )
 
 gold_df.display()
