@@ -78,14 +78,14 @@ Please select a tab to get started.
            Here you can select a file to fine tune your agent prompts against. 
             """
         )
-        volume_path = INPUT_VOLUME
+        volume_path = gr.Textbox(value=INPUT_VOLUME, visible=False)
 
         load_files = gr.Button("Load Files from Volume")
         select_code_file = gr.Radio(label="Select Code File")
         selected_file = gr.Code(label="Selected Code File", language="sql-msSQL")
 
-        def list_files():
-            file_infos = w.dbutils.fs.ls(volume_path)
+        def list_files(path_to_volume):
+            file_infos = w.dbutils.fs.ls(path_to_volume)
             file_names = [x.name for x in file_infos]
             file_name_radio = gr.Radio(
                 label="Select Code File"
@@ -94,8 +94,7 @@ Please select a tab to get started.
             )
             return file_name_radio
 
-        load_files.click(
-            outputs=list_files, fn=select_code_file)
+        load_files.click(list_files, volume_path, select_code_file)
 
         def read_code_file(volume_path, file_name):
             file_name = os.path.join(volume_path, file_name)
@@ -335,6 +334,10 @@ Please select a tab to get started.
             size="lg",
 
         )
+        run_status = gr.Markdown(
+            label="Job Status Page",
+            visible=False
+        )
         def exectute_workflow(
                 intent_prompt,
                 intent_temperature,
@@ -377,14 +380,29 @@ Please select a tab to get started.
             app_configs = json.dumps(app_config_payload)
             agent_configs = json.dumps(agent_config_payload)
 
-            w.jobs.run_now(
+            response = w.jobs.run_now(
                 job_id=int(TRANSFORMATION_JOB_ID),
                 job_parameters={
                     "agent_configs": agent_configs,
                     "app_configs": app_configs
                 }
-
             )
+            run_id = response.run_id
+
+            job_url = f"{os.environ.get('DATABRICKS_HOST')}/jobs/{TRANSFORMATION_JOB_ID}"
+            textbox_message = f"Job run initiated. Click [here]({job_url}) to view the job status. You just executed the run with run_id: {run_id}"
+            return textbox_message
+
+        def make_status_box_visible():
+            return gr.Markdown(
+            label="Job Run Status Page",
+            visible=True
+        )
+
+        execute.click(
+            fn=make_status_box_visible,
+            outputs=run_status
+        )
         execute.click(
             exectute_workflow,
             inputs=[
@@ -395,7 +413,9 @@ Please select a tab to get started.
                 translation_temperature,
                 translation_max_tokens
             ],
+            outputs=run_status
         )
+
 
     # read the selected code file and put it into the other panes
     for output in [selected_file, translation_input_code, intent_input_code, similar_code_input]:

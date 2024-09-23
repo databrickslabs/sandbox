@@ -44,7 +44,7 @@ class JobsInfra:
                     #     "spark.databricks.cluster.profile": "singleNode",
                     #     "spark.master": "local[*]",
                     # },
-                    num_workers = 0,
+                    num_workers = 1,
                     node_type_id = self.node_types[self.cloud],
                 )
             )
