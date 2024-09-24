@@ -15,6 +15,7 @@ import os
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
 
+
 class SetUpMigrationAssistant:
 
     # this is a decorator to handle errors and do a retry where user is asked to choose an existing resource
@@ -87,6 +88,7 @@ class SetUpMigrationAssistant:
         logging.info("Create transformation job")
         job_infra.create_transformation_job()
         return job_infra.config
+
     @_handle_errors
     def setup_chat_infra(self, config, w, p):
         chat_infra = ChatInfra(config, w, p)
@@ -165,9 +167,12 @@ class SetUpMigrationAssistant:
             "run_app_from_databricks_notebook.py",
             "config.yml",
         ]
+
         def inner(f):
             full_file_path = os.path.join(path, f)
-            logging.info(f"Uploading {full_file_path} to {uploader.installer._install_folder}/{f}")
+            logging.info(
+                f"Uploading {full_file_path} to {uploader.installer._install_folder}/{f}"
+            )
             uploader.upload(full_file_path, f)
 
         for f in files_to_upload:

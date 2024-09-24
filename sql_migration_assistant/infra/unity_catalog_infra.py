@@ -7,6 +7,7 @@ from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk.service.catalog import VolumeType
 from databricks.sdk.errors import PermissionDenied
 import os
+
 """
 Approach
 
@@ -40,12 +41,15 @@ class UnityCatalogInfra:
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
         self.volume_name = "sql_migration_assistant_volume"
-        self.volume_dirs = {"checkpoint":"code_ingestion_checkpoints", "input":"input_code", "output":"output_code"}
+        self.volume_dirs = {
+            "checkpoint": "code_ingestion_checkpoints",
+            "input": "input_code",
+            "output": "output_code",
+        }
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
         # add values to config
         self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
-
 
     def choose_UC_catalog(self):
         """Ask the user to choose an existing Unity Catalog or create a new one."""
@@ -100,7 +104,7 @@ class UnityCatalogInfra:
                 catalog_name=self.migration_assistant_UC_catalog,
                 schema_name=schema,
                 comment="Volume for storing assets related to the SQL migration assistant.",
-                volume_type= VolumeType.MANAGED
+                volume_type=VolumeType.MANAGED,
             )
             for key in self.volume_dirs.keys():
                 dir_ = self.volume_dirs[key]
@@ -124,12 +128,10 @@ class UnityCatalogInfra:
         table_name = self.code_intent_table_name
 
         _ = self.see.execute(
-            statement=
-            f"CREATE TABLE IF NOT EXISTS "
+            statement=f"CREATE TABLE IF NOT EXISTS "
             f"`{table_name}`"
             f" (id BIGINT, code STRING, intent STRING) "
             f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
             catalog=self.migration_assistant_UC_catalog,
-            schema=self.migration_assistant_UC_schema
+            schema=self.migration_assistant_UC_schema,
         )
-

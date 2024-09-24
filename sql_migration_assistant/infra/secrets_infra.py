@@ -17,8 +17,12 @@ class SecretsInfra:
         print("Creating a Databricks PAT for the SQL Migration Assistant")
         scopes = self.w.secrets.list_scopes()
         if scopes == []:
-            logging.info("No secret scopes found. Please create a secret scope before proceeding.")
-            print("No secret scopes found. Please create a secret scope before proceeding.")
+            logging.info(
+                "No secret scopes found. Please create a secret scope before proceeding."
+            )
+            print(
+                "No secret scopes found. Please create a secret scope before proceeding."
+            )
             question = "Enter secret scope name:"
             scope_name = self.prompts.question(question)
             self.w.secrets.create_scope(scope_name)

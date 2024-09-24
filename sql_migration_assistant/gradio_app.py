@@ -28,7 +28,7 @@ CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
 VOLUME_NAME_INPUT_PATH = os.environ.get("VOLUME_NAME_INPUT_PATH")
 VOLUME_NAME = os.environ.get("VOLUME_NAME")
-DATABRICKS_HOST=os.environ.get('DATABRICKS_HOST')
+DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
@@ -50,7 +50,7 @@ similar_code_helper = SimilarCode(
 
 # this is the app UI. it uses gradio blocks https://www.gradio.app/docs/gradio/blocks
 # each gr.{} call adds a new element to UI, top to bottom.
-with (gr.Blocks(theme=gr.themes.Soft()) as demo):
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
     # title with Databricks image
     gr.Markdown(
         """<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
@@ -90,13 +90,8 @@ Please select a tab to get started.
         def list_files(path_to_volume):
             file_infos = w.dbutils.fs.ls(path_to_volume)
             file_names = [x.name for x in file_infos]
-            file_name_radio = gr.Radio(
-                label="Select Code File"
-                , choices=file_names
-
-            )
+            file_name_radio = gr.Radio(label="Select Code File", choices=file_names)
             return file_name_radio
-
 
         load_files.click(list_files, volume_path, select_code_file)
 
@@ -110,13 +105,15 @@ Please select a tab to get started.
     #### EXPLANATION TAB
     ################################################################################
     with gr.Tab(label="Code Explanation"):
-        gr.Markdown("""
+        gr.Markdown(
+            """
         ## An AI tool to generate the intent of your code.
 
         In this panel you need to iterate on the system prompt to refine the intent the AI generates for your code.
         This intent will be stored in Unity Catalog, and can be used for finding similar code, for documentation, 
          and to help with writing new code in Databricks to achieve the same goal.
-        """)
+        """
+        )
         with gr.Accordion(label="Advanced Intent Settings", open=True):
             gr.Markdown(
                 """ ### Advanced settings for the generating the intent of the input code.
@@ -127,8 +124,12 @@ Please select a tab to get started.
             )
 
             with gr.Row():
-                intent_temperature = gr.Number(label="Temperature. Float between 0.0 and 1.0", value=0.0)
-                intent_max_tokens = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
+                intent_temperature = gr.Number(
+                    label="Temperature. Float between 0.0 and 1.0", value=0.0
+                )
+                intent_max_tokens = gr.Number(
+                    label="Max tokens. Check your LLM docs for limit.", value=3500
+                )
             with gr.Row():
                 intent_system_prompt = gr.Textbox(
                     label="System prompt of the LLM to generate the intent.",
@@ -143,9 +144,7 @@ Please select a tab to get started.
             explain_button = gr.Button("Explain")
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown(
-                        """ ## Code loaded from Unity Catalog."""
-                    )
+                    gr.Markdown(""" ## Code loaded from Unity Catalog.""")
 
                     # input box for SQL code with nice formatting
                     intent_input_code = gr.Code(
@@ -158,34 +157,39 @@ Please select a tab to get started.
                     # divider subheader
                     gr.Markdown(""" ## Code intent""")
                     # output box of the T-SQL translated to Spark SQL
-                    explained = gr.Textbox(
-                        label="AI generated intent of your code."
-                    )
-
+                    explained = gr.Textbox(label="AI generated intent of your code.")
 
             def llm_intent_wrapper(system_prompt, input_code, max_tokens, temperature):
                 # call the LLM to translate the code
-                intent = intent_llm.llm_intent(system_prompt, input_code, max_tokens, temperature)
+                intent = intent_llm.llm_intent(
+                    system_prompt, input_code, max_tokens, temperature
+                )
                 return intent
-
 
             # reset hidden chat history and prompt
             # do translation
             explain_button.click(
                 fn=llm_intent_wrapper,
-                inputs=[intent_system_prompt, intent_input_code, intent_max_tokens, intent_temperature],
+                inputs=[
+                    intent_system_prompt,
+                    intent_input_code,
+                    intent_max_tokens,
+                    intent_temperature,
+                ],
                 outputs=explained,
             )
     ################################################################################
     #### TRANSLATION TAB
     ################################################################################
     with gr.Tab(label="Translation"):
-        gr.Markdown("""
+        gr.Markdown(
+            """
         ## An AI tool to translate your code.
 
         In this panel you need to iterate on the system prompt to refine the translation the AI generates for your code.
       
-        """)
+        """
+        )
         with gr.Accordion(label="Translation Advanced Settings", open=True):
             gr.Markdown(
                 """ ### Advanced settings for the translating the input code.
@@ -195,8 +199,12 @@ Please select a tab to get started.
                 """
             )
             with gr.Row():
-                translation_temperature = gr.Number(label="Temperature. Float between 0.0 and 1.0", value=0.0)
-                translation_max_tokens = gr.Number(label="Max tokens. Check your LLM docs for limit.", value=3500)
+                translation_temperature = gr.Number(
+                    label="Temperature. Float between 0.0 and 1.0", value=0.0
+                )
+                translation_max_tokens = gr.Number(
+                    label="Max tokens. Check your LLM docs for limit.", value=3500
+                )
             with gr.Row():
                 translation_system_prompt = gr.Textbox(
                     label="Instructions for the LLM translation tool.",
@@ -232,16 +240,12 @@ Please select a tab to get started.
                 )
 
         with gr.Accordion(label="Translation Pane", open=True):
-            gr.Markdown(
-                """ ### Input your code here for translation to Spark-SQL."""
-            )
+            gr.Markdown(""" ### Input your code here for translation to Spark-SQL.""")
             # a button labelled translate
             translate_button = gr.Button("Translate")
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown(
-                        """ ## Code loaded from Unity Catalog."""
-                    )
+                    gr.Markdown(""" ## Code loaded from Unity Catalog.""")
 
                     # input box for SQL code with nice formatting
                     translation_input_code = gr.Code(
@@ -253,32 +257,46 @@ Please select a tab to get started.
                     # divider subheader
                     gr.Markdown(""" ## Translated Code""")
                     # output box of the T-SQL translated to Spark SQL
-                    translated = gr.Code(label="Your code translated to Spark SQL", language="sql-sparkSQL")
+                    translated = gr.Code(
+                        label="Your code translated to Spark SQL",
+                        language="sql-sparkSQL",
+                    )
 
             # helper function to take the output from llm_translate and return outputs for chatbox and textbox
             # chatbox input is a list of lists, each list is a message from the user and the response from the LLM
             # textbox input is a string
-            def llm_translate_wrapper(system_prompt, input_code, max_tokens, temperature):
+            def llm_translate_wrapper(
+                system_prompt, input_code, max_tokens, temperature
+            ):
                 # call the LLM to translate the code
-                translated_code = translation_llm.llm_translate(system_prompt, input_code, max_tokens, temperature)
+                translated_code = translation_llm.llm_translate(
+                    system_prompt, input_code, max_tokens, temperature
+                )
                 return translated_code
 
             # reset hidden chat history and prompt
             # do translation
             translate_button.click(
                 fn=llm_translate_wrapper,
-                inputs=[translation_system_prompt, translation_input_code, translation_max_tokens, translation_temperature],
-                outputs= translated,
+                inputs=[
+                    translation_system_prompt,
+                    translation_input_code,
+                    translation_max_tokens,
+                    translation_temperature,
+                ],
+                outputs=translated,
             )
 
     ################################################################################
     #### SIMILAR CODE TAB
     ################################################################################
     with gr.Tab(label="Find Similar Code"):
-        gr.Markdown("""
+        gr.Markdown(
+            """
         # ** Work in Progress **
         ## An AI tool to find similar code.
-        """)
+        """
+        )
         with gr.Accordion(label="Similar Code Pane", open=True):
             gr.Markdown(
                 """ ## Similar code 
@@ -336,50 +354,58 @@ Please select a tab to get started.
         execute = gr.Button(
             value="EXECUTE CODE TRANSFORMATION",
             size="lg",
+        )
+        run_status = gr.Markdown(label="Job Status Page", visible=False)
 
-        )
-        run_status = gr.Markdown(
-            label="Job Status Page",
-            visible=False
-        )
         def exectute_workflow(
-                intent_prompt,
-                intent_temperature,
-                intent_max_tokens,
-                translation_prompt,
-                translation_temperature,
-                translation_max_tokens
+            intent_prompt,
+            intent_temperature,
+            intent_max_tokens,
+            translation_prompt,
+            translation_temperature,
+            translation_max_tokens,
         ):
             gr.Info("Beginning code transformation workflow")
             agent_config_payload = [
-                [{"translation_agent":
-                     {"system_prompt":translation_prompt,
-                      "endpoint":FOUNDATION_MODEL_NAME,
-                      "max_tokens": translation_max_tokens,
-                      "temperature": translation_temperature
-                      }
-                 }],
-                [{"explanation_agent":
-                     {"system_prompt":intent_prompt,
-                      "endpoint":FOUNDATION_MODEL_NAME,
-                      "max_tokens": intent_max_tokens,
-                      "temperature": intent_temperature
-                      }
-                 }]
+                [
+                    {
+                        "translation_agent": {
+                            "system_prompt": translation_prompt,
+                            "endpoint": FOUNDATION_MODEL_NAME,
+                            "max_tokens": translation_max_tokens,
+                            "temperature": translation_temperature,
+                        }
+                    }
+                ],
+                [
+                    {
+                        "explanation_agent": {
+                            "system_prompt": intent_prompt,
+                            "endpoint": FOUNDATION_MODEL_NAME,
+                            "max_tokens": intent_max_tokens,
+                            "temperature": intent_temperature,
+                        }
+                    }
+                ],
             ]
 
             app_config_payload = {
                 "VOLUME_NAME_OUTPUT_PATH": os.environ.get("VOLUME_NAME_OUTPUT_PATH"),
                 "VOLUME_NAME_INPUT_PATH": os.environ.get("VOLUME_NAME_INPUT_PATH"),
-                "VOLUME_NAME_CHECKPOINT_PATH": os.environ.get("VOLUME_NAME_CHECKPOINT_PATH"),
+                "VOLUME_NAME_CHECKPOINT_PATH": os.environ.get(
+                    "VOLUME_NAME_CHECKPOINT_PATH"
+                ),
                 "CATALOG": os.environ.get("CATALOG"),
                 "SCHEMA": os.environ.get("SCHEMA"),
                 "DATABRICKS_HOST": DATABRICKS_HOST,
-                "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get("DATABRICKS_TOKEN_SECRET_SCOPE"),
-                "DATABRICKS_TOKEN_SECRET_KEY": os.environ.get("DATABRICKS_TOKEN_SECRET_KEY"),
-                "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME")
+                "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get(
+                    "DATABRICKS_TOKEN_SECRET_SCOPE"
+                ),
+                "DATABRICKS_TOKEN_SECRET_KEY": os.environ.get(
+                    "DATABRICKS_TOKEN_SECRET_KEY"
+                ),
+                "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME"),
             }
-
 
             app_configs = json.dumps(app_config_payload)
             agent_configs = json.dumps(agent_config_payload)
@@ -388,8 +414,8 @@ Please select a tab to get started.
                 job_id=int(TRANSFORMATION_JOB_ID),
                 job_parameters={
                     "agent_configs": agent_configs,
-                    "app_configs": app_configs
-                }
+                    "app_configs": app_configs,
+                },
             )
             run_id = response.run_id
 
@@ -398,15 +424,9 @@ Please select a tab to get started.
             return textbox_message
 
         def make_status_box_visible():
-            return gr.Markdown(
-            label="Job Run Status Page",
-            visible=True
-        )
+            return gr.Markdown(label="Job Run Status Page", visible=True)
 
-        execute.click(
-            fn=make_status_box_visible,
-            outputs=run_status
-        )
+        execute.click(fn=make_status_box_visible, outputs=run_status)
         execute.click(
             exectute_workflow,
             inputs=[
@@ -415,18 +435,20 @@ Please select a tab to get started.
                 intent_max_tokens,
                 translation_system_prompt,
                 translation_temperature,
-                translation_max_tokens
+                translation_max_tokens,
             ],
-            outputs=run_status
+            outputs=run_status,
         )
 
-
     # read the selected code file and put it into the other panes
-    for output in [selected_file, translation_input_code, intent_input_code, similar_code_input]:
+    for output in [
+        selected_file,
+        translation_input_code,
+        intent_input_code,
+        similar_code_input,
+    ]:
         select_code_file.select(
-            fn=read_code_file
-            , inputs=[volume_path, select_code_file]
-            ,outputs=output
+            fn=read_code_file, inputs=[volume_path, select_code_file], outputs=output
         )
 
 # for local dev

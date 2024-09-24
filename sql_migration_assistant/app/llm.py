@@ -3,6 +3,7 @@ import gradio as gr
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
 
+
 class LLMCalls:
     def __init__(self, foundation_llm_name):
         self.w = WorkspaceClient()
@@ -26,7 +27,10 @@ class LLMCalls:
         if temperature < 0.0 or temperature > 1.0:
             raise gr.Error("Temperature must be between 0.0 and 1.0")
         response = self.w.serving_endpoints.query(
-            name=self.foundation_llm_name, max_tokens=max_tokens, messages=messages, temperature=temperature
+            name=self.foundation_llm_name,
+            max_tokens=max_tokens,
+            messages=messages,
+            temperature=temperature,
         )
         message = response.choices[0].message.content
         return message
@@ -56,7 +60,9 @@ class LLMCalls:
         ]
 
         # call the LLM end point.
-        llm_answer = self.call_llm(messages=messages, max_tokens=max_tokens, temperature=temperature)
+        llm_answer = self.call_llm(
+            messages=messages, max_tokens=max_tokens, temperature=temperature
+        )
         # Extract the code from in between the triple backticks (```), since LLM often prints the code like this.
         # Also removes the 'sql' prefix always added by the LLM.
         translation = llm_answer  # .split("Final answer:\n")[1].replace(">>", "").replace("<<", "")
@@ -76,5 +82,7 @@ class LLMCalls:
         ]
 
         # call the LLM end point.
-        llm_answer = self.call_llm(messages=messages, max_tokens=max_tokens, temperature=temperature)
+        llm_answer = self.call_llm(
+            messages=messages, max_tokens=max_tokens, temperature=temperature
+        )
         return llm_answer
