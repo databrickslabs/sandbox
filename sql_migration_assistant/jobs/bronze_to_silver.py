@@ -29,14 +29,10 @@ print(app_configs)
 checkpoint_dir = app_configs["VOLUME_NAME_CHECKPOINT_PATH"]
 volume_path = app_configs["VOLUME_NAME_INPUT_PATH"]
 
-# COMMAND ----------
-
-dbutils.fs.rm(checkpoint_dir, True)
 
 # COMMAND ----------
 
 bronze_raw_code = f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.bronze_raw_code'
-spark.sql(f"""drop table if exists {bronze_raw_code}""")
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {bronze_raw_code} (
@@ -53,7 +49,6 @@ spark.sql(
 bronze_prompt_config = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.bronze_prompt_config'
 )
-spark.sql(f"""drop table if exists {bronze_prompt_config}""")
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {bronze_prompt_config} (
@@ -67,7 +62,6 @@ spark.sql(
 bronze_holding_table = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.bronze_holding_table'
 )
-spark.sql(f"""drop table if exists {bronze_holding_table}""")
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {bronze_prompt_config} (
@@ -87,7 +81,6 @@ spark.sql(
 silver_llm_responses = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.silver_llm_responses'
 )
-spark.sql(f"""drop table if exists {silver_llm_responses}""")
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {silver_llm_responses} (
@@ -105,7 +98,6 @@ spark.sql(
 gold_table = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.gold_transformed_notebooks'
 )
-spark.sql(f"""drop table if exists {gold_table}""")
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {gold_table} (

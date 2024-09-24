@@ -21,7 +21,6 @@ gold_table = (
 )
 prompt_id = dbutils.jobs.taskValues.get(taskKey="ingest_to_holding", key="promptID")
 output_volume_path = app_configs["VOLUME_NAME_OUTPUT_PATH"]
-dbutils.fs.rm(output_volume_path, True)
 
 # COMMAND ----------
 
