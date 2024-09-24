@@ -65,7 +65,7 @@ class SetUpMigrationAssistant:
         logging.info("Choose or create catalog")
         uc_infra.choose_UC_catalog()
         logging.info("Choose or create schema")
-        uc_infra.choose_schema_name()
+        uc_infra.create_schema()
         logging.info("Create code intent table")
         uc_infra.create_tables()
         return uc_infra.config

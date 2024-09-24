@@ -32,14 +32,10 @@ class UnityCatalogInfra:
         self.prompts = p
         self.see = see
 
-        # get defaults from config file
-        self.default_UC_catalog = "sql_migration_assistant"
-        self.default_UC_schema = "sql_migration_assistant"
-
         # these are updated as the user makes a choice about which UC catalog and schema to use.
         # the chosen values are then written back into the config file.
         self.migration_assistant_UC_catalog = None
-        self.migration_assistant_UC_schema = None
+        self.migration_assistant_UC_schema = "sql_migration_assistant"
 
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
@@ -68,28 +64,8 @@ class UnityCatalogInfra:
         # update config with user choice
         self.config["CATALOG"] = self.migration_assistant_UC_catalog
 
-    def choose_schema_name(self):
+    def create_schema(self):
 
-        use_default_schema_name = self.prompts.confirm(
-            f"Would you like to use the default schema name: {self.default_UC_schema}? (yes/no)"
-        )
-        if use_default_schema_name:
-            self.migration_assistant_UC_schema = self.default_UC_schema
-        else:
-            # Ask the user to enter a schema name, and validate it.
-            name_invalid = True
-            while name_invalid:
-                # Name cannot include period, space, or forward-slash
-                schema_name = self.prompts.question("Enter the schema name: ")
-                if (
-                    "." not in schema_name
-                    and " " not in schema_name
-                    and "/" not in schema_name
-                ):
-                    self.migration_assistant_UC_schema = schema_name
-                    name_invalid = False
-                else:
-                    print("Schema name cannot include period, space, or forward-slash.")
         # update config with user choice
         self.config["SCHEMA"] = self.migration_assistant_UC_schema
         try:

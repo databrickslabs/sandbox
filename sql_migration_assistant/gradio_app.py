@@ -3,6 +3,7 @@ import os
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import InvalidParameterValue
+from pathlib import Path
 import gradio as gr
 
 from app.llm import LLMCalls
@@ -95,6 +96,7 @@ Please select a tab to get started.
 
             )
             return file_name_radio
+
 
         load_files.click(list_files, volume_path, select_code_file)
 
