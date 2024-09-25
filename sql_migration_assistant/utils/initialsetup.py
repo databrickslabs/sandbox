@@ -1,5 +1,6 @@
 from databricks.labs.lsql.core import StatementExecutionExt
-from databricks.sdk.errors import PermissionDenied, ResourceAlreadyExists, BadRequest
+from databricks.sdk.errors import ResourceAlreadyExists, BadRequest
+from databricks.sdk.errors.platform import PermissionDenied
 from sql_migration_assistant.infra.sql_warehouse_infra import SqlWarehouseInfra
 from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
 from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
