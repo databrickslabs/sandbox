@@ -181,7 +181,7 @@ class SetUpMigrationAssistant:
         def inner(f):
             full_file_path = os.path.join(path, f)
             logging.info(
-                f"Uploading {full_file_path} to {uploader.installer._install_folder}/{f}"
+                f"Uploading {full_file_path} to {uploader.installer.install_folder()}/{f}"
             )
             uploader.upload(full_file_path, f)
 

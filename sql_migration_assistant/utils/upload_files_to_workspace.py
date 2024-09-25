@@ -25,7 +25,7 @@ class FileUploader:
 
     def update_config(self, config):
         # add in the Workspace location to the config
-        config["WORKSPACE_LOCATION"] = self.installer._install_folder
+        config["WORKSPACE_LOCATION"] = self.installer.install_folder()
         return config
     def save_config(self, config):
         # not used, need to get working
