@@ -16,6 +16,7 @@ secret_key=app_configs["DATABRICKS_TOKEN_SECRET_KEY"]
 host=app_configs["DATABRICKS_HOST"]
 
 workspace_location = app_configs["WORKSPACE_LOCATION"]
+key = dbutils.secrets.get(scope=secret_scope, key=secret_key)
 
 # COMMAND ----------
 

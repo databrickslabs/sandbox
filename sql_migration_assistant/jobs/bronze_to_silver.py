@@ -64,7 +64,7 @@ bronze_holding_table = (
 )
 spark.sql(
     f"""
-  CREATE TABLE IF NOT EXISTS {bronze_prompt_config} (
+  CREATE TABLE IF NOT EXISTS {bronze_holding_table} (
     id INT,
     path STRING,
     modificationTime TIMESTAMP,
