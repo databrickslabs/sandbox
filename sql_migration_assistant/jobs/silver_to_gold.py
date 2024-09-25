@@ -1,4 +1,6 @@
 # Databricks notebook source
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.workspace import ImportFormat, Language
 from pyspark.sql import functions as f
 from pyspark.sql.types import *
 import json
@@ -8,6 +10,12 @@ import json
 # DBTITLE 1,get params into notebook
 agent_configs = json.loads(dbutils.widgets.get("agent_configs"))
 app_configs = json.loads(dbutils.widgets.get("app_configs"))
+
+secret_scope=app_configs["DATABRICKS_TOKEN_SECRET_SCOPE"]
+secret_key=app_configs["DATABRICKS_TOKEN_SECRET_KEY"]
+host=app_configs["DATABRICKS_HOST"]
+
+workspace_location = app_configs["WORKSPACE_LOCATION"]
 
 # COMMAND ----------
 
@@ -58,25 +66,44 @@ TRANSLATED_CODE_GOES_HERE
 
 # DBTITLE 1,write the notebooks into a new column
 gold_df = (
-    spark.read.table(silver_llm_responses)
-    .filter(f.col("promptID") == f.lit(prompt_id))
-    .withColumn("zipped", f.array(f.col("agentName"), f.col("agentResponse")))
-    .groupBy(f.col("content"), f.col("loadDatetime"), f.col("promptID"), f.col("path"))
-    .agg(
-        f.collect_list(f.col("zipped")).alias("zipped"),
+  spark.read.table(silver_llm_responses)
+  .filter(f.col("promptID") == f.lit(prompt_id))
+  .withColumn("zipped", f.array(f.col("agentName"), f.col("agentResponse")) )
+  .groupBy(
+    f.col("content"),
+    f.col("loadDatetime"),
+    f.col("promptID"),
+    f.col("path")
     )
-    .withColumn("notebookAsString", write_notebook_code(f.col("zipped")))
-    .withColumn(
-        "outputPath", f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetime"))
+  .agg(
+    f.collect_list(f.col("zipped")).alias("zipped"),
     )
-    .withColumn("path", f.split(f.col("path"), f.lit("\."))[0])
-    .withColumn("path", f.concat(f.col("path"), f.lit(".py")))
-    .select(
-        "promptID", "content", "loadDatetime", "path", "notebookAsString", "outputPath"
+  .withColumn(
+    "notebookAsString"
+    ,write_notebook_code(f.col("zipped"))
     )
+  .withColumn("path",f.split(f.col("path"),f.lit("\."))[0])
+  .withColumn(
+    "outputVolumePath"
+    ,f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetime"), f.col("path"))
+    )
+  .withColumn(
+    "outputNotebookPath"
+    ,f.concat_ws("/", f.lit(workspace_location), f.lit("outputNotebooks"), f.col("loadDatetime"), f.col("path"))
+    )
+  .select(
+    "promptID",
+    "content",
+    "loadDatetime",
+    "notebookAsString",
+    "outputVolumePath",
+    "outputNotebookPath"
+  )
 )
 
 gold_df.display()
+
+
 
 
 # COMMAND ----------
@@ -101,13 +128,44 @@ display(
 
 pandas_gold = gold_df.toPandas()
 
+temp_table_name = "gold_temp"
+gold_df.createOrReplaceTempView(temp_table_name)
+spark.sql(
+    f"""
+  INSERT INTO {gold_table} TABLE {temp_table_name}
+  """
+)
+display(spark.sql(
+    f"""
+  select * from {gold_table}
+  """
+)
+)
+w = WorkspaceClient(
+    host=host,
+    token=key
+)
 
-def write_to_volume(row):
-    filepath = row["outputPath"] + "/" + row["path"]
-    content = row["notebookAsString"]
-    dbutils.fs.put(filepath, content)
+
+def write_files(row):
+    volume_path = row['outputVolumePath']
+    content = row['notebookAsString']
+    # write to a volume
+    dbutils.fs.put(volume_path, content)
+
+    # write to workspace
+
+    notebook_path = row['outputNotebookPath']
+    w.workspace.import_(
+        content=content,
+        path=notebook_path,
+        format=ImportFormat.SOURCE,
+        language=Language.SQL,
+        overwrite=True,
+    )
 
 
-pandas_gold.apply(write_to_volume, axis=1)
+pandas_gold = gold_df.toPandas()
+pandas_gold.apply(write_files, axis=1)
 
 # COMMAND ----------

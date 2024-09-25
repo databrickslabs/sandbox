@@ -30,6 +30,7 @@ VOLUME_NAME_INPUT_PATH = os.environ.get("VOLUME_NAME_INPUT_PATH")
 VOLUME_NAME = os.environ.get("VOLUME_NAME")
 DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
+WORKSPACE_LOCATION = os.environ.get("WORKSPACE_LOCATION")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
@@ -405,6 +406,7 @@ Please select a tab to get started.
                     "DATABRICKS_TOKEN_SECRET_KEY"
                 ),
                 "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME"),
+                "WORKSPACE_LOCATION":WORKSPACE_LOCATION,
             }
 
             app_configs = json.dumps(app_config_payload)

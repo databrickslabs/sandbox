@@ -104,9 +104,9 @@ spark.sql(
     promptID INT,  
     content STRING,
     loadDatetime TIMESTAMP,
-    path STRING, 
     notebookAsString STRING,
-    outputPath STRING
+    outputVolumePath STRING,
+    outputNotebookPath STRING
     )
   """
 )
