@@ -23,9 +23,12 @@ class FileUploader:
             contents = file.read()
             self.installer.upload(file_name, contents)
 
-    def save_config(self, config):
+    def update_config(self, config):
         # add in the Workspace location to the config
         config["WORKSPACE_LOCATION"] = self.installer._install_folder
+        return config
+    def save_config(self, config):
+        # not used, need to get working
         X = make_dataclass("X", fields=config.keys())
 
         config_class = X(**config)

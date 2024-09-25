@@ -103,6 +103,11 @@ class SetUpMigrationAssistant:
         secrets_infra.create_secret_PAT()
         return secrets_infra.config
 
+    def update_config(self, w, config):
+        uploader = FileUploader(w)
+        config = uploader.update_config(config)
+        return config
+
     def setup_migration_assistant(self, w, p):
         logging.info("Setting up infrastructure")
         print("\nSetting up infrastructure")
@@ -145,6 +150,11 @@ class SetUpMigrationAssistant:
         print("\nSetting up job")
         config = self.setup_job(config, w)
 
+        ############################################################
+        logging.info("Infrastructure setup complete")
+        print("\nInfrastructure setup complete")
+
+        config = self.update_config(w, config)
         return config
 
     def upload_files(self, w, path):
