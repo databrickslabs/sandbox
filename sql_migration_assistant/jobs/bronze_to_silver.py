@@ -189,7 +189,7 @@ llm_inputs = spark.sql(
   )
   """
 )
-llm_inputs.write.saveAsTable(bronze_holding_table)
+llm_inputs.write.mode("append").saveAsTable(bronze_holding_table)
 display(spark.read.table(bronze_holding_table))
 
 # COMMAND ----------
