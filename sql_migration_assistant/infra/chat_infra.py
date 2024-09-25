@@ -69,6 +69,7 @@ class ChatInfra:
                     endpoints = self.w.serving_endpoints.list()
                     endpoint_names = [ep.name for ep in endpoints]
                     endpoint_names = filter(lambda x: x not in self.pay_per_token_models, endpoint_names)
+                    question = "Please choose an endpoint to use:"
                     choice = self.prompts.choice(question, endpoint_names)
                     self.foundation_llm_name = choice
                     self.config["SERVED_FOUNDATION_MODEL_NAME"] = self.foundation_llm_name
