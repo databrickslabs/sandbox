@@ -181,7 +181,15 @@ display(spark.sql(f"select * from {bronze_raw_code}"))
 
 llm_inputs = spark.sql(
     f"""
-  select monotonically_increasing_id() as id, * from {bronze_raw_code}
+  select cast(monotonically_increasing_id() as INT)  as id,
+    brc.path,
+    modificationTime,
+    length,
+    content,
+    loadDatetime,
+    promptID,
+    agentConfigs
+  from {bronze_raw_code} brc
   cross join (
     select bpc.promptID, agentConfigs
     from {bronze_prompt_config} bpc
