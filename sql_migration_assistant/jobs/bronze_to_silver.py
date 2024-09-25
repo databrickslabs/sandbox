@@ -16,13 +16,6 @@ from pyspark.sql.functions import udf, pandas_udf
 agent_configs = json.loads(dbutils.widgets.get("agent_configs"))
 app_configs = json.loads(dbutils.widgets.get("app_configs"))
 
-# COMMAND ----------
-
-print(agent_configs)
-
-# COMMAND ----------
-
-print(app_configs)
 
 # COMMAND ----------
 
@@ -65,7 +58,7 @@ bronze_holding_table = (
 spark.sql(
     f"""
   CREATE TABLE IF NOT EXISTS {bronze_holding_table} (
-    id INT,
+    id LONG,
     path STRING,
     modificationTime TIMESTAMP,
     length INT,
@@ -181,7 +174,7 @@ display(spark.sql(f"select * from {bronze_raw_code}"))
 
 llm_inputs = spark.sql(
     f"""
-  select cast(monotonically_increasing_id() as INT)  as id,
+  select monotonically_increasing_id()  as id,
     brc.path,
     modificationTime,
     length,
