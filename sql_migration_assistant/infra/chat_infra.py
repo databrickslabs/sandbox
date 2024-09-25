@@ -47,7 +47,7 @@ class ChatInfra:
         if self._pay_per_token_exists():
             question = (
                 "Would you like to use an existing pay per token endpoint? This is recommended for quick testing. "
-                "The alternative is to create a Provisioned Throughput endpoint, which enables monitoring of "
+                "The alternative is to create or use a Provisioned Throughput endpoint, which enables monitoring of "
                 "the requests and responses made to the LLM via inference tables. (y/n)"
             )
             choice = self.prompts.question(
@@ -59,21 +59,36 @@ class ChatInfra:
                 self.foundation_llm_name = choice
                 self.config["SERVED_FOUNDATION_MODEL_NAME"] = self.foundation_llm_name
                 return
-        # create a provisioned throughput endpoint
-        question = "Choose a foundation model from the system.ai schema to deploy:"
-        system_models = self._list_models_from_system_ai()
-        choice = self.prompts.choice(question, system_models)
-        self.foundation_llm_name = choice
-        logging.info(
-            f"Deploying provisioned throughput endpoint {self.provisioned_throughput_endpoint_name} serving"
-            f" {self.foundation_llm_name}. This may take a few minutes."
-        )
-        self._create_provisioned_throughput_endpoint(self.foundation_llm_name)
-        # update config with user choice
-        self.config["SERVED_FOUNDATION_MODEL_NAME"] = self.foundation_llm_name
-        self.config["PROVISIONED_THROUGHPUT_ENDPOINT_NAME"] = (
-            self.provisioned_throughput_endpoint_name
-        )
+            else:
+                question = "Would you like to use an existing endpoint? (y/n)"
+                choice = self.prompts.question(
+                    question, validate=lambda x: x.lower() in ["y", "n"]
+                )
+                if choice.lower() == "y":
+                    # get endpoints, filter out pay per token models, present to user
+                    endpoints = self.w.serving_endpoints.list()
+                    endpoint_names = [ep.name for ep in endpoints]
+                    endpoint_names = filter(lambda x: x not in self.pay_per_token_models, endpoint_names)
+                    choice = self.prompts.choice(question, endpoint_names)
+                    self.foundation_llm_name = choice
+                    self.config["SERVED_FOUNDATION_MODEL_NAME"] = self.foundation_llm_name
+                    self.provisioned_throughput_endpoint_name = "migration_assistant_endpoint"
+                else:
+                    # create a provisioned throughput endpoint
+                    question = "Choose a foundation model from the system.ai schema to deploy:"
+                    system_models = self._list_models_from_system_ai()
+                    choice = self.prompts.choice(question, system_models)
+                    self.foundation_llm_name = choice
+                    logging.info(
+                        f"Deploying provisioned throughput endpoint {self.provisioned_throughput_endpoint_name} serving"
+                        f" {self.foundation_llm_name}. This may take a few minutes."
+                    )
+                    self._create_provisioned_throughput_endpoint(self.foundation_llm_name)
+                    # update config with user choice
+                    self.config["SERVED_FOUNDATION_MODEL_NAME"] = self.foundation_llm_name
+                    self.config["PROVISIONED_THROUGHPUT_ENDPOINT_NAME"] = (
+                        self.provisioned_throughput_endpoint_name
+                    )
 
     def _pay_per_token_exists(self):
         """
