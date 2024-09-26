@@ -87,6 +87,7 @@ gold_df = (
     ,write_notebook_code(f.col("zipped"))
     )
   .withColumn("path",f.split(f.col("path"),f.lit("\."))[0])
+  .withColumn("loadDatetime",f.replace(f.col("loadDatetime"), ":", "_"))
   .withColumn(
     "outputVolumePath"
     ,f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetime"), f.col("path"))
@@ -160,6 +161,8 @@ def write_files(row):
     # write to workspace
 
     notebook_path = row['outputNotebookPath']
+    notebook_path_root = "/".join(notebook_path.split("/")[:-1])
+    dbutils.fs.mkdirs(notebook_path_root)
     w.workspace.import_(
         content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
         path=notebook_path,
