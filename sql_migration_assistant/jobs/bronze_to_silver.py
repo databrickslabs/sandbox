@@ -186,11 +186,13 @@ llm_inputs = spark.sql(
   cross join (
     select bpc.promptID, agentConfigs
     from {bronze_prompt_config} bpc
-    left join {silver_llm_responses} st on bpc.loadDatetime > st.loadDatetime  
+    left anti join (
+      select distinct promptID from {silver_llm_responses} 
+    ) st on bpc.promptID = st.promptID  
   )
   """
 )
-llm_inputs.write.mode("append").saveAsTable(bronze_holding_table)
+llm_inputs.write.mode("overwrite").saveAsTable(bronze_holding_table)
 display(spark.read.table(bronze_holding_table))
 
 # COMMAND ----------
