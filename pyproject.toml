@@ -14,7 +14,7 @@ databricks-sdk = "0.30.0"
 pyyaml = "^6.0.2"
 mlflow = {extras = ["databricks"], version = "^2.16.0"}
 databricks-labs-blueprint = "0.8.2"
-databricks-labs-lsql = "0.9.0"
+databricks-labs-lsql = "0.12.1"
 
 [build-system]
 requires = [
