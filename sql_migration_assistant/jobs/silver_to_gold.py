@@ -87,14 +87,14 @@ gold_df = (
     ,write_notebook_code(f.col("zipped"))
     )
   .withColumn("path",f.split(f.col("path"),f.lit("\."))[0])
-  .withColumn("loadDatetime",f.replace(f.col("loadDatetime"), ":", "_"))
+  .withColumn("loadDatetimeStr",f.replace(f.col("loadDatetime"), f.lit(":"), f.lit("_")))
   .withColumn(
     "outputVolumePath"
-    ,f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetime"), f.col("path"))
+    ,f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetimeStr"), f.col("path"))
     )
   .withColumn(
     "outputNotebookPath"
-    ,f.concat_ws("/", f.lit(workspace_location), f.lit("outputNotebooks"), f.col("loadDatetime"), f.col("path"))
+    ,f.concat_ws("/", f.lit(workspace_location), f.lit("outputNotebooks"), f.col("loadDatetimeStr"), f.col("path"))
     )
   .select(
     "promptID",
@@ -162,7 +162,7 @@ def write_files(row):
 
     notebook_path = row['outputNotebookPath']
     notebook_path_root = "/".join(notebook_path.split("/")[:-1])
-    dbutils.fs.mkdirs(notebook_path_root)
+    w.workspace.mkdirs(notebook_path_root)
     w.workspace.import_(
         content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
         path=notebook_path,
