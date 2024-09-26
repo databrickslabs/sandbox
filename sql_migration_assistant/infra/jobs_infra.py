@@ -69,6 +69,7 @@ class JobsInfra:
                 notebook_task=NotebookTask(
                     notebook_path=self.notebook_root_path + "bronze_to_silver"
                 ),
+                disable_auto_optimization=True
             ),
             Task(
                 task_key="call_agents",
@@ -92,6 +93,7 @@ class JobsInfra:
                     notebook_path=self.notebook_root_path + "silver_to_gold"
                 ),
                 depends_on=[TaskDependency(task_key="call_agents")],
+                disable_auto_optimization=True
             ),
         ]
 

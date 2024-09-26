@@ -1,4 +1,5 @@
 # Databricks notebook source
+import base64
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.workspace import ImportFormat, Language
 from pyspark.sql import functions as f
@@ -16,6 +17,8 @@ secret_key=app_configs["DATABRICKS_TOKEN_SECRET_KEY"]
 host=app_configs["DATABRICKS_HOST"]
 
 workspace_location = app_configs["WORKSPACE_LOCATION"]
+workspace_location = "/Workspace"+workspace_location
+
 key = dbutils.secrets.get(scope=secret_scope, key=secret_key)
 
 # COMMAND ----------
@@ -158,7 +161,7 @@ def write_files(row):
 
     notebook_path = row['outputNotebookPath']
     w.workspace.import_(
-        content=content,
+        content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
         path=notebook_path,
         format=ImportFormat.SOURCE,
         language=Language.SQL,
