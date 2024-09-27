@@ -422,7 +422,11 @@ Please select a tab to get started.
             run_id = response.run_id
 
             job_url = f"{DATABRICKS_HOST}/jobs/{TRANSFORMATION_JOB_ID}"
-            textbox_message = f"Job run initiated. Click [here]({job_url}) to view the job status. You just executed the run with run_id: {run_id}"
+            textbox_message = (f"Job run initiated. Click [here]({job_url}) to view the job status. "
+                               f"You just executed the run with run_id: {run_id}\n"
+                               f"Output notebooks will be written to the Workspace for immediate use at {WORKSPACE_LOCATION}/outputNotebooks"
+                               f", and also in the *Output Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME})"
+                               )
             return textbox_message
 
         def make_status_box_visible():
