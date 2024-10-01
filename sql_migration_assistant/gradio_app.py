@@ -1,9 +1,10 @@
 import json
 import os
+import datetime
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.errors import InvalidParameterValue
-from pathlib import Path
+from databricks.sdk.service.workspace import ImportFormat, Language
+import base64
 import gradio as gr
 
 from app.llm import LLMCalls
@@ -64,21 +65,53 @@ does this by using AI to translate, explain, and make discoverable your code.
 This interface is the Legion Control Panel. Here you are able to configure the AI agents for translation and explanation
 to fit your needs, incorporating your expertise and knowledge of the codebase by adjusting the AI agents' instructions.
 
-Please select a tab to get started.   
+Legion can work in a batch or interactive fashion.
+
+*Interactive operation*
+Fine tune the AI agents on a single file and output the result as a Databricks notebook. 
+Use this UI to adjust the system prompts and instructions for the AI agents to generate the best translation and intent.
+
+*Batch operation*
+Process a Volume of files to generate Databricks notebooks. Use this UI to fine tune your agent prompts against selected
+ files before executing a Workflow to transform all files in the Volume, outputting Databricks notebooks with the AI
+ generated intent and translation.
+
+
+Please select your mode of operation to get started.   
 
 """
+    )
+    operation = gr.Radio(
+        label="Select operation mode",
+        choices = ["Interactive mode", "Batch mode"],
+        value = "Interactive mode",
+        type="value",
+        interactive=True,
     )
     ################################################################################
     #### STORAGE SETTINGS TAB
     ################################################################################
-    with gr.Tab(label="Test file"):
+
+    with gr.Tab(label="Input code", visible=True) as interactive_input_code_tab:
+
+        gr.Markdown(
+            f"""## Paste in some code to test your agents on.   
+            """
+        )
+        interactive_code_button = gr.Button("Ingest code")
+        interactive_code = gr.Code(label="Paste your code in here", language="sql-msSQL")
+        interactive_code_button.click(
+            fn=lambda : gr.Info("Code ingested!")
+        )
+
+    with gr.Tab(label="Select code", visible=False) as batch_input_code_tab:
 
         gr.Markdown(
             f"""## Select a file to test your agents on.   
-           
-           Legion can batch process a volume of files to generate Databricks notebooks. The files to translate must be 
+
+           Legion can batch process a Volume of files to generate Databricks notebooks. The files to translate must be 
            added to the *Input Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME}). 
-           
+
            Here you can select a file to fine tune your agent prompts against. 
             """
         )
@@ -145,7 +178,7 @@ Please select a tab to get started.
             explain_button = gr.Button("Explain")
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown(""" ## Code loaded from Unity Catalog.""")
+                    gr.Markdown(""" ## Input Code.""")
 
                     # input box for SQL code with nice formatting
                     intent_input_code = gr.Code(
@@ -246,7 +279,7 @@ Please select a tab to get started.
             translate_button = gr.Button("Translate")
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown(""" ## Code loaded from Unity Catalog.""")
+                    gr.Markdown(""" ## Input code.""")
 
                     # input box for SQL code with nice formatting
                     translation_input_code = gr.Code(
@@ -337,7 +370,7 @@ Please select a tab to get started.
     ################################################################################
     #### EXECUTE JOB TAB
     ################################################################################
-    with gr.Tab(label="Execute Job"):
+    with gr.Tab(label="Execute Job", visible=False) as batch_output_tab:
         gr.Markdown(
             """ ## Execute Job
 
@@ -347,7 +380,8 @@ Please select a tab to get started.
             
             This will kick off a Workflow which will ingest the code files, write them to a Delta Table, apply the AI
             agents, and output a Databricks Notebook per input code file. This notebook will have the intent at the top 
-            of the notebook in a markdown cell, and the translated code in the cell below.
+            of the notebook in a markdown cell, and the translated code in the cell below. These notebooks are found in 
+            the workspace at *{WORKSPACE_LOCATION}/outputNotebooks* and in the *Output Code* folder in the UC Volume
             
             The intent will also be stored in a Unity Catalog table and vector search index for finding similar code. 
             """
@@ -424,7 +458,7 @@ Please select a tab to get started.
             job_url = f"{DATABRICKS_HOST}/jobs/{TRANSFORMATION_JOB_ID}"
             textbox_message = (f"Job run initiated. Click [here]({job_url}) to view the job status. "
                                f"You just executed the run with run_id: {run_id}\n"
-                               f"Output notebooks will be written to the Workspace for immediate use at {WORKSPACE_LOCATION}/outputNotebooks"
+                               f"Output notebooks will be written to the Workspace for immediate use at *{WORKSPACE_LOCATION}/outputNotebooks*"
                                f", and also in the *Output Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME})"
                                )
             return textbox_message
@@ -446,6 +480,83 @@ Please select a tab to get started.
             outputs=run_status,
         )
 
+    with gr.Tab(label="Write file to Workspace") as interactive_output_tab:
+        gr.Markdown(
+            f""" ## Write to Workspace
+
+            Write out your explained and translated file to a notebook in the workspace. 
+            You must provide a filename for the notebook. The notebook will be written to the workspace, saved to the 
+            Output Code location in the Unity Catalog Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME}) 
+            , and the intent will be saved to the intent table. 
+            """
+        )
+        template = """
+-- Databricks notebook source
+-- MAGIC %md
+-- MAGIC # This notebook was AI generated. AI can make mistakes. This is provided as a tool to accelerate your migration. 
+-- MAGIC
+-- MAGIC ### AI Generated Intent
+-- MAGIC
+-- MAGIC INTENT_GOES_HERE
+
+-- COMMAND ----------
+
+TRANSLATED_CODE_GOES_HERE
+          """
+        with gr.Row():
+            produce_preview_button = gr.Button("Produce Preview")
+            with gr.Column():
+                file_name = gr.Textbox(label="Filename for the notebook")
+                write_to_workspace_button = gr.Button("Write to Workspace")
+                adhoc_write_output = gr.Markdown(label="Notebook output location")
+
+        def produce_preview(explanation, translated_code):
+            preview_code = template.replace("INTENT_GOES_HERE", explanation).replace(
+                "TRANSLATED_CODE_GOES_HERE", translated_code
+            )
+            return preview_code
+
+        def write_adhoc_to_workspace(file_name, preview):
+
+            if len(file_name) == 0:
+                raise gr.Error("Please provide a filename")
+
+            notebook_path_root = f"{WORKSPACE_LOCATION}/outputNotebooks/{str(datetime.datetime.now()).replace(':', '_')}"
+            notebook_path = f"{notebook_path_root}/{file_name}"
+            content = preview
+            w.workspace.mkdirs(notebook_path_root)
+            w.workspace.import_(
+                content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
+                path=notebook_path,
+                format=ImportFormat.SOURCE,
+                language=Language.PYTHON,
+                overwrite=True,
+            )
+
+        preview = gr.Code(label="Preview", language="python")
+        produce_preview_button.click(
+            produce_preview, inputs=[explained, translated], outputs=preview
+        )
+        def update_output_message(file_name):
+            if len(file_name) == 0:
+                raise gr.Error("Please provide a filename")
+
+            output_message = f"Notebook {file_name} written to Databricks at {WORKSPACE_LOCATION}/outputNotebooks/{str(datetime.datetime.now()).replace(':', '_')}/{file_name}"
+            return output_message
+
+        # write file to notebook
+        write_to_workspace_button.click(
+            fn=write_adhoc_to_workspace,
+            inputs=[file_name, preview]
+        )
+        #update output message
+        write_to_workspace_button.click(
+            fn=update_output_message,
+            inputs=file_name,
+            outputs=adhoc_write_output
+        )
+
+    # this handles the code loading for batch mode
     # read the selected code file and put it into the other panes
     for output in [
         selected_file,
@@ -456,6 +567,42 @@ Please select a tab to get started.
         select_code_file.select(
             fn=read_code_file, inputs=[volume_path, select_code_file], outputs=output
         )
+
+    # this handles the code loading for interative mode
+    for output in [
+        translation_input_code,
+        intent_input_code,
+        similar_code_input,
+    ]:
+        interactive_code_button.click(
+            fn=lambda x: gr.update(value=x),
+            inputs=interactive_code,
+            outputs=output
+        )
+
+    # change the input tabs based on the operation mode
+    operation.change(
+        lambda x: gr.update(visible=False) if x == "Interactive mode" else gr.update(visible=True),
+        operation,
+        batch_input_code_tab
+    )
+    operation.change(
+        lambda x: gr.update(visible=True) if x == "Interactive mode" else gr.update(visible=False),
+        operation,
+        interactive_input_code_tab
+    )
+
+    # change the output tabs based on the operation mode
+    operation.change(
+        lambda x: gr.update(visible=False) if x == "Interactive mode" else gr.update(visible=True),
+        operation,
+        batch_output_tab
+    )
+    operation.change(
+        lambda x: gr.update(visible=True) if x == "Interactive mode" else gr.update(visible=False),
+        operation,
+        interactive_output_tab
+    )
 
 # for local dev
 try:
