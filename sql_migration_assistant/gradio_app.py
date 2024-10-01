@@ -529,7 +529,7 @@ TRANSLATED_CODE_GOES_HERE
                 content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
                 path=notebook_path,
                 format=ImportFormat.SOURCE,
-                language=Language.PYTHON,
+                language=Language.SQL,
                 overwrite=True,
             )
 
