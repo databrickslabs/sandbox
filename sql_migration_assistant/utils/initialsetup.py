@@ -1,10 +1,12 @@
 from databricks.labs.lsql.core import StatementExecutionExt
-from databricks.sdk.errors import PermissionDenied, ResourceAlreadyExists, BadRequest
+from databricks.sdk.errors import ResourceAlreadyExists, BadRequest
+from databricks.sdk.errors.platform import PermissionDenied
 from sql_migration_assistant.infra.sql_warehouse_infra import SqlWarehouseInfra
 from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
 from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
 from sql_migration_assistant.infra.chat_infra import ChatInfra
 from sql_migration_assistant.infra.secrets_infra import SecretsInfra
+from sql_migration_assistant.infra.jobs_infra import JobsInfra
 from sql_migration_assistant.infra.app_serving_cluster_infra import (
     AppServingClusterInfra,
 )
@@ -13,6 +15,7 @@ import logging
 import os
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
+
 
 class SetUpMigrationAssistant:
 
@@ -64,9 +67,9 @@ class SetUpMigrationAssistant:
         logging.info("Choose or create catalog")
         uc_infra.choose_UC_catalog()
         logging.info("Choose or create schema")
-        uc_infra.choose_schema_name()
+        uc_infra.create_schema()
         logging.info("Create code intent table")
-        uc_infra.create_code_intent_table()
+        uc_infra.create_tables()
         return uc_infra.config
 
     @_handle_errors
@@ -79,6 +82,13 @@ class SetUpMigrationAssistant:
         logging.info("Create VS index")
         vs_infra.create_VS_index()
         return vs_infra.config
+
+    # no need to handle errors, no user input
+    def setup_job(self, config, w):
+        job_infra = JobsInfra(config, w)
+        logging.info("Create transformation job")
+        job_infra.create_transformation_job()
+        return job_infra.config
 
     @_handle_errors
     def setup_chat_infra(self, config, w, p):
@@ -93,6 +103,11 @@ class SetUpMigrationAssistant:
         logging.info("Set up secret")
         secrets_infra.create_secret_PAT()
         return secrets_infra.config
+
+    def update_config(self, w, config):
+        uploader = FileUploader(w)
+        config = uploader.update_config(config)
+        return config
 
     def setup_migration_assistant(self, w, p):
         logging.info("Setting up infrastructure")
@@ -131,6 +146,16 @@ class SetUpMigrationAssistant:
         print("\nSetting up secrets")
         config = self.setup_secrets_infra(config, w, p)
 
+        ############################################################
+        logging.info("Setting up job")
+        print("\nSetting up job")
+        config = self.setup_job(config, w)
+
+        ############################################################
+        logging.info("Infrastructure setup complete")
+        print("\nInfrastructure setup complete")
+
+        config = self.update_config(w, config)
         return config
 
     def upload_files(self, w, path):
@@ -142,22 +167,27 @@ class SetUpMigrationAssistant:
         uploader = FileUploader(w)
         files_to_upload = [
             "utils/runindatabricks.py",
-            "gradio_app.py",
-            "run_app_from_databricks_notebook.py",
             "utils/configloader.py",
             "utils/run_review_app.py",
+            "jobs/bronze_to_silver.py",
+            "jobs/call_agents.py",
+            "jobs/silver_to_gold.py",
+            "app/llm.py",
+            "app/similar_code.py",
+            "gradio_app.py",
+            "run_app_from_databricks_notebook.py",
             "config.yml",
         ]
-        files_to_upload = [os.path.join(path, x) for x in files_to_upload]
-        files_to_upload.extend(
-            [
-                os.path.join(path, "app", x)
-                for x in os.listdir(os.path.join(path, "app"))
-                if x[-3:] == ".py"
-            ]
-        )
+
+        def inner(f):
+            full_file_path = os.path.join(path, f)
+            logging.info(
+                f"Uploading {full_file_path} to {uploader.installer.install_folder()}/{f}"
+            )
+            uploader.upload(full_file_path, f)
+
         for f in files_to_upload:
-            uploader.upload(f)
+            inner(f)
 
     def launch_review_app(self, w, config):
         logging.info(
@@ -168,3 +198,12 @@ class SetUpMigrationAssistant:
         )
         app_runner = RunReviewApp(w, config)
         app_runner.launch_review_app()
+
+    def check_cloud(self, w):
+        host = w.config.host
+        if "https://adb" in host:
+            pass
+        elif ".gcp.databricks" in host:
+            raise Exception("GCP is not supported")
+        else:
+            pass

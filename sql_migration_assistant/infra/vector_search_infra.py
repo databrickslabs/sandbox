@@ -15,6 +15,7 @@ import logging
 from sql_migration_assistant.utils.uc_model_version import get_latest_model_version
 import time
 
+
 class VectorSearchInfra:
     def __init__(self, config, workspace_client: WorkspaceClient, p: Prompts):
         self.w = workspace_client
@@ -77,7 +78,9 @@ class VectorSearchInfra:
             )
             self._create_VS_endpoint()
         else:
-            choice = choice.split(" ")[0] #need to remove the (num indices) part of the string
+            choice = choice.split(" ")[
+                0
+            ]  # need to remove the (num indices) part of the string
             self.migration_assistant_VS_endpoint = choice
             # update config with user choice
             self.config["VECTOR_SEARCH_ENDPOINT_NAME"] = (
@@ -173,9 +176,16 @@ class VectorSearchInfra:
                 f"Index {self.migration_assistant_VS_index} already exists. Using existing index."
             )
         except NotFound as e:
-            if f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found" in str(e):
-                logging.info(f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds.")
-                print(f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds.")
+            if (
+                f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found"
+                in str(e)
+            ):
+                logging.info(
+                    f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds."
+                )
+                print(
+                    f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds."
+                )
                 time.sleep(30)
                 self.create_VS_index()
             else:

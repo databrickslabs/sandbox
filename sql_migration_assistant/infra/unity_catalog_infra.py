@@ -1,9 +1,12 @@
+import logging
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors.platform import BadRequest
 from databricks.labs.blueprint.tui import Prompts
 from databricks.labs.lsql.core import StatementExecutionExt
-import logging
-import time
+from databricks.sdk.service.catalog import VolumeType
+from databricks.sdk.errors import PermissionDenied
+import os
 
 """
 Approach
@@ -30,20 +33,22 @@ class UnityCatalogInfra:
         self.prompts = p
         self.see = see
 
-        # get defaults from config file
-        self.default_UC_catalog = "sql_migration_assistant"
-        self.default_UC_schema = "sql_migration_assistant"
-
         # these are updated as the user makes a choice about which UC catalog and schema to use.
         # the chosen values are then written back into the config file.
         self.migration_assistant_UC_catalog = None
-        self.migration_assistant_UC_schema = None
+        self.migration_assistant_UC_schema = "sql_migration_assistant"
 
         # user cannot change these values
         self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
+        self.volume_name = "sql_migration_assistant_volume"
+        self.volume_dirs = {
+            "checkpoint": "code_ingestion_checkpoints",
+            "input": "input_code",
+            "output": "output_code",
+        }
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
-        # add code intent table name to config
+        # add values to config
         self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
 
     def choose_UC_catalog(self):
@@ -63,37 +68,19 @@ class UnityCatalogInfra:
         # update config with user choice
         self.config["CATALOG"] = self.migration_assistant_UC_catalog
 
-    def choose_schema_name(self):
+    def create_schema(self):
 
-        use_default_schema_name = self.prompts.confirm(
-            f"Would you like to use the default schema name: {self.default_UC_schema}? (yes/no)"
-        )
-        if use_default_schema_name:
-            self.migration_assistant_UC_schema = self.default_UC_schema
-        else:
-            # Ask the user to enter a schema name, and validate it.
-            name_invalid = True
-            while name_invalid:
-                # Name cannot include period, space, or forward-slash
-                schema_name = self.prompts.question("Enter the schema name: ")
-                if (
-                    "." not in schema_name
-                    and " " not in schema_name
-                    and "/" not in schema_name
-                ):
-                    self.migration_assistant_UC_schema = schema_name
-                    name_invalid = False
-                else:
-                    print("Schema name cannot include period, space, or forward-slash.")
         # update config with user choice
         self.config["SCHEMA"] = self.migration_assistant_UC_schema
         try:
             self._create_UC_schema()
+            self._create_UC_volume(self.migration_assistant_UC_schema)
         except BadRequest as e:
             if "already exists" in str(e):
                 print(
                     f"Schema already exists. Using existing schema {self.migration_assistant_UC_schema}."
                 )
+                self._create_UC_volume(self.migration_assistant_UC_schema)
 
     def _create_UC_catalog(self):
         """Create a new Unity Catalog."""
@@ -110,18 +97,41 @@ class UnityCatalogInfra:
             comment="Schema for storing assets related to the SQL migration assistant.",
         )
 
-    def create_code_intent_table(self):
+    def _create_UC_volume(self, schema):
+        try:
+            self.w.volumes.create(
+                name=self.volume_name,
+                catalog_name=self.migration_assistant_UC_catalog,
+                schema_name=schema,
+                comment="Volume for storing assets related to the SQL migration assistant.",
+                volume_type=VolumeType.MANAGED,
+            )
+            for key in self.volume_dirs.keys():
+                dir_ = self.volume_dirs[key]
+                volume_path = f"/Volumes/{self.migration_assistant_UC_catalog}/{schema}/{self.volume_name}/{dir_}"
+                self.w.dbutils.fs.mkdirs(volume_path)
+                self.config[f"VOLUME_NAME_{key.upper()}_PATH"] = volume_path
+            self.config["VOLUME_NAME"] = self.volume_name
+        except PermissionDenied:
+            print(
+                "You do not have permission to create a volume. A volume will not be created. You will need to create a "
+                "volume to run the batch code transformation process."
+            )
+            logging.error(
+                "You do not have permission to create a volume. A volume will not be created. You will need to create a "
+                "volume to run the batch code transformation process."
+            )
+
+    def create_tables(self):
         """Create a new table to store code intent data."""
 
         table_name = self.code_intent_table_name
 
         _ = self.see.execute(
-            statement=
-            f"CREATE TABLE IF NOT EXISTS "
+            statement=f"CREATE TABLE IF NOT EXISTS "
             f"`{table_name}`"
             f" (id BIGINT, code STRING, intent STRING) "
             f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
             catalog=self.migration_assistant_UC_catalog,
-            schema=self.migration_assistant_UC_schema
+            schema=self.migration_assistant_UC_schema,
         )
-

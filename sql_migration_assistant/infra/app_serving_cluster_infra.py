@@ -14,7 +14,6 @@ class AppServingClusterInfra:
         self.node_types = {
             "azure": "Standard_DS3_v2",
             "aws": "m5d.xlarge",
-            "gcp": "n1-standard-4",
         }
         self.cloud = self._get_cloud()
         self.cluster_name = "sql_migration_assistant_review_app_cluster"
@@ -60,7 +59,7 @@ class AppServingClusterInfra:
             spark_version=self.spark_version,
             autotermination_minutes=120,
             cluster_name=self.cluster_name,
-            data_security_mode=DataSecurityMode.NONE,
+            data_security_mode=DataSecurityMode.SINGLE_USER,
             spark_conf={
                 "spark.databricks.cluster.profile": "singleNode",
                 "spark.master": "local[*]",
