@@ -540,8 +540,12 @@ TRANSLATED_CODE_GOES_HERE
         def update_output_message(file_name):
             if len(file_name) == 0:
                 raise gr.Error("Please provide a filename")
-
-            output_message = f"Notebook {file_name} written to Databricks at {WORKSPACE_LOCATION}/outputNotebooks/{str(datetime.datetime.now()).replace(':', '_')}/{file_name}"
+            notebook_path_root = f"{WORKSPACE_LOCATION}/outputNotebooks/{str(datetime.datetime.now()).replace(':', '_')}"
+            notebook_path = f"{notebook_path_root}/{file_name}"
+            _ = w.workspace.get_status(notebook_path)
+            id = _.object_id
+            url = f"{w.config.host}/#notebook/{id}"
+            output_message = f"Notebook {file_name} written to Databricks [here]({url})"
             return output_message
 
         # write file to notebook
