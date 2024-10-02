@@ -532,31 +532,21 @@ TRANSLATED_CODE_GOES_HERE
                 language=Language.SQL,
                 overwrite=True,
             )
-
-        preview = gr.Code(label="Preview", language="python")
-        produce_preview_button.click(
-            produce_preview, inputs=[explained, translated], outputs=preview
-        )
-        def update_output_message(file_name):
-            if len(file_name) == 0:
-                raise gr.Error("Please provide a filename")
-            notebook_path_root = f"{WORKSPACE_LOCATION}/outputNotebooks/{str(datetime.datetime.now()).replace(':', '_')}"
-            notebook_path = f"{notebook_path_root}/{file_name}"
             _ = w.workspace.get_status(notebook_path)
             id = _.object_id
             url = f"{w.config.host}/#notebook/{id}"
             output_message = f"Notebook {file_name} written to Databricks [here]({url})"
             return output_message
 
+        preview = gr.Code(label="Preview", language="python")
+        produce_preview_button.click(
+            produce_preview, inputs=[explained, translated], outputs=preview
+        )
+
         # write file to notebook
         write_to_workspace_button.click(
             fn=write_adhoc_to_workspace,
-            inputs=[file_name, preview]
-        )
-        #update output message
-        write_to_workspace_button.click(
-            fn=update_output_message,
-            inputs=file_name,
+            inputs=[file_name, preview],
             outputs=adhoc_write_output
         )
 
