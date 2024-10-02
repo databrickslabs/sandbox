@@ -12,12 +12,12 @@ import json
 agent_configs = json.loads(dbutils.widgets.get("agent_configs"))
 app_configs = json.loads(dbutils.widgets.get("app_configs"))
 
-secret_scope=app_configs["DATABRICKS_TOKEN_SECRET_SCOPE"]
-secret_key=app_configs["DATABRICKS_TOKEN_SECRET_KEY"]
-host=app_configs["DATABRICKS_HOST"]
+secret_scope = app_configs["DATABRICKS_TOKEN_SECRET_SCOPE"]
+secret_key = app_configs["DATABRICKS_TOKEN_SECRET_KEY"]
+host = app_configs["DATABRICKS_HOST"]
 
 workspace_location = app_configs["WORKSPACE_LOCATION"]
-workspace_location = "/Workspace"+workspace_location
+workspace_location = "/Workspace" + workspace_location
 
 key = dbutils.secrets.get(scope=secret_scope, key=secret_key)
 
@@ -70,45 +70,45 @@ TRANSLATED_CODE_GOES_HERE
 
 # DBTITLE 1,write the notebooks into a new column
 gold_df = (
-  spark.read.table(silver_llm_responses)
-  .filter(f.col("promptID") == f.lit(prompt_id))
-  .withColumn("zipped", f.array(f.col("agentName"), f.col("agentResponse")) )
-  .groupBy(
-    f.col("content"),
-    f.col("loadDatetime"),
-    f.col("promptID"),
-    f.col("path")
+    spark.read.table(silver_llm_responses)
+    .filter(f.col("promptID") == f.lit(prompt_id))
+    .withColumn("zipped", f.array(f.col("agentName"), f.col("agentResponse")))
+    .groupBy(f.col("content"), f.col("loadDatetime"), f.col("promptID"), f.col("path"))
+    .agg(
+        f.collect_list(f.col("zipped")).alias("zipped"),
     )
-  .agg(
-    f.collect_list(f.col("zipped")).alias("zipped"),
+    .withColumn("notebookAsString", write_notebook_code(f.col("zipped")))
+    .withColumn("path", f.split(f.col("path"), f.lit("\."))[0])
+    .withColumn(
+        "loadDatetimeStr", f.replace(f.col("loadDatetime"), f.lit(":"), f.lit("_"))
     )
-  .withColumn(
-    "notebookAsString"
-    ,write_notebook_code(f.col("zipped"))
+    .withColumn(
+        "outputVolumePath",
+        f.concat_ws(
+            "/", f.lit(output_volume_path), f.col("loadDatetimeStr"), f.col("path")
+        ),
     )
-  .withColumn("path",f.split(f.col("path"),f.lit("\."))[0])
-  .withColumn("loadDatetimeStr",f.replace(f.col("loadDatetime"), f.lit(":"), f.lit("_")))
-  .withColumn(
-    "outputVolumePath"
-    ,f.concat_ws("/", f.lit(output_volume_path), f.col("loadDatetimeStr"), f.col("path"))
+    .withColumn(
+        "outputNotebookPath",
+        f.concat_ws(
+            "/",
+            f.lit(workspace_location),
+            f.lit("outputNotebooks"),
+            f.col("loadDatetimeStr"),
+            f.col("path"),
+        ),
     )
-  .withColumn(
-    "outputNotebookPath"
-    ,f.concat_ws("/", f.lit(workspace_location), f.lit("outputNotebooks"), f.col("loadDatetimeStr"), f.col("path"))
+    .select(
+        "promptID",
+        "content",
+        "loadDatetime",
+        "notebookAsString",
+        "outputVolumePath",
+        "outputNotebookPath",
     )
-  .select(
-    "promptID",
-    "content",
-    "loadDatetime",
-    "notebookAsString",
-    "outputVolumePath",
-    "outputNotebookPath"
-  )
 )
 
 gold_df.display()
-
-
 
 
 # COMMAND ----------
@@ -140,31 +140,29 @@ spark.sql(
   INSERT INTO {gold_table} TABLE {temp_table_name}
   """
 )
-display(spark.sql(
-    f"""
+display(
+    spark.sql(
+        f"""
   select * from {gold_table}
   """
+    )
 )
-)
-w = WorkspaceClient(
-    host=host,
-    token=key
-)
+w = WorkspaceClient(host=host, token=key)
 
 
 def write_files(row):
-    volume_path = row['outputVolumePath']
-    content = row['notebookAsString']
+    volume_path = row["outputVolumePath"]
+    content = row["notebookAsString"]
     # write to a volume
     dbutils.fs.put(volume_path, content)
 
     # write to workspace
 
-    notebook_path = row['outputNotebookPath']
+    notebook_path = row["outputNotebookPath"]
     notebook_path_root = "/".join(notebook_path.split("/")[:-1])
     w.workspace.mkdirs(notebook_path_root)
     w.workspace.import_(
-        content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
+        content=base64.b64encode(content.encode("utf-8")).decode("utf-8"),
         path=notebook_path,
         format=ImportFormat.SOURCE,
         language=Language.SQL,

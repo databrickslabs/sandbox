@@ -83,8 +83,8 @@ Please select your mode of operation to get started.
     )
     operation = gr.Radio(
         label="Select operation mode",
-        choices = ["Interactive mode", "Batch mode"],
-        value = "Interactive mode",
+        choices=["Interactive mode", "Batch mode"],
+        value="Interactive mode",
         type="value",
         interactive=True,
     )
@@ -99,10 +99,10 @@ Please select your mode of operation to get started.
             """
         )
         interactive_code_button = gr.Button("Ingest code")
-        interactive_code = gr.Code(label="Paste your code in here", language="sql-msSQL")
-        interactive_code_button.click(
-            fn=lambda : gr.Info("Code ingested!")
+        interactive_code = gr.Code(
+            label="Paste your code in here", language="sql-msSQL"
         )
+        interactive_code_button.click(fn=lambda: gr.Info("Code ingested!"))
 
     with gr.Tab(label="Select code", visible=False) as batch_input_code_tab:
 
@@ -440,7 +440,7 @@ Please select your mode of operation to get started.
                     "DATABRICKS_TOKEN_SECRET_KEY"
                 ),
                 "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME"),
-                "WORKSPACE_LOCATION":WORKSPACE_LOCATION,
+                "WORKSPACE_LOCATION": WORKSPACE_LOCATION,
             }
 
             app_configs = json.dumps(app_config_payload)
@@ -456,11 +456,12 @@ Please select your mode of operation to get started.
             run_id = response.run_id
 
             job_url = f"{DATABRICKS_HOST}/jobs/{TRANSFORMATION_JOB_ID}"
-            textbox_message = (f"Job run initiated. Click [here]({job_url}) to view the job status. "
-                               f"You just executed the run with run_id: {run_id}\n"
-                               f"Output notebooks will be written to the Workspace for immediate use at *{WORKSPACE_LOCATION}/outputNotebooks*"
-                               f", and also in the *Output Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME})"
-                               )
+            textbox_message = (
+                f"Job run initiated. Click [here]({job_url}) to view the job status. "
+                f"You just executed the run with run_id: {run_id}\n"
+                f"Output notebooks will be written to the Workspace for immediate use at *{WORKSPACE_LOCATION}/outputNotebooks*"
+                f", and also in the *Output Code* folder in the UC Volume [here]({DATABRICKS_HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/{VOLUME_NAME})"
+            )
             return textbox_message
 
         def make_status_box_visible():
@@ -526,7 +527,7 @@ TRANSLATED_CODE_GOES_HERE
             content = preview
             w.workspace.mkdirs(notebook_path_root)
             w.workspace.import_(
-                content=base64.b64encode(content.encode('utf-8')).decode('utf-8'),
+                content=base64.b64encode(content.encode("utf-8")).decode("utf-8"),
                 path=notebook_path,
                 format=ImportFormat.SOURCE,
                 language=Language.SQL,
@@ -547,7 +548,7 @@ TRANSLATED_CODE_GOES_HERE
         write_to_workspace_button.click(
             fn=write_adhoc_to_workspace,
             inputs=[file_name, preview],
-            outputs=adhoc_write_output
+            outputs=adhoc_write_output,
         )
 
     # this handles the code loading for batch mode
@@ -569,33 +570,47 @@ TRANSLATED_CODE_GOES_HERE
         similar_code_input,
     ]:
         interactive_code_button.click(
-            fn=lambda x: gr.update(value=x),
-            inputs=interactive_code,
-            outputs=output
+            fn=lambda x: gr.update(value=x), inputs=interactive_code, outputs=output
         )
 
     # change the input tabs based on the operation mode
     operation.change(
-        lambda x: gr.update(visible=False) if x == "Interactive mode" else gr.update(visible=True),
+        lambda x: (
+            gr.update(visible=False)
+            if x == "Interactive mode"
+            else gr.update(visible=True)
+        ),
         operation,
-        batch_input_code_tab
+        batch_input_code_tab,
     )
     operation.change(
-        lambda x: gr.update(visible=True) if x == "Interactive mode" else gr.update(visible=False),
+        lambda x: (
+            gr.update(visible=True)
+            if x == "Interactive mode"
+            else gr.update(visible=False)
+        ),
         operation,
-        interactive_input_code_tab
+        interactive_input_code_tab,
     )
 
     # change the output tabs based on the operation mode
     operation.change(
-        lambda x: gr.update(visible=False) if x == "Interactive mode" else gr.update(visible=True),
+        lambda x: (
+            gr.update(visible=False)
+            if x == "Interactive mode"
+            else gr.update(visible=True)
+        ),
         operation,
-        batch_output_tab
+        batch_output_tab,
     )
     operation.change(
-        lambda x: gr.update(visible=True) if x == "Interactive mode" else gr.update(visible=False),
+        lambda x: (
+            gr.update(visible=True)
+            if x == "Interactive mode"
+            else gr.update(visible=False)
+        ),
         operation,
-        interactive_output_tab
+        interactive_output_tab,
     )
 
 # for local dev
