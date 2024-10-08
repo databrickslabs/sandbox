@@ -21,10 +21,10 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
-	"github.com/databrickslabs/sandbox/go-libs/toolchain"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/fileset"
 	"github.com/databrickslabs/sandbox/go-libs/process"
+	"github.com/databrickslabs/sandbox/go-libs/toolchain"
 	"github.com/nxadm/tail"
 )
 

@@ -6,7 +6,7 @@ fmt: lint
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-lint: vendor
+lint:
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
 	@staticcheck ./...
 

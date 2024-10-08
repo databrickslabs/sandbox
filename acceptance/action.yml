@@ -17,9 +17,9 @@ inputs:
     description: 'Slack Webhook'
     required: false
   timeout:
-    description: 'Maximum suite execution time. Defaults to 1h'
+    description: 'Maximum suite execution time. Defaults to 2h'
     required: false
-    default: 1h
+    default: 2h
   create_issues:
     description: 'Create issues in the repository for failed tests'
     required: false

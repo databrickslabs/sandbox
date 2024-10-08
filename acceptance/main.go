@@ -111,7 +111,7 @@ func (a *acceptance) runWithTimeout(
 ) (ecosystem.TestReport, error) {
 	timeoutRaw := a.Action.GetInput("timeout")
 	if timeoutRaw == "" {
-		timeoutRaw = "50m"
+		timeoutRaw = "2h"
 	}
 	timeout, err := time.ParseDuration(timeoutRaw)
 	if err != nil {
