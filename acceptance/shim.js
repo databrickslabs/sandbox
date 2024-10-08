@@ -1,4 +1,4 @@
-const version = 'v0.2.2';
+const version = 'v0.3.0';
 const action = 'acceptance';
 
 const { createWriteStream, chmodSync } = require('fs');

@@ -148,7 +148,7 @@ func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notificat
 				}
 				err := a.CreateOrCommentOnIssue(ctx, github.NewIssue{
 					Title:  fmt.Sprintf("Test failure: `%s`", v.Name),
-					Body:   v.Summary(),
+					Body:   v.Summary(ecosystem.CommentMaxSize),
 					Labels: []string{"bug"},
 				})
 				if err != nil {

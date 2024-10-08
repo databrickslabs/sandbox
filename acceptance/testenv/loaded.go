@@ -2,6 +2,7 @@ package testenv
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -150,13 +151,45 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 				Message:   "Wrong Authorization header",
 			})
 		}
+		// try parse expiry date from JWT token
+		exp, err := l.parseExpiryDate(ctx, accessToken)
+		if err != nil {
+			logger.Errorf(ctx, "parse expiry date: %s", err)
+			exp = time.Now().Add(2 * time.Minute).Unix()
+		}
 		l.replyJson(ctx, w, 200, msiToken{
 			TokenType:   tokenType,
 			AccessToken: accessToken,
-			// TODO: get the real expiry of the token (if we can)
-			ExpiresOn: json.Number(fmt.Sprint(time.Now().Add(2 * time.Minute).Unix())),
+			ExpiresOn:   json.Number(fmt.Sprint(exp)),
 		})
 	}))
+}
+
+func (l *loadedEnv) parseExpiryDate(ctx context.Context, tokenString string) (int64, error) {
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return 0, fmt.Errorf("invalid token format")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return 0, fmt.Errorf("payload: %v", err)
+	}
+	var claims map[string]interface{}
+	err = json.Unmarshal(payload, &claims)
+	if err != nil {
+		return 0, fmt.Errorf("json: %v", err)
+	}
+	exp, ok := claims["exp"].(float64)
+	if ok {
+		logger.Debugf(ctx, "exp is float64: %d", exp)
+		return int64(exp), nil
+	}
+	expInt, ok := claims["exp"].(int64)
+	if ok {
+		logger.Debugf(ctx, "exp is int64: %d", expInt)
+		return expInt, nil
+	}
+	return 0, fmt.Errorf("not found")
 }
 
 func (l *loadedEnv) replyJson(ctx context.Context, w http.ResponseWriter, status int, body any) {

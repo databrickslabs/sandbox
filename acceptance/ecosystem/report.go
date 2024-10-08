@@ -29,11 +29,16 @@ func (tr TestResult) Failed() bool {
 	return !tr.Pass && !tr.Skip
 }
 
-func (tr TestResult) Summary() string {
+func (tr TestResult) Summary(cap int) string {
+	out, padding := tr.Output, 512
+	diff := len(out) + padding - cap
+	if diff > 0 {
+		out = fmt.Sprintf("... (skipped %d bytes)\n%s", diff, out[diff:])
+	}
 	res := []string{}
 	res = append(res, "<details>")
 	res = append(res, fmt.Sprintf("<summary>%s</summary>", tr))
-	res = append(res, fmt.Sprintf("\n```\n%s\n```\n", tr.Output))
+	res = append(res, fmt.Sprintf("\n```\n%s\n```\n", out))
 	res = append(res, "</details>")
 	return strings.Join(res, "\n")
 }
@@ -148,13 +153,24 @@ func (r TestReport) String() string {
 	return fmt.Sprintf("%s %s", emoji, strings.Join(parts, ", "))
 }
 
+const CommentMaxSize = 65536
+
 func (r TestReport) StepSummary() string {
-	res := []string{r.String()}
+	res, failures, maybeOutput, padding := []string{r.String()}, []TestResult{}, 0, 1024
 	for _, v := range r {
 		if !v.Failed() {
 			continue
 		}
-		res = append(res, v.Summary())
+		failures = append(failures, v)
+		maybeOutput += len(v.Summary(CommentMaxSize))
+	}
+	summaryCap := CommentMaxSize - len(strings.Join(res, "\n")) - padding
+	if maybeOutput > (CommentMaxSize - padding) {
+		// if the output is too large, truncate the summaries up to a fraction of the total size
+		summaryCap /= len(failures)
+	}
+	for _, v := range failures {
+		res = append(res, v.Summary(summaryCap))
 	}
 	if r.Flaky() {
 		res = append(res, "\nFlaky tests:\n")
