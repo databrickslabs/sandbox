@@ -30,6 +30,32 @@ Executes tests, comments on PR, links to worflow run, uploads artifacts for late
 
 ![Alt text](docs/comments.png)
 
+```mermaid
+sequenceDiagram
+    acceptance->>+ACTIONS_ID_TOKEN_REQUEST_URL: (1) ACTIONS_ID_TOKEN_REQUEST_TOKEN
+    ACTIONS_ID_TOKEN_REQUEST_URL->>-acceptance: (2) JWT assertion
+    acceptance->>+Microsoft Entra: (3) JWT assertion + client ID + resource ID
+    Microsoft Entra->>-acceptance: (4) Access Token for Azure Key Vault
+    acceptance->>+Azure Key Vault: (5) request environment variables
+    Azure Key Vault->>-acceptance: (6) test environment
+    acceptance->>+Metadata Server: (7) start auth token proxy in a thread
+    Metadata Server->>-acceptance: (8) http://localhost:<random-port>/<random-prefix>
+    acceptance->>+Test Runner: (9) start test runner subprocess with relevant environment
+    Test Runner->>+test: (10) start test execution
+    test->>+SDK: (11) call API
+    SDK->>+Metadata Server: (12) call localhost:<random-port>/<random-prefix>
+    Metadata Server->>+ACTIONS_ID_TOKEN_REQUEST_URL: (13) ACTIONS_ID_TOKEN_REQUEST_TOKEN
+    ACTIONS_ID_TOKEN_REQUEST_URL->>-Metadata Server: (14) JWT assertion to request token for Databricks
+    Metadata Server->>+Microsoft Entra: (15) JWT assertion + client ID + resource ID
+    Microsoft Entra->>-Metadata Server: (16) Access token for Databricks
+    Metadata Server->>-SDK: (17) Access token for Databricks
+    SDK->>+Databricks API: (18) call API
+    Databricks API->>-SDK: (19) deserialized result
+    SDK->>-test: (20) deserialized result
+    test->>-Test Runner: (21) success or failure
+    Test Runner->>-acceptance: (22) success or failure + redacted logs
+```
+
 ## Usage
 
 Add to your `.github/workflows` folder:

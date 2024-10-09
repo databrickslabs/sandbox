@@ -23,27 +23,38 @@ func NewWithGitHubOIDC(a *githubactions.Action, vaultURI string) *vaultEnv {
 	}
 }
 
-type ghOidcCreds struct {
-	a *githubactions.Action
+type ghOidcProxy struct {
+	ctx      context.Context
+	a        *githubactions.Action
+	resource string
 }
 
-func (c *ghOidcCreds) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
-	// TODO: at the moment, ID token expires in 1 hour, so we need to rewrite the logic to refresh it
-	clientAssertion, err := c.a.GetIDToken(ctx, "api://AzureADTokenExchange")
+func (c *ghOidcProxy) Token() (*oauth2.Token, error) {
+	clientAssertion, err := c.a.GetIDToken(c.ctx, "api://AzureADTokenExchange")
 	if err != nil {
 		return nil, fmt.Errorf("id token: %w", err)
 	}
 	clientID := c.a.Getenv("ARM_CLIENT_ID")
 	tenantID := c.a.Getenv("ARM_TENANT_ID")
-	return (&clientcredentials.Config{
+	creds := (&clientcredentials.Config{
 		ClientID: clientID,
 		TokenURL: fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", tenantID),
 		EndpointParams: url.Values{
 			"client_assertion_type": []string{"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
 			"client_assertion":      []string{clientAssertion},
-			"resource":              []string{resource},
+			"resource":              []string{c.resource},
 		},
-	}).TokenSource(ctx), nil
+	}).TokenSource(c.ctx)
+	refresher := oauth2.ReuseTokenSource(nil, creds)
+	return refresher.Token()
+}
+
+type ghOidcCreds struct {
+	a *githubactions.Action
+}
+
+func (c *ghOidcCreds) oidcTokenSource(ctx context.Context, resource string) (oauth2.TokenSource, error) {
+	return &ghOidcProxy{ctx: ctx, a: c.a, resource: resource}, nil
 }
 
 func (c *ghOidcCreds) Name() string {

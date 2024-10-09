@@ -111,7 +111,7 @@ func (a *acceptance) runWithTimeout(
 ) (ecosystem.TestReport, error) {
 	timeoutRaw := a.Action.GetInput("timeout")
 	if timeoutRaw == "" {
-		timeoutRaw = "50m"
+		timeoutRaw = "2h"
 	}
 	timeout, err := time.ParseDuration(timeoutRaw)
 	if err != nil {
@@ -148,7 +148,7 @@ func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notificat
 				}
 				err := a.CreateOrCommentOnIssue(ctx, github.NewIssue{
 					Title:  fmt.Sprintf("Test failure: `%s`", v.Name),
-					Body:   v.Summary(),
+					Body:   v.Summary(ecosystem.CommentMaxSize),
 					Labels: []string{"bug"},
 				})
 				if err != nil {
