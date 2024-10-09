@@ -109,7 +109,7 @@ func (r TestReport) Failed() error {
 	if r.Pass() {
 		return nil
 	}
-	return fmt.Errorf(r.String())
+	return fmt.Errorf("failed: %s", r.String())
 }
 
 func (r TestReport) String() string {
