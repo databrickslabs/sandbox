@@ -166,19 +166,23 @@ class SetUpMigrationAssistant:
         logging.info("Uploading files to workspace")
         print("\nUploading files to workspace")
         uploader = FileUploader(w)
-        files_to_upload = [
+        # Define the list of files and folders to upload
+        upload_target_paths = [
             "utils/runindatabricks.py",
             "utils/configloader.py",
             "utils/run_review_app.py",
             "jobs/bronze_to_silver.py",
             "jobs/call_agents.py",
             "jobs/silver_to_gold.py",
+            "jobs/sql2dbx/",
             "app/llm.py",
             "app/similar_code.py",
             "gradio_app.py",
             "run_app_from_databricks_notebook.py",
             "config.yml",
         ]
+        # Get the list of files to upload using get_files_to_upload
+        files_to_upload = self.get_files_to_upload(path, upload_target_paths)
 
         def inner(f):
             full_file_path = os.path.join(path, f)
