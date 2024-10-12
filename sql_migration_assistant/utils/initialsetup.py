@@ -15,6 +15,7 @@ import logging
 import os
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
+from typing import List
 
 
 class SetUpMigrationAssistant:
@@ -207,3 +208,31 @@ class SetUpMigrationAssistant:
             raise Exception("GCP is not supported")
         else:
             pass
+
+    @staticmethod
+    def get_files_to_upload(base_path: str, paths: List[str]) -> List[str]:
+        """
+        Returns a list of file paths to upload, based on the specified files and folders.
+
+        :param base_path: The base directory.
+        :param paths: A list of files or folders specified as relative paths from the base_path.
+        :return: A list of file paths relative to base_path that need to be uploaded.
+        """
+        files_to_upload = set()
+        for path in paths:
+            full_path = os.path.join(base_path, path)
+            if os.path.isfile(full_path):
+                # If it's a file, add its relative path to the set
+                relative_path = os.path.relpath(full_path, base_path)
+                files_to_upload.add(relative_path)
+            elif os.path.isdir(full_path):
+                # If it's a directory, recursively walk through it
+                for root, _, files in os.walk(full_path):
+                    for file in files:
+                        file_full_path = os.path.join(root, file)
+                        relative_path = os.path.relpath(file_full_path, base_path)
+                        files_to_upload.add(relative_path)
+            else:
+                # Skip if the path does not exist
+                continue
+        return list(files_to_upload)
