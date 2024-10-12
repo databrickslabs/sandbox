@@ -65,35 +65,11 @@ class JobsInfra:
         ]
         self.job_tasks = [
             Task(
-                task_key="ingest_to_holding",
+                task_key="sql2dbx_main",
                 notebook_task=NotebookTask(
-                    notebook_path=self.notebook_root_path + "bronze_to_silver"
+                    notebook_path=self.notebook_root_path + "sql2dbx/notebooks/00_main"
                 ),
-                disable_auto_optimization=True,
-            ),
-            Task(
-                task_key="call_agents",
-                for_each_task=ForEachTask(
-                    inputs="{{tasks.ingest_to_holding.values.new_record_ids}}",
-                    task=Task(
-                        task_key="call_agent",
-                        notebook_task=NotebookTask(
-                            notebook_path=self.notebook_root_path + "call_agents",
-                            base_parameters={"record_id": "{{input}}"},
-                        ),
-                        job_cluster_key="sql_migration_job_cluster",
-                    ),
-                    concurrency=8,
-                ),
-                depends_on=[TaskDependency(task_key="ingest_to_holding")],
-            ),
-            Task(
-                task_key="silver_to_gold",
-                notebook_task=NotebookTask(
-                    notebook_path=self.notebook_root_path + "silver_to_gold"
-                ),
-                depends_on=[TaskDependency(task_key="call_agents")],
-                disable_auto_optimization=True,
+                job_cluster_key="sql_migration_job_cluster",
             ),
         ]
 
