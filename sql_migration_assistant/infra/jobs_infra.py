@@ -65,9 +65,9 @@ class JobsInfra:
         ]
         self.job_tasks = [
             Task(
-                task_key="sql2dbx_main",
+                task_key="legion_sql2dbx_runner",
                 notebook_task=NotebookTask(
-                    notebook_path=self.notebook_root_path + "sql2dbx/notebooks/00_main"
+                    notebook_path=self.notebook_root_path + "legion_sql2dbx_runner"
                 ),
                 job_cluster_key="sql_migration_job_cluster",
             ),
