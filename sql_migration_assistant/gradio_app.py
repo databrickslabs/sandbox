@@ -282,7 +282,6 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 translation_system_prompt = gr.Textbox(
                     label="Instructions for the LLM translation tool.",
                     value=TRANSLATION_PROMPT.strip(),
-                    lines=20,
                 )
             with gr.Row():
                 save_translation_prompt = gr.Button("Save translation prompt")
