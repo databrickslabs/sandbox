@@ -6,6 +6,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.workspace import ImportFormat, Language
 import base64
 import gradio as gr
+import requests
 
 from app.llm import LLMCalls
 from app.similar_code import SimilarCode
@@ -58,36 +59,39 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
         """<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
 
 # Databricks Legion Migration Accelerator
+""")
+    with gr.Tab("Instructions"):
+        gr.Markdown("""
+        Legion is an AI powered tool that aims to accelerate the migration of code to Databricks for low cost and effort. It 
+        does this by using AI to translate, explain, and make discoverable your code. 
+        
+        This interface is the Legion Control Panel. Here you are able to configure the AI agents for translation and explanation
+        to fit your needs, incorporating your expertise and knowledge of the codebase by adjusting the AI agents' instructions.
+        
+        Legion can work in a batch or interactive fashion.
+        
+        *Interactive operation*
+        Fine tune the AI agents on a single file and output the result as a Databricks notebook. 
+        Use this UI to adjust the system prompts and instructions for the AI agents to generate the best translation and intent.
+        
+        *Batch operation*
+        Process a Volume of files to generate Databricks notebooks. Use this UI to fine tune your agent prompts against selected
+         files before executing a Workflow to transform all files in the Volume, outputting Databricks notebooks with the AI
+         generated intent and translation.
+        
+        
+        Please select your mode of operation to get started.   
+        
+        """
+        )
 
-Legion is an AI powered tool that aims to accelerate the migration of code to Databricks for low cost and effort. It 
-does this by using AI to translate, explain, and make discoverable your code. 
-
-This interface is the Legion Control Panel. Here you are able to configure the AI agents for translation and explanation
-to fit your needs, incorporating your expertise and knowledge of the codebase by adjusting the AI agents' instructions.
-
-Legion can work in a batch or interactive fashion.
-
-*Interactive operation*
-Fine tune the AI agents on a single file and output the result as a Databricks notebook. 
-Use this UI to adjust the system prompts and instructions for the AI agents to generate the best translation and intent.
-
-*Batch operation*
-Process a Volume of files to generate Databricks notebooks. Use this UI to fine tune your agent prompts against selected
- files before executing a Workflow to transform all files in the Volume, outputting Databricks notebooks with the AI
- generated intent and translation.
-
-
-Please select your mode of operation to get started.   
-
-"""
-    )
-    operation = gr.Radio(
-        label="Select operation mode",
-        choices=["Interactive mode", "Batch mode"],
-        value="Interactive mode",
-        type="value",
-        interactive=True,
-    )
+        operation = gr.Radio(
+            label="Select operation mode",
+            choices=["Interactive mode", "Batch mode"],
+            value="Interactive mode",
+            type="value",
+            interactive=True,
+        )
     ################################################################################
     #### STORAGE SETTINGS TAB
     ################################################################################
@@ -549,6 +553,19 @@ TRANSLATED_CODE_GOES_HERE
             fn=write_adhoc_to_workspace,
             inputs=[file_name, preview],
             outputs=adhoc_write_output,
+        )
+
+    with gr.Tab(label="Feedback"):
+        gr.Markdown(
+            """
+        ## Comments? Feature Suggestions? Bugs?
+        
+        Below is the link to the Legion Github repo for you to raise an issue. 
+        
+        On the right hand side of the Issue page, please assign it to **robertwhiffin**, and select the project **Legion**. 
+
+        Raise the issue on the Github repo for Legion [here](https://github.com/databrickslabs/sandbox/issues/new).        
+        """
         )
 
     # this handles the code loading for batch mode
