@@ -39,7 +39,10 @@ class UnityCatalogInfra:
         self.migration_assistant_UC_schema = "sql_migration_assistant"
 
         # user cannot change these values
-        self.code_intent_table_name = "sql_migration_assistant_code_intent_table"
+        self.tables = {
+            "sql_migration_assistant_code_intent_table" : f"(id BIGINT, code STRING, intent STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)",
+            "sql_migration_assistant_prompt_history" : f"(agent STRING, prompt STRING, save_time TIMESTAMP)",
+        }
         self.volume_name = "sql_migration_assistant_volume"
         self.volume_dirs = {
             "checkpoint": "code_ingestion_checkpoints",
@@ -49,7 +52,7 @@ class UnityCatalogInfra:
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
         # add values to config
-        self.config["CODE_INTENT_TABLE_NAME"] = self.code_intent_table_name
+        self.config["CODE_INTENT_TABLE_NAME"] = self.tables
 
     def choose_UC_catalog(self):
         """Ask the user to choose an existing Unity Catalog or create a new one."""
@@ -125,13 +128,9 @@ class UnityCatalogInfra:
     def create_tables(self):
         """Create a new table to store code intent data."""
 
-        table_name = self.code_intent_table_name
-
-        _ = self.see.execute(
-            statement=f"CREATE TABLE IF NOT EXISTS "
-            f"`{table_name}`"
-            f" (id BIGINT, code STRING, intent STRING) "
-            f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
-            catalog=self.migration_assistant_UC_catalog,
-            schema=self.migration_assistant_UC_schema,
-        )
+        for table_name, table_spec in self.tables.items():
+            _ = self.see.execute(
+                statement=f"CREATE TABLE IF NOT EXISTS `{table_name}` {table_spec}",
+                catalog=self.migration_assistant_UC_catalog,
+                schema=self.migration_assistant_UC_schema,
+            )

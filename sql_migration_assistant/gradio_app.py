@@ -10,6 +10,7 @@ import gradio as gr
 from openai import OpenAI
 from app.llm import LLMCalls
 from app.similar_code import SimilarCode
+from app.prompt_helper import PromptHelper
 import logging  # For printing translation attempts in console (debugging)
 
 # Setting up logger
@@ -34,6 +35,8 @@ DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 DATABRICKS_TOKEN = os.environ.get('DATABRICKS_TOKEN')
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 WORKSPACE_LOCATION = os.environ.get("WORKSPACE_LOCATION")
+TRANSLATION_PROMPT = os.environ.get("TRANSLATION_PROMPT")
+INTENT_PROMPT = os.environ.get("INTENT_PROMPT")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 openai_client = OpenAI(
   api_key=DATABRICKS_TOKEN,
@@ -52,6 +55,8 @@ similar_code_helper = SimilarCode(
     VS_index_name=VS_INDEX_NAME,
     VS_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
 )
+prompt_helper = PromptHelper(see=see, catalog=CATALOG, schema=SCHEMA)
+
 
 ################################################################################
 ################################################################################
@@ -161,7 +166,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             gr.Markdown(
                 """ ### Advanced settings for the generating the intent of the input code.
                 
-                The *Temperature* paramater controls the randomness of the AI's response. Higher values will result in 
+                The *Temperature* parameter controls the randomness of the AI's response. Higher values will result in 
                 more creative responses, while lower values will result in more predictable responses.
                 """
             )
@@ -176,9 +181,34 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 intent_system_prompt = gr.Textbox(
                     label="System prompt of the LLM to generate the intent.",
-                    value="""Your job is to explain intent of the provided SQL code.
-                            """.strip(),
+                    value=INTENT_PROMPT.strip(),
                 )
+            with gr.Row():
+                save_intent_prompt = gr.Button("Save intent prompt")
+                load_intent_prompt = gr.Button("Load intent prompt")
+            loaded_intent_prompts = gr.Dataset(label='Select prompt', visible=False, components=[gr.Textbox(visible=False)], samples=[["No saved prompt yet!"]])
+
+            load_intent_prompt.click(
+                fn=lambda : gr.update(visible=True, samples=prompt_helper.get_prompts("intent_agent")),
+                inputs=None,
+                outputs=[loaded_intent_prompts],
+            )
+            loaded_intent_prompts.select(
+                fn=lambda x: gr.update(value=x[0]),
+                inputs=loaded_intent_prompts,
+                outputs=intent_system_prompt
+            )
+
+            save_intent_prompt.click(
+                fn=lambda x: prompt_helper.save_prompt("intent_agent", x),
+                inputs=intent_system_prompt,
+                outputs=None
+            )
+
+            # TODO - figure out how to load the prompt from the delta table
+
+
+
         with gr.Accordion(label="Intent Pane", open=True):
             gr.Markdown(
                 """ ## AI generated intent of what your code aims to do. 
@@ -251,39 +281,34 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 translation_system_prompt = gr.Textbox(
                     label="Instructions for the LLM translation tool.",
-                    value="""
-                              You are an expert in multiple SQL dialects. You only reply with SQL code and with no other text. 
-                              Your purpose is to translate the given SQL query to Databricks Spark SQL. 
-                              You must follow these rules:
-                              - You must keep all original catalog, schema, table, and field names.
-                              - Convert all dates to dd-MMM-yyyy format using the date_format() function.
-                              - Subqueries must end with a semicolon.
-                              - Ensure queries do not have # or @ symbols.
-                              - ONLY if the original query uses temporary tables (e.g. "INTO #temptable"), re-write these as either CREATE OR REPLACE TEMPORARY VIEW or CTEs. .
-                              - Square brackets must be replaced with backticks.
-                              - Custom field names should be surrounded by backticks. 
-                              - Ensure queries do not have # or @ symbols.
-                              - Only if the original query contains DECLARE and SET statements, re-write them according to the following format:
-                                    DECLARE VARIABLE variable TYPE DEFAULT value; For example: DECLARE VARIABLE number INT DEFAULT 9;
-                                    SET VAR variable = value; For example: SET VAR number = 9;
-                              
-                            Write an initial draft of the translated query. Then double check the output for common mistakes, including:
-                            - Using NOT IN with NULL values
-                            - Using UNION when UNION ALL should have been used
-                            - Using BETWEEN for exclusive ranges
-                            - Data type mismatch in predicates
-                            - Properly quoting identifiers
-                            - Using the correct number of arguments for functions
-                            - Casting to the correct data type
-                            - Using the proper columns for joins
-                            
-                            Return the final translated query only. Include comments. Include only SQL.
-                            """.strip(),
+                    value=TRANSLATION_PROMPT.strip(),
                     lines=20,
                 )
+            with gr.Row():
+                save_translation_prompt = gr.Button("Save translation prompt")
+                load_translation_prompt = gr.Button("Load translation prompt")
+            loaded_translation_prompts = gr.Dataset(label='Select prompt', visible=False, components=[gr.Textbox(visible=False)], samples=[["No saved prompt yet!"]])
+
+            load_translation_prompt.click(
+                fn=lambda : gr.update(visible=True, samples=prompt_helper.get_prompts("translation_agent")),
+                inputs=None,
+                outputs=[loaded_translation_prompts],
+            )
+            loaded_translation_prompts.select(
+                fn=lambda x: gr.update(value=x[0]),
+                inputs=loaded_translation_prompts,
+                outputs=translation_system_prompt
+            )
+
+            save_translation_prompt.click(
+                fn=lambda x: prompt_helper.save_prompt("translation_agent", x),
+                inputs=translation_system_prompt,
+                outputs=None
+            )
+
 
         with gr.Accordion(label="Translation Pane", open=True):
-            gr.Markdown(""" ### Input your code here for translation to Spark-SQL.""")
+            gr.Markdown(""" ### Source code for translation to Spark-SQL.""")
             # a button labelled translate
             translate_button = gr.Button("Translate")
             with gr.Row():
