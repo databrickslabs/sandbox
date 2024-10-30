@@ -6,8 +6,8 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.workspace import ImportFormat, Language
 import base64
 import gradio as gr
-import requests
 
+from openai import OpenAI
 from app.llm import LLMCalls
 from app.similar_code import SimilarCode
 import logging  # For printing translation attempts in console (debugging)
@@ -31,13 +31,18 @@ SCHEMA = os.environ.get("SCHEMA")
 VOLUME_NAME_INPUT_PATH = os.environ.get("VOLUME_NAME_INPUT_PATH")
 VOLUME_NAME = os.environ.get("VOLUME_NAME")
 DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
+DATABRICKS_TOKEN = os.environ.get('DATABRICKS_TOKEN')
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 WORKSPACE_LOCATION = os.environ.get("WORKSPACE_LOCATION")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
+openai_client = OpenAI(
+  api_key=DATABRICKS_TOKEN,
+  base_url=f"{DATABRICKS_HOST}/serving-endpoints"
+)
 
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
-translation_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
-intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
+translation_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
+intent_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
 similar_code_helper = SimilarCode(
     workspace_client=w,
     see=see,
