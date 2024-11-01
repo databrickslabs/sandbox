@@ -174,6 +174,7 @@ class SetUpMigrationAssistant:
             "jobs/silver_to_gold.py",
             "app/llm.py",
             "app/similar_code.py",
+            "app/prompt_helper.py",
             "gradio_app.py",
             "run_app_from_databricks_notebook.py",
             "config.yml",
