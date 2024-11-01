@@ -36,8 +36,6 @@ DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 DATABRICKS_TOKEN = os.environ.get('DATABRICKS_TOKEN')
 TRANSFORMATION_JOB_ID = os.environ.get("TRANSFORMATION_JOB_ID")
 WORKSPACE_LOCATION = os.environ.get("WORKSPACE_LOCATION")
-TRANSLATION_PROMPT = os.environ.get("TRANSLATION_PROMPT")
-INTENT_PROMPT = os.environ.get("INTENT_PROMPT")
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 openai_client = OpenAI(
   api_key=DATABRICKS_TOKEN,
@@ -182,7 +180,8 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 intent_system_prompt = gr.Textbox(
                     label="System prompt of the LLM to generate the intent.",
-                    value=INTENT_PROMPT.strip(),
+                    placeholder="Add your system prompt here, for example:\n"
+                                "Explain the intent of this code with an example use case.",
                 )
             with gr.Row():
                 save_intent_prompt = gr.Button("Save intent prompt")
@@ -225,7 +224,6 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         label="Input SQL",
                         language="sql-msSQL",
                     )
-                    # a button labelled translate
 
                 with gr.Column():
                     # divider subheader
@@ -282,7 +280,8 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 translation_system_prompt = gr.Textbox(
                     label="Instructions for the LLM translation tool.",
-                    value=TRANSLATION_PROMPT.strip(),
+                    placeholder="Add your system prompt here, for example:\n"
+                                "Translate this code to Spark SQL.",
                 )
             with gr.Row():
                 save_translation_prompt = gr.Button("Save translation prompt")
