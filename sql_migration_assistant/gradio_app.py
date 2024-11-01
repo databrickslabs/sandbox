@@ -27,6 +27,7 @@ SQL_WAREHOUSE_ID = os.environ.get("DATABRICKS_WAREHOUSE_ID")
 VECTOR_SEARCH_ENDPOINT_NAME = os.environ.get("VECTOR_SEARCH_ENDPOINT_NAME")
 VS_INDEX_NAME = os.environ.get("VS_INDEX_NAME")
 CODE_INTENT_TABLE_NAME = os.environ.get("CODE_INTENT_TABLE_NAME")
+PROMPT_HISTORY_TABLE_NAME = os.environ.get("PROMPT_HISTORY_TABLE_NAME")
 CATALOG = os.environ.get("CATALOG")
 SCHEMA = os.environ.get("SCHEMA")
 VOLUME_NAME_INPUT_PATH = os.environ.get("VOLUME_NAME_INPUT_PATH")
@@ -55,7 +56,7 @@ similar_code_helper = SimilarCode(
     VS_index_name=VS_INDEX_NAME,
     VS_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
 )
-prompt_helper = PromptHelper(see=see, catalog=CATALOG, schema=SCHEMA)
+prompt_helper = PromptHelper(see=see, catalog=CATALOG, schema=SCHEMA, prompt_table=PROMPT_HISTORY_TABLE_NAME)
 
 
 ################################################################################

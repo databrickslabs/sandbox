@@ -40,8 +40,8 @@ class UnityCatalogInfra:
 
         # user cannot change these values
         self.tables = {
-            "sql_migration_assistant_code_intent_table" : f"(id BIGINT, code STRING, intent STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)",
-            "sql_migration_assistant_prompt_history" : f"(agent STRING, prompt STRING, save_time TIMESTAMP)",
+            "code_intent" : f"(id BIGINT, code STRING, intent STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)",
+            "prompt_history" : f"(agent STRING, prompt STRING, save_time TIMESTAMP)",
         }
         self.volume_name = "sql_migration_assistant_volume"
         self.volume_dirs = {
@@ -52,7 +52,8 @@ class UnityCatalogInfra:
         self.warehouseID = self.config.get("DATABRICKS_WAREHOUSE_ID")
 
         # add values to config
-        self.config["CODE_INTENT_TABLE_NAME"] = self.tables
+        self.config["CODE_INTENT_TABLE_NAME"] = "code_intent"
+        self.config["PROMPT_HISTORY_TABLE_NAME"] = "prompt_history"
 
     def choose_UC_catalog(self):
         """Ask the user to choose an existing Unity Catalog or create a new one."""
