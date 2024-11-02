@@ -78,19 +78,23 @@ func (a *Boilerplate) Upload(ctx context.Context, folder string) error {
 
 func (a *Boilerplate) RunURL(ctx context.Context) (string, error) {
 	org, repo := a.context.Repo()
+	logger.Debugf(ctx, "List jobs for current run id '%s'", a.context.RunID)
 	workflowJobs := a.GitHub.ListWorkflowJobs(ctx, org, repo, a.context.RunID)
 	for workflowJobs.HasNext(ctx) {
 		job, err := workflowJobs.Next(ctx)
 		if err != nil {
 			return "", err
 		}
+		logger.Debugf(ctx, "Check if job id '%s' with runnner '%s' matches RUNNER_NAME '%s'", 
+			job.ID, job.RunnerName, a.Action.Getenv("RUNNER_NAME"))
 		if job.RunnerName == a.Action.Getenv("RUNNER_NAME") {
 			url := fmt.Sprintf("%s/%s/actions/runs/%d/job/%d", // ?pr=56
 				a.context.ServerURL, a.context.Repository, a.context.RunID, job.ID)
+			logger.Debugf(ctx, "Found job id '%s' with url '%s'", job.ID, url)
 			return url, nil
 		}
 	}
-	return "", fmt.Errorf("id not found for current run: %s", a.context.Job)
+	return "", fmt.Errorf("no matching job found for current run id %s, job %s", a.context.RunID, a.context.Job)
 }
 
 func (a *Boilerplate) CreateOrCommentOnIssue(ctx context.Context, newIssue github.NewIssue) error {
