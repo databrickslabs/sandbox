@@ -94,7 +94,7 @@ func (a *Boilerplate) RunURL(ctx context.Context) (string, error) {
 			return url, nil
 		}
 	}
-	return "", fmt.Errorf("no matching job found for current run id %s, job %s", a.context.RunID, a.context.Job)
+	return "", fmt.Errorf("no matching job found for current run id %d, job %s", a.context.RunID, a.context.Job)
 }
 
 func (a *Boilerplate) CreateOrCommentOnIssue(ctx context.Context, newIssue github.NewIssue) error {
