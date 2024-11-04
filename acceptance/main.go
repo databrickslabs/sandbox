@@ -46,7 +46,15 @@ type acceptance struct {
 	*boilerplate.Boilerplate
 }
 
+func (a *acceptance) canCreateIssues() bool {
+	createIssues := strings.ToLower(a.Action.GetInput("create_issues"))
+	return createIssues == "true" || createIssues == "yes"
+}
+
 func (a *acceptance) syncTodos(ctx context.Context) error {
+	if !a.canCreateIssues() {
+		return nil
+	}
 	directory, _, err := a.getProject()
 	if err != nil {
 		return fmt.Errorf("project: %w", err)
@@ -63,6 +71,10 @@ func (a *acceptance) syncTodos(ctx context.Context) error {
 }
 
 func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) {
+	err := a.syncTodos(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("sync todos: %w", err)
+	}
 	vaultURI := a.Action.GetInput("vault_uri")
 	directory, project, err := a.getProject()
 	if err != nil {
@@ -146,9 +158,8 @@ func (a *acceptance) runWithTimeout(
 
 func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notification) error {
 	slackWebhook := a.Action.GetInput("slack_webhook")
-	createIssues := strings.ToLower(a.Action.GetInput("create_issues"))
 	needsSlack := slackWebhook != ""
-	needsIssues := createIssues == "true" || createIssues == "yes"
+	needsIssues := a.canCreateIssues()
 	needsNotification := needsSlack || needsIssues
 	if !alert.Report.Pass() && needsNotification {
 		if needsSlack {
@@ -159,12 +170,6 @@ func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notificat
 			}
 		}
 		if needsIssues {
-			// doesn't seem to pick the right commit hash, so it's better to do it nightly
-			// see https://github.com/databrickslabs/ucx/issues/3195
-			err := a.syncTodos(ctx)
-			if err != nil {
-				return fmt.Errorf("sync todos: %w", err)
-			}
 			for _, v := range alert.Report {
 				if !v.Failed() {
 					continue
