@@ -51,6 +51,7 @@ type TechnicalDebtFinder struct {
 type Todo struct {
 	message string
 	link    string
+	blame   string
 }
 
 func (f *TechnicalDebtFinder) CreateIssues(ctx context.Context) error {
@@ -80,7 +81,7 @@ func (f *TechnicalDebtFinder) createIssue(ctx context.Context, todo Todo) error 
 	}
 	_, err := f.gh.CreateIssue(ctx, org, repo, github.NewIssue{
 		Title:  fmt.Sprintf("[TODO] %s", todo.message),
-		Body:   fmt.Sprintf("See: %s", todo.link),
+		Body:   fmt.Sprintf("See [more context](%s):\n%s", todo.blame, todo.link),
 		Labels: []string{"tech debt"},
 	})
 	if err != nil {
@@ -121,6 +122,9 @@ func (f *TechnicalDebtFinder) allTodos(ctx context.Context) ([]Todo, error) {
 	var todos []Todo
 	needle := regexp.MustCompile(`TODO:(.*)`)
 	for _, v := range f.fs {
+		if !strings.HasSuffix(v.Absolute, v.Relative) {
+			continue // avoid false positives like https://github.com/databrickslabs/ucx/issues/3193
+		}
 		raw, err := v.Raw()
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", v.Relative, err)
@@ -130,9 +134,11 @@ func (f *TechnicalDebtFinder) allTodos(ctx context.Context) ([]Todo, error) {
 			if !needle.MatchString(line) {
 				continue
 			}
+			link := fmt.Sprintf("%s/%s#L%d-L%d", prefix, v.Relative, i, i+5)
 			todos = append(todos, Todo{
 				message: strings.TrimSpace(needle.FindStringSubmatch(line)[1]),
-				link:    fmt.Sprintf("%s/%s#L%d-L%d", prefix, v.Relative, i, i+5),
+				link:    link,
+				blame:   strings.ReplaceAll(link, "/blob/", "/blame/"),
 			})
 		}
 	}
@@ -149,6 +155,6 @@ func (f *TechnicalDebtFinder) embedPrefix(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("git history: %w", err)
 	}
 	// example: https://github.com/databrickslabs/ucx/blob/69a0cf8ce3450680dc222150f500d84a1eb523fc/src/databricks/labs/ucx/azure/access.py#L25-L35
-	prefix := fmt.Sprintf("https://github.com/%s/%s/blame/%s", org, repo, commits[0].Sha)
+	prefix := fmt.Sprintf("https://github.com/%s/%s/blob/%s", org, repo, commits[0].Sha)
 	return prefix, nil
 }

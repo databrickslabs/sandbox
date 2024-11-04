@@ -35,10 +35,6 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
 	a := &acceptance{Boilerplate: b}
-	err = a.syncTodos(ctx)
-	if err != nil {
-		return fmt.Errorf("sync todos: %w", err)
-	}
 	alert, err := a.trigger(ctx)
 	if err != nil {
 		return fmt.Errorf("trigger: %w", err)
@@ -163,6 +159,12 @@ func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notificat
 			}
 		}
 		if needsIssues {
+			// doesn't seem to pick the right commit hash, so it's better to do it nightly
+			// see https://github.com/databrickslabs/ucx/issues/3195
+			err := a.syncTodos(ctx)
+			if err != nil {
+				return fmt.Errorf("sync todos: %w", err)
+			}
 			for _, v := range alert.Report {
 				if !v.Failed() {
 					continue
