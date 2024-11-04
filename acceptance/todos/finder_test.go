@@ -9,12 +9,13 @@ import (
 )
 
 func TestXXX(t *testing.T) {
+	t.SkipNow()
 	ctx := context.Background()
 
 	gh := github.NewClient(&github.GitHubConfig{})
 	f, err := New(ctx, gh, "/Users/serge.smertin/git/labs/remorph")
 	assert.NoError(t, err)
 
-	err = f.Create(ctx)
+	err = f.CreateIssues(ctx)
 	assert.NoError(t, err)
 }

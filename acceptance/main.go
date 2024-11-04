@@ -59,7 +59,7 @@ func (a *acceptance) syncTodos(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("tech debt: %w", err)
 	}
-	err = techDebt.Create(ctx)
+	err = techDebt.CreateIssues(ctx)
 	if err != nil {
 		return fmt.Errorf("create: %w", err)
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/github"
 )
 
-func New(ctx context.Context, gh *github.GitHubClient, root string) (*Finder, error) {
+func New(ctx context.Context, gh *github.GitHubClient, root string) (*TechnicalDebtFinder, error) {
 	fs, err := fileset.RecursiveChildren(root)
 	if err != nil {
 		return nil, fmt.Errorf("fileset: %w", err)
@@ -35,14 +35,14 @@ func New(ctx context.Context, gh *github.GitHubClient, root string) (*Finder, er
 	if err != nil {
 		return nil, fmt.Errorf("git: %w", err)
 	}
-	return &Finder{
+	return &TechnicalDebtFinder{
 		fs:  scope,
 		git: checkout,
 		gh:  gh,
 	}, nil
 }
 
-type Finder struct {
+type TechnicalDebtFinder struct {
 	fs  fileset.FileSet
 	git *git.Checkout
 	gh  *github.GitHubClient
@@ -53,7 +53,7 @@ type Todo struct {
 	link    string
 }
 
-func (f *Finder) Create(ctx context.Context) error {
+func (f *TechnicalDebtFinder) CreateIssues(ctx context.Context) error {
 	todos, err := f.allTodos(ctx)
 	if err != nil {
 		return fmt.Errorf("all todos: %w", err)
@@ -73,7 +73,7 @@ func (f *Finder) Create(ctx context.Context) error {
 	return nil
 }
 
-func (f *Finder) createIssue(ctx context.Context, todo Todo) error {
+func (f *TechnicalDebtFinder) createIssue(ctx context.Context, todo Todo) error {
 	org, repo, ok := f.git.OrgAndRepo()
 	if !ok {
 		return fmt.Errorf("git org and repo")
@@ -89,7 +89,7 @@ func (f *Finder) createIssue(ctx context.Context, todo Todo) error {
 	return nil
 }
 
-func (f *Finder) seenIssues(ctx context.Context) (map[string]bool, error) {
+func (f *TechnicalDebtFinder) seenIssues(ctx context.Context) (map[string]bool, error) {
 	org, repo, ok := f.git.OrgAndRepo()
 	if !ok {
 		return nil, fmt.Errorf("git org and repo")
@@ -113,8 +113,8 @@ func (f *Finder) seenIssues(ctx context.Context) (map[string]bool, error) {
 	return seen, nil
 }
 
-func (f *Finder) allTodos(ctx context.Context) ([]Todo, error) {
-	prefix, err := f.prefix(ctx)
+func (f *TechnicalDebtFinder) allTodos(ctx context.Context) ([]Todo, error) {
+	prefix, err := f.embedPrefix(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("prefix: %w", err)
 	}
@@ -139,7 +139,7 @@ func (f *Finder) allTodos(ctx context.Context) ([]Todo, error) {
 	return todos, nil
 }
 
-func (f *Finder) prefix(ctx context.Context) (string, error) {
+func (f *TechnicalDebtFinder) embedPrefix(ctx context.Context) (string, error) {
 	org, repo, ok := f.git.OrgAndRepo()
 	if !ok {
 		return "", fmt.Errorf("git org and repo")
@@ -149,6 +149,6 @@ func (f *Finder) prefix(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("git history: %w", err)
 	}
 	// example: https://github.com/databrickslabs/ucx/blob/69a0cf8ce3450680dc222150f500d84a1eb523fc/src/databricks/labs/ucx/azure/access.py#L25-L35
-	prefix := fmt.Sprintf("https://github.com/%s/%s/blob/%s", org, repo, commits[0].Sha)
+	prefix := fmt.Sprintf("https://github.com/%s/%s/blame/%s", org, repo, commits[0].Sha)
 	return prefix, nil
 }
