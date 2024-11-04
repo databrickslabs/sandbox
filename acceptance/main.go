@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/sandbox/acceptance/notify"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/acceptance/testenv"
+	"github.com/databrickslabs/sandbox/acceptance/todos"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/databrickslabs/sandbox/go-libs/slack"
@@ -34,6 +35,10 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 		return fmt.Errorf("boilerplate: %w", err)
 	}
 	a := &acceptance{Boilerplate: b}
+	err = a.syncTodos(ctx)
+	if err != nil {
+		return fmt.Errorf("sync todos: %w", err)
+	}
 	alert, err := a.trigger(ctx)
 	if err != nil {
 		return fmt.Errorf("trigger: %w", err)
@@ -43,6 +48,22 @@ func run(ctx context.Context, opts ...githubactions.Option) error {
 
 type acceptance struct {
 	*boilerplate.Boilerplate
+}
+
+func (a *acceptance) syncTodos(ctx context.Context) error {
+	directory, _, err := a.getProject()
+	if err != nil {
+		return fmt.Errorf("project: %w", err)
+	}
+	techDebt, err := todos.New(ctx, a.GitHub, directory)
+	if err != nil {
+		return fmt.Errorf("tech debt: %w", err)
+	}
+	err = techDebt.Create(ctx)
+	if err != nil {
+		return fmt.Errorf("create: %w", err)
+	}
+	return nil
 }
 
 func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) {
