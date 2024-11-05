@@ -4,9 +4,9 @@ import json
 import os
 
 import gradio as gr
-from app.llm import LLMCalls
-from app.similar_code import SimilarCode
-from config import (
+from sql_migration_assistant.app.llm import LLMCalls
+from sql_migration_assistant.app.similar_code import SimilarCode
+from sql_migration_assistant.config import (
     FOUNDATION_MODEL_NAME,
     SQL_WAREHOUSE_ID,
     CATALOG,

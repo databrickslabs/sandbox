@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from app.llm import LLMCalls
+from sql_migration_assistant.app.llm import LLMCalls
 
 
 class TestLLMCalls(unittest.TestCase):
