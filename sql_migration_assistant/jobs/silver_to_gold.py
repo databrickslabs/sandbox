@@ -1,10 +1,11 @@
 # Databricks notebook source
 import base64
+import json
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.workspace import ImportFormat, Language
 from pyspark.sql import functions as f
 from pyspark.sql.types import *
-import json
 
 # COMMAND ----------
 
@@ -33,6 +34,7 @@ gold_table = (
 )
 prompt_id = dbutils.jobs.taskValues.get(taskKey="ingest_to_holding", key="promptID")
 output_volume_path = app_configs["VOLUME_NAME_OUTPUT_PATH"]
+
 
 # COMMAND ----------
 
@@ -109,7 +111,6 @@ gold_df = (
 )
 
 gold_df.display()
-
 
 # COMMAND ----------
 

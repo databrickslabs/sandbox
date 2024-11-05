@@ -1,8 +1,10 @@
-from sql_migration_assistant.utils.initialsetup import SetUpMigrationAssistant
-from databricks.sdk import WorkspaceClient
-from databricks.labs.blueprint.tui import Prompts
-import yaml
 from pathlib import Path
+
+import yaml
+from databricks.labs.blueprint.tui import Prompts
+from databricks.sdk import WorkspaceClient
+
+from sql_migration_assistant.utils.initialsetup import SetUpMigrationAssistant
 
 
 def hello():

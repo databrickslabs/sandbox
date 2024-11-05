@@ -1,20 +1,21 @@
+import logging
+import os
+
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk.errors import ResourceAlreadyExists, BadRequest
 from databricks.sdk.errors.platform import PermissionDenied
-from sql_migration_assistant.infra.sql_warehouse_infra import SqlWarehouseInfra
-from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
-from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
-from sql_migration_assistant.infra.chat_infra import ChatInfra
-from sql_migration_assistant.infra.secrets_infra import SecretsInfra
-from sql_migration_assistant.infra.jobs_infra import JobsInfra
+
 from sql_migration_assistant.infra.app_serving_cluster_infra import (
     AppServingClusterInfra,
 )
-
-import logging
-import os
-from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
+from sql_migration_assistant.infra.chat_infra import ChatInfra
+from sql_migration_assistant.infra.jobs_infra import JobsInfra
+from sql_migration_assistant.infra.secrets_infra import SecretsInfra
+from sql_migration_assistant.infra.sql_warehouse_infra import SqlWarehouseInfra
+from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
+from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
+from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 
 
 class SetUpMigrationAssistant:

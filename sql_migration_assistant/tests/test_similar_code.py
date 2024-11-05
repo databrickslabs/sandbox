@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 from sql_migration_assistant.app.similar_code import (
     SimilarCode,
 )  # replace 'your_module' with the actual name of your module

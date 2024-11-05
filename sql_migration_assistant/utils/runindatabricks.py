@@ -1,11 +1,13 @@
 # this is only run from within databricks, hence the import doesn't work in IDE
-from sql_migration_assistant.utils.configloader import ConfigLoader
-from sql_migration_assistant.utils.run_review_app import RunReviewApp
-from dbtunnel import dbtunnel
+import threading
+
+import yaml
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.runtime import *
-import threading
-import yaml
+from dbtunnel import dbtunnel
+
+from sql_migration_assistant.utils.configloader import ConfigLoader
+from sql_migration_assistant.utils.run_review_app import RunReviewApp
 
 
 def thread_func():

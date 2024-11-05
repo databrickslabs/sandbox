@@ -1,4 +1,9 @@
+import logging
+import time
+
+from databricks.labs.blueprint.tui import Prompts
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.errors.platform import ResourceAlreadyExists, NotFound
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from databricks.sdk.service.vectorsearch import (
     EndpointType,
@@ -7,13 +12,8 @@ from databricks.sdk.service.vectorsearch import (
     EmbeddingSourceColumn,
     VectorIndexType,
 )
-from databricks.sdk.errors.platform import ResourceAlreadyExists, NotFound
 
-from databricks.labs.blueprint.tui import Prompts
-
-import logging
 from sql_migration_assistant.utils.uc_model_version import get_latest_model_version
-import time
 
 
 class VectorSearchInfra:
@@ -177,8 +177,8 @@ class VectorSearchInfra:
             )
         except NotFound as e:
             if (
-                f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found"
-                in str(e)
+                    f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found"
+                    in str(e)
             ):
                 logging.info(
                     f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds."

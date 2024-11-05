@@ -1,9 +1,8 @@
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.sql import CreateWarehouseRequestWarehouseType
+import logging
 
 from databricks.labs.blueprint.tui import Prompts
-
-import logging
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.sql import CreateWarehouseRequestWarehouseType
 
 
 class SqlWarehouseInfra:

@@ -3,10 +3,10 @@ This code is called after the user has run through the configutation steps in in
 This uploads the config, runindatabricks.py, and gradio_app_backup.py files to the Databricks workspace.
 """
 
+from dataclasses import make_dataclass
+
 from databricks.labs.blueprint.installation import Installation
 from databricks.sdk import WorkspaceClient
-from dataclasses import make_dataclass
-import os
 
 
 class FileUploader:
@@ -15,9 +15,9 @@ class FileUploader:
         self.installer = Installation(ws=self.w, product="sql_migration_assistant")
 
     def upload(
-        self,
-        file_path,
-        file_name,
+            self,
+            file_path,
+            file_name,
     ):
         with open(file_path, "rb") as file:
             contents = file.read()

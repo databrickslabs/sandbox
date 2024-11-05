@@ -8,20 +8,15 @@ from pyspark.sql.types import (
     StringType,
     MapType,
     IntegerType,
-    TimestampType,
 )
-import pyspark.sql.functions as f
-from pyspark.sql.functions import udf, pandas_udf
 
 agent_configs = json.loads(dbutils.widgets.get("agent_configs"))
 app_configs = json.loads(dbutils.widgets.get("app_configs"))
-
 
 # COMMAND ----------
 
 checkpoint_dir = app_configs["VOLUME_NAME_CHECKPOINT_PATH"]
 volume_path = app_configs["VOLUME_NAME_INPUT_PATH"]
-
 
 # COMMAND ----------
 
@@ -70,7 +65,6 @@ spark.sql(
   """
 )
 
-
 silver_llm_responses = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.silver_llm_responses'
 )
@@ -87,7 +81,6 @@ spark.sql(
   """
 )
 
-
 gold_table = (
     f'{app_configs["CATALOG"]}.{app_configs["SCHEMA"]}.gold_transformed_notebooks'
 )
@@ -103,7 +96,6 @@ spark.sql(
     )
   """
 )
-
 
 # COMMAND ----------
 

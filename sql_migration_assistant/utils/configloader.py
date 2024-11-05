@@ -1,6 +1,7 @@
-from databricks.sdk import WorkspaceClient
-import yaml
 import os
+
+import yaml
+from databricks.sdk import WorkspaceClient
 
 
 class ConfigLoader:

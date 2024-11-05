@@ -1,12 +1,11 @@
 import logging
 
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.errors.platform import BadRequest
 from databricks.labs.blueprint.tui import Prompts
 from databricks.labs.lsql.core import StatementExecutionExt
-from databricks.sdk.service.catalog import VolumeType
+from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import PermissionDenied
-import os
+from databricks.sdk.errors.platform import BadRequest
+from databricks.sdk.service.catalog import VolumeType
 
 """
 Approach
@@ -22,11 +21,11 @@ upload app file to databricks
 
 class UnityCatalogInfra:
     def __init__(
-        self,
-        config,
-        workspace_client: WorkspaceClient,
-        p: Prompts,
-        see: StatementExecutionExt,
+            self,
+            config,
+            workspace_client: WorkspaceClient,
+            p: Prompts,
+            see: StatementExecutionExt,
     ):
         self.w = workspace_client
         self.config = config
@@ -129,9 +128,9 @@ class UnityCatalogInfra:
 
         _ = self.see.execute(
             statement=f"CREATE TABLE IF NOT EXISTS "
-            f"`{table_name}`"
-            f" (id BIGINT, code STRING, intent STRING) "
-            f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
+                      f"`{table_name}`"
+                      f" (id BIGINT, code STRING, intent STRING) "
+                      f"TBLPROPERTIES (delta.enableChangeDataFeed = true)",
             catalog=self.migration_assistant_UC_catalog,
             schema=self.migration_assistant_UC_schema,
         )

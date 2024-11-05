@@ -1,7 +1,7 @@
 import logging
 
-from databricks.sdk import WorkspaceClient
 from databricks.labs.blueprint.tui import Prompts
+from databricks.sdk import WorkspaceClient
 
 
 class SecretsInfra:

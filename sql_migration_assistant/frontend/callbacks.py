@@ -4,6 +4,10 @@ import json
 import os
 
 import gradio as gr
+from databricks.labs.lsql.core import StatementExecutionExt
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.workspace import ImportFormat, Language
+
 from sql_migration_assistant.app.llm import LLMCalls
 from sql_migration_assistant.app.similar_code import SimilarCode
 from sql_migration_assistant.config import (
@@ -18,9 +22,6 @@ from sql_migration_assistant.config import (
     TRANSFORMATION_JOB_ID,
     WORKSPACE_LOCATION, VOLUME_NAME,
 )
-from databricks.labs.lsql.core import StatementExecutionExt
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.workspace import ImportFormat, Language
 
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
@@ -45,6 +46,7 @@ def list_files(path_to_volume):
 
 def make_status_box_visible():
     return gr.Markdown(label="Job Run Status Page", visible=True)
+
 
 def read_code_file(volume_path, file_name):
     file_name = os.path.join(volume_path, file_name)

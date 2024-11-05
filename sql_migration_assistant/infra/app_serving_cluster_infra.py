@@ -1,8 +1,8 @@
+import logging
+
+from databricks.labs.blueprint.tui import Prompts
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.compute import ListClustersFilterBy, State, DataSecurityMode
-from databricks.labs.blueprint.tui import Prompts
-
-import logging
 
 
 class AppServingClusterInfra:

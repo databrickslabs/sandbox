@@ -1,12 +1,12 @@
 import gradio as gr
 
 from sql_migration_assistant.frontend.Tabs.BatchInputCodeTab import BatchInputCodeTab
-from sql_migration_assistant.frontend.Tabs.CodeExplanationTab import CodeExplanationTab
 from sql_migration_assistant.frontend.Tabs.BatchOutputTab import BatchOutputTab
+from sql_migration_assistant.frontend.Tabs.CodeExplanationTab import CodeExplanationTab
 from sql_migration_assistant.frontend.Tabs.InteractiveInputCodeTab import InteractiveInputCodeTab
+from sql_migration_assistant.frontend.Tabs.InteractiveOutputTab import InteractiveOutputTab
 from sql_migration_assistant.frontend.Tabs.SimilarCodeTab import SimilarCodeTab
 from sql_migration_assistant.frontend.Tabs.TranslationTab import TranslationTab
-from sql_migration_assistant.frontend.Tabs.InteractiveOutputTab import InteractiveOutputTab
 from sql_migration_assistant.frontend.callbacks import (
     read_code_file,
     produce_preview,

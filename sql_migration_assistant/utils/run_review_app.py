@@ -1,10 +1,10 @@
 import logging
-
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import compute
-from databricks.sdk.mixins.compute import ClustersExt
-from databricks.labs.blueprint.commands import CommandExecutor
 from urllib.parse import urlparse
+
+from databricks.labs.blueprint.commands import CommandExecutor
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.mixins.compute import ClustersExt
+from databricks.sdk.service import compute
 
 
 class RunReviewApp:
@@ -66,7 +66,7 @@ os.chdir(path)
     def _get_proxy_url(self, organisation_id):
 
         def get_cloud_proxy_settings(
-            cloud: str, host: str, org_id: str, cluster_id: str, port: int
+                cloud: str, host: str, org_id: str, cluster_id: str, port: int
         ):
             cloud_norm = cloud.lower()
             if cloud_norm not in ["aws", "azure"]:

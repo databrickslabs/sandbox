@@ -1,19 +1,14 @@
 # Databricks notebook source
+import json
+
+import pyspark.sql.functions as f
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-import json
-import os
+from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import (
-    ArrayType,
-    StructType,
-    StructField,
     StringType,
     MapType,
-    IntegerType,
-    TimestampType,
 )
-import pyspark.sql.functions as f
-from pyspark.sql.functions import udf, pandas_udf
 
 # COMMAND ----------
 

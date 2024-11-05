@@ -1,7 +1,5 @@
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.errors.platform import BadRequest
-from databricks.labs.blueprint.tui import Prompts
-from databricks.labs.lsql.core import StatementExecutionExt
+from databricks.sdk.service import compute
 from databricks.sdk.service.compute import DataSecurityMode
 from databricks.sdk.service.jobs import (
     Task,
@@ -11,8 +9,6 @@ from databricks.sdk.service.jobs import (
     JobCluster,
     JobParameterDefinition,
 )
-from databricks.sdk.service import jobs, compute
-import os
 
 """
 Approach
@@ -28,9 +24,9 @@ upload app file to databricks
 
 class JobsInfra:
     def __init__(
-        self,
-        config,
-        workspace_client: WorkspaceClient,
+            self,
+            config,
+            workspace_client: WorkspaceClient,
     ):
         self.w = workspace_client
         self.config = config
