@@ -1,5 +1,6 @@
 # this is only run from within databricks, hence the import doesn't work in IDE
 import threading
+from pathlib import Path
 
 import yaml
 from databricks.sdk import WorkspaceClient
@@ -9,24 +10,26 @@ from dbtunnel import dbtunnel
 from sql_migration_assistant.utils.configloader import ConfigLoader
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
 
+current_folder = Path(__file__).parent.resolve()
 
-def thread_func():
+
+def thread_func(config_path: str):
     cl = ConfigLoader()
-    cl.read_yaml_to_env("config.yml")
+    cl.read_yaml_to_env(config_path)
     dbtunnel.kill_port(8080)
     app = "main.py"
     dbtunnel.gradio(path=app).run()
 
 
-def run_app(debug=False):
+def run_app(config_path: str, debug=False):
     # load config file into environment variables. This is necesarry to create the workspace client
     if debug:
         # this will get the app logs to print in the notebook cell output
-        thread_func()
+        thread_func(config_path)
     else:
         cl = ConfigLoader()
-        cl.read_yaml_to_env("config.yml")
-        with open("config.yml", "r") as f:
+        cl.read_yaml_to_env(config_path)
+        with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         w = WorkspaceClient()
 
@@ -38,7 +41,7 @@ def run_app(debug=False):
         proxy_url_split[-3] = cluster_id
         proxy_url = "/".join(proxy_url_split)
 
-        x = threading.Thread(target=thread_func)
+        x = threading.Thread(target=lambda: thread_func(config_path))
         x.start()
         print(
             f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}"

@@ -38,28 +38,20 @@ class RunReviewApp:
 
         for l in self.libraries:
             self.executor.install_notebook_library(l)
+        self.executor.run("pip install .")
         self.executor.run("dbutils.library.restartPython()")
-
-    def _path_updates(self):
-        self.executor.run(
-            code=f"""
-import sys
-sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/utils')
-sys.path.insert(0, '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/app')
-import os
-path = '/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant'
-os.chdir(path)
-"""
-        )
 
     def _get_org_id(self):
         return self.w.get_workspace_id()
 
     def _launch_app(self):
         self.executor.run(
-            code="""
-            from utils.runindatabricks import run_app
-            run_app()
+            code=f"""
+            from sql_migration_assistant.utils.runindatabricks import run_app
+
+            # set debug=True to print the app logs in this cell.
+            # run_app(debug=True)
+            run_app("/Workspace/Users/{self.w.current_user.me().user_name}/sql_migration_assistant/config.yml")
             """
         )
 
@@ -120,7 +112,6 @@ os.chdir(path)
 
     def launch_review_app(self):
         self._library_install()
-        self._path_updates()
         org_id = self._get_org_id()
         proxy_url = self._get_proxy_url(org_id)
         logging.info(

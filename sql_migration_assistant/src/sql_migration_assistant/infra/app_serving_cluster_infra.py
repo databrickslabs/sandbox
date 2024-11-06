@@ -2,7 +2,7 @@ import logging
 
 from databricks.labs.blueprint.tui import Prompts
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.compute import ListClustersFilterBy, State, DataSecurityMode
+from databricks.sdk.service.compute import State, DataSecurityMode
 
 
 class AppServingClusterInfra:
@@ -32,9 +32,7 @@ class AppServingClusterInfra:
             cluster_name = self.cluster_name
             cluster_id = response.response.cluster_id
         else:
-            clusters = self.w.clusters.list(
-                filter_by=ListClustersFilterBy(cluster_states=[State.RUNNING])
-            )
+            clusters = self.w.clusters.list()
 
             # get cluster name and id
             clusters = {
@@ -49,6 +47,10 @@ class AppServingClusterInfra:
                 question = "Choose a cluster:"
                 cluster_name = self.prompts.choice(question, clusters.keys())
                 cluster_id = clusters[cluster_name]
+                cluster = self.w.clusters.get(cluster_id)
+                if cluster.state not in (State.RUNNING, State.PENDING):
+                    logging.info("Cluster is not running. Trying to start it")
+                    self.w.clusters.start(cluster_id)
 
         self.config["SERVING_CLUSTER_NAME"] = cluster_name
         self.config["SERVING_CLUSTER_ID"] = cluster_id

@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk.errors import ResourceAlreadyExists, BadRequest
@@ -16,6 +17,14 @@ from sql_migration_assistant.infra.unity_catalog_infra import UnityCatalogInfra
 from sql_migration_assistant.infra.vector_search_infra import VectorSearchInfra
 from sql_migration_assistant.utils.run_review_app import RunReviewApp
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
+
+
+def list_files_recursive(parent_path: str, sub_path: str) -> list[str]:
+    # Get absolute paths of both directories
+    dir_to_list = Path(parent_path, sub_path).resolve()
+    base_dir = Path(parent_path).resolve()
+    # List all files in dir_to_list and make paths relative to base_dir
+    return [str(file.relative_to(base_dir)) for file in dir_to_list.rglob('*') if file.is_file()]
 
 
 class SetUpMigrationAssistant:
@@ -167,17 +176,12 @@ class SetUpMigrationAssistant:
         print("\nUploading files to workspace")
         uploader = FileUploader(w)
         files_to_upload = [
-            "utils/runindatabricks.py",
-            "utils/configloader.py",
-            "utils/run_review_app.py",
-            "jobs/bronze_to_silver.py",
-            "jobs/call_agents.py",
-            "jobs/silver_to_gold.py",
-            "app/llm.py",
-            "app/similar_code.py",
             "main.py",
+            "config.py",
             "run_app_from_databricks_notebook.py",
             "config.yml",
+            "setup.py",
+            *list_files_recursive(path, "src")
         ]
 
         def inner(f):

@@ -54,7 +54,7 @@ class JobsInfra:
         ]
 
         self.job_name = "sql_migration_code_transformation"
-        self.notebook_root_path = f"/Workspace/Users/{self.w.current_user.me().user_name}/.sql_migration_assistant/jobs/"
+        self.notebook_root_path = f"/Workspace/Users/{self.w.current_user.me().user_name}/sql_migration_assistant/jobs/"
         self.job_parameters = [
             JobParameterDefinition("agent_configs", ""),
             JobParameterDefinition("app_configs", ""),
