@@ -182,6 +182,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     label="System prompt of the LLM to generate the intent.",
                     placeholder="Add your system prompt here, for example:\n"
                                 "Explain the intent of this code with an example use case.",
+                    lines=3
                 )
             # these bits relate to saving and loading of prompts
             with gr.Row():
@@ -303,6 +304,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     label="Instructions for the LLM translation tool.",
                     placeholder="Add your system prompt here, for example:\n"
                                 "Translate this code to Spark SQL.",
+                    lines=3
                 )
             with gr.Row():
                 save_translation_prompt = gr.Button("Save translation prompt")
