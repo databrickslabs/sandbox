@@ -188,7 +188,11 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 save_intent_prompt = gr.Button("Save intent prompt")
                 load_intent_prompt = gr.Button("Load intent prompt")
             # hidden button and display box for saved prompts, made visible when the load button is clicked
-            intent_prompt_id_to_load = gr.Textbox(label="Prompt ID to load", visible=False)
+            intent_prompt_id_to_load = gr.Textbox(
+                label="Prompt ID to load",
+                visible=False,
+                placeholder="Enter the ID of the prompt to load from the table below."
+            )
             loaded_intent_prompts = gr.Dataframe(
                 label='Saved prompts.',
                 visible=False,
@@ -304,7 +308,11 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 save_translation_prompt = gr.Button("Save translation prompt")
                 load_translation_prompt = gr.Button("Load translation prompt")
             # hidden button and display box for saved prompts, made visible when the load button is clicked
-            translation_prompt_id_to_load = gr.Textbox(label="Prompt ID to load", visible=False)
+            translation_prompt_id_to_load = gr.Textbox(
+                label="Prompt ID to load",
+                visible=False,
+                placeholder="Enter the ID of the prompt to load from the table below."
+            )
             loaded_translation_prompts = gr.Dataframe(
                 label='Saved prompts.',
                 visible=False,
