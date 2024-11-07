@@ -41,7 +41,7 @@ class UnityCatalogInfra:
         # user cannot change these values
         self.tables = {
             "code_intent" : f"(id BIGINT, code STRING, intent STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)",
-            "prompt_history" : f"(agent STRING, prompt STRING, save_time TIMESTAMP)",
+            "prompt_history" : f"(id BIGINT GENERATED ALWAYS AS IDENTITY, agent STRING, prompt STRING, temperature DOUBLE, token_limit INT, save_time TIMESTAMP)",
         }
         self.volume_name = "sql_migration_assistant_volume"
         self.volume_dirs = {

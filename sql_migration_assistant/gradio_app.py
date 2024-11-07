@@ -183,30 +183,47 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     placeholder="Add your system prompt here, for example:\n"
                                 "Explain the intent of this code with an example use case.",
                 )
+            # these bits relate to saving and loading of prompts
             with gr.Row():
                 save_intent_prompt = gr.Button("Save intent prompt")
                 load_intent_prompt = gr.Button("Load intent prompt")
-            loaded_intent_prompts = gr.Dataset(label='Select prompt', visible=False, components=[gr.Textbox(visible=False)], samples=[["No saved prompt yet!"]])
-
+            # hidden button and display box for saved prompts, made visible when the load button is clicked
+            intent_prompt_id_to_load = gr.Textbox(label="Prompt ID to load", visible=False)
+            loaded_intent_prompts = gr.Dataframe(
+                label='Saved prompts.',
+                visible=False,
+                headers=["id", "Prompt", "Temperature", "Max Tokens", "Save Datetime"],
+                interactive=False,
+                wrap=True
+            )
+            # get the prompts and populate the table and make it visible
             load_intent_prompt.click(
-                fn=lambda : gr.update(visible=True, samples=prompt_helper.get_prompts("intent_agent")),
+                fn=lambda : gr.update(visible=True, value=prompt_helper.get_prompts("intent_agent")),
                 inputs=None,
                 outputs=[loaded_intent_prompts],
             )
-            loaded_intent_prompts.select(
-                fn=lambda x: gr.update(value=x[0]),
-                inputs=loaded_intent_prompts,
-                outputs=intent_system_prompt
+            # make the input box for the prompt id visible
+            load_intent_prompt.click(
+                fn=lambda : gr.update(visible=True),
+                inputs=None,
+                outputs=[intent_prompt_id_to_load],
             )
+            # retrive the row from the table and populate the system prompt, temperature, and max tokens
+            def get_prompt_details(prompt_id, prompts):
+                prompt = prompts[prompts["id"] == prompt_id]
+                return [prompt["Prompt"].values[0], prompt["Temperature"].values[0], prompt["Max Tokens"].values[0]]
 
+            intent_prompt_id_to_load.change(
+                fn=get_prompt_details,
+                inputs=[intent_prompt_id_to_load, loaded_intent_prompts],
+                outputs=[intent_system_prompt, intent_temperature, intent_max_tokens]
+            )
+            # save the prompt
             save_intent_prompt.click(
-                fn=lambda x: prompt_helper.save_prompt("intent_agent", x),
-                inputs=intent_system_prompt,
+                fn=lambda prompt, temp, tokens: prompt_helper.save_prompt("intent_agent", prompt, temp, tokens),
+                inputs=[intent_system_prompt, intent_temperature, intent_max_tokens],
                 outputs=None
             )
-
-            # TODO - figure out how to load the prompt from the delta table
-
 
 
         with gr.Accordion(label="Intent Pane", open=True):
@@ -286,22 +303,37 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 save_translation_prompt = gr.Button("Save translation prompt")
                 load_translation_prompt = gr.Button("Load translation prompt")
-            loaded_translation_prompts = gr.Dataset(label='Select prompt', visible=False, components=[gr.Textbox(visible=False)], samples=[["No saved prompt yet!"]])
-
+            # hidden button and display box for saved prompts, made visible when the load button is clicked
+            translation_prompt_id_to_load = gr.Textbox(label="Prompt ID to load", visible=False)
+            loaded_translation_prompts = gr.Dataframe(
+                label='Saved prompts.',
+                visible=False,
+                headers=["id", "Prompt", "Temperature", "Max Tokens", "Save Datetime"],
+                interactive=False,
+                wrap=True
+            )
+            # get the prompts and populate the table and make it visible
             load_translation_prompt.click(
-                fn=lambda : gr.update(visible=True, samples=prompt_helper.get_prompts("translation_agent")),
+                fn=lambda : gr.update(visible=True, value=prompt_helper.get_prompts("translation_agent")),
                 inputs=None,
                 outputs=[loaded_translation_prompts],
             )
-            loaded_translation_prompts.select(
-                fn=lambda x: gr.update(value=x[0]),
-                inputs=loaded_translation_prompts,
-                outputs=translation_system_prompt
+            # make the input box for the prompt id visible
+            load_translation_prompt.click(
+                fn=lambda : gr.update(visible=True),
+                inputs=None,
+                outputs=[translation_prompt_id_to_load],
+            )
+            # retrive the row from the table and populate the system prompt, temperature, and max tokens
+            translation_prompt_id_to_load.change(
+                fn=get_prompt_details,
+                inputs=[translation_prompt_id_to_load, loaded_translation_prompts],
+                outputs=[translation_system_prompt, translation_temperature, translation_max_tokens]
             )
 
             save_translation_prompt.click(
-                fn=lambda x: prompt_helper.save_prompt("translation_agent", x),
-                inputs=translation_system_prompt,
+                fn=lambda prompt, temp, tokens: prompt_helper.save_prompt("translation_agent", prompt, temp, tokens),
+                inputs=[translation_system_prompt, translation_temperature, translation_max_tokens],
                 outputs=None
             )
 
