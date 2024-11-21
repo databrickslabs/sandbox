@@ -1,8 +1,10 @@
 import logging
 import os
 from pathlib import Path
+from typing import Iterator
 
 from databricks.labs.lsql.core import StatementExecutionExt
+from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import ResourceAlreadyExists, BadRequest
 from databricks.sdk.errors.platform import PermissionDenied
 
@@ -19,12 +21,21 @@ from sql_migration_assistant.utils.run_review_app import RunReviewApp
 from sql_migration_assistant.utils.upload_files_to_workspace import FileUploader
 
 
-def list_files_recursive(parent_path: str, sub_path: str) -> list[str]:
+def list_files_recursive(parent_path: str | Path, sub_path: str) -> Iterator[str]:
     # Get absolute paths of both directories
     dir_to_list = Path(parent_path, sub_path).resolve()
     base_dir = Path(parent_path).resolve()
     # List all files in dir_to_list and make paths relative to base_dir
-    return [str(file.relative_to(base_dir)) for file in dir_to_list.rglob('*') if file.is_file()]
+    for path in dir_to_list.rglob("*"):  # Match all files and directories
+        # Exclude hidden files/folders, 'venv', and '.egg-info' folders
+        if (
+            any(part.startswith(".") for part in path.parts) or  # Hidden files/folders
+            "venv" in path.parts or                             # Exclude 'venv'
+            any(part.endswith(".egg-info") for part in path.parts)  # Exclude '.egg-info'
+        ):
+            continue
+        if path.is_file():  # Only yield files
+            yield str(path.relative_to(base_dir))
 
 
 class SetUpMigrationAssistant:
@@ -168,24 +179,19 @@ class SetUpMigrationAssistant:
         config = self.update_config(w, config)
         return config
 
-    def upload_files(self, w, path):
+    def upload_files(self, w: WorkspaceClient, path):
         # all this nastiness becomes unnecessary with lakehouse apps, or if we upload a whl it simplifies things.
         # But for now, this is the way.
         # TODO - MAKE THIS NICE!!
+        project_path = Path(path).parent.parent
+        files_to_upload = list_files_recursive(project_path, ".")
+
         logging.info("Uploading files to workspace")
         print("\nUploading files to workspace")
         uploader = FileUploader(w)
-        files_to_upload = [
-            "main.py",
-            "config.py",
-            "run_app_from_databricks_notebook.py",
-            "config.yml",
-            "setup.py",
-            *list_files_recursive(path, "src")
-        ]
 
         def inner(f):
-            full_file_path = os.path.join(path, f)
+            full_file_path = os.path.join(project_path, f)
             logging.info(
                 f"Uploading {full_file_path} to {uploader.installer.install_folder()}/{f}"
             )
