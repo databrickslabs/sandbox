@@ -2,7 +2,15 @@ import os
 
 import yaml
 from databricks.sdk import WorkspaceClient
+import yaml
+from importlib.resources import files
 
+def load_config():
+    # Access the YAML file as a resource
+    config_path = files('sql_migration_assistant').joinpath('config.yml')
+    with config_path.open('r') as f:
+        config = yaml.safe_load(f)
+    return config
 
 class ConfigLoader:
     """
@@ -10,17 +18,16 @@ class ConfigLoader:
     environment variables.
     """
 
-    def read_yaml_to_env(self, file_path):
+    def read_yaml_to_env(self):
         """Reads a YAML file and sets environment variables based on its contents.
 
         Args:
             file_path (str): The path to the YAML file.
 
         """
-        with open(file_path, "r") as file:
-            data = yaml.safe_load(file)
-            for key, value in data.items():
-                os.environ[key] = str(value)
+        data = load_config()
+        for key, value in data.items():
+            os.environ[key] = str(value)
 
         w = WorkspaceClient()
         dbutils = w.dbutils
@@ -37,3 +44,4 @@ class ConfigLoader:
         if DATABRICKS_HOST[-1] == "/":
             DATABRICKS_HOST = DATABRICKS_HOST[:-1]
             os.environ["DATABRICKS_HOST"] = DATABRICKS_HOST
+        return data

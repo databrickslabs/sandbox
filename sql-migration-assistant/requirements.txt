@@ -3,3 +3,8 @@ pyyaml
 databricks-labs-blueprint==0.8.2
 databricks-labs-lsql==0.9.0
 gradio==5.5.0
+aiohttp==3.10.5
+fastapi
+pydantic==2.8.2
+dbtunnel==0.14.6
+mlflow
