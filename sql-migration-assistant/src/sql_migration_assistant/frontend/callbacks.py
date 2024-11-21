@@ -7,8 +7,10 @@ import gradio as gr
 from databricks.labs.lsql.core import StatementExecutionExt
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.workspace import ImportFormat, Language
+from openai import OpenAI
 
 from sql_migration_assistant.app.llm import LLMCalls
+from sql_migration_assistant.app.prompt_helper import PromptHelper
 from sql_migration_assistant.app.similar_code import SimilarCode
 from sql_migration_assistant.config import (
     FOUNDATION_MODEL_NAME,
@@ -20,13 +22,20 @@ from sql_migration_assistant.config import (
     VS_INDEX_NAME,
     DATABRICKS_HOST,
     TRANSFORMATION_JOB_ID,
-    WORKSPACE_LOCATION, VOLUME_NAME,
+    WORKSPACE_LOCATION, VOLUME_NAME, DATABRICKS_TOKEN, PROMPT_HISTORY_TABLE_NAME,
+)
+
+openai_client = OpenAI(
+    api_key=DATABRICKS_TOKEN,
+    base_url=f"{DATABRICKS_HOST}/serving-endpoints"
 )
 
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
 see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
-translation_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
-intent_llm = LLMCalls(foundation_llm_name=FOUNDATION_MODEL_NAME)
+translation_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
+intent_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
+
+prompt_helper = PromptHelper(see=see, catalog=CATALOG, schema=SCHEMA, prompt_table=PROMPT_HISTORY_TABLE_NAME)
 similar_code_helper = SimilarCode(
     workspace_client=w,
     see=see,
@@ -172,3 +181,9 @@ def save_intent_wrapper(input_code, explained):
     gr.Info("Saving intent")
     similar_code_helper.save_intent(input_code, explained)
     gr.Info("Intent saved")
+
+# retreive the row from the table and populate the system prompt, temperature, and max tokens
+def get_prompt_details(prompt_id, prompts):
+    prompt = prompts[prompts["id"] == prompt_id]
+    return [prompt["Prompt"].values[0], prompt["Temperature"].values[0],
+            prompt["Max Tokens"].values[0]]

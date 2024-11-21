@@ -1,6 +1,6 @@
 import gradio as gr
 
-from sql_migration_assistant.frontend.callbacks import llm_intent_wrapper
+from sql_migration_assistant.frontend.callbacks import llm_intent_wrapper, get_prompt_details, prompt_helper
 
 
 class CodeExplanationTab:
@@ -38,8 +38,50 @@ class CodeExplanationTab:
                 with gr.Row():
                     self.intent_system_prompt = gr.Textbox(
                         label="System prompt of the LLM to generate the intent.",
-                        value="""Your job is to explain intent of the provided SQL code.
-                                """.strip(),
+                        placeholder="Add your system prompt here, for example:\n"
+                                    "Explain the intent of this code with an example use case.",
+                        lines=3
+                    )
+                    # these bits relate to saving and loading of prompts
+                    with gr.Row():
+                        self.save_intent_prompt = gr.Button("Save intent prompt")
+                        self.load_intent_prompt = gr.Button("Load intent prompt")
+                    # hidden button and display box for saved prompts, made visible when the load button is clicked
+                    self.intent_prompt_id_to_load = gr.Textbox(
+                        label="Prompt ID to load",
+                        visible=False,
+                        placeholder="Enter the ID of the prompt to load from the table below."
+                    )
+                    self.loaded_intent_prompts = gr.Dataframe(
+                        label='Saved prompts.',
+                        visible=False,
+                        headers=["id", "Prompt", "Temperature", "Max Tokens", "Save Datetime"],
+                        interactive=False,
+                        wrap=True
+                    )
+                    # get the prompts and populate the table and make it visible
+                    self.load_intent_prompt.click(
+                        fn=lambda: gr.update(visible=True, value=prompt_helper.get_prompts("intent_agent")),
+                        inputs=None,
+                        outputs=[self.loaded_intent_prompts],
+                    )
+                    # make the input box for the prompt id visible
+                    self.load_intent_prompt.click(
+                        fn=lambda: gr.update(visible=True),
+                        inputs=None,
+                        outputs=[self.intent_prompt_id_to_load],
+                    )
+
+                    self.intent_prompt_id_to_load.change(
+                        fn=get_prompt_details,
+                        inputs=[self.intent_prompt_id_to_load, self.loaded_intent_prompts],
+                        outputs=[self.intent_system_prompt, self.intent_temperature, self.intent_max_tokens]
+                    )
+                    # save the prompt
+                    self.save_intent_prompt.click(
+                        fn=lambda prompt, temp, tokens: prompt_helper.save_prompt("intent_agent", prompt, temp, tokens),
+                        inputs=[self.intent_system_prompt, self.intent_temperature, self.intent_max_tokens],
+                        outputs=None
                     )
 
             with gr.Accordion(label="Intent Pane", open=True):

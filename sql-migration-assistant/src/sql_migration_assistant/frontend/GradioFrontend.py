@@ -3,6 +3,7 @@ import gradio as gr
 from sql_migration_assistant.frontend.Tabs.BatchInputCodeTab import BatchInputCodeTab
 from sql_migration_assistant.frontend.Tabs.BatchOutputTab import BatchOutputTab
 from sql_migration_assistant.frontend.Tabs.CodeExplanationTab import CodeExplanationTab
+from sql_migration_assistant.frontend.Tabs.InstructionsTab import InstructionsTab
 from sql_migration_assistant.frontend.Tabs.InteractiveInputCodeTab import InteractiveInputCodeTab
 from sql_migration_assistant.frontend.Tabs.InteractiveOutputTab import InteractiveOutputTab
 from sql_migration_assistant.frontend.Tabs.SimilarCodeTab import SimilarCodeTab
@@ -19,39 +20,12 @@ class GradioFrontend:
     intro = """<img align="right" src="https://asset.brandfetch.io/idSUrLOWbH/idm22kWNaH.png" alt="logo" width="120">
 
 # Databricks Legion Migration Accelerator
-
-Legion is an AI powered tool that aims to accelerate the migration of code to Databricks for low cost and effort. It 
-does this by using AI to translate, explain, and make discoverable your code. 
-
-This interface is the Legion Control Panel. Here you are able to configure the AI agents for translation and explanation
-to fit your needs, incorporating your expertise and knowledge of the codebase by adjusting the AI agents' instructions.
-
-Legion can work in a batch or interactive fashion.
-
-*Interactive operation*
-Fine tune the AI agents on a single file and output the result as a Databricks notebook. 
-Use this UI to adjust the system prompts and instructions for the AI agents to generate the best translation and intent.
-
-*Batch operation*
-Process a Volume of files to generate Databricks notebooks. Use this UI to fine tune your agent prompts against selected
- files before executing a Workflow to transform all files in the Volume, outputting Databricks notebooks with the AI
- generated intent and translation.
-
-
-Please select your mode of operation to get started.   
-
 """
 
     def __init__(self):
         with gr.Blocks(theme=gr.themes.Soft()) as self.app:
             self.intro_markdown = gr.Markdown(self.intro)
-            self.operation = gr.Radio(
-                label="Select operation mode",
-                choices=["Interactive mode", "Batch mode"],
-                value="Interactive mode",
-                type="value",
-                interactive=True,
-            )
+            self.instructions_tab = InstructionsTab()
 
             self.interactive_input_code_tab = InteractiveInputCodeTab()
             self.batch_input_code_tab = BatchInputCodeTab()
@@ -108,18 +82,18 @@ Please select your mode of operation to get started.
 
     def change_tabs_based_on_operation_mode(self):
         for tab in [self.batch_input_code_tab, self.batch_output_tab]:
-            self.operation.change(
+            self.instructions_tab.operation.change(
                 lambda x: (
                     gr.update(visible=(x != "Interactive mode"))
                 ),
-                self.operation,
+                self.instructions_tab.operation,
                 tab.tab,
             )
         for tab in [self.interactive_input_code_tab, self.interactive_output_tab]:
-            self.operation.change(
+            self.instructions_tab.operation.change(
                 lambda x: (
                     gr.update(visible=(x == "Interactive mode"))
                 ),
-                self.operation,
+                self.instructions_tab.operation,
                 tab.tab,
             )

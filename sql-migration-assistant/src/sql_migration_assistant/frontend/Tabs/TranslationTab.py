@@ -1,6 +1,6 @@
 import gradio as gr
 
-from sql_migration_assistant.frontend.callbacks import llm_translate_wrapper
+from sql_migration_assistant.frontend.callbacks import llm_translate_wrapper, prompt_helper, get_prompt_details
 
 
 class TranslationTab:
@@ -36,39 +36,53 @@ class TranslationTab:
                 with gr.Row():
                     self.translation_system_prompt = gr.Textbox(
                         label="Instructions for the LLM translation tool.",
-                        value="""
-                                  You are an expert in multiple SQL dialects. You only reply with SQL code and with no other text. 
-                                  Your purpose is to translate the given SQL query to Databricks Spark SQL. 
-                                  You must follow these rules:
-                                  - You must keep all original catalog, schema, table, and field names.
-                                  - Convert all dates to dd-MMM-yyyy format using the date_format() function.
-                                  - Subqueries must end with a semicolon.
-                                  - Ensure queries do not have # or @ symbols.
-                                  - ONLY if the original query uses temporary tables (e.g. "INTO #temptable"), re-write these as either CREATE OR REPLACE TEMPORARY VIEW or CTEs. .
-                                  - Square brackets must be replaced with backticks.
-                                  - Custom field names should be surrounded by backticks. 
-                                  - Ensure queries do not have # or @ symbols.
-                                  - Only if the original query contains DECLARE and SET statements, re-write them according to the following format:
-                                        DECLARE VARIABLE variable TYPE DEFAULT value; For example: DECLARE VARIABLE number INT DEFAULT 9;
-                                        SET VAR variable = value; For example: SET VAR number = 9;
-
-                                Write an initial draft of the translated query. Then double check the output for common mistakes, including:
-                                - Using NOT IN with NULL values
-                                - Using UNION when UNION ALL should have been used
-                                - Using BETWEEN for exclusive ranges
-                                - Data type mismatch in predicates
-                                - Properly quoting identifiers
-                                - Using the correct number of arguments for functions
-                                - Casting to the correct data type
-                                - Using the proper columns for joins
-
-                                Return the final translated query only. Include comments. Include only SQL.
-                                """.strip(),
-                        lines=20,
+                        placeholder="Add your system prompt here, for example:\n"
+                                    "Translate this code to Spark SQL.",
+                        lines=3
                     )
+                with gr.Row():
+                    self.save_translation_prompt = gr.Button("Save translation prompt")
+                    self.load_translation_prompt = gr.Button("Load translation prompt")
+                # hidden button and display box for saved prompts, made visible when the load button is clicked
+                self.translation_prompt_id_to_load = gr.Textbox(
+                    label="Prompt ID to load",
+                    visible=False,
+                    placeholder="Enter the ID of the prompt to load from the table below."
+                )
+                self.loaded_translation_prompts = gr.Dataframe(
+                    label='Saved prompts.',
+                    visible=False,
+                    headers=["id", "Prompt", "Temperature", "Max Tokens", "Save Datetime"],
+                    interactive=False,
+                    wrap=True
+                )
+                # get the prompts and populate the table and make it visible
+                self.load_translation_prompt.click(
+                    fn=lambda: gr.update(visible=True, value=prompt_helper.get_prompts("translation_agent")),
+                    inputs=None,
+                    outputs=[self.loaded_translation_prompts],
+                )
+                # make the input box for the prompt id visible
+                self.load_translation_prompt.click(
+                    fn=lambda: gr.update(visible=True),
+                    inputs=None,
+                    outputs=[self.translation_prompt_id_to_load],
+                )
+                # retrive the row from the table and populate the system prompt, temperature, and max tokens
+                self.translation_prompt_id_to_load.change(
+                    fn=get_prompt_details,
+                    inputs=[self.translation_prompt_id_to_load, self.loaded_translation_prompts],
+                    outputs=[self.translation_system_prompt, self.translation_temperature, self.translation_max_tokens]
+                )
+                self.save_translation_prompt.click(
+                    fn=lambda prompt, temp, tokens: prompt_helper.save_prompt("translation_agent", prompt, temp,
+                                                                              tokens),
+                    inputs=[self.translation_system_prompt, self.translation_temperature, self.translation_max_tokens],
+                    outputs=None
+                )
 
             with gr.Accordion(label="Translation Pane", open=True):
-                gr.Markdown(""" ### Input your code here for translation to Spark-SQL.""")
+                gr.Markdown(""" ### Source code for translation to Spark-SQL.""")
                 # a button labelled translate
                 self.translate_button = gr.Button("Translate")
                 with gr.Row():

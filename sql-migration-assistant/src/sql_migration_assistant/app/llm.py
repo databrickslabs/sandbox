@@ -1,8 +1,5 @@
 import gradio as gr
 
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-
 
 class LLMCalls:
     def __init__(self, openai_client, foundation_llm_name):
