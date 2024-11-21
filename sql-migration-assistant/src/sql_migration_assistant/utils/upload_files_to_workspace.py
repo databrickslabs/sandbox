@@ -12,7 +12,7 @@ from databricks.sdk import WorkspaceClient
 class FileUploader:
     def __init__(self, workspace_client: WorkspaceClient):
         self.w = workspace_client
-        self.installer = Installation(ws=self.w, product="sql_migration_assistant")
+        self.installer = Installation(ws=self.w, product="sql-migration-assistant")
 
     def upload(
             self,
@@ -34,4 +34,4 @@ class FileUploader:
 
         config_class = X(**config)
 
-        self.installer.save(config_class, filename="config.yml")
+        self.installer.save(config_class, filename="src/sql_migration_assistant/config.yml")

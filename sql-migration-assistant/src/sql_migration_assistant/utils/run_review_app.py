@@ -51,7 +51,7 @@ class RunReviewApp:
 
             # set debug=True to print the app logs in this cell.
             # run_app(debug=True)
-            run_app("/Workspace/Users/{self.w.current_user.me().user_name}/sql_migration_assistant/config.yml")
+            run_app()
             """
         )
 
