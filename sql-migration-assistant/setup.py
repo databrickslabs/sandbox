@@ -1,9 +1,11 @@
 from setuptools import setup, find_packages
 
+
 # Read the requirements.txt file
 def load_requirements(filename="requirements.txt"):
     with open(filename, "r") as file:
         return file.read().splitlines()
+
 
 setup(
     name="sql_migration_assistant",

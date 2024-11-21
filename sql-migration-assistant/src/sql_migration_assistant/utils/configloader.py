@@ -1,9 +1,9 @@
 import os
+from importlib.resources import files
 
 import yaml
 from databricks.sdk import WorkspaceClient
-import yaml
-from importlib.resources import files
+
 
 def load_config():
     # Access the YAML file as a resource
@@ -11,6 +11,7 @@ def load_config():
     with config_path.open('r') as f:
         config = yaml.safe_load(f)
     return config
+
 
 class ConfigLoader:
     """

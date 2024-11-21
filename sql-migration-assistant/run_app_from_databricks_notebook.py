@@ -7,7 +7,8 @@
 # MAGIC If you want to share the app with users outside of Databricks, for example so non technical SMEs can contribute to LLM prompt development, the notebook needs to run on a no isolation shared cluster.
 
 # COMMAND ----------
-%pip install .
+%pip
+install.
 
 # COMMAND ----------
 dbutils.library.restartPython()

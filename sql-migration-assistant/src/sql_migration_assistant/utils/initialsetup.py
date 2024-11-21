@@ -29,9 +29,9 @@ def list_files_recursive(parent_path: str | Path, sub_path: str) -> Iterator[str
     for path in dir_to_list.rglob("*"):  # Match all files and directories
         # Exclude hidden files/folders, 'venv', and '.egg-info' folders
         if (
-            any(part.startswith(".") for part in path.parts) or  # Hidden files/folders
-            "venv" in path.parts or                             # Exclude 'venv'
-            any(part.endswith(".egg-info") for part in path.parts)  # Exclude '.egg-info'
+                any(part.startswith(".") for part in path.parts) or  # Hidden files/folders
+                "venv" in path.parts or  # Exclude 'venv'
+                any(part.endswith(".egg-info") for part in path.parts)  # Exclude '.egg-info'
         ):
             continue
         if path.is_file():  # Only yield files

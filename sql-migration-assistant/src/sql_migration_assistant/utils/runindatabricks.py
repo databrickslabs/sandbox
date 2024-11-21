@@ -2,7 +2,6 @@
 import threading
 from pathlib import Path
 
-import yaml
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.runtime import *
 from dbtunnel import dbtunnel

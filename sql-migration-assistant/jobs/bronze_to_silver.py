@@ -1,13 +1,12 @@
 # Databricks notebook source
 # DBTITLE 1,get params
 import json
+
 from pyspark.sql.types import (
-    ArrayType,
     StructType,
     StructField,
     StringType,
     MapType,
-    IntegerType,
 )
 
 agent_configs = json.loads(dbutils.widgets.get("agent_configs"))
