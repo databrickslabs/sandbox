@@ -13,24 +13,22 @@ from sql_migration_assistant.utils.run_review_app import RunReviewApp
 current_folder = Path(__file__).parent.resolve()
 
 
-def thread_func(config_path: str):
+def thread_func():
     cl = ConfigLoader()
-    cl.read_yaml_to_env(config_path)
+    cl.read_yaml_to_env()
     dbtunnel.kill_port(8080)
-    app = "main.py"
+    app = str(Path(current_folder, "..", "main.py").absolute())
     dbtunnel.gradio(path=app).run()
 
 
-def run_app(config_path: str, debug=False):
+def run_app(debug=False):
     # load config file into environment variables. This is necesarry to create the workspace client
     if debug:
         # this will get the app logs to print in the notebook cell output
-        thread_func(config_path)
+        thread_func()
     else:
         cl = ConfigLoader()
-        cl.read_yaml_to_env(config_path)
-        with open(config_path, "r") as f:
-            config = yaml.safe_load(f)
+        config = cl.read_yaml_to_env()
         w = WorkspaceClient()
 
         app_runner = RunReviewApp(w, config)
@@ -41,7 +39,7 @@ def run_app(config_path: str, debug=False):
         proxy_url_split[-3] = cluster_id
         proxy_url = "/".join(proxy_url_split)
 
-        x = threading.Thread(target=lambda: thread_func(config_path))
+        x = threading.Thread(target=lambda: thread_func())
         x.start()
         print(
             f"Launching review app, it may take a few minutes to come up. Visit below link to access the app.\n{proxy_url}"
