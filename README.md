@@ -2,7 +2,7 @@
 
 [![lines of code](https://tokei.rs/b1/github/databrickslabs/sandbox)]([https://codecov.io/github/databrickslabs/sandbox](https://github.com/databrickslabs/sandbox))
 
-Experimental and low-maturity scripts
+Experimental labs projects
 
 ## Installation
 
