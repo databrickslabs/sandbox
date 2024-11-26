@@ -50,8 +50,6 @@ class RunReviewApp:
             code=f"""
             from sql_migration_assistant.utils.runindatabricks import run_app
 
-            # set debug=True to print the app logs in this cell.
-            # run_app(debug=True)
             run_app()
             """
         )
