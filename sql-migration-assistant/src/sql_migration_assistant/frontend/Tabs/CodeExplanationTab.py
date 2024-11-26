@@ -99,10 +99,9 @@ class CodeExplanationTab:
                     )
                     # save the prompt
                     self.save_intent_prompt.click(
-                        fn=lambda prompt, temp, tokens: prompt_helper.save_prompt(
-                            "intent_agent", prompt, temp, tokens
-                        ),
+                        fn=prompt_helper.save_prompt,
                         inputs=[
+                            gr.Textbox("intent_agent"),
                             self.intent_system_prompt,
                             self.intent_temperature,
                             self.intent_max_tokens,
