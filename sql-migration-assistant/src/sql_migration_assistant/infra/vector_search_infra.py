@@ -177,8 +177,8 @@ class VectorSearchInfra:
             )
         except NotFound as e:
             if (
-                    f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found"
-                    in str(e)
+                f"Vector search endpoint {self.migration_assistant_VS_endpoint} not found"
+                in str(e)
             ):
                 logging.info(
                     f"Waiting for Vector Search endpoint to provision. Retrying in 30 seconds."

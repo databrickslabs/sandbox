@@ -59,7 +59,7 @@ class RunReviewApp:
     def _get_proxy_url(self, organisation_id):
 
         def get_cloud_proxy_settings(
-                cloud: str, host: str, org_id: str, cluster_id: str, port: int
+            cloud: str, host: str, org_id: str, cluster_id: str, port: int
         ):
             cloud_norm = cloud.lower()
             if cloud_norm not in ["aws", "azure"]:

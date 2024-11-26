@@ -41,7 +41,7 @@ class LLMCalls:
     def llm_translate(self, system_prompt, input_code, max_tokens, temperature):
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": input_code}
+            {"role": "user", "content": input_code},
         ]
 
         # call the LLM end point.
@@ -55,7 +55,7 @@ class LLMCalls:
     def llm_intent(self, system_prompt, input_code, max_tokens, temperature):
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": input_code}
+            {"role": "user", "content": input_code},
         ]
 
         # call the LLM end point.

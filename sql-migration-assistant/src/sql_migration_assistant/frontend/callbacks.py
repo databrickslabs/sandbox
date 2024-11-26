@@ -22,12 +22,14 @@ from sql_migration_assistant.config import (
     VS_INDEX_NAME,
     DATABRICKS_HOST,
     TRANSFORMATION_JOB_ID,
-    WORKSPACE_LOCATION, VOLUME_NAME, DATABRICKS_TOKEN, PROMPT_HISTORY_TABLE_NAME,
+    WORKSPACE_LOCATION,
+    VOLUME_NAME,
+    DATABRICKS_TOKEN,
+    PROMPT_HISTORY_TABLE_NAME,
 )
 
 openai_client = OpenAI(
-    api_key=DATABRICKS_TOKEN,
-    base_url=f"{DATABRICKS_HOST}/serving-endpoints"
+    api_key=DATABRICKS_TOKEN, base_url=f"{DATABRICKS_HOST}/serving-endpoints"
 )
 
 w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1")
@@ -35,7 +37,9 @@ see = StatementExecutionExt(w, warehouse_id=SQL_WAREHOUSE_ID)
 translation_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
 intent_llm = LLMCalls(openai_client, foundation_llm_name=FOUNDATION_MODEL_NAME)
 
-prompt_helper = PromptHelper(see=see, catalog=CATALOG, schema=SCHEMA, prompt_table=PROMPT_HISTORY_TABLE_NAME)
+prompt_helper = PromptHelper(
+    see=see, catalog=CATALOG, schema=SCHEMA, prompt_table=PROMPT_HISTORY_TABLE_NAME
+)
 similar_code_helper = SimilarCode(
     workspace_client=w,
     see=see,
@@ -70,7 +74,9 @@ def llm_intent_wrapper(system_prompt, input_code, max_tokens, temperature):
 
 
 def llm_translate_wrapper(system_prompt, input_code, max_tokens, temperature):
-    translated_code = translation_llm.llm_translate(system_prompt, input_code, max_tokens, temperature)
+    translated_code = translation_llm.llm_translate(
+        system_prompt, input_code, max_tokens, temperature
+    )
     return translated_code
 
 
@@ -116,8 +122,14 @@ def write_adhoc_to_workspace(file_name, preview):
     return output_message
 
 
-def exectute_workflow(intent_prompt, intent_temperature, intent_max_tokens, translation_prompt, translation_temperature,
-                      translation_max_tokens):
+def exectute_workflow(
+    intent_prompt,
+    intent_temperature,
+    intent_max_tokens,
+    translation_prompt,
+    translation_temperature,
+    translation_max_tokens,
+):
     gr.Info("Beginning code transformation workflow")
     agent_config_payload = [
         [
@@ -149,7 +161,9 @@ def exectute_workflow(intent_prompt, intent_temperature, intent_max_tokens, tran
         "CATALOG": os.environ.get("CATALOG"),
         "SCHEMA": os.environ.get("SCHEMA"),
         "DATABRICKS_HOST": DATABRICKS_HOST,
-        "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get("DATABRICKS_TOKEN_SECRET_SCOPE"),
+        "DATABRICKS_TOKEN_SECRET_SCOPE": os.environ.get(
+            "DATABRICKS_TOKEN_SECRET_SCOPE"
+        ),
         "DATABRICKS_TOKEN_SECRET_KEY": os.environ.get("DATABRICKS_TOKEN_SECRET_KEY"),
         "CODE_INTENT_TABLE_NAME": os.environ.get("CODE_INTENT_TABLE_NAME"),
         "WORKSPACE_LOCATION": WORKSPACE_LOCATION,
@@ -182,8 +196,12 @@ def save_intent_wrapper(input_code, explained):
     similar_code_helper.save_intent(input_code, explained)
     gr.Info("Intent saved")
 
+
 # retreive the row from the table and populate the system prompt, temperature, and max tokens
 def get_prompt_details(prompt_id, prompts):
     prompt = prompts[prompts["id"] == prompt_id]
-    return [prompt["Prompt"].values[0], prompt["Temperature"].values[0],
-            prompt["Max Tokens"].values[0]]
+    return [
+        prompt["Prompt"].values[0],
+        prompt["Temperature"].values[0],
+        prompt["Max Tokens"].values[0],
+    ]

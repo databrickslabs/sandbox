@@ -7,8 +7,8 @@ from databricks.sdk import WorkspaceClient
 
 def load_config():
     # Access the YAML file as a resource
-    config_path = files('sql_migration_assistant').joinpath('config.yml')
-    with config_path.open('r') as f:
+    config_path = files("sql_migration_assistant").joinpath("config.yml")
+    with config_path.open("r") as f:
         config = yaml.safe_load(f)
     return config
 

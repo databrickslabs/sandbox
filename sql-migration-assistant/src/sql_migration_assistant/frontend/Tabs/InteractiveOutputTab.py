@@ -38,7 +38,9 @@ class InteractiveOutputTab:
                 with gr.Column():
                     self.file_name = gr.Textbox(label="Filename for the notebook")
                     self.write_to_workspace_button = gr.Button("Write to Workspace")
-                    self.adhoc_write_output = gr.Markdown(label="Notebook output location")
+                    self.adhoc_write_output = gr.Markdown(
+                        label="Notebook output location"
+                    )
 
             self.preview = gr.Code(label="Preview", language="python")
 

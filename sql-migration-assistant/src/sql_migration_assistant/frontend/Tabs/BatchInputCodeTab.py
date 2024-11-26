@@ -1,6 +1,12 @@
 import gradio as gr
 
-from sql_migration_assistant.config import DATABRICKS_HOST, CATALOG, SCHEMA, VOLUME_NAME, VOLUME_NAME_INPUT_PATH
+from sql_migration_assistant.config import (
+    DATABRICKS_HOST,
+    CATALOG,
+    SCHEMA,
+    VOLUME_NAME,
+    VOLUME_NAME_INPUT_PATH,
+)
 from sql_migration_assistant.frontend.callbacks import list_files
 
 
@@ -24,6 +30,8 @@ class BatchInputCodeTab:
 
             self.load_files = gr.Button("Load Files from Volume")
             self.select_code_file = gr.Radio(label="Select Code File")
-            self.selected_file = gr.Code(label="Selected Code File", language="sql-msSQL")
+            self.selected_file = gr.Code(
+                label="Selected Code File", language="sql-msSQL"
+            )
 
             self.load_files.click(list_files, self.volume_path, self.select_code_file)

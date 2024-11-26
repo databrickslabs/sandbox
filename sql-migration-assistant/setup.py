@@ -14,7 +14,7 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,  # Include files specified in MANIFEST.in
     package_data={
-        'sql_migration_assistant': ['config.yml'],  # Include YAML file
+        "sql_migration_assistant": ["config.yml"],  # Include YAML file
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -22,5 +22,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=load_requirements(),
-    python_requires='>=3.10',
+    python_requires=">=3.10",
 )

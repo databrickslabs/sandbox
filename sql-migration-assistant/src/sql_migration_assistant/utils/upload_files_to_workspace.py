@@ -15,9 +15,9 @@ class FileUploader:
         self.installer = Installation(ws=self.w, product="sql-migration-assistant")
 
     def upload(
-            self,
-            file_path,
-            file_name,
+        self,
+        file_path,
+        file_name,
     ):
         with open(file_path, "rb") as file:
             contents = file.read()
@@ -34,4 +34,6 @@ class FileUploader:
 
         config_class = X(**config)
 
-        self.installer.save(config_class, filename="src/sql_migration_assistant/config.yml")
+        self.installer.save(
+            config_class, filename="src/sql_migration_assistant/config.yml"
+        )

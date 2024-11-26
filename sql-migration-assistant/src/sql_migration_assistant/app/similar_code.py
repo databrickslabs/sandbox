@@ -5,14 +5,14 @@ from databricks.sdk import WorkspaceClient
 class SimilarCode:
 
     def __init__(
-            self,
-            workspace_client: WorkspaceClient,
-            see: StatementExecutionExt,
-            catalog,
-            schema,
-            code_intent_table_name,
-            VS_index_name,
-            VS_endpoint_name,
+        self,
+        workspace_client: WorkspaceClient,
+        see: StatementExecutionExt,
+        catalog,
+        schema,
+        code_intent_table_name,
+        VS_index_name,
+        VS_endpoint_name,
     ):
         self.w = workspace_client
         self.see = see

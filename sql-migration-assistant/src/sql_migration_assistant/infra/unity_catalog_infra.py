@@ -21,11 +21,11 @@ upload app file to databricks
 
 class UnityCatalogInfra:
     def __init__(
-            self,
-            config,
-            workspace_client: WorkspaceClient,
-            p: Prompts,
-            see: StatementExecutionExt,
+        self,
+        config,
+        workspace_client: WorkspaceClient,
+        p: Prompts,
+        see: StatementExecutionExt,
     ):
         self.w = workspace_client
         self.config = config

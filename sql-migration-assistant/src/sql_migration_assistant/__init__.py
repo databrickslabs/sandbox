@@ -8,7 +8,11 @@ from sql_migration_assistant.utils.initialsetup import SetUpMigrationAssistant
 
 
 def hello(**kwargs):
-    w = WorkspaceClient(product="sql_migration_assistant", product_version="0.0.1", profile=kwargs.get("profile"))
+    w = WorkspaceClient(
+        product="sql_migration_assistant",
+        product_version="0.0.1",
+        profile=kwargs.get("profile"),
+    )
     p = Prompts()
     setter_upper = SetUpMigrationAssistant()
     setter_upper.check_cloud(w)

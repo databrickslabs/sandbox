@@ -24,9 +24,9 @@ upload app file to databricks
 
 class JobsInfra:
     def __init__(
-            self,
-            config,
-            workspace_client: WorkspaceClient,
+        self,
+        config,
+        workspace_client: WorkspaceClient,
     ):
         self.w = workspace_client
         self.config = config

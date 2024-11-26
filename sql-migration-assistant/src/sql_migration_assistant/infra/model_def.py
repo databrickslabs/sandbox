@@ -122,15 +122,15 @@ def create_langchain_chat_model():
     # RAG Chain
     ############
     is_question_about_sql_chain = (
-            {
-                "question": itemgetter("messages")
-                            | RunnableLambda(extract_user_query_string),
-                "formatted_chat_history": itemgetter("messages")
-                                          | RunnableLambda(extract_chat_history),
-            }
-            | is_question_relevant_prompt
-            | model
-            | StrOutputParser()
+        {
+            "question": itemgetter("messages")
+            | RunnableLambda(extract_user_query_string),
+            "formatted_chat_history": itemgetter("messages")
+            | RunnableLambda(extract_chat_history),
+        }
+        | is_question_relevant_prompt
+        | model
+        | StrOutputParser()
     )
 
     irrelevant_question_chain = RunnableLambda(
@@ -154,15 +154,15 @@ def create_langchain_chat_model():
     )
 
     chain = (
-            RunnablePassthrough()
-            | {
-                "system": itemgetter("system"),
-                "question": itemgetter("question"),
-                "formatted_chat_history": itemgetter("chat_history"),
-            }
-            | prompt
-            | model
-            | StrOutputParser()
+        RunnablePassthrough()
+        | {
+            "system": itemgetter("system"),
+            "question": itemgetter("question"),
+            "formatted_chat_history": itemgetter("chat_history"),
+        }
+        | prompt
+        | model
+        | StrOutputParser()
     )
 
     branch_node = RunnableBranch(
@@ -178,12 +178,12 @@ def create_langchain_chat_model():
     )
 
     full_chain = {
-                     "question_is_relevant": is_question_about_sql_chain,
-                     "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
-                     "system": itemgetter("messages") | RunnableLambda(extract_system_prompt_string),
-                     "chat_history": itemgetter("messages")
-                                     | RunnableLambda(format_chat_history_for_prompt),
-                 } | branch_node
+        "question_is_relevant": is_question_about_sql_chain,
+        "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
+        "system": itemgetter("messages") | RunnableLambda(extract_system_prompt_string),
+        "chat_history": itemgetter("messages")
+        | RunnableLambda(format_chat_history_for_prompt),
+    } | branch_node
 
     mlflow.models.set_model(model=full_chain)
 

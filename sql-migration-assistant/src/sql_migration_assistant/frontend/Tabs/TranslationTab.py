@@ -1,6 +1,10 @@
 import gradio as gr
 
-from sql_migration_assistant.frontend.callbacks import llm_translate_wrapper, prompt_helper, get_prompt_details
+from sql_migration_assistant.frontend.callbacks import (
+    llm_translate_wrapper,
+    prompt_helper,
+    get_prompt_details,
+)
 
 
 class TranslationTab:
@@ -37,8 +41,8 @@ class TranslationTab:
                     self.translation_system_prompt = gr.Textbox(
                         label="Instructions for the LLM translation tool.",
                         placeholder="Add your system prompt here, for example:\n"
-                                    "Translate this code to Spark SQL.",
-                        lines=3
+                        "Translate this code to Spark SQL.",
+                        lines=3,
                     )
                 with gr.Row():
                     self.save_translation_prompt = gr.Button("Save translation prompt")
@@ -47,18 +51,27 @@ class TranslationTab:
                 self.translation_prompt_id_to_load = gr.Textbox(
                     label="Prompt ID to load",
                     visible=False,
-                    placeholder="Enter the ID of the prompt to load from the table below."
+                    placeholder="Enter the ID of the prompt to load from the table below.",
                 )
                 self.loaded_translation_prompts = gr.Dataframe(
-                    label='Saved prompts.',
+                    label="Saved prompts.",
                     visible=False,
-                    headers=["id", "Prompt", "Temperature", "Max Tokens", "Save Datetime"],
+                    headers=[
+                        "id",
+                        "Prompt",
+                        "Temperature",
+                        "Max Tokens",
+                        "Save Datetime",
+                    ],
                     interactive=False,
-                    wrap=True
+                    wrap=True,
                 )
                 # get the prompts and populate the table and make it visible
                 self.load_translation_prompt.click(
-                    fn=lambda: gr.update(visible=True, value=prompt_helper.get_prompts("translation_agent")),
+                    fn=lambda: gr.update(
+                        visible=True,
+                        value=prompt_helper.get_prompts("translation_agent"),
+                    ),
                     inputs=None,
                     outputs=[self.loaded_translation_prompts],
                 )
@@ -71,14 +84,26 @@ class TranslationTab:
                 # retrive the row from the table and populate the system prompt, temperature, and max tokens
                 self.translation_prompt_id_to_load.change(
                     fn=get_prompt_details,
-                    inputs=[self.translation_prompt_id_to_load, self.loaded_translation_prompts],
-                    outputs=[self.translation_system_prompt, self.translation_temperature, self.translation_max_tokens]
+                    inputs=[
+                        self.translation_prompt_id_to_load,
+                        self.loaded_translation_prompts,
+                    ],
+                    outputs=[
+                        self.translation_system_prompt,
+                        self.translation_temperature,
+                        self.translation_max_tokens,
+                    ],
                 )
                 self.save_translation_prompt.click(
-                    fn=lambda prompt, temp, tokens: prompt_helper.save_prompt("translation_agent", prompt, temp,
-                                                                              tokens),
-                    inputs=[self.translation_system_prompt, self.translation_temperature, self.translation_max_tokens],
-                    outputs=None
+                    fn=lambda prompt, temp, tokens: prompt_helper.save_prompt(
+                        "translation_agent", prompt, temp, tokens
+                    ),
+                    inputs=[
+                        self.translation_system_prompt,
+                        self.translation_temperature,
+                        self.translation_max_tokens,
+                    ],
+                    outputs=None,
                 )
 
             with gr.Accordion(label="Translation Pane", open=True):
