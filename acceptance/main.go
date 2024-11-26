@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/sandbox/acceptance/notify"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/acceptance/testenv"
+	"github.com/databrickslabs/sandbox/acceptance/todos"
 	"github.com/databrickslabs/sandbox/go-libs/env"
 	"github.com/databrickslabs/sandbox/go-libs/github"
 	"github.com/databrickslabs/sandbox/go-libs/slack"
@@ -45,7 +46,35 @@ type acceptance struct {
 	*boilerplate.Boilerplate
 }
 
+func (a *acceptance) canCreateIssues() bool {
+	createIssues := strings.ToLower(a.Action.GetInput("create_issues"))
+	return createIssues == "true" || createIssues == "yes"
+}
+
+func (a *acceptance) syncTodos(ctx context.Context) error {
+	if !a.canCreateIssues() {
+		return nil
+	}
+	directory, _, err := a.getProject()
+	if err != nil {
+		return fmt.Errorf("project: %w", err)
+	}
+	techDebt, err := todos.New(ctx, a.GitHub, directory)
+	if err != nil {
+		return fmt.Errorf("tech debt: %w", err)
+	}
+	err = techDebt.CreateIssues(ctx)
+	if err != nil {
+		return fmt.Errorf("create: %w", err)
+	}
+	return nil
+}
+
 func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) {
+	err := a.syncTodos(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("sync todos: %w", err)
+	}
 	vaultURI := a.Action.GetInput("vault_uri")
 	directory, project, err := a.getProject()
 	if err != nil {
@@ -129,9 +158,8 @@ func (a *acceptance) runWithTimeout(
 
 func (a *acceptance) notifyIfNeeded(ctx context.Context, alert *notify.Notification) error {
 	slackWebhook := a.Action.GetInput("slack_webhook")
-	createIssues := strings.ToLower(a.Action.GetInput("create_issues"))
 	needsSlack := slackWebhook != ""
-	needsIssues := createIssues == "true" || createIssues == "yes"
+	needsIssues := a.canCreateIssues()
 	needsNotification := needsSlack || needsIssues
 	if !alert.Report.Pass() && needsNotification {
 		if needsSlack {
