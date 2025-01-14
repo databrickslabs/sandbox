@@ -13,7 +13,7 @@ python = ">=3.10"
 databricks-sdk = "0.40.0"
 pyyaml = "^6.0.2"
 mlflow = {extras = ["databricks"], version = "^2.16.0"}
-databricks-labs-blueprint = "0.8.2"
+databricks-labs-blueprint = "0.9.3"
 databricks-labs-lsql = "0.14.0"
 
 [build-system]
