@@ -44,17 +44,6 @@ type pyTestRunner struct {
 	files fileset.FileSet
 }
 
-// definition of poetry source in the pyproject.toml
-type PoetryConfig struct {
-	Tool struct {
-		Poetry struct {
-			Packages []struct {
-				Include string `toml:"include"`
-			} `toml:"packages"`
-		} `toml:"poetry"`
-	} `toml:"tool"`
-}
-
 // definition of hatch source in the pyproject.toml
 type HatchConfig struct {
 	Tool struct {
@@ -67,17 +56,11 @@ type HatchConfig struct {
 }
 
 func extractSourceDir(tomlFile string) string {
-	var poetryConfig PoetryConfig
 	var hatchConfig HatchConfig
 
 	_, err := toml.DecodeFile(tomlFile, &hatchConfig)
 	if err == nil && hatchConfig.Tool.Hatch.Build.Sources != nil {
 		return hatchConfig.Tool.Hatch.Build.Sources[0]
-	}
-
-	_, err = toml.DecodeFile(tomlFile, &poetryConfig)
-	if err == nil && poetryConfig.Tool.Poetry.Packages != nil {
-		return poetryConfig.Tool.Poetry.Packages[0].Include
 	}
 
 	return "src"
