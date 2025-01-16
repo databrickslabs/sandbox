@@ -13,6 +13,7 @@ require (
 	github.com/sethvargo/go-githubactions v1.2.0 // Apache 2.0
 	github.com/stretchr/testify v1.9.0 // MIT
 	golang.org/x/oauth2 v0.19.0 // BSD
+	github.com/BurntSushi/toml v1.4.0 // MIT
 )
 
 require (
