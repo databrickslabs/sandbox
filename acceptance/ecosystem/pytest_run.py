@@ -3,6 +3,7 @@ import sys
 import pytest
 import requests
 import collections
+import logging
 
 
 class RunReport:
@@ -48,9 +49,14 @@ class RunReport:
 
 
 if __name__ == '__main__':
+    src_dir = os.getenv('SOURCE_DIR', 'src')
+    logging.info(f"Code coverage to be generated for '{src_dir}'.")
+
     sys.exit(pytest.main([
         '-n', '10',
         "--log-disable", "urllib3.connectionpool",
         "--log-format", "%(asctime)s %(levelname)s [%(name)s] %(message)s",
         "--log-date-format", "%H:%M",
+        f"--cov={src_dir}",
+        "--cov-report=xml",
     ], plugins=[RunReport()]))
