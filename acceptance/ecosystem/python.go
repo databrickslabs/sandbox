@@ -19,6 +19,7 @@ import (
 
 	_ "embed"
 
+	"github.com/BurntSushi/toml"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/env"
@@ -26,7 +27,6 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/process"
 	"github.com/databrickslabs/sandbox/go-libs/toolchain"
 	"github.com/nxadm/tail"
-	"github.com/BurntSushi/toml"
 )
 
 //go:embed pytest_collect.py
@@ -46,13 +46,13 @@ type pyTestRunner struct {
 
 // definition of poetry source in the pyproject.toml
 type PoetryConfig struct {
-    Tool struct {
-        Poetry struct {
-            Packages []struct {
-                Include string `toml:"include"`
-            } `toml:"packages"`
-        } `toml:"poetry"`
-    } `toml:"tool"`
+	Tool struct {
+		Poetry struct {
+			Packages []struct {
+				Include string `toml:"include"`
+			} `toml:"packages"`
+		} `toml:"poetry"`
+	} `toml:"tool"`
 }
 
 // definition of hatch source in the pyproject.toml
@@ -72,7 +72,7 @@ func extractSourceDir(tomlFile string) string {
 
 	_, err := toml.DecodeFile(tomlFile, &hatchConfig)
 	if err == nil && hatchConfig.Tool.Hatch.Build.Sources != nil {
-        return hatchConfig.Tool.Hatch.Build.Sources[0]
+		return hatchConfig.Tool.Hatch.Build.Sources[0]
 	}
 
 	_, err = toml.DecodeFile(tomlFile, &poetryConfig)
