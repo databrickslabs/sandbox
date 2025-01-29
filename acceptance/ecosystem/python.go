@@ -19,6 +19,7 @@ import (
 
 	_ "embed"
 
+	"github.com/BurntSushi/toml"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
 	"github.com/databrickslabs/sandbox/go-libs/env"
@@ -41,6 +42,28 @@ var ErrNotImplemented = errors.New("not implemented")
 
 type pyTestRunner struct {
 	files fileset.FileSet
+}
+
+// definition of hatch source in the pyproject.toml
+type HatchConfig struct {
+	Tool struct {
+		Hatch struct {
+			Build struct {
+				Sources []string `toml:"sources"`
+			} `toml:"build"`
+		} `toml:"hatch"`
+	} `toml:"tool"`
+}
+
+func extractSourceDir(tomlFile string) string {
+	var hatchConfig HatchConfig
+
+	_, err := toml.DecodeFile(tomlFile, &hatchConfig)
+	if err == nil && hatchConfig.Tool.Hatch.Build.Sources != nil {
+		return hatchConfig.Tool.Hatch.Build.Sources[0]
+	}
+
+	return "src"
 }
 
 func (r pyTestRunner) Detect() bool {
@@ -78,6 +101,7 @@ func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 	errs := make(chan error)
 	go func() {
 		py.ctx = env.Set(py.ctx, "REPLY_URL", reply.URL())
+		py.ctx = env.Set(py.ctx, "SOURCE_DIR", extractSourceDir("pyproject.toml"))
 		err := py.start([]string{
 			filepath.Join(py.venv, "python"), "-c", script,
 		})
