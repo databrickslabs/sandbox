@@ -2,6 +2,7 @@ package sqlexec
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -79,7 +80,7 @@ func (s *StatementExecutionExt) raiseIfNeeded(status *sql.StatementStatus) error
 	if ok {
 		return found
 	}
-	return fmt.Errorf(errorMessage)
+	return errors.New(errorMessage)
 }
 
 type ExecuteStatement struct {
@@ -123,7 +124,7 @@ func (s *StatementExecutionExt) determineDefaultWarehouse(ctx context.Context) (
 }
 
 // executeAndWait executes a SQL statement and returns the execution response
-func (s *StatementExecutionExt) executeAndWait(ctx context.Context, req ExecuteStatement) (*sql.ExecuteStatementResponse, error) {
+func (s *StatementExecutionExt) executeAndWait(ctx context.Context, req ExecuteStatement) (*sql.StatementResponse, error) {
 	if req.WarehouseID == "" {
 		req.WarehouseID = s.warehouseID
 	}
@@ -182,7 +183,7 @@ func (s *StatementExecutionExt) executeAndWait(ctx context.Context, req ExecuteS
 			state = sql.StatementStateFailed
 		}
 		if state == sql.StatementStateSucceeded {
-			return &sql.ExecuteStatementResponse{
+			return &sql.StatementResponse{
 				Manifest:    res.Manifest,
 				Result:      res.Result,
 				StatementId: statementID,
