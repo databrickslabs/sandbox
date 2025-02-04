@@ -1,4 +1,3 @@
-
 CREATE OR REPLACE MATERIALIZED VIEW main.default.dbsql_cost_per_query
 (statement_id string,
 query_source_id string,
@@ -270,10 +269,10 @@ SELECT
     COUNT(CASE WHEN utilization_flag = 'ON_IDLE' THEN second_chunk END) AS idle_seconds,
     COUNT(*) AS total_seconds,
    round(
-        CASE 
-            WHEN COUNT(*) = 0 THEN 0 
-            ELSE COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END) / (COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END)  + COUNT(CASE WHEN utilization_flag = 'ON_IDLE' THEN second_chunk END))
-        END, 
+        try_divide(
+            COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END),
+            (COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END)  + COUNT(CASE WHEN utilization_flag = 'ON_IDLE' THEN second_chunk END))
+        ), 
         2
     ) AS utilization_proportion
 FROM state_by_second
