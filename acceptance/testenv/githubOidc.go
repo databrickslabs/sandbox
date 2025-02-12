@@ -10,7 +10,9 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/config/credentials"
 	"github.com/sethvargo/go-githubactions"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -61,19 +63,29 @@ func (c *ghOidcCreds) Name() string {
 	return "github-oidc"
 }
 
+type credentialsProviderFunc struct {
+	setHeadersFunc func(r *http.Request) error
+}
+
+func (cpf *credentialsProviderFunc) SetHeaders(r *http.Request) error {
+	return cpf.setHeadersFunc(r)
+}
+
 // Configure implements credentials provider for Databricks SDK
-func (c *ghOidcCreds) Configure(ctx context.Context, cfg *config.Config) (func(*http.Request) error, error) {
+func (c *ghOidcCreds) Configure(ctx context.Context, cfg *config.Config) (credentials.CredentialsProvider, error) {
 	ts, err := c.oidcTokenSource(ctx, cfg.Environment().AzureApplicationID)
 	if err != nil {
 		return nil, fmt.Errorf("oidc: %w", err)
 	}
-	return func(r *http.Request) error {
-		token, err := ts.Token()
-		if err != nil {
-			return fmt.Errorf("token: %w", err)
-		}
-		token.SetAuthHeader(r)
-		return nil
+	return &credentialsProviderFunc{
+		setHeadersFunc: func(r *http.Request) error {
+			token, err := ts.Token()
+			if err != nil {
+				return fmt.Errorf("token: %w", err)
+			}
+			token.SetAuthHeader(r)
+			return nil
+		},
 	}, nil
 }
 
@@ -92,6 +104,19 @@ func (c *ghOidcCreds) GetToken(ctx context.Context, options policy.TokenRequestO
 		Token:     token.AccessToken,
 		ExpiresOn: token.Expiry,
 	}, nil
+}
+
+func (c *ghOidcCreds) SetHeaders(r *http.Request) error {
+	env := environment.GetEnvironmentForHostname(r.Host)
+	azureManagementURL := env.AzureResourceManagerEndpoint()
+	token, err := c.GetToken(r.Context(), policy.TokenRequestOptions{
+		Scopes: []string{azureManagementURL + "/.default"},
+	})
+	if err != nil {
+		return fmt.Errorf("token: %w", err)
+	}
+	r.Header.Set("Authorization", "Bearer "+token.Token)
+	return nil
 }
 
 type msiToken struct {

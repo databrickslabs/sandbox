@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databrickslabs/sandbox/acceptance/redaction"
@@ -62,10 +63,10 @@ func (l *loadedEnv) Redaction() redaction.Redaction {
 	return redaction.New(l.vars)
 }
 
-func (l *loadedEnv) Cloud() config.Cloud {
+func (l *loadedEnv) Cloud() environment.Cloud {
 	cfg, err := l.getDatabricksConfig()
 	if err != nil {
-		return config.CloudAWS
+		return environment.CloudAWS
 	}
 	return cfg.Environment().Cloud
 }
@@ -113,14 +114,14 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 		defer r.Body.Close()
 		ctx := r.Context()
 		if r.Header.Get("X-Databricks-Metadata-Version") != "1" {
-			l.replyJson(ctx, w, 400, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 400, apierr.APIError{
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Version mismatch",
 			})
 			return
 		}
 		if strings.TrimPrefix(r.URL.Path, "/") != l.mpath {
-			l.replyJson(ctx, w, 404, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 404, apierr.APIError{
 				ErrorCode: "NOT_FOUND",
 				Message:   "nope",
 			})
@@ -129,7 +130,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 		hostInHeader := r.Header.Get("X-Databricks-Host")
 		configs, ok := configurations[hostInHeader]
 		if !ok {
-			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 403, apierr.APIError{
 				ErrorCode: "PERMISSION_DENIED",
 				Message:   fmt.Sprintf("Not allowed: %s", hostInHeader),
 			})
@@ -138,7 +139,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 		req := &http.Request{Header: http.Header{}}
 		err := configs.Authenticate(req)
 		if err != nil {
-			l.replyJson(ctx, w, 403, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 403, apierr.APIError{
 				ErrorCode: "PERMISSION_DENIED",
 				Message:   err.Error(),
 			})
@@ -146,7 +147,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 		}
 		tokenType, accessToken, ok := strings.Cut(req.Header.Get("Authorization"), " ")
 		if !ok {
-			l.replyJson(ctx, w, 400, apierr.APIErrorBody{
+			l.replyJson(ctx, w, 400, apierr.APIError{
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Wrong Authorization header",
 			})
@@ -194,7 +195,7 @@ func (l *loadedEnv) parseExpiryDate(ctx context.Context, tokenString string) (in
 
 func (l *loadedEnv) replyJson(ctx context.Context, w http.ResponseWriter, status int, body any) {
 	msg := "<token response>"
-	apiErrBody, ok := body.(apierr.APIErrorBody)
+	apiErrBody, ok := body.(apierr.APIError)
 	if ok {
 		msg = fmt.Sprintf("%s: %s", apiErrBody.ErrorCode, apiErrBody.Message)
 	}

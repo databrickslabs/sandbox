@@ -53,4 +53,5 @@ if __name__ == '__main__':
         "--log-disable", "urllib3.connectionpool",
         "--log-format", "%(asctime)s %(levelname)s [%(name)s] %(message)s",
         "--log-date-format", "%H:%M",
+        "--cov", "--cov-report=xml", "--cov-config=.coveragerc",
     ], plugins=[RunReport()]))
