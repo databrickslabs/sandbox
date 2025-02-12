@@ -319,7 +319,10 @@ statement_proportioned_work AS (
           UNIX_TIMESTAMP(LEAST(query_work_end_time, timestampadd(hour, 1, hour_bucket))) -
           UNIX_TIMESTAMP(GREATEST(query_work_start_time, hour_bucket))
         ) AS overlap_duration,
-      query_work_task_time * (overlap_duration / (CAST(query_work_end_time AS DOUBLE) - CAST(query_work_start_time AS DOUBLE))) AS proportional_query_work
+        CASE WHEN CAST(query_work_end_time AS DOUBLE) - CAST(query_work_start_time AS DOUBLE) = 0
+        THEN 0
+        ELSE query_work_task_time * (overlap_duration / (CAST(query_work_end_time AS DOUBLE) - CAST(query_work_start_time AS DOUBLE)))
+        END AS proportional_query_work
     FROM hour_intervals
 ),
 
@@ -382,7 +385,7 @@ query_attribution AS (
   SELECT
     a.*,
     warehouse_max_hour_bucket AS most_recent_billing_hour,
-    CASE WHEN warehouse_hour_bucket IS NOT NULL THEN 'Has Billing Reocrd' ELSE 'No Billing Record for this hour and warehouse yet available' END AS billing_record_check,
+    CASE WHEN warehouse_hour_bucket IS NOT NULL THEN 'Has Billing Record' ELSE 'No Billing Record for this hour and warehouse yet available' END AS billing_record_check,
     CASE
       WHEN total_work_done_on_warehouse = 0 THEN NULL
       ELSE attributed_query_work / total_work_done_on_warehouse
