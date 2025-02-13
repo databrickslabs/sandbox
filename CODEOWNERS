@@ -6,14 +6,14 @@
 
 # Specific owners are listed last. Please keep this list in the alphabetical order
 
-acceptance                 @nfx
+acceptance                 @nfx @alexott
 database-diagram-builder   @alexott
-downstreams                @nfx
-go-libs                    @nfx
+downstreams                @nfx @alexott
+go-libs                    @nfx @alexott
 ip_access_list_analyzer    @alexott
-metascan                   @nfx
-runtime-packages           @nfx
+metascan                   @nfx @alexott
+runtime-packages           @nfx @alexott
 sql_migration_copilot      @robertwhiffin
 tacklebox                  @Jonathan-Choi
 uc-catalog-cloning         @esiol-db @vasco-lopes
-.github                    @nfx
+.github                    @nfx @alexott @gueniai
