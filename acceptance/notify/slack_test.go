@@ -3,7 +3,7 @@ package notify_test
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/acceptance/notify"
 	"github.com/databrickslabs/sandbox/go-libs/fixtures"
@@ -15,7 +15,7 @@ func TestMessageDryRun(t *testing.T) {
 	hook := fixtures.GetEnvOrSkipTest(t, "TEST_HOOK")
 	notify.Notification{
 		Project: "ucx",
-		Cloud:   config.CloudAzure,
+		Cloud:   environment.CloudAzure,
 		RunName: "acceptance #213123",
 		RunURL:  "https://github.com/databrickslabs/sandbox",
 		Report: ecosystem.TestReport{

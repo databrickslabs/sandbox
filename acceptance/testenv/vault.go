@@ -11,11 +11,13 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/config/credentials"
 )
 
 type creds interface {
-	config.CredentialsProvider
+	credentials.CredentialsProvider
 	azcore.TokenCredential
+	config.CredentialsStrategy
 }
 
 type vaultEnv struct {

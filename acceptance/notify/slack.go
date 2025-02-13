@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/openapi/code"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/go-libs/slack"
@@ -13,16 +13,16 @@ import (
 
 type Notification struct {
 	Project string
-	Cloud   config.Cloud
+	Cloud   environment.Cloud
 	RunName string
 	Report  ecosystem.TestReport
 	RunURL  string
 }
 
-var icons = map[config.Cloud]string{
-	config.CloudAzure: "https://portal.azure.com/Content/favicon.ico",
-	config.CloudAWS:   "https://aws.amazon.com/favicon.ico",
-	config.CloudGCP:   "https://cloud.google.com/favicon.ico",
+var icons = map[environment.Cloud]string{
+	environment.CloudAzure: "https://portal.azure.com/Content/favicon.ico",
+	environment.CloudAWS:   "https://aws.amazon.com/favicon.ico",
+	environment.CloudGCP:   "https://cloud.google.com/favicon.ico",
 }
 
 func (n Notification) ToSlack(hook slack.Webhook) error {
