@@ -80,6 +80,13 @@ filtered_warehouse_usage AS (
         and (u.usage_end_time between p.price_start_time and p.coalesced_price_end_time)
 ),
 
+table_bound_expld AS 
+(
+select timestampadd(hour, h, selected_start_time) as selected_hours
+  from table_boundaries
+  join lateral explode(sequence(0, timestampdiff(hour, selected_start_time, selected_end_time), 1)) as t (h)
+),
+
 ----===== Query Level Calculations =====-----
 cpq_warehouse_query_history AS (
   SELECT
@@ -98,7 +105,7 @@ cpq_warehouse_query_history AS (
     start_time,
     end_time,
     timestampadd(MILLISECOND , waiting_at_capacity_duration_ms + waiting_for_compute_duration_ms + compilation_duration_ms, start_time) AS query_work_start_time,
-    timestampadd(MILLISECOND, result_fetch_duration_ms, end_time) AS query_work_end_time,
+    timestampadd(MILLISECOND, coalesce(result_fetch_duration_ms, 0), end_time) AS query_work_end_time,
     -- NEW - Query source
     CASE
       WHEN query_source.job_info.job_id IS NOT NULL THEN 'JOB'
@@ -126,157 +133,183 @@ cpq_warehouse_query_history AS (
   WHERE
     statement_type IS NOT NULL
     -- If query touches the boundaries at all, we will divy it up
-    AND start_time < (SELECT MAX(selected_end_time) FROM table_boundaries)
-    AND end_time > (SELECT MIN(selected_start_time) FROM table_boundaries)
+    AND start_time < (SELECT selected_end_time FROM table_boundaries)
+    AND end_time > (SELECT selected_start_time FROM table_boundaries)
     AND total_task_duration_ms > 0 --exclude metadata operations
-),
-
+     and compute.warehouse_id is not null -- = 'd13162f928a069c7'
+)
+  ,  cte_warehouse as
+(
+  select warehouse_id, min(query_work_start_time) as min_start_time
+    from cpq_warehouse_query_history
+group by warehouse_id
+)
+,
 --- Warehouse + Query Level level allocation
 window_events AS (
     SELECT
         warehouse_id,
-        workspace_id,
         event_type,
         event_time,
         cluster_count AS cluster_count,
-        CASE 
+        CASE
             WHEN cluster_count = 0 THEN 'OFF'
             WHEN cluster_count > 0 THEN 'ON'
         END AS warehouse_state
     FROM system.compute.warehouse_events AS we
     -- Only get window events for when we have query history, otherwise, not usable
-    WHERE EXISTS (SELECT warehouse_id FROM cpq_warehouse_query_history ws WHERE we.warehouse_id = ws.warehouse_id)
-    AND event_time BETWEEN (SELECT MIN(selected_start_time) FROM table_boundaries) AND (SELECT MAX(selected_end_time) FROM table_boundaries)
-),
-
--- Get the most recent state of the warehouse before the event window
-pre_window_event AS (
-    SELECT 
-        warehouse_id,
-        workspace_id,
-        event_type,
-        event_time,
-        cluster_count AS cluster_count,
-        CASE 
-            WHEN cluster_count = 0 THEN 'OFF'
-            WHEN cluster_count > 0 THEN 'ON'
-        END AS warehouse_state
-    FROM system.compute.warehouse_events pwe
-    WHERE 
-    event_time < (SELECT MIN(selected_start_time) FROM table_boundaries)
-    AND event_time >= DATE_SUB((SELECT MIN(selected_start_time) FROM table_boundaries), 1) -- Make 1 day lookback window 
-        AND EXISTS (
-            SELECT 1
-            FROM window_events we 
-            WHERE we.warehouse_id = pwe.warehouse_id
-            AND we.workspace_id = pwe.workspace_id
-        ) -- Filter for only warehouses that have events in the selected period, very important for performance
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY pwe.warehouse_id ORDER BY event_time DESC) = 1
-),
-
--- Combine Pre-Window and Window Events
-all_events AS (
-    SELECT * FROM pre_window_event
-    UNION ALL
-    SELECT * FROM window_events
-),
-
--- Create Event Windows for Each Warehouse
-event_windows AS (
-    SELECT /*+ REPARTITION(128, event_window_start) */
-        warehouse_id,
-        warehouse_state AS window_state,
-        event_time AS event_window_start,
-        LEAD(event_time, 1, (SELECT MAX(selected_end_time) FROM table_boundaries)) OVER (
-            PARTITION BY warehouse_id
-            ORDER BY event_time
-        ) AS event_window_end
-    FROM all_events
-),
-
-all_seconds AS (
-    SELECT
-        e.warehouse_id,
-        e.window_state,
-        CAST(second_chunk AS TIMESTAMP) AS second_chunk
-    FROM event_windows e
-    LATERAL VIEW explode(
-        sequence(
-            CAST(UNIX_TIMESTAMP(e.event_window_start) AS BIGINT),
-            CAST(UNIX_TIMESTAMP(e.event_window_end) - 1 AS BIGINT), -- Subtract 1 to avoid off-by-one errors
-            1
-        )
-    ) AS second_chunk
-    WHERE CAST(UNIX_TIMESTAMP(e.event_window_start) AS BIGINT) < CAST(UNIX_TIMESTAMP(e.event_window_end) AS BIGINT)
-),
-
--- Weave in Query History for Each Warehouse
-raw_history AS (
-    SELECT /*+ REPARTITION(128, query_second) */
-        warehouse_id, 
-        CAST(query_second AS TIMESTAMP) AS query_second, -- Convert back to TIMESTAMP
-        COUNT(0) AS queries_active
-    FROM (
-        SELECT 
-            warehouse_id,
-            start_seconds + seq_index AS query_second
-        FROM (
-            SELECT 
-                warehouse_id,
-                CAST(UNIX_TIMESTAMP(date_trunc('SECOND', query_work_start_time)) AS BIGINT) AS start_seconds, -- For Photon compatability
-                CAST(UNIX_TIMESTAMP(date_trunc('SECOND', query_work_end_time)) AS BIGINT) AS end_seconds,
-                end_seconds - start_seconds AS duration_seconds
-            FROM cpq_warehouse_query_history f
-            WHERE 
-                EXISTS (
-                    SELECT warehouse_id 
-                    FROM window_events we 
-                    WHERE we.warehouse_id = f.warehouse_id
-                )
-        ) base
-        LATERAL VIEW posexplode(sequence(0, duration_seconds)) AS seq_index, seq_value
-    ) expanded
-    GROUP BY warehouse_id, query_second
-),
-
-
-state_by_second AS (
-    SELECT 
-        s.warehouse_id,
-        s.second_chunk,
-        MAX(s.window_state) AS warehouse_state,
-        COALESCE(MAX(rh.queries_active), 0) AS query_load, -- queries_active will be null on this join because there were no queries for that warehouse active in the second
-        CASE 
-            WHEN COALESCE(MAX(s.window_state), 'OFF') = 'OFF' THEN 'OFF'
-            WHEN query_load > 0 THEN 'UTILIZED'
-            WHEN query_load = 0 AND MAX(s.window_state) = 'ON' THEN 'ON_IDLE' -- queries_active will be null on this join because there were no queries for that warehouse active in the second
-        END AS utilization_flag
-    FROM all_seconds s
-    LEFT JOIN raw_history rh
-      ON s.warehouse_id = rh.warehouse_id
-         AND s.second_chunk = rh.query_second
-    WHERE s.second_chunk <= (SELECT MAX(selected_end_time) FROM table_boundaries) -- Make you only calculate utailization metrics up to the clean end-hour window
-    GROUP BY
-        s.warehouse_id,
-        s.second_chunk
+    WHERE warehouse_id in (SELECT warehouse_id FROM cte_warehouse)
+    AND event_time >= (SELECT timestampadd(day, -1, selected_start_time) FROM table_boundaries)
+    AND event_time <= (SELECT selected_end_time FROM table_boundaries)
+)
+  ,  cte_agg_events_prep as
+(
+select warehouse_id
+     , warehouse_state
+     , event_time
+     , row_number() over W1
+     - row_number() over W2 as grp
+  from window_events
+window W1 as (partition by warehouse_id                  order by event_time asc)
+     , W2 as (partition by warehouse_id, warehouse_state order by event_time asc)
+)
+  ,  cte_agg_events as
+(
+  select warehouse_id
+       , warehouse_state                                    as window_state
+       , min(event_time)                                    as event_window_start
+       , lead(min(event_time), 1, selected_end_time) over W as event_window_end
+    from cte_agg_events_prep
+    join table_boundaries
+group by warehouse_id
+       , warehouse_state
+       , grp
+       , selected_end_time
+  window W as (partition by warehouse_id order by min(event_time) asc)
+)
+  ,  cte_all_events as
+(
+select warehouse_id
+     , window_state
+     , date_trunc('second', event_window_start) as event_window_start
+     , date_trunc('second', event_window_end  ) as event_window_end
+  from cte_agg_events
+ where date_trunc('second', event_window_start) < date_trunc('second', event_window_end)
+ --and date_trunc('second', event_window_start) >= timestamp '2024-11-14 09:00:00'
+)
+  ,  cte_queries_event_cnt as
+(
+  select warehouse_id
+       , case num
+           when 1
+           then date_trunc('second', query_work_start_time)
+           else timestampadd(second, case when date_trunc('second', query_work_start_time) = date_trunc('second', query_work_end_time) then 1 else 0 end, date_trunc('second', query_work_end_time))
+         end as query_event_time
+       , sum(num) as num_queries
+    from cpq_warehouse_query_history
+    join lateral explode(array(1, -1)) as t (num)
+group by 1, 2
+)
+  ,  cte_raw_history as
+(
+select warehouse_id
+     , query_event_time                                    as query_start
+     , lead(query_event_time, 1, selected_end_time) over W as query_end
+     , sum(num_queries) over W as queries_active
+  from cte_queries_event_cnt
+  join table_boundaries
+window W as (partition by warehouse_id order by query_event_time asc)
+)
+  ,  cte_raw_history_byday as
+(
+  select /*+ repartition(64, warehouse_id, query_start_dt) */
+         warehouse_id
+       , case num
+           when 0
+           then query_start
+           else timestampadd(day, num, query_start::date)
+         end::date as query_start_dt
+       , case num
+           when 0
+           then query_start
+           else timestampadd(day, num, query_start::date)
+         end as query_start
+       , case num
+           when timestampdiff(day, query_start::date, query_end::date)
+           then query_end
+           else timestampadd(day, num + 1, query_start::date)
+         end as query_end
+       , queries_active
+    from cte_raw_history
+    join lateral explode(sequence(0, timestampdiff(day, query_start::date, query_end::date), 1)) as t (num)
+)
+  ,  cte_all_time_union as
+(
+select warehouse_id
+     , case num when 1 then event_window_start else event_window_end end ts_start
+  from cte_all_events
+  join lateral explode(array(1, -1)) as t (num)
+ union 
+select warehouse_id
+     , case num when 1 then query_start else query_end end
+  from cte_raw_history_byday
+  join lateral explode(array(1, -1)) as t (num)
+ union
+select warehouse_id, selected_hours
+  from cte_warehouse
+  join table_bound_expld on true
+-- where selected_hours >= timestampadd(day, -1, min_start_time)
+)
+  ,  cte_periods as
+(
+select /*+ repartition(64, warehouse_id, dt_start) */
+       warehouse_id
+     , ts_start::date as dt_start
+     , ts_start
+     , lead(ts_start, 1, selected_end_time) over W as ts_end
+  from cte_all_time_union
+  join table_boundaries
+window W as (partition by warehouse_id order by ts_start asc)
+)
+  ,  cte_merge_periods as
+(
+    select /*+ broadcast(r) */
+           p.warehouse_id
+         , date_trunc('hour', p.ts_start) as ts_hour
+         , sum(timestampdiff(second, p.ts_start, p.ts_end)) as duration
+         , case
+             when e.window_state = 'OFF'
+               or e.window_state is null
+             then 'OFF'
+             when r.queries_active > 0
+             then 'UTILIZED'
+             else 'ON_IDLE'
+           end as utilization_flag
+      from cte_periods           as p
+ left join cte_all_events        as e  on e.warehouse_id       = p.warehouse_id
+                                      and e.event_window_start < p.ts_end
+                                      and e.event_window_end   > p.ts_start
+ left join cte_raw_history_byday as r  on r.warehouse_id       = p.warehouse_id
+                                      and r.query_start_dt     = p.dt_start
+                                      and r.query_start        < p.ts_end
+                                      and r.query_end          > p.ts_start
+                                      and r.queries_active     > 0
+                                      and e.window_state      <> 'OFF'
+     where p.ts_start < p.ts_end
+  group by all
 ),
 
 utilization_by_warehouse AS (
-SELECT 
-    warehouse_id,
-    date_trunc('HOUR', second_chunk) AS warehouse_hour,
-    COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END) AS utilized_seconds,
-    COUNT(CASE WHEN utilization_flag = 'ON_IDLE' THEN second_chunk END) AS idle_seconds,
-    COUNT(*) AS total_seconds,
-   round(
-        try_divide(
-            COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END),
-            (COUNT(CASE WHEN utilization_flag = 'UTILIZED' THEN second_chunk END)  + COUNT(CASE WHEN utilization_flag = 'ON_IDLE' THEN second_chunk END))
-        ), 
-        2
-    ) AS utilization_proportion
-FROM state_by_second
-GROUP BY warehouse_id, date_trunc('HOUR', second_chunk)
+  select warehouse_id
+       , ts_hour as warehouse_hour
+       , coalesce(sum(duration) filter(where utilization_flag = 'UTILIZED'), 0) as utilized_seconds
+       , coalesce(sum(duration) filter(where utilization_flag = 'ON_IDLE' ), 0) as idle_seconds
+       , coalesce(sum(duration) filter(where utilization_flag = 'OFF'     ), 0) as off_seconds
+       , coalesce(sum(duration), 0) as total_seconds
+       , try_divide(utilized_seconds, utilized_seconds + idle_seconds)::decimal(3,2) as utilization_proportion
+    from cte_merge_periods
+group by warehouse_id
+       , ts_hour
 ),
 
 cleaned_warehouse_info AS (
@@ -381,6 +414,7 @@ history_with_pricing AS (
 ),
 
 -- This is at the statement_id / hour grain (there will be duplicates for each statement for each hour bucket the query spans)
+
 query_attribution AS (
   SELECT
     a.*,
