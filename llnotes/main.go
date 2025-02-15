@@ -34,7 +34,7 @@ func main() {
 			flags.StringVar(&cfg.GitHub.PrivateKeyPath, "github-app-private-key-path", "", "GitHub App Private Key file (*.pem) path")
 			flags.StringVar(&cfg.GitHub.PrivateKeyBase64, "github-app-private-key", "", "GitHub App Private Key encoded in base64")
 			flags.StringVar(&cfg.Databricks.Profile, "profile", "", "Databricks config profile")
-			flags.StringVar(&cfg.Model, "model", "databricks-mixtral-8x7b-instruct", "Serving chat model")
+			flags.StringVar(&cfg.Model, "model", "databricks-meta-llama-3-3-70b-instruct", "Serving chat model")
 			flags.StringVar(&cfg.Org, "org", "databrickslabs", "GitHub org")
 			flags.StringVar(&cfg.Repo, "repo", "ucx", "GitHub repository")
 		},
