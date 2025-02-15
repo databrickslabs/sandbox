@@ -6,7 +6,7 @@ require (
 	github.com/databricks/databricks-sdk-go v0.58.1
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/fatih/color v1.18.0
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6
 )
 
 require (
