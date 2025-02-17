@@ -7,7 +7,7 @@ require (
 	github.com/databricks/databricks-sdk-go v0.58.1
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/fatih/color v1.18.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.9.1
 	golang.org/x/mod v0.23.0
 )
 
@@ -28,7 +28,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nwidger/jsoncolor v0.3.2 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
