@@ -16,19 +16,23 @@ The connector is built with the Tableau Web Data Connector 3.0 SDK and provides:
 After cloning and installing npm packages, in the top level directory:
 
 To compile/build project  
-`taco build`
+```taco build```
 
 To produce .taco file (for Tableau Desktop testing)  
-`taco pack`
+```taco pack```
 
 To run .taco file in top level directory (launches Tableau Desktop, runs interactive phase + data gathering phase)  
-`taco run Desktop`
+```taco run Desktop```
 
-The current connector.json file has an example OAuth setting which target EntraId and a custom tenant, to make changes to use your own IDP setting please change the following fields:
+The current connector.json file has an example OAuth setting which target EntraId with your default/home tenant.
+If you are using EntraID, you only need to change the tenentId from **common** to your tenantId in the **authUri**/**tokenUri**.
+If you are using other Idp you need to follow your Idp guidence of how to register an app and grab the folloing fields: 
 - **clientIdDesktop**: The OAuth ClientId target your IDP
 - **authUri**: The authentication url for your IDP
 - **tokenUri**: The token url for your IDP
 - **scopes**: The OAuth scopes to use with your IDP
+
+E.g. for Okta: https://developer.okta.com/docs/guides/implement-oauth-for-okta/main/.
 
 ## Run in Tableau
 Please refer to [Tableau doc](https://tableau.github.io/connector-plugin-sdk/docs/run-taco)

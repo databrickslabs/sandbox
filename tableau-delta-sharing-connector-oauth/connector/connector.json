@@ -28,8 +28,8 @@
         "http://localhost:55558/Callback",
         "http://localhost:55559/Callback"
       ],
-      "authUri": "https://login.microsoftonline.com/9fca8007-4338-4251-99db-4791001e3151/oauth2/v2.0/authorize",
-      "tokenUri": "https://login.microsoftonline.com/9fca8007-4338-4251-99db-4791001e3151/oauth2/v2.0/token",
+      "authUri": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+      "tokenUri": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
       "userInfoUri": "https://graph.microsoft.com/oidc/userinfo",
       "scopes": [
         "64978f70-f6a6-4204-a29e-87d74bfea138/Read",
