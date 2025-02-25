@@ -6,8 +6,8 @@
         <support-link url='https://help.databricks.com/'/>
     </vendor-information>
     <connection-customization class='delta_sharing_oauth' enabled='true' version='10.0'>
-        <vendor name='salesforce'/>
-        <driver name='salesforce'/>
+        <vendor name='databricks'/>
+        <driver name='databricks'/>
         <customizations>
         </customizations>
     </connection-customization>
