@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connection-fields>
+    <field default-value="delta_sharing_oauth" editable="false" value-type="string" category="endpoint" label="@string/server_prompt/" name="server"/>
+    <field default-value="oauth" editable="false" value-type="string" category="authentication" label="Authentication" name="authentication"/>
+    <field default-value="12082020" editable="false" value-type="string" category="general" label="eps-alpha-version" name="eps-alpha-version"/>
+    <field default-value="" editable="false" value-type="string" category="general" label="connectionData" name="connectionData"/>
+    <field default-value="true" editable="false" value-type="string" category="general" label="is-eps-taco" name="is-eps-taco"/>
+    <field default-value="" editable="false" value-type="string" category="general" label="eps-connection-id" name="eps-connection-id"/>
+</connection-fields>

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<connection-metadata>
+    <database enabled='false' label="@string/http_path_prompt/" />
+    <schema enabled='false' label="@string/metadata_database_prompt/"/>
+    <table enabled='true' label="@string/metadata_table_prompt/"/>
+</connection-metadata>

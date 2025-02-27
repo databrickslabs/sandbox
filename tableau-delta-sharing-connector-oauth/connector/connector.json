@@ -1,0 +1,62 @@
+{
+  "name": "Delta Sharing OAuth",
+  "version": "1.0.0",
+  "tableau-version": {
+    "min": "2024.1"
+  },
+  "vendor": {
+    "name": "Databricks",
+    "support-link": "https://help.databricks.com/",
+    "email": "help@databricks.com"
+  },
+  "permission": {
+    "api": {
+      "https://*": [
+        "GET",
+        "POST"
+      ]
+    }
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth": {
+      "clientIdDesktop": "0464ea90-c12f-42a7-b347-c2311ca4413c",
+      "redirectUrisDesktop": [
+        "http://localhost:55555/Callback",
+        "http://localhost:55556/Callback",
+        "http://localhost:55557/Callback",
+        "http://localhost:55558/Callback",
+        "http://localhost:55559/Callback"
+      ],
+      "authUri": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+      "tokenUri": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+      "userInfoUri": "https://graph.microsoft.com/oidc/userinfo",
+      "scopes": [
+        "64978f70-f6a6-4204-a29e-87d74bfea138/Read",
+	      "offline_access",
+        "email",
+        "profile",
+        "openid"
+      ],
+      "capabilities": {
+        "OAUTH_CAP_FIXED_PORT_IN_CALLBACK_URL": true,
+        "OAUTH_CAP_CLIENT_SECRET_IN_URL_QUERY_PARAM": true,
+        "OAUTH_CAP_PKCE_REQUIRES_CODE_CHALLENGE_METHOD": true,
+        "OAUTH_CAP_REQUIRE_PKCE": true,
+        "OAUTH_CAP_SUPPORTS_GET_USERINFO_FROM_ID_TOKEN": true
+      },
+      "accessTokenResponseMaps": {
+        "ACCESSTOKEN": "access_token",
+        "REFRESHTOKEN": "refresh_token",
+        "access-token-issue-time": "issued_at",
+        "access-token-expires-in": "expires_in",
+        "username": "preferred_username",
+        "id-token": "id_token"
+      }
+    }
+  },
+  "window": {
+    "height": 800,
+    "width": 600
+  }
+}

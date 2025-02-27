@@ -1,0 +1,58 @@
+.box {
+  display: block;
+  align-items: center;
+  justify-content: center;
+  height: 20vh;
+}
+
+.error {
+  display: block;
+  margin-top: 2em;
+  height: 5px;
+  text-align: center;
+  color: red;
+}
+
+.card {
+  margin: 20px;
+}
+
+.card-body {
+  overflow: auto;
+}
+
+.browser-card {
+  height: 400px;
+}
+
+/* custom css for horizontal 'or' divider */
+.or {
+  display:flex;
+  justify-content:center;
+  align-items: center;
+  color:grey;
+}
+.or:after,
+.or:before {
+  content: "";
+  display: block;
+  background: grey;
+  width: 30%;
+  height:1px;
+  margin: 0 10px;
+}
+
+/* custom css to change bootstrap's file upload text */
+.custom-file-button input[type=file] {
+  margin-left: -2px !important;
+}
+.custom-file-button input[type=file]::-webkit-file-upload-button {
+  display: none;
+}
+.custom-file-button input[type=file]::file-selector-button {
+  display: none;
+}
+.custom-file-button:hover label {
+  background-color: #dde0e3;
+  cursor: pointer;
+}
