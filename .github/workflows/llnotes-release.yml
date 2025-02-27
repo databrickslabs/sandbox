@@ -7,7 +7,9 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: databrickslabs-protected-runner-group
+      labels: linux-ubuntu-latest
     permissions:
       id-token: write
       contents: write
