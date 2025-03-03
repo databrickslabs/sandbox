@@ -4,7 +4,7 @@ go 1.21.0
 toolchain go1.22.5
 
 require (
-	github.com/databricks/databricks-sdk-go v0.58.1
+	github.com/databricks/databricks-sdk-go v0.59.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.8.0
