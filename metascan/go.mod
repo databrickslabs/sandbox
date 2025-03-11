@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/adrg/frontmatter v0.2.0
-	github.com/databricks/databricks-sdk-go v0.58.1
+	github.com/databricks/databricks-sdk-go v0.60.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
