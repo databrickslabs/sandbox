@@ -104,7 +104,7 @@ cpq_warehouse_query_history AS (
     )  AS query_work_task_time,
     start_time,
     end_time,
-    timestampadd(MILLISECOND , waiting_at_capacity_duration_ms + waiting_for_compute_duration_ms + compilation_duration_ms, start_time) AS query_work_start_time,
+    timestampadd(MILLISECOND , coalesce(waiting_at_capacity_duration_ms, 0) + coalesce(waiting_for_compute_duration_ms, 0) + coalesce(compilation_duration_ms, 0), start_time) AS query_work_start_time,
     timestampadd(MILLISECOND, coalesce(result_fetch_duration_ms, 0), end_time) AS query_work_end_time,
     -- NEW - Query source
     CASE
