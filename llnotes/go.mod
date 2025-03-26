@@ -3,7 +3,7 @@ module github.com/databrickslabs/sandbox/llnotes
 go 1.21.0
 
 require (
-	github.com/databricks/databricks-sdk-go v0.58.1
+	github.com/databricks/databricks-sdk-go v0.61.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/fatih/color v1.18.0
 	github.com/spf13/pflag v1.0.6
@@ -29,6 +29,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
