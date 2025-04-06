@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/acceptance
 
-go 1.21.0
+go 1.24
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.2 // MIT

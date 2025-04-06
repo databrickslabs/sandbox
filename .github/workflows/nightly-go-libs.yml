@@ -21,7 +21,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
+          go-version-file: go-libs/go.mod
 
       - name: Acceptance
         uses: databrickslabs/sandbox/acceptance@acceptance/v0.4.3
