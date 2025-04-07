@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "dbfs-scanner"
+version = "0.0.1"
+description = "Command-line tool and notebook to scan and analyze the DBFS content"
+authors = ["Alex Ott <alexey.ott@databricks.com>"]
+license = "Databricks License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+databricks-sdk = "^0.44.1"
+
+[tool.poetry.group.test.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
