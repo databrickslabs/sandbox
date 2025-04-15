@@ -1,6 +1,7 @@
 module github.com/databrickslabs/sandbox/metascan
 
 go 1.21.0
+toolchain go1.24.1
 
 require (
 	github.com/adrg/frontmatter v0.2.0
@@ -8,7 +9,7 @@ require (
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/yuin/goldmark v1.7.1
+	github.com/yuin/goldmark v1.7.9
 	github.com/yuin/goldmark-meta v1.1.0
 )
 
