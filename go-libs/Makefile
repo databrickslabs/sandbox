@@ -17,6 +17,6 @@ coverage: test
 vendor:
 	@echo "✓ Filling vendor folder with library code ..."
 	@go mod tidy
-	@go mod vendor
+	@go work vendor
 
 .PHONY: build vendor coverage test fmt

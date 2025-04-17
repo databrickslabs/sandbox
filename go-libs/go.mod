@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/go-libs
 
-go 1.21.0
+go 1.24
 
 require (
 	github.com/briandowns/spinner v1.23.2

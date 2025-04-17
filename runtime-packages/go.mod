@@ -1,7 +1,6 @@
 module github.com/databrickslabs/sandbox/runtime-packages
 
-go 1.21.0
-toolchain go1.22.5
+go 1.24
 
 require (
 	github.com/databricks/databricks-sdk-go v0.58.1

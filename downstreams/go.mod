@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/downstreams
 
-go 1.21.0
+go 1.24
 
 require github.com/databrickslabs/sandbox/acceptance v0.2.1
 
