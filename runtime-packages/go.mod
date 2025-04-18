@@ -3,7 +3,7 @@ module github.com/databrickslabs/sandbox/runtime-packages
 go 1.24
 
 require (
-	github.com/databricks/databricks-sdk-go v0.58.1
+	github.com/databricks/databricks-sdk-go v0.63.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.0
 	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.8.0
@@ -27,6 +27,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nwidger/jsoncolor v0.3.2 // indirect
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
