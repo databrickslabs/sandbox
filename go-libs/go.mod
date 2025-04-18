@@ -9,8 +9,8 @@ require (
 	github.com/google/go-querystring v1.1.0
 	github.com/nwidger/jsoncolor v0.3.2
 	github.com/sourcegraph/go-diff v0.7.0
-	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/cobra v1.9.1
+	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.32.0
