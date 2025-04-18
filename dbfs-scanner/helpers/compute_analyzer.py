@@ -13,34 +13,77 @@ from databricks.sdk.service.workspace import ExportFormat
 __notebook_pip_install_from_dbfs__ = re.compile(r"^#\s+MAGIC\s+%pip\s+install.*(/dbfs/.*)$")
 __notebook_dbfs_fuse_use__ = re.compile(r"^.*[\"'](/dbfs/[^\"']*)[\"'].*$")
 __notebook_dbfs_hdfs_use__ = re.compile(r"^.*[\"'](dbfs:/[^\"']*)[\"'].*$")
+__supported_dbfs_paths__ = re.compile(r"^(/dbfs|dbfs:)(/Volumes|/databricks-datasets|/databricks-results|/databricks/mlflow-registry|/databricks/mlflow-tracking)(/.*)?$")
+
+
+def _is_supported_dbfs_path(path: str) -> bool:
+    return __supported_dbfs_paths__.match(path) is not None
 
 
 def _analyze_notebook_or_wsfile(wc: WorkspaceClient, notebook_path: str) -> Tuple[list, list]:
+    """Analyzes a notebook or workspace file for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+        notebook_path: The path to the notebook or workspace file
+
+    Returns:
+        Tuple containing:
+        - List of library paths found in pip install commands
+        - List of DBFS file references found in the code
+    """
     libs = []
     dbfs_file_refs = []
     try:
         b64 = wc.workspace.export(notebook_path, format=ExportFormat.SOURCE).content
         content = base64.b64decode(b64).decode("utf-8")
-        for l in content.split("\n"):
-            m = __notebook_pip_install_from_dbfs__.match(l)
-            if m:
-                libs.append(m.group(1))
-            elif not l.lstrip().startswith("#"):
-                m = __notebook_dbfs_fuse_use__.match(l)
-                if m:
-                    dbfs_file_refs.append(m.group(1))
-                m = __notebook_dbfs_hdfs_use__.match(l)
-                if m:
-                    dbfs_file_refs.append(m.group(1))
+        libs, dbfs_file_refs = _analyze_notebook_content(content)
 
-    except Exception as e:
+    except Exception:
         # print(f"Error occurred while analyzing notebook {notebook_path}: {e}")
         pass
 
     return libs, dbfs_file_refs
 
 
+def _analyze_notebook_content(content: str) -> Tuple[list, list]:
+    """Analyzes notebook content for DBFS libraries and file references.
+
+    Args:
+        content: The notebook content as a string
+
+    Returns:
+        Tuple containing:
+        - List of library paths found in pip install commands
+        - List of DBFS file references found in the code
+    """
+    libs = []
+    dbfs_file_refs = []
+
+    for l in content.split("\n"):
+        m = __notebook_pip_install_from_dbfs__.match(l)
+        if m and _is_supported_dbfs_path(m.group(1)):
+            libs.append(m.group(1))
+        elif not l.lstrip().startswith("#"):
+            m = __notebook_dbfs_fuse_use__.match(l)
+            if m and _is_supported_dbfs_path(m.group(1)):
+                dbfs_file_refs.append(m.group(1))
+            m = __notebook_dbfs_hdfs_use__.match(l)
+            if m and _is_supported_dbfs_path(m.group(1)):
+                dbfs_file_refs.append(m.group(1))
+
+    return libs, dbfs_file_refs
+
+
 def analyze_dlt_pipelines(wc: WorkspaceClient) -> dict:
+    """Analyzes Databricks Delta Live Tables (DLTs) for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     finds = {}
     i = 0
     for l in wc.pipelines.list_pipelines(max_results=100):
@@ -92,6 +135,15 @@ def analyze_dlt_pipelines(wc: WorkspaceClient) -> dict:
 
 
 def _analyze_task(wc: WorkspaceClient, task: Task ) -> dict:
+    """Analyzes a task for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+        task: The task to analyze
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     finds = {}
     if task.spark_python_task:
         if task.spark_python_task.python_file.startswith("dbfs:/"):
@@ -143,6 +195,14 @@ def _analyze_task(wc: WorkspaceClient, task: Task ) -> dict:
 
 
 def analyze_jobs(wc: WorkspaceClient) -> dict:
+    """Analyzes Databricks jobs for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     res = {}
     i = 0
     for job in wc.jobs.list(expand_tasks=True, limit=100):
@@ -180,7 +240,15 @@ def analyze_jobs(wc: WorkspaceClient) -> dict:
 
 
 def _analyze_cluster_spec(cl: ClusterDetails | ClusterSpec | PipelineCluster, finds: dict):
-    # check if we have any init scripts pointing to DBFS
+    """Analyzes a cluster specification for DBFS libraries and file references.
+
+    Args:
+        cl: The cluster specification to analyze
+        finds: A dictionary containing the results of the analysis
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     for init_script in (cl.init_scripts or []):
         if init_script.dbfs:
             r = finds.get("init_scripts", [])
@@ -194,14 +262,22 @@ def _analyze_cluster_spec(cl: ClusterDetails | ClusterSpec | PipelineCluster, fi
 
 
 def analyze_clusters(wc: WorkspaceClient) -> dict:
+    """Analyzes Databricks clusters for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     res = {}
     i = 0
     for cl in wc.clusters.list(page_size=100):
+        if cl.cluster_source not in [ClusterSource.UI, ClusterSource.API]:
+            continue
         i += 1
         if i % 100 == 0:
             print(f"Scanned {i} clusters")
-        if cl.cluster_source not in [ClusterSource.UI, ClusterSource.API]:
-            continue
         # print("Analyzing cluster:", cl.cluster_name)
         finds = {}
 
@@ -229,6 +305,13 @@ def analyze_clusters(wc: WorkspaceClient) -> dict:
 
 
 def _check_policy_definition(sdef: Optional[str], finds: dict):
+    """Analyzes a policy definition for DBFS libraries and file references.
+
+    Args:
+        sdef: The policy definition to analyze
+        finds: A dictionary containing the results of the analysis
+
+    """
     policy_def = json.loads(sdef or "{}")
     for k, v in policy_def.items():
         if not isinstance(v, dict):
@@ -248,6 +331,14 @@ def _check_policy_definition(sdef: Optional[str], finds: dict):
 
 
 def analyze_cluster_policies(wc: WorkspaceClient) -> dict:
+    """Analyzes Databricks cluster policies for DBFS libraries and file references.
+
+    Args:
+        wc: The Databricks workspace client
+
+    Returns:
+        A dictionary containing the results of the analysis.
+    """
     res = {}
     i = 0
     for pf in wc.policy_families.list():
