@@ -2,7 +2,7 @@
   "name": "Delta Sharing OAuth",
   "version": "1.0.0",
   "tableau-version": {
-    "min": "2024.1"
+    "min": "2023.3.14"
   },
   "vendor": {
     "name": "Databricks",

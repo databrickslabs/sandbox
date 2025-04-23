@@ -8,8 +8,8 @@ The connector is built with the Tableau Web Data Connector 3.0 SDK and provides:
 ## Prerequisite
 - [Python 3.7 or higher](https://www.python.org/downloads/)
 - [JDK 11 or higher](https://www.oracle.com/java/technologies/downloads/)
-- [Tableau Desktop 2024.1 or later](https://www.tableau.com/support/releases/desktop/2024.1)
-- Install [taco-toolkit](https://help.tableau.com/current/api/webdataconnector/en-us/index.html): `npm install -g @tableau/taco-toolkit@tableau-2024.1`
+- [Tableau Desktop 2023.3.14 or later](https://www.tableau.com/support/releases/desktop/2023.3.14)
+- Install [taco-toolkit](https://help.tableau.com/current/api/webdataconnector/en-us/index.html): `npm install -g @tableau/taco-toolkit@2.0.0`
 
 ## Local Test
 
@@ -36,3 +36,6 @@ E.g. for Okta: https://developer.okta.com/docs/guides/implement-oauth-for-okta/m
 
 ## Run in Tableau
 Please refer to [Tableau doc](https://tableau.github.io/connector-plugin-sdk/docs/run-taco)
+
+## Limitations
+Please refer to [Databricks doc](https://docs.databricks.com/aws/en/delta-sharing/read-data-open#limitations-of-the-tableau-delta-sharing-connector)
