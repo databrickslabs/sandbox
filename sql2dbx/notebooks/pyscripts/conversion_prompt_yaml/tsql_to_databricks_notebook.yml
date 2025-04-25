@@ -1,0 +1,251 @@
+system_message: |
+  Convert T-SQL code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple T-SQL statements (including but not limited to `CREATE OR ALTER PROCEDURE` statements).
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # T-SQL Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `CONVERT(type, expr)` => `cast(expr AS type)`
+  - `DATEADD(unit, n, date)` => `date_add(date, n)` or an equivalent
+  - `DATEDIFF(unit, startDate, endDate)` => `datediff(endDate, startDate)` (note argument order)
+  - `DATEPART(WEEKDAY, col)` => `dayofweek(col)`
+  - `FORMAT(date, 'pattern')` => `date_format(date, 'pattern')`
+  - `GETDATE()` => `current_timestamp()`
+  - `HASHBYTES('MD5' | 'SHA1' | 'SHA2_256' | 'SHA2_512', expr)`:
+    - MD5 => `md5(expr)`
+    - SHA1 => `sha(expr)`
+    - SHA2_256 => `sha2(expr, 256)`
+    - SHA2_512 => `sha2(expr, 512)`
+  - `ISNULL(expr, replacement)` => `nvl(expr, replacement)`
+  - `JSON_VALUE(...)`, `JSON_QUERY(...)` => `get_json_object()`, `json_tuple()`, or comment out if not feasible.
+  - `OBJECT_NAME(@@PROCID)` => Use the notebook name or a defined variable for references.
+  - `SQUARE(expr)` => `expr * expr` or `power(expr, 2)`
+  - `SYSDATE` => `current_date()`
+  - `SYSDATETIME()` => `current_timestamp()`
+  - `TIMEFROMPARTS(...)`, `DATETIMEFROMPARTS(...)` => Consider Python datetime or `make_timestamp`.
+  - `TO_NUMBER(expr)` => `cast(expr AS INT)` or `cast(expr AS DECIMAL(...))` depending on usage
+  - `TRUNC(date, 'DD')` => `date_trunc('DAY', date)`
+  - For string concat, handle NULL carefully (e.g., `concat_ws`)
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BIGINT` => `LONG`
+  - `FLOAT` / `REAL` => `DOUBLE`
+  - `GEOGRAPHY` => `STRING`
+  - `GEOMETRY` => `STRING`
+  - `IMAGE` => `BINARY`
+  - `INT` / `INTEGER` => `INT`
+  - `MONEY` => `DECIMAL` or `DOUBLE`
+  - `NUMERIC(p, s)` / `DECIMAL(p, s)` => `DECIMAL(p, s)`
+  - `NTEXT` => `STRING`
+  - `NVARCHAR` => `STRING`
+  - `ROWVERSION`:
+    - T-SQL uses `ROWVERSION` for concurrency checks. Spark SQL has no direct equivalent.
+    - Often converted to `BINARY(8)` or left commented out if you only need the concurrency logic in T-SQL.
+  - `SMALLMONEY` => `DECIMAL` or `DOUBLE`
+  - `SQL_VARIANT` => `STRING`
+  - `TEXT` => `STRING`
+  - `UNIQUEIDENTIFIER` => `STRING`
+  - `VARBINARY` => `BINARY`
+  - `VARCHAR` => `STRING`
+
+  ## 3. Syntax Transformation:
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - For T-SQL statements with no direct equivalent (e.g., `CREATE NONCLUSTERED INDEX`, `EXEC <Procedure>`, etc.), exclude or comment them out. Add Python comments explaining why.
+  - `CROSS APPLY` => Typically replaced by a lateral view + `explode()`
+  - `TOP(n)` => `LIMIT n`
+  - `IF EXISTS(SELECT 1 FROM ...)` => `spark.sql(...).count() > 0`
+  - `IF NOT EXISTS(SELECT 1 FROM ...)` => `spark.sql(...).count() <= 0`
+  - `DECLARE @var...`, `SET @var = ...` => Not supported. Use Python variables or Databricks widgets instead.
+  - Query Hints (e.g., `OPTION(MAXDOP=1)`, `WITH(NOLOCK)`) => Not supported. Comment out.
+  - `INDEX` definitions (`CLUSTERED` / `NONCLUSTERED`) => Not supported in Delta Lake. Comment out.
+  - Bracketed Identifiers: `[schema].[table]` => `schema.table` or `schema`.`table` (Spark SQL doesn’t support square brackets)
+  - T-SQL Variables: `@VariableName` => Switch to Pythonic variables or f-string placeholders.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TABLE #RecentOrders (
+        OrderID INT,
+        CustomerName VARCHAR(100),
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    );
+
+    INSERT INTO #RecentOrders
+    SELECT 
+        o.OrderID,
+        c.FirstName + ' ' + c.LastName AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > DATEADD(MONTH, -3, GETDATE())
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT TOP 10 CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM #RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC;
+- role: assistant
+  content: |
+    # Create a temporary table with Delta (using OR REPLACE to avoid conflicts)
+    spark.sql("""
+    CREATE OR REPLACE TABLE RecentOrders (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Populate the temporary table
+    spark.sql("""
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_add(current_date(), -90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Query for top customers
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+
+    # Display results
+    display(top_customers)
+
+    # Explicitly drop the temporary equivalent table
+    spark.sql("DROP TABLE IF EXISTS RecentOrders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    CREATE OR ALTER PROCEDURE dbo.UpdateProductPrice
+        @ProductID INT,
+        @NewPrice DECIMAL(10,2)
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        IF NOT EXISTS (SELECT 1 FROM Products WHERE ProductID = @ProductID)
+        BEGIN
+            PRINT 'Product not found';
+            RETURN;
+        END
+
+        UPDATE Products
+        SET Price = @NewPrice
+        WHERE ProductID = @ProductID;
+
+        SELECT * FROM Products WHERE ProductID = @ProductID;
+    END;
+- role: assistant
+  content: |
+    # Use widgets for parameter input
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Validate input
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM Products WHERE ProductID = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Update price
+    spark.sql(f"""
+    UPDATE Products
+    SET Price = {new_price}
+    WHERE ProductID = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    CREATE OR ALTER PROCEDURE dbo.UpdateProductPriceWithTransaction
+        @ProductID INT,
+        @NewPrice DECIMAL(10,2)
+    AS
+    BEGIN
+        BEGIN TRANSACTION;
+        BEGIN TRY
+            UPDATE Products
+            SET Price = @NewPrice
+            WHERE ProductID = @ProductID;
+            COMMIT TRANSACTION;
+        END TRY
+        BEGIN CATCH
+            ROLLBACK TRANSACTION;
+            THROW;
+        END CATCH
+
+        SELECT * FROM Products WHERE ProductID = @ProductID;
+    END;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("ProductID"))
+    new_price = float(dbutils.widgets.get("NewPrice"))
+
+    # Capture the current timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Perform the update
+        spark.sql(f"""
+        UPDATE Products
+        SET Price = {new_price}
+        WHERE ProductID = {product_id}
+        """)
+
+    except Exception as e:
+        # Rollback via restore if available
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)

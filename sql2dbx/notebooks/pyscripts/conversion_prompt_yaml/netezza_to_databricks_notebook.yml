@@ -1,0 +1,239 @@
+system_message: |
+  Convert IBM Netezza SQL (including NZPLSQL) code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple Netezza SQL/NZPLSQL statements.
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  ## 1. Function Mapping
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `CONVERT(type, expr)` => `CAST(expr AS type)`
+  - `DECODE(expr, val1, res1, val2, res2, ...)` => Rewrite as `CASE WHEN expr=val1 THEN res1 WHEN expr=val2 THEN res2 ELSE ... END`
+  - `getdate()` => `current_timestamp()` or `now()`
+  - `IF(condition, value_if_true, value_if_false)` => Use `CASE WHEN condition THEN value_if_true ELSE value_if_false END`
+  - `INDEX(str, substr)` or `INSTR(str, substr)` => `locate(substr, str)` (or `charindex(substr, str)`)
+  - `INT8(expr)` => `CAST(expr AS BIGINT)` or `CAST(expr AS LONG)`
+  - `ISNULL(expr)` => Typically `coalesce(expr, <replacement>)` or `NVL(expr, <replacement>)`
+  - `LEN(expr)` => `length(expr)`
+  - `NULLIFZERO(expr)` => `NULLIF(expr, 0)`
+  - `STRTOK(str, delim, token_number)` => Use `split(str, delim)` and pick the element by index in a higher-level expression
+  - `TO_CHAR(expr)` (no format) => `CAST(expr AS STRING)`
+  - `TO_CHAR(expr, 'format')` => `date_format(expr, 'format')`
+  - `ZEROIFNULL(expr)` => `coalesce(expr, 0)`
+
+  ## 2. Data Type Mapping
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BYTEINT` => `TINYINT`
+  - `CHAR` / `CHARACTER(n)` => `STRING` or `VARCHAR(n)` (Spark often treats both simply as `STRING`)
+  - `CHARACTER VARYING(n)` => `VARCHAR(n)` or `STRING`
+  - `datetime` => `DATE` or `TIMESTAMP` depending on usage
+  - `DOUBLE PRECISION` => `DOUBLE`
+  - `numeric(p, s)` => `DECIMAL(p, s)` if exact precision needed; otherwise `DOUBLE` or `FLOAT`
+  - `NVARCHAR(...)` => `STRING`
+  - `TIME` / `TIME WITH TIME ZONE` => `STRING`
+  - `VARCHAR(...)` => `STRING`
+
+  ## 3. Syntax Transformation
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - Ignore or comment out Netezza-specific clauses (e.g., `DISTRIBUTE ON(...)`, `ORGANIZE ON(...)`) because Spark does not support them.
+  - For other unsupported features, add Python comments explaining the reason and any possible workaround.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TEMP TABLE RecentOrders (
+        OrderID INT,
+        CustomerName VARCHAR(100),
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    DISTRIBUTE ON (OrderID);
+
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        c.FirstName || ' ' || c.LastName AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > ADD_MONTHS(current_date, -3)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10;
+- role: assistant
+  content: |
+    # Create a Delta table (comment out DISTRIBUTE ON since Spark doesn't support it)
+    spark.sql("""
+    CREATE OR REPLACE TABLE RecentOrders (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Insert records
+    spark.sql("""
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_add(current_date(), -90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Fetch top 10 customers by total spending
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+
+    # Display results
+    display(top_customers)
+
+    # Clean up (drop the table)
+    spark.sql("DROP TABLE IF EXISTS RecentOrders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    CREATE PROCEDURE UpdateProductPrice(
+        IN P_ProductID INT,
+        IN P_NewPrice DECIMAL(10,2)
+    )
+    LANGUAGE NZPLSQL
+    AS
+    BEGIN_PROC
+    DECLARE
+        v_exists INT;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_exists
+        FROM Products
+        WHERE ProductID = P_ProductID;
+
+        IF v_exists = 0 THEN
+            RAISE NOTICE 'Product not found.';
+            RETURN;
+        END IF;
+
+        UPDATE Products
+        SET Price = P_NewPrice
+        WHERE ProductID = P_ProductID;
+
+        SELECT * FROM Products WHERE ProductID = P_ProductID;
+    END;
+    END_PROC;
+- role: assistant
+  content: |
+    # Use widgets for parameter input
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Validate input
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM Products WHERE ProductID = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Update price
+    spark.sql(f"""
+    UPDATE Products
+    SET Price = {new_price}
+    WHERE ProductID = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    CREATE PROCEDURE UpdateProductPriceWithTransaction(
+        IN P_ProductID INT,
+        IN P_NewPrice DECIMAL(10,2)
+    )
+    LANGUAGE NZPLSQL
+    AS
+    BEGIN_PROC
+    DECLARE
+        v_errmsg VARCHAR(256);
+    BEGIN
+        BEGIN;
+        UPDATE Products
+        SET Price = P_NewPrice
+        WHERE ProductID = P_ProductID;
+        COMMIT;
+        SELECT * FROM Products WHERE ProductID = P_ProductID;
+    EXCEPTION
+        WHEN OTHERS THEN
+            GET DIAGNOSTICS EXCEPTION 1 v_errmsg = MESSAGE_TEXT;
+            RAISE NOTICE 'Error encountered: %', v_errmsg;
+            ROLLBACK;
+            RETURN;
+    END;
+    END_PROC;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("ProductID"))
+    new_price = float(dbutils.widgets.get("NewPrice"))
+
+    # Capture the current timestamp for rollback (Delta time travel)
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Perform the update
+        spark.sql(f"""
+        UPDATE Products
+        SET Price = {new_price}
+        WHERE ProductID = {product_id}
+        """)
+
+    except Exception as e:
+        # Rollback simulation via restore if available
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)
