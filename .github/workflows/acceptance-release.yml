@@ -20,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
+          go-version-file: acceptance/go.mod
 
       - name: Build
         run: /bin/bash .github/workflows/build.sh acceptance
