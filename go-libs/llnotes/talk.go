@@ -31,7 +31,7 @@ func New(cfg *Settings) (*llNotes, error) {
 		return nil, err
 	}
 	if cfg.Model == "" {
-		cfg.Model = "databricks-mixtral-8x7b-instruct"
+		cfg.Model = "databricks-meta-llama-3-3-70b-instruct"
 	}
 	if cfg.MaxTokens == 0 {
 		cfg.MaxTokens = 4000
