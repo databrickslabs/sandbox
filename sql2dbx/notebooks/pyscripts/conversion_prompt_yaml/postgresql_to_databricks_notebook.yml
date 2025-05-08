@@ -1,0 +1,233 @@
+system_message: |
+  Convert PostgreSQL (including PL/pgSQL) code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple PostgreSQL statements (including but not limited to `CREATE FUNCTION` or `CREATE PROCEDURE` statements in PL/pgSQL).
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # PostgreSQL Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `GENERATE_SERIES(start, stop, step)` => Use `sequence(start, stop, step)` combined with `explode()`
+  - `json#>'{a,b,c}'` => `get_json_object(json_str, '$.a.b.c')`
+  - `json#>>'{a,b,c}'` => `get_json_object(json_str, '$.a.b.c')` (when treating as string)
+  - `json->'key'` => `get_json_object(json_str, '$.key')` (may require additional processing if treating as JSON object)
+  - `json->>'key'` => `get_json_object(json_str, '$.key')`
+  - `LEVENSHTEIN(string1, string2)` => No direct equivalent; requires implementation via Python UDF
+  - `PERFORM function_call()` => Use `_ = spark.sql("...")` when result needs to be discarded
+  - `RAISE NOTICE 'message'` => Use Python's `print("message")` or logging
+  - `REGEXP_REPLACE(string, pattern, replacement, flags)` => `regexp_replace(string, pattern, replacement)` (flags converted to appropriate pattern modifiers)
+  - `STRING_AGG(col, delimiter)` => `concat_ws(delimiter, collect_list(col))`
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BYTEA` => `BINARY`
+  - `CHAR`, `VARCHAR`, `TEXT` => `STRING`
+  - `DOUBLE PRECISION`, `REAL` => `DOUBLE`
+  - `INTEGER` => `INT`
+  - `NUMERIC(p, s)`, `DECIMAL(p, s)` => `DECIMAL(p, s)`
+  - `SERIAL`, `BIGSERIAL`, `SMALLSERIAL` => `INT` or `LONG` (note that auto-increment is not directly supported)
+  - `UUID` => `STRING`
+  - Array types => Convert to corresponding `ARRAY<type>`
+  - Composite types => Typically converted to `STRUCT<...>`
+
+  ## 3. Syntax Transformation:
+  Map PostgreSQL-specific syntax constructs to their Databricks equivalents as follows:
+
+  - `IF EXISTS (SELECT 1 FROM ...)` => `if spark.sql("SELECT COUNT(*) FROM ...").collect()[0][0] > 0:`
+  - `IF NOT EXISTS (SELECT 1 FROM ...)` => `if spark.sql("SELECT COUNT(*) FROM ...").collect()[0][0] == 0:`
+  - `GENERATE_SERIES` with date intervals => Generate date sequences in Python
+  - `WITH RECURSIVE` => Not directly supported; implement iterative logic in Python
+  - `LATERAL JOIN` => May need to be rewritten with UDFs or multiple operations
+  - `INSERT ... RETURNING ...` => Split into INSERT followed by a separate SELECT query
+  - PostgreSQL-specific date/time manipulations => Use Spark functions with appropriate adjustments
+  - `CREATE TABLE ... INHERITS (...)` => Not supported in Spark; create separate tables or use a unified schema
+  - `SELECT ... FOR UPDATE` => Not supported; lock management differs in distributed systems
+  - `DO $$ ... $$` => Convert to Python code outside of SQL
+
+few_shots:
+# Example 1: Basic PostgreSQL Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TEMP TABLE temp_recent_orders (
+        order_id INTEGER,
+        customer_name VARCHAR(100),
+        total_amount DECIMAL(10,2),
+        order_date DATE
+    );
+
+    INSERT INTO temp_recent_orders
+    SELECT 
+        o.order_id,
+        c.first_name || ' ' || c.last_name AS customer_name,
+        SUM(oi.price * oi.quantity) AS total_amount,
+        o.order_date
+    FROM orders o
+    JOIN customers c ON o.customer_id = c.customer_id
+    JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.order_date > current_date - INTERVAL '3 months'
+    GROUP BY o.order_id, c.first_name, c.last_name, o.order_date;
+
+    SELECT customer_name, SUM(total_amount) AS total_spent
+    FROM temp_recent_orders
+    GROUP BY customer_name
+    ORDER BY total_spent DESC
+    LIMIT 10;
+- role: assistant
+  content: |
+    # Create a temporary table with Delta (using OR REPLACE to avoid conflicts)
+    spark.sql("""
+    CREATE OR REPLACE TABLE temp_recent_orders (
+        order_id INT,
+        customer_name STRING,
+        total_amount DECIMAL(10,2),
+        order_date DATE
+    )
+    """)
+
+    # Populate the temporary table
+    spark.sql("""
+    INSERT INTO temp_recent_orders
+    SELECT 
+        o.order_id,
+        concat_ws(' ', c.first_name, c.last_name) AS customer_name,
+        SUM(oi.price * oi.quantity) AS total_amount,
+        o.order_date
+    FROM orders o
+    JOIN customers c ON o.customer_id = c.customer_id
+    JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.order_date > date_sub(current_date(), 90)
+    GROUP BY o.order_id, c.first_name, c.last_name, o.order_date
+    """)
+
+    # Query for top customers
+    top_customers = spark.sql("""
+    SELECT customer_name, SUM(total_amount) AS total_spent
+    FROM temp_recent_orders
+    GROUP BY customer_name
+    ORDER BY total_spent DESC
+    LIMIT 10
+    """)
+
+    # Display results
+    display(top_customers)
+
+    # Explicitly drop the temporary equivalent table
+    spark.sql("DROP TABLE IF EXISTS temp_recent_orders")
+
+# Example 2: PostgreSQL Function
+- role: user
+  content: |
+    CREATE OR REPLACE FUNCTION update_product_price(
+        p_product_id INTEGER,
+        p_new_price DECIMAL(10,2)
+    )
+    RETURNS VOID AS $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM products WHERE product_id = p_product_id) THEN
+            RAISE NOTICE 'Product not found';
+            RETURN;
+        END IF;
+        UPDATE products
+        SET price = p_new_price
+        WHERE product_id = p_product_id;
+        PERFORM (SELECT * FROM products WHERE product_id = p_product_id);
+    END;
+    $$ LANGUAGE plpgsql;
+- role: assistant
+  content: |
+    # Use widgets for parameter input
+    dbutils.widgets.text("p_product_id", "")
+    dbutils.widgets.text("p_new_price", "")
+
+    # Validate input
+    try:
+        product_id = int(dbutils.widgets.get("p_product_id"))
+        new_price = float(dbutils.widgets.get("p_new_price"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM products WHERE product_id = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Update price
+    spark.sql(f"""
+    UPDATE products
+    SET price = {new_price}
+    WHERE product_id = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM products WHERE product_id = {product_id}")
+    display(updated_df)
+
+# Example 3: PostgreSQL Function with Transaction Handling
+- role: user
+  content: |
+    CREATE OR REPLACE FUNCTION update_product_price_with_transaction(
+        p_product_id INTEGER,
+        p_new_price DECIMAL(10,2)
+    )
+    RETURNS TABLE (product_id INTEGER, price DECIMAL(10,2)) AS $$
+    BEGIN
+        BEGIN;
+        
+        UPDATE products
+        SET price = p_new_price
+        WHERE product_id = p_product_id;
+        
+        COMMIT;
+        
+        RETURN QUERY
+        SELECT products.product_id, products.price 
+        FROM products 
+        WHERE product_id = p_product_id;
+        
+        EXCEPTION
+            WHEN OTHERS THEN
+                ROLLBACK;
+                RAISE;
+    END;
+    $$ LANGUAGE plpgsql;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("p_product_id", "")
+    dbutils.widgets.text("p_new_price", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("p_product_id"))
+    new_price = float(dbutils.widgets.get("p_new_price"))
+
+    # Capture the current timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Perform the update
+        spark.sql(f"""
+        UPDATE products
+        SET price = {new_price}
+        WHERE product_id = {product_id}
+        """)
+    except Exception as e:
+        # Roll back via restore if available
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT product_id, price FROM products WHERE product_id = {product_id}")
+    display(final_df)
