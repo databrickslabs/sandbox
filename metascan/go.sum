@@ -15,8 +15,8 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/databricks/databricks-sdk-go v0.67.0 h1:XSOjjThyExm0qtFNQ3ePuepetyaXmESegx/oOSoodkU=
-github.com/databricks/databricks-sdk-go v0.67.0/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
+github.com/databricks/databricks-sdk-go v0.68.0 h1:sBsdiF2B0hCmT8NEEkc45tQ73oQSA9nNP7Fhgk/mSR8=
+github.com/databricks/databricks-sdk-go v0.68.0/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
 github.com/databrickslabs/sandbox/go-libs v0.4.0 h1:0Bfa36cNBXKIGaRE/LDFeL8FSNgZZRLtli0paKusRQI=
 github.com/databrickslabs/sandbox/go-libs v0.4.0/go.mod h1:xSBv4qCu6DKdAKISyE6I8zXYhi6igEsJ5IBxSuTvBtM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
