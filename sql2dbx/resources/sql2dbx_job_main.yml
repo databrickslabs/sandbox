@@ -1,0 +1,45 @@
+resources:
+  jobs:
+    sql2dbx_job_main:
+      name: sql2dbx_job_main
+      max_concurrent_runs: 1000
+      tasks:
+        - task_key: 00_main
+          notebook_task:
+            notebook_path: ../notebooks/00_main.py
+            source: WORKSPACE
+      queue:
+        enabled: true
+      parameters:
+        # Params for 01_analyze_input_files
+        - name: input_dir
+          default: ""
+        - name: result_catalog
+          default: ""
+        - name: result_schema
+          default: ""
+        - name: token_count_threshold
+          default: "20000"
+        - name: existing_result_table
+          default: ""
+        # Params for 02_convert_sql_to_databricks
+        - name: endpoint_name
+          default: "databricks-claude-3-7-sonnet"
+        - name: sql_dialect
+          default: "tsql"
+        - name: conversion_prompt_yaml
+          default: ""
+        - name: comment_lang
+          default: "English"
+        - name: concurrency
+          default: "4"
+        - name: request_params
+          default: ""
+        - name: log_level
+          default: "DEBUG"
+        # Params for 03_convert_sql_to_databricks
+        - name: max_fix_attempts
+          default: "1"
+        # Params for 04_export_to_databricks_notebooks
+        - name: output_dir
+          default: ""

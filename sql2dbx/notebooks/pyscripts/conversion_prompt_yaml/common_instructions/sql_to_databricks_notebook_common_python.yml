@@ -1,0 +1,95 @@
+common_python_instructions_and_guidelines: |
+  # Instructions
+  1. Convert the input SQL statements into Python code suitable for execution in a Databricks notebook.
+  2. Strictly adhere to the guidelines provided below.
+  3. The output should be Python code and Python comments only.
+  4. DO NOT omit any part of the conversion. Instead, include any non-convertible parts as Python comments in the output code, along with explanations of the necessary changes or alternatives.
+  5. DO NOT output explanation strings between cells. Just output Python code and Python comments.
+  6. DO NOT include cell separators or notebook-level Markdown descriptions as these will be added by another program.
+  7. If you receive a message like "Please continue," simply continue the conversion from where you left off without adding any extra phrases.
+
+  # Guidelines
+  ## 1. Python-based:
+  - Use Python as the primary programming language.
+
+  ## 2. Databricks Environment:
+  - Include a setup cell at the beginning with any necessary imports.
+  - DO NOT create a new SparkSession in the notebook. Databricks provides it by default.
+
+  ## 3. Spark SQL Execution:
+  - Use `spark.sql()` to execute SQL statements.
+  - Write SQL statements directly within `spark.sql()`.
+  - DO NOT store SQL statements in variables unless absolutely necessary. If you must store SQL statements in variables, prefix the variable names with `qs_` for identification.
+
+  ## 4. Comments:
+  - Add Python comments in {comment_lang} as needed to explain the code's logic.
+  - Start each cell with a high-level Python comment describing its purpose.
+
+  # 5. Transaction and Rollback Handling:
+  - Databricks does not fully support transaction control statements like `BEGIN`, `COMMIT`, or `ROLLBACK`.
+  - If transactional behavior is required, simulate it using Python's `try-except-finally` blocks for error handling.
+  - For rolling back a Delta table:
+    - Retrieve the most recent update timestamp from the first row of the table's HISTORY (inside the try block).
+    - Use the `RESTORE TABLE TIMESTAMP AS OF` command in a finally block to revert the Delta table.
+
+  ## 6. Looping Constructs:
+  - DO NOT use `collect()`, for/while loops, or `iterrows()` for large data processing.
+  - Replace cursor/row-by-row logic with Spark DataFrame operations (`map`, `filter`, `groupBy`, `merge`, etc.).
+  - Use JOINs for bulk operations rather than iterating over rows.
+
+  ## 7. Handling Non-Compatible Syntax
+  - If you encounter vendor-specific SQL syntax or functions that have no direct Spark/Delta equivalent, comment them out in Python with an explanation.  
+  - If possible, provide an alternative approach (for example, rewrite CROSS APPLY with a lateral view + `explode()`).
+
+  ## 8. Table, View, Column, and Schema Names
+  - Keep the original names as much as possible.
+  - If names include unsupported characters such as `@`, `#`, or `$`, remove or replace them.
+  - Avoid square brackets `[]`; use backticks `` for names with special characters or spaces.
+
+  ## 9. Code Organization
+  - Group related SQL statements together into logical units (setup, transformations, cleanup, etc.).
+  - DO NOT output extra Markdown or notebook cell separators; only Python code and comments.
+
+  ## 10. Error Handling
+  - Wrap critical operations in `try-except` blocks to gracefully handle failures.
+  - Optionally call `dbutils.notebook.exit("<message>")` if you need to stop execution upon errors.
+
+  ## 11. Parameter Handling with Widgets
+  - Use `dbutils.widgets.text()`, `dbutils.widgets.dropdown()`, etc. for input parameters.
+  - Use `dbutils.widgets.get()` to retrieve parameter values.
+  - Convert parameter values to the correct data type (e.g., `int(dbutils.widgets.get("param_name"))`).
+  - Define sensible default values where applicable.
+  - If the SQL includes stored procedures or other parameterized routines, convert them accordingly:
+    - Create widgets for each parameter.
+    - Place widget creation at the beginning of the code.
+    - Refer to the widget values inside the converted Python logic or spark.sql() calls.
+
+  ## 12. Delta Tables
+  - Assume that all referenced tables (unless explicitly created) are Delta tables.
+
+  ## 13. CREATE TEMP TABLE
+  - Databricks does not support the same `CREATE TEMP TABLE` syntax as some other SQL dialects.
+  - Use a Delta table instead; drop it at the end of the script or in a `finally` clause.
+  - DO NOT rely on Spark TEMP VIEWs as an equivalent for a true “temp table.”
+
+  ## 14. DELETE with Alias
+  - Databricks does not support using a table alias in a DELETE statement.
+  - Always specify the full table name:  
+    ```sql
+    DELETE FROM MyTable WHERE ...
+    ```
+
+  ## 15. DELETE with JOIN
+  - Databricks does not support a `JOIN` clause directly within `DELETE`.
+  - Create a temporary view or subquery that performs the join logic, then run the `DELETE` referencing that view or subquery.
+
+  ## 16. UPDATE Statements:
+  - Databricks does not support `FROM` clauses in `UPDATE`.
+  - Use `MERGE INTO` for statements that require a join. For example:
+    ```sql
+    MERGE INTO target_table t
+    USING source_table s
+    ON t.key = s.key
+    WHEN MATCHED THEN UPDATE SET ...
+    ```
+  - If `MERGE INTO` is not suitable, create a temporary view or subquery for the join, then perform the `UPDATE`.
