@@ -1,0 +1,224 @@
+system_message: |
+  Convert Teradata SQL code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple Teradata SQL statements.
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # Teradata Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `POSITION(substr IN str)` => `INSTR(str, substr)`
+  - `SAMPLE n` => Spark has no direct random sample equivalent using the exact syntax. Use `TABLESAMPLE` (with caution, different behavior) or simply `LIMIT n` for a non-random limit.
+  - Date/Time Arithmetic:
+    - `current_date - n` => `dateadd('DAY', -n, current_date())`
+    - `INTERVAL '1' WEEK` => approximate with `dateadd('DAY', 7, current_date())`
+    - Custom intervals like `INTERVAL '1' QUARTER` => approximate via days or comment out if no direct mapping.
+  - If no direct Spark equivalent (e.g., custom functions like `OREPLACE`, `OTRANSLATE`), comment them out or add Python notes.
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BIGINT` => `LONG`
+  - `BLOB` / `VARBYTE` => `BINARY`
+  - `BYTEINT` => `TINYINT` or `SMALLINT`
+  - `CHAR` / `VARCHAR` => `STRING`
+  - `DECIMAL(p, s)` => `DECIMAL(p, s)`
+  - `INTEGER` => `INT`
+  - `SMALLINT` => `SMALLINT`
+  - `ST_GEOMETRY` => `STRING` (comment out if unsupported)
+  - `TIMESTAMP(n)` => `TIMESTAMP` (precision may be truncated)
+
+  ## 3. Syntax Transformation:
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - `REPLACE <object>` => `CREATE OR REPLACE <object>`
+  - `TOP n` => `LIMIT n`
+  - `MINUS` => `EXCEPT`
+  - Teradata-specific statements like `LOCKING`, `MLOAD`, `FAST_LOAD`, `COLLECT STATISTICS` => remove or comment out.
+  - `CREATE MULTISET TABLE` / `CREATE VOLATILE TABLE` => `CREATE TABLE` (Delta, temp view, etc.). Comment differences.
+  - `UPDATE ... FROM`, `DELETE ... JOIN` => Not directly supported; consider `MERGE INTO` or a workaround with temp views.
+  - `PRIMARY INDEX`, `UNIQUE PRIMARY INDEX`, `PARTITION BY RANGE_N` => Spark does not support these directly. Remove or comment out.  
+  - Character set conversions (e.g., `TRANSLATE(... USING ...)`) => remove or comment out.
+  - For hashing, encryption, or specialized Teradata functions (e.g., `HASHBYTES` analogs), comment or note as unsupported.
+
+  ## 4. Abbreviations:
+  - `SEL` => `SELECT`
+  - `DEL` => `DELETE`
+  - `INS` => `INSERT`
+  - `UPD` => `UPDATE`
+
+few_shots:
+# Example 1: Basic Queries with (Volatile) Tables
+- role: user
+  content: |
+    CREATE VOLATILE TABLE RecentOrders (
+        OrderID INTEGER,
+        CustomerName VARCHAR(100),
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    ON COMMIT PRESERVE ROWS;
+
+    INSERT INTO RecentOrders
+    SELECT
+        o.OrderID,
+        c.FirstName || ' ' || c.LastName AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > ADD_MONTHS(CURRENT_DATE, -3)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT TOP 10 CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC;
+- role: assistant
+  content: |
+    # Create a table in Databricks (Delta). Volatile table doesn't exist, so we simply create or replace a normal table.
+    spark.sql("""
+    CREATE OR REPLACE TABLE RecentOrders (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Insert data into the table
+    spark.sql("""
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_add(current_date(), -90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Retrieve top 10 by total spent
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+    display(top_customers)
+
+    # Drop the table (to emulate dropping the volatile table)
+    spark.sql("DROP TABLE IF EXISTS RecentOrders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    REPLACE PROCEDURE UpdateProductPrice(
+        IN ProductID INT,
+        IN NewPrice DECIMAL(10,2)
+    )
+    BEGIN
+      IF (NOT EXISTS (SELECT 1 FROM Products WHERE ProductID = :ProductID)) THEN
+        CALL dbc.trace('Product not found');
+        LEAVE proc_exit;
+      END IF;
+
+      UPDATE Products
+      SET Price = :NewPrice
+      WHERE ProductID = :ProductID;
+
+      SELECT * FROM Products WHERE ProductID = :ProductID;
+    END proc_exit;
+- role: assistant
+  content: |
+    # Use Databricks widgets for parameter input (simulating procedure parameters)
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs from string to numeric types
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM Products WHERE ProductID = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Update product price
+    spark.sql(f"""
+    UPDATE Products
+    SET Price = {new_price}
+    WHERE ProductID = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    REPLACE PROCEDURE UpdateProductPriceWithTransaction(
+        IN ProductID INT,
+        IN NewPrice DECIMAL(10,2)
+    )
+    BEGIN
+      BT;  -- Begin Teradata transaction
+
+      UPDATE Products
+      SET Price = :NewPrice
+      WHERE ProductID = :ProductID;
+
+      ET;  -- End transaction (commit)
+
+      SELECT * FROM Products WHERE ProductID = :ProductID;
+    END;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("ProductID"))
+    new_price = float(dbutils.widgets.get("NewPrice"))
+
+    # Capture the current timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Equivalent to "BT" -> begin a logical block
+        spark.sql(f"""
+        UPDATE Products
+        SET Price = {new_price}
+        WHERE ProductID = {product_id}
+        """)
+        # "ET" -> we simply do nothing extra in Delta for commit
+    except Exception as e:
+        # If an error occurs, attempt rollback via RESTORE
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)

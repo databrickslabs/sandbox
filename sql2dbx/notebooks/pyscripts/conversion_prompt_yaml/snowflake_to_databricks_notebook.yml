@@ -1,0 +1,257 @@
+system_message: |
+  Convert Snowflake SQL code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple Snowflake SQL statements (including but not limited DDL, DML, or stored procedures).
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # Snowflake Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `ARRAY_AGG(expr)` => `collect_list(expr)`
+  - `ARRAY_CONSTRUCT(...)` => `array(...)` for flat arrays, or `map(...)` / `struct(...)` if keys/values are involved.
+  - `DIV0(expr1, expr2)` => `case when expr2=0 then 0 else expr1/expr2 end` or Python try/except block.
+  - `FLATTEN(...)` => `explode()` or `posexplode()` plus a lateral view. Provide a Python comment on how to replicate the logic.
+  - `LEN(expr)` => `length(expr)`
+  - `LISTAGG(...)` => `collect_list(...)` plus `concat_ws(...)`, or a similar approach.
+  - `NULLIFZERO(expr)` => `case when expr = 0 then null else expr end`.
+  - `OBJECT_CONSTRUCT(...)` => `map(...)`, JSON operations, or `struct(...)`; note any limitations in comments.
+  - `PIVOT` / `UNPIVOT` => `stack()`, multiple `union`s, or DataFrame operations. Document any complexity via Python comments.
+  - `REGEXP_EXTRACT(...)`, `REGEXP_EXTRACT_ALL(...)`, `REGEXP_REPLACE(...)`, `REGEXP_ILIKE(...)`, `RLIKE(...)` => Use Spark equivalents or Python comments for unsupported functions.
+  - `SQUARE(expr)` => `power(expr, 2)` or a Python comment.
+  - `TIMEDIFF`, `TIMESTAMPDIFF` => Often reversed argument order or different semantics in Spark. Make sure to confirm the logic does not invert the result. Add clarifying Python comments where needed.
+  - `TIMESTAMP_NTZ` / `TIMESTAMP_LTZ` / `TIMESTAMP_TZ` => All map to a single `timestamp` type in Spark. Note any differences (time zone handling, local time, etc.) in comments.
+  - `TIMEADD(unit, n, date)` or `TIMESTAMPADD(unit, n, date)` => `dateadd(unit, n, date)`
+  - `TO_CHAR(date, format)` => `date_format(date, format)` (or rely on the LLM to generate the correct pattern).
+  - `TO_TIMESTAMP_LTZ` / `TO_TIMESTAMP_TZ` / `TO_TIMESTAMP_NTZ` => In Spark, generally `to_timestamp()` or `cast(... as timestamp)`. If time zone data is lost, insert an explanatory comment.
+  - `VARIANCE_SAMP(expr)` => `variance(expr)`
+  - `ZEROIFNULL(expr)` => `coalesce(expr, 0)` or a `case when expr is null then 0 else expr end`.
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `TEXT`, `VARCHAR2` => `STRING`
+  - `DATETIME`, `TIMESTAMP_NTZ`, `TIMESTAMP_LTZ`, `TIMESTAMP_TZ` => `TIMESTAMP`
+  - `FLOAT4` / `FLOAT8` / `DOUBLE PRECISION` => `DOUBLE`
+  - `INTEGER` / `INT` => `BIGINT` or `INT`
+  - `NUMBER(p, s)` => `DECIMAL(p, s)`
+  - `VARBINARY` => `BINARY`
+  - If `NOT NULL` or other DDL clauses do not map cleanly, use Python comments to explain any differences or potential issues.
+
+  ## 3. Syntax Transformation:
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - For Snowflake statements with no direct equivalent (e.g., `SHOW PRIMARY KEYS`, `PUT`, `GET`, etc.), exclude or comment them out. Add Python comments explaining why.
+  - Variable interpolation: `:var`, `$var` => Use Python f-strings or `.format()` instead.
+  - Identifier quoting: `"My Table Name"` => Use backticks (e.g., `My Table Name`) in Spark SQL.
+  - Special characters in names: `@`, `#`, `$` => Remove or replace them as these are forbidden in Spark. Add Python comments if this could break references.
+  - `BITSHIFTLEFT` => `<<` or use Python-level operations.
+  - `BITSHIFTRIGHT` => `>>` or use Python-level operations.
+  - `BITXOR` => `^` or use Python-level operations.
+  - `BOOLXOR` => Not directly supported. Use `(a OR b) AND NOT (a AND b)` or similar logical expression.
+
+  ## 4. JavaScript-based Stored Procedures:
+  Snowflake allows creating stored procedures in JavaScript. In Databricks, these should be converted to Python code following these guidelines:
+
+  - Replace `snowflake.execute({sqlText: ...})` with `spark.sql()` calls.
+  - Convert JavaScript local variables to Python variables.
+  - Replace parameter passing mechanisms with Databricks widgets (`dbutils.widgets`), environment variables, or function parameters in Python.
+  - Transform JavaScript `try { ... } catch (err) { ... }` blocks to Python's `try-except` blocks.
+  - Replicate JavaScript conditional logic (`if`, `for`, etc.) with equivalent Python control structures.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TEMPORARY TABLE TEMP_RECENT_ORDERS (
+        OrderID NUMBER(10, 0),
+        CustomerName VARCHAR(100),
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    );
+
+    INSERT INTO TEMP_RECENT_ORDERS
+    SELECT 
+        o.OrderID,
+        -- Snowflake typically uses '||' for string concatenation:
+        c.FirstName || ' ' || c.LastName AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > DATEADD(MONTH, -3, CURRENT_TIMESTAMP())
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM TEMP_RECENT_ORDERS
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10;
+- role: assistant
+  content: |
+    # Create a Delta table (replacing the temporary concept)
+    spark.sql("""
+    CREATE OR REPLACE TABLE TEMP_RECENT_ORDERS (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Populate the temporary table
+    spark.sql("""
+    INSERT INTO TEMP_RECENT_ORDERS
+    SELECT
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_add(current_timestamp(), -90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Query for top customers
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM TEMP_RECENT_ORDERS
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+
+    # Display the results
+    display(top_customers)
+
+    # Explicitly drop the temporary equivalent table
+    spark.sql("DROP TABLE IF EXISTS TEMP_RECENT_ORDERS")
+
+# EXAMPLE 2: JavaScript-based Stored Procedure
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE PUBLIC.UPDATE_OR_INSERT_CUSTOMER(
+        "CUST_ID" NUMBER,
+        "NEW_NAME" VARCHAR
+    )
+    RETURNS VARCHAR
+    LANGUAGE JAVASCRIPT
+    AS
+    '
+      var checkSQL = `SELECT COUNT(*) AS CNT FROM CUSTOMERS WHERE CUSTOMER_ID = ` + CUST_ID;
+      var rs = snowflake.execute({sqlText: checkSQL});
+      rs.next();
+      var countVal = rs.getColumnValue(1);
+
+      if (countVal > 0) {
+        var updateSQL = `UPDATE CUSTOMERS SET CUSTOMER_NAME = ''' + NEW_NAME + ''' WHERE CUSTOMER_ID = ` + CUST_ID;
+        snowflake.execute({sqlText: updateSQL});
+        return "Updated existing customer.";
+      } else {
+        var insertSQL = `INSERT INTO CUSTOMERS (CUSTOMER_ID, CUSTOMER_NAME) VALUES (` + CUST_ID + `, ''' + NEW_NAME + ''')`;
+        snowflake.execute({sqlText: insertSQL});
+        return "Inserted new customer.";
+      }
+    ';
+- role: assistant
+  content: |
+    # Retrieve parameters via widgets (simulating procedure arguments)
+    dbutils.widgets.text("CUST_ID", "")
+    dbutils.widgets.text("NEW_NAME", "")
+
+    try:
+        cust_id = int(dbutils.widgets.get("CUST_ID"))
+        new_name = dbutils.widgets.get("NEW_NAME")
+    except ValueError:
+        raise ValueError("Invalid CUST_ID. Must be an integer.")
+
+    # Check if the customer exists
+    check_df = spark.sql(f"SELECT COUNT(*) AS CNT FROM CUSTOMERS WHERE CUSTOMER_ID = {cust_id}")
+    count_val = check_df.collect()[0]["CNT"]
+
+    # Update or Insert logic
+    if count_val > 0:
+        # Update
+        spark.sql(f"""
+        UPDATE CUSTOMERS
+        SET CUSTOMER_NAME = '{new_name}'
+        WHERE CUSTOMER_ID = {cust_id}
+        """)
+        result_msg = "Updated existing customer."
+    else:
+        # Insert
+        spark.sql(f"""
+        INSERT INTO CUSTOMERS (CUSTOMER_ID, CUSTOMER_NAME)
+        VALUES ({cust_id}, '{new_name}')
+        """)
+        result_msg = "Inserted new customer."
+
+    # Return or display the result    
+    print(result_msg)
+    dbutils.notebook.exit(result_msg)
+
+# Example 3: JavaScript-based Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE PUBLIC.UpdateProductPriceWithTransaction(
+        "PRODUCT_ID" NUMBER,
+        "NEW_PRICE" NUMBER(10,2)
+    )
+    RETURNS TABLE (PRODUCTID NUMBER, PRICE NUMBER(10,2))
+    LANGUAGE JAVASCRIPT
+    EXECUTE AS OWNER
+    AS
+    $$
+    try {
+        snowflake.execute({ sqlText: 'BEGIN' });
+        let updateStmt = "UPDATE PRODUCTS SET PRICE = " + NEW_PRICE + " WHERE PRODUCTID = " + PRODUCT_ID;
+        snowflake.execute({ sqlText: updateStmt });
+        snowflake.execute({ sqlText: 'COMMIT' });
+        return snowflake.execute({
+            sqlText: "SELECT PRODUCTID, PRICE FROM PRODUCTS WHERE PRODUCTID = " + PRODUCT_ID
+        });
+    } catch (err) {
+        snowflake.execute({ sqlText: 'ROLLBACK' });
+        throw err;
+    }
+    $$;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("PRODUCT_ID", "")
+    dbutils.widgets.text("NEW_PRICE", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("PRODUCT_ID"))
+    new_price = float(dbutils.widgets.get("NEW_PRICE"))
+
+    # Capture the current timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Perform the update
+        spark.sql(f"""
+        UPDATE Products
+        SET Price = {new_price}
+        WHERE ProductID = {product_id}
+        """)
+    except Exception as e:
+        # Rollback via restore if available
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)
