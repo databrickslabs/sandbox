@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Figtree', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #11171C;
+  background-color: #FFFFFF;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  position: absolute;
+  right: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F5F5;
+  margin-right: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C0CDD8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5F7281;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: #C0CDD8 #F5F5F5;
+}

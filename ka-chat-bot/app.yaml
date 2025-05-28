@@ -1,0 +1,11 @@
+command:
+  - "gunicorn"
+  - "main:app"
+  - "-w"
+  - "2"
+  - "--worker-class"
+  - "uvicorn.workers.UvicornWorker"
+
+env:
+  - name: "SERVING_ENDPOINT_NAME"
+    valueFrom: "serving_endpoint" 
