@@ -1,0 +1,10 @@
+version: 1
+name: "chatbot-app"
+description: "A sample chatbot app"
+resource_specs:
+  - name: "serving_endpoint"
+    description: "Serving endpoint for the chatbot app"
+    serving_endpoint_spec:
+      permission: "CAN_QUERY"
+user_api_scopes:
+  - serving.serving-endpoints
