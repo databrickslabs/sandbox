@@ -11,7 +11,6 @@ const InputContainer = styled.div<InputContainerProps>`
   width: 100%;
   max-width: 680px;
   min-height: 50px;
-  height: 90px;
   position: relative;
   border: 1px solid #C0CDD8;
   border-radius: 12px;
@@ -19,7 +18,7 @@ const InputContainer = styled.div<InputContainerProps>`
   background-color: white;
   box-shadow: 0px 1px 3px -1px rgba(0, 0, 0, 0.05), 0px 2px 0px 0px rgba(0, 0, 0, 0.05);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-between;
   gap: 8px;
   margin-top: 10px;
@@ -41,7 +40,6 @@ const TextArea = styled.textarea`
   display: block;
   background-color: transparent;
   font-family: inherit;
-  margin-bottom: 30px;
   resize: none;
   box-sizing: border-box;
 `;
@@ -50,7 +48,7 @@ const ButtonsRight = styled.div`
   display: flex;
   align-items: center;
   position: absolute;
-  bottom: 12px;
+  top: 12px;
   right: 12px;
   z-index: 2;
 `;
@@ -80,66 +78,6 @@ const SendButton = styled(InputButton)`
   &:hover {
     background-color: rgba(34, 114, 180, 0.08);
     color: #0E538B;
-  }
-`;
-
-const ToggleContainer = styled.div`
-  display: flex;
-  align-items: center;
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  z-index: 2;
-  gap: 8px;
-`;
-
-const ToggleLabel = styled.span`
-  font-size: 12px;
-  color: #5F7281;
-`;
-
-const ToggleSwitch = styled.label`
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 20px;
-`;
-
-const ToggleSlider = styled.span`
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #C0CDD8;
-  transition: .4s;
-  border-radius: 20px;
-
-  &:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-  }
-`;
-
-const ToggleInput = styled.input`
-  opacity: 0;
-  width: 0;
-  height: 0;
-
-  &:checked + ${ToggleSlider} {
-    background-color: #2272B4;
-  }
-
-  &:checked + ${ToggleSlider}:before {
-    transform: translateX(16px);
   }
 `;
 
@@ -196,17 +134,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onKeyDown={handleKeyDown}
         data-testid="chat-input-textarea"
       />
-      <ToggleContainer>
-        <ToggleLabel>Include History</ToggleLabel>
-        <ToggleSwitch>
-          <ToggleInput
-            type="checkbox"
-            checked={includeHistory}
-            onChange={(e) => setIncludeHistory(e.target.checked)}
-          />
-          <ToggleSlider />
-        </ToggleSwitch>
-      </ToggleContainer>
       <ButtonsRight data-testid="buttons-right">
         <SendButton onClick={handleSubmit} disabled={loading} data-testid="send-button" />
       </ButtonsRight>

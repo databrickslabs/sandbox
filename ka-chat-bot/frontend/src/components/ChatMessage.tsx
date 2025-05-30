@@ -18,9 +18,9 @@ const MessageContainer = styled.div<{ isUser: boolean }>`
   width: 100%;
   align-items: ${props => props.isUser ? 'flex-end' : 'flex-start'};
   align-self: ${props => props.isUser ? 'flex-end' : 'flex-start'};
-  // margin-top: ${props => props.isUser ? '8px' : '16px'};
   max-width: ${props => props.isUser ? '80%' : '100%'};
   margin-bottom: ${props => props.isUser ? '10px' : '0px'};
+  color: #333333;
 `;
 
 const UserMessageContent = styled.div`
@@ -381,7 +381,6 @@ const ThinkContent = styled.div<{ isExpanded: boolean }>`
   padding: ${props => props.isExpanded ? '12px' : '0'};
   max-height: ${props => props.isExpanded ? '1000px' : '0'};
   overflow: hidden;
-  // transition: all 0.3s ease-in-out;
   background-color: white;
 `;
 
@@ -389,6 +388,15 @@ const ChevronIcon = styled(FontAwesomeIcon)<{ isExpanded: boolean }>`
   color: #5F7281;
   margin-left: 8px;
   transform: rotate(${props => props.isExpanded ? '180deg' : '0deg'});
+`;
+
+const StyledLink = styled.a`
+  color: #0066cc;
+  text-decoration: none;
+  &:hover {
+    color: #004499;
+    text-decoration: underline;
+  }
 `;
 
 interface ChatMessageProps {
@@ -403,7 +411,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
   const [showSources, setShowSources] = useState(false);
   const [selectedSource, setSelectedSource] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [expandedThinks, setExpandedThinks] = useState<string[]>([]);
+  const [closedThinks, setClosedThinks] = useState<string[]>([]);
   const chatContentRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = async () => {
@@ -417,7 +425,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
   };
 
   const toggleThink = (thinkId: string) => {
-    setExpandedThinks(prev => {
+    setClosedThinks(prev => {
       const newSet = [...prev];
       const index = newSet.indexOf(thinkId);
       if (index >= 0) {
@@ -447,7 +455,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
       }
 
       const thinkId = 'think-' + thinkIndex;
-      const isExpanded = expandedThinks.includes(thinkId);
+      const isExpanded = !closedThinks.includes(thinkId);
       elements.push(
         <ThinkContainer key={thinkId}>
           <ThinkHeader onClick={() => toggleThink(thinkId)}>
@@ -498,14 +506,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
                 }
               };
               return (
-                <a
+                <StyledLink
                   {...props}
                   onClick={handleClick}
                   target={'_blank'}
                   rel={'noopener noreferrer'}
                 >
-                  {props.children}
-                </a>
+                  {isNaN(Number(props.children)) ? props.children : `[${props.children}]`}
+                </StyledLink>
               );
             }
           }}

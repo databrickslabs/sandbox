@@ -13,7 +13,7 @@ const SidebarContainer = styled.div<SidebarContainerProps>`
   flex-direction: column;
   height: calc(100vh - 48px);
   width: 100%;
-  overflow: hidden;
+  overflow: ${props => props.isOpen ? 'visible' : 'hidden'};
   padding: ${props => props.isOpen ? '8px 16px 24px 16px' : '0'};
   white-space: nowrap;
 `;
@@ -30,6 +30,38 @@ const SidebarHeader = styled.div`
 const SidebarHeaderText = styled.div`
   font-size: 18px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const InfoIcon = styled.div`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #5F7281;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: help;
+  position: relative;
+
+  &:hover::after {
+    content: "Chat history is temporary and will be cleared periodically";
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #11171C;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    z-index: 1000;
+  }
 `;
 
 const ChatList = styled.div`
@@ -44,13 +76,6 @@ const SessionGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-`;
-
-const SessionHeader = styled.div`
-  font-size: 12px;
-  color: #666;
-  padding: 8px 12px;
-  border-bottom: 1px solid #E0E0E0;
 `;
 
 const ChatItem = styled.div<{ active: boolean }>`
@@ -143,7 +168,10 @@ const Sidebar: React.FC = () => {
   return (
     <SidebarContainer isOpen={isSidebarOpen} data-testid="sidebar">
       <SidebarHeader data-testid="sidebar-header">
-        <SidebarHeaderText>Recent chats</SidebarHeaderText>
+        <SidebarHeaderText>
+          Recent chats
+          <InfoIcon data-testid="info-tooltip">i</InfoIcon>
+        </SidebarHeaderText>
       </SidebarHeader>
       
       <ChatList data-testid="chat-list">
