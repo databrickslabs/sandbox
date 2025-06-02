@@ -11,6 +11,7 @@ database-diagram-builder   @alexott
 downstreams                @nfx @alexott
 go-libs                    @nfx @alexott
 ip_access_list_analyzer    @alexott
+ka-chat-bot                @taiga-db
 metascan                   @nfx @alexott
 runtime-packages           @nfx @alexott
 sql_migration_copilot      @robertwhiffin
