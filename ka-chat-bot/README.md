@@ -5,9 +5,9 @@ author: "Taiga Matsumoto"
 date: 2025-05-26
 ---
 
-# Databricks Chatbot Application
+# Databricks Knowledge Assistant Chatbot Application
 
-Chat applications powered by your Databricks' Knowledge Assistant endpoint.
+Chat applications powered by your Databricks Knowledge Assistant
 
 ## Features
 
