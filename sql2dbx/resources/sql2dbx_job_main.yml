@@ -40,6 +40,9 @@ resources:
         # Params for 03_convert_sql_to_databricks
         - name: max_fix_attempts
           default: "1"
-        # Params for 04_export_to_databricks_notebooks
+        # Params for 05_export_to_databricks_notebooks
         - name: output_dir
+          default: ""
+        # Params for 06_convert_to_sql_notebooks (Experimental)
+        - name: sql_output_dir
           default: ""

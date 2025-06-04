@@ -1,0 +1,101 @@
+system_message: |
+  Convert Databricks Python notebook code to Databricks SQL notebook code.
+
+  Key conversion patterns:
+  - Convert spark.sql() calls to direct SQL statements
+  - Convert dbutils.widgets.get() to SQL parameter references (:parameter_name)
+  - Convert Python functions that generate SQL to SQL variables with EXECUTE IMMEDIATE
+  - Convert timezone handling (JST = UTC+9) to SQL date arithmetic
+  - Use DECLARE OR REPLACE VARIABLE and SET VARIABLE for dynamic values
+  - Use IDENTIFIER() for dynamic table references when needed
+  - Remove Python imports, functions, and print statements
+  - Reorganize cell boundaries (-- COMMAND ----------) to ensure complete SQL statements within each cell
+  - Add comments to explain the conversion where appropriate
+
+few_shots:
+- role: user
+  content: |
+    # Databricks notebook source
+    from datetime import datetime, timedelta, timezone
+    
+    # Databricks widgets for parameters
+    dbutils.widgets.text("database", "example_db", "Database")
+    dbutils.widgets.text("schema", "example_schema", "Schema")
+    dbutils.widgets.text("source_table", "sales_data", "Source Table")
+    dbutils.widgets.text("temp_table", "sales_temp", "Temp Table")
+    
+    def tm_print(msg):
+        print(f"{datetime.now()} {msg}")
+    
+    tm_print("START")
+    
+    # Get parameters from widgets
+    database = dbutils.widgets.get("database")
+    schema = dbutils.widgets.get("schema")
+    source_table = dbutils.widgets.get("source_table")
+    temp_table = dbutils.widgets.get("temp_table")
+    
+    # Generate date key in JST timezone
+    JST = timezone(timedelta(hours=9))
+    now_jst = datetime.now(JST)
+    date_key_today = now_jst.strftime("%Y%m%d")
+    
+    # Execute merge operation
+    merge_sql = f"""
+        MERGE INTO {database}.{schema}.{temp_table} as t1
+        USING (
+            select DATE_KEY, HOUR_KEY, PRODUCT_KEY, SALE_AMT
+            from {database}.{schema}.{source_table}
+            where DATE_KEY = {date_key_today}
+        ) as t2
+        ON t1.DATE_KEY = t2.DATE_KEY AND t1.PRODUCT_KEY = t2.PRODUCT_KEY
+        WHEN NOT MATCHED THEN
+            INSERT (DATE_KEY, HOUR_KEY, PRODUCT_KEY, SALE_AMT)
+            VALUES (t2.DATE_KEY, t2.HOUR_KEY, t2.PRODUCT_KEY, t2.SALE_AMT)
+    """
+    spark.sql(merge_sql)
+    tm_print("MERGE COMPLETE")
+- role: assistant
+  content: |
+    -- Databricks notebook source
+    -- Parameters: :database, :schema, :source_table, :temp_table
+    
+    SELECT CONCAT(CURRENT_TIMESTAMP(), ' START') AS status;
+    
+    -- COMMAND ----------
+    
+    -- Get current date key (JST timezone = UTC+9)
+    DECLARE OR REPLACE VARIABLE date_key_today STRING;
+    SET VARIABLE date_key_today = DATE_FORMAT(DATEADD(HOUR, 9, CURRENT_TIMESTAMP()), 'yyyyMMdd');
+    
+    -- Execute MERGE operation
+    MERGE INTO IDENTIFIER(:database || '.' || :schema || '.' || :temp_table) as t1
+    USING (
+        select DATE_KEY, HOUR_KEY, PRODUCT_KEY, SALE_AMT
+        from IDENTIFIER(:database || '.' || :schema || '.' || :source_table)
+        where DATE_KEY = date_key_today
+    ) as t2
+    ON t1.DATE_KEY = t2.DATE_KEY AND t1.PRODUCT_KEY = t2.PRODUCT_KEY
+    WHEN NOT MATCHED THEN
+        INSERT (DATE_KEY, HOUR_KEY, PRODUCT_KEY, SALE_AMT)
+        VALUES (t2.DATE_KEY, t2.HOUR_KEY, t2.PRODUCT_KEY, t2.SALE_AMT);
+    
+    SELECT CONCAT(CURRENT_TIMESTAMP(), ' MERGE COMPLETE') AS status;
+- role: user
+  content: |
+    # Databricks notebook source
+    import pandas as pd
+    
+    # Get parameter
+    table_name = dbutils.widgets.get("table_name")
+    
+    # Execute simple query
+    result = spark.sql(f"SELECT * FROM {table_name} WHERE date >= '2024-01-01'")
+    display(result)
+- role: assistant
+  content: |
+    -- Databricks notebook source
+    -- Parameters: :table_name
+    
+    SELECT * FROM IDENTIFIER(:table_name) 
+    WHERE date >= '2024-01-01';
