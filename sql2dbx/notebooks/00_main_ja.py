@@ -5,7 +5,7 @@
 # MAGIC
 # MAGIC sql2dbxによって生成されたDatabricksノートブックは、手動での調整が必要な場合がありますが、SQLベースの処理フローをDatabricks環境に移行する際の有用な出発点となります。
 # MAGIC
-# MAGIC このメインノートブックは、SQLファイルをDatabricksノートブックに変換するsql2dbxの一連のプロセスのエントリーポイントとして機能します。
+# MAGIC このメインノートブックは、SQLファイルをDatabricksノートブックに変換するsql2dbxの一連のプロセスのエントリーポイントとして機能します。また、生成されたPythonノートブックをSQLノートブックに変換する実験的機能も含まれています。
 
 # COMMAND ----------
 
@@ -71,6 +71,7 @@
 # MAGIC | <a href="$./03_02_fix_syntax_error" target="_blank">03_02_fix_syntax_error</a> | 前のステップで検出されたPython関数とSQL文の構文エラーをLLMを使用して修正し、結果テーブルを更新します。 |
 # MAGIC | <a href="$./04_split_cells" target="_blank">04_split_cells</a> | 変換されたコードを、Databricksノートブック内での可読性や整理を高めるため、複数のセルに分割します。 |
 # MAGIC | <a href="$./05_export_to_databricks_notebooks" target="_blank">05_export_to_databricks_notebooks</a> | 変換されたコードをDatabricksノートブックにエクスポートします。 |
+# MAGIC | <a href="$./06_convert_to_sql_notebooks" target="_blank">06_convert_to_sql_notebooks</a> | （実験的）LLMを使用してPythonノートブックをSQLノートブックに変換します。この機能は`sql_output_dir`が指定された場合のみ実行されます。 |
 # MAGIC | <a href="$./11_adjust_conversion_targets" target="_blank">11_adjust_conversion_targets</a> | （オプション）特定のファイルを再変換したい場合に、`is_conversion_target`を`True`に設定することで変換対象を再指定します。 |
 # MAGIC
 # MAGIC ## 🎯 変換対象
@@ -256,6 +257,7 @@
 # MAGIC 2-x | `conversion_prompt_yaml` | Yes | 変換プロンプトを含むYAMLファイルへのパス。特定のSQL方言（例：T-SQL）の変換用のシステムメッセージとfew-shot例が定義されている必要があります。 |
 # MAGIC 3-1 | `max_fix_attempts` | Yes | 変換結果の構文エラーを自動修正する最大試行回数。 | `1`
 # MAGIC 5-1 | `output_dir` | Yes | Databricksノートブックを保存するディレクトリ。WorkspaceまたはRepos内のパスをサポート。 |
+# MAGIC 6-1 | `sql_output_dir` | No | （実験的）SQLノートブックを保存するディレクトリ。指定された場合、PythonノートブックがSQLノートブックに変換されます。WorkspaceまたはRepos内のパスをサポート。 |
 # MAGIC
 # MAGIC ## 📂 入出力
 # MAGIC 変換プロセスの主な入出力は以下の通りです：
@@ -265,6 +267,9 @@
 # MAGIC
 # MAGIC ### 変換結果ノートブック（最終出力）
 # MAGIC 変換結果であるDatabricksノートブック群は<a href="$./05_export_to_databricks_notebooks" target="_blank">05_export_to_databricks_notebooks</a>ノートブックによって出力され、変換プロセスの最終出力となります。出力先としてWorkspaceまたはReposのパスをサポートしています。
+# MAGIC
+# MAGIC ### SQLノートブック（オプション出力）
+# MAGIC `sql_output_dir`が指定された場合、<a href="$./06_convert_to_sql_notebooks" target="_blank">06_convert_to_sql_notebooks</a>ノートブック（実験的）がPythonノートブックをSQLノートブックに変換します。これは変換されたノートブックのSQLベース版を提供するオプションのステップです。
 # MAGIC
 # MAGIC ### 変換結果テーブル（中間出力）
 # MAGIC 変換結果テーブルは<a href="$./01_analyze_input_files" target="_blank">01_analyze_input_files</a>ノートブックによって作成され、変換プロセスの後続のノートブックの入出力先として利用します。これはDelta Lakeテーブルで、入力SQLファイルの分析結果（トークン数、ファイルメタデータ、変換ステータスなど）を保存します。
@@ -373,6 +378,9 @@ dbutils.widgets.text("max_fix_attempts", "1", "3-1. 最大修正試行回数")
 # 05_export_to_databricks_notebooks用のパラメータ
 dbutils.widgets.text("output_dir", "", "5-1. 出力ディレクトリ")
 
+# 実験的SQLノートブック変換用のパラメータ
+dbutils.widgets.text("sql_output_dir", "", "6-1. SQLノートブック出力ディレクトリ（実験的）")
+
 # COMMAND ----------
 
 # DBTITLE 1,Load Configurations
@@ -388,6 +396,7 @@ request_params = dbutils.widgets.get("request_params")
 log_level = dbutils.widgets.get("log_level")
 max_fix_attempts = int(dbutils.widgets.get("max_fix_attempts"))
 output_dir = dbutils.widgets.get("output_dir")
+sql_output_dir = dbutils.widgets.get("sql_output_dir")
 
 # 使用するYAMLファイルを判断
 _conversion_prompt_yaml = dbutils.widgets.get("conversion_prompt_yaml")
@@ -398,7 +407,7 @@ if _conversion_prompt_yaml:
 else:
     conversion_prompt_yaml = ConversionPromptHelper.get_default_yaml_for_sql_dialect(sql_dialect)
 
-input_dir, endpoint_name, result_catalog, result_schema, token_count_threshold, existing_result_table, conversion_prompt_yaml, comment_lang, request_params, log_level, max_fix_attempts, output_dir
+input_dir, endpoint_name, result_catalog, result_schema, token_count_threshold, existing_result_table, conversion_prompt_yaml, comment_lang, request_params, log_level, max_fix_attempts, output_dir, sql_output_dir
 
 # COMMAND ----------
 
@@ -680,6 +689,30 @@ spark.sql(f"""
     ON r.input_file_path = t.input_file_path
     ORDER BY r.input_file_number
 """).display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 6. SQLノートブックへの変換（実験的）
+# MAGIC SQL出力ディレクトリが指定されている場合、オプションでPythonノートブックをSQLノートブックに変換します。
+
+# COMMAND ----------
+
+# DBTITLE 1,SQLノートブックへの変換（要求された場合）
+if sql_output_dir:
+    print("PythonノートブックをSQLノートブックに変換中...")
+    dbutils.notebook.run("06_convert_to_sql_notebooks", 0, {
+        "python_input_dir": output_dir,
+        "sql_output_dir": sql_output_dir,
+        "endpoint_name": endpoint_name,
+        "concurrency": concurrency,
+        "request_params": request_params,
+        "comment_lang": comment_lang,
+        "log_level": log_level,
+    })
+    print("SQLノートブック変換が完了しました。")
+else:
+    print("SQLノートブック変換をスキップしました（sql_output_dirが指定されていません）。")
 
 # COMMAND ----------
 
