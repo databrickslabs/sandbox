@@ -539,8 +539,6 @@ spark.sql(f"""
 # COMMAND ----------
 
 # DBTITLE 1,Function for Syntax Error File Count
-
-
 def get_error_file_count(result_table: str) -> int:
     """Get the count of files with syntax errors."""
     error_count = spark.sql(f"""
@@ -552,7 +550,6 @@ def get_error_file_count(result_table: str) -> int:
     return error_count
 
 # COMMAND ----------
-
 
 # DBTITLE 1,Check and Fix Syntax Errors
 for attempt in range(max_fix_attempts):
