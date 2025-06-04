@@ -5,9 +5,9 @@ author: "Taiga Matsumoto"
 date: 2025-05-26
 ---
 
-# Databricks Chatbot Application
+# Databricks Knowledge Assistant Chatbot Application
 
-Chat applications powered by Databricks' model serving endpoints. This project provides a foundation for creating interactive chat interfaces that leverage Databricks' powerful AI framework and model serving infrastructure.
+Chat applications powered by your Databricks Knowledge Assistant
 
 ## Features
 
@@ -15,7 +15,7 @@ Chat applications powered by Databricks' model serving endpoints. This project p
 - 💾 Chat history persistence
 - 🔄 Message regeneration capability
 - ⚡ Streaming responses
-- 🔒 Secure authentication
+- 🔒 On-behalf-of-user authentication
 - 🎯 Rate limiting and error handling
 
 ## Architecture
@@ -23,52 +23,56 @@ Chat applications powered by Databricks' model serving endpoints. This project p
 The application is built with:
 - FastAPI for the backend API
 - SQLite for chat history storage
-- Async/await patterns for efficient request handling
-- Dependency injection for clean code organization
+- React frontend
+
 
 ## Getting Started
 
 1. Clone the repository
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2. Create an .env file with the following:
+    - `LOCAL_API_TOKEN`: your PAT used only for local development
+    - `DATABRICKS_HOST`: your Databricks domain url (e.g. "your-domain@databricks.com")
+    - `SERVING_ENDPOINT_NAME`: your Knowledge Assistant's serving endpoint (e.g "ka-123-endpoint")
 
-3. Building the Frontend
+3. Install dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-[1]. Navigate to the frontend directory:
+4. Build the frontend
 
-```bash
-cd frontend
-```
+    [1]. Navigate to the frontend directory:
 
-[2]. Install dependencies:
+    ```bash
+    cd frontend
+    ```
 
-```bash
-npm install
-```
+    [2]. Install dependencies:
 
-[3]. Build the production version:
+    ```bash
+    npm install
+    ```
+    [3a]. Generate a local build:
 
-```bash
-npm run build
-```
+    ```bash
+    npm run build
+    ```
 
-4. Run the application:
-```bash
-python main.py
-```
+    [3b]. Generate a production build for app deployment:
 
-## Example Interface
+    ```bash
+    npm run build:prod
+    ```
 
-Here's how the chat interface looks like
-
-![Databricks Chat Interface](./utils/Databricks_chatbot_app.png)
+5. Run the server:
+    ```bash
+    python main.py
+    ```
 
 ## Key Components
 
+- `fronted/`: React frontend
 - `main.py`: FastAPI application entry point
 - `utils/`: Helper functions and utilities
 - `models.py`: Data models and schemas
 - `chat_database.py`: Database interactions
-- `token_minter.py`: Authentication handling
