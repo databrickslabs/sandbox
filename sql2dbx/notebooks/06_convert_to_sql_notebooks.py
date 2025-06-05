@@ -58,6 +58,7 @@ dbutils.widgets.dropdown("comment_lang", "English", [
 
 # Optional Parameters
 dbutils.widgets.text("request_params", "", "Chat Request Params")
+dbutils.widgets.text("conversion_prompt_yaml", "", "Conversion Prompt YAML Path (Optional)")
 dbutils.widgets.text("logging_interval", "1", "Logging Interval")
 dbutils.widgets.text("timeout", "300", "Timeout Seconds")
 dbutils.widgets.text("max_retries_backpressure", "10", "Max Retries on Backpressure")
@@ -73,16 +74,22 @@ concurrency = int(dbutils.widgets.get("concurrency"))
 log_level = dbutils.widgets.get("log_level")
 comment_lang = dbutils.widgets.get("comment_lang")
 request_params = dbutils.widgets.get("request_params")
+_conversion_prompt_yaml = dbutils.widgets.get("conversion_prompt_yaml")
 logging_interval = int(dbutils.widgets.get("logging_interval"))
 timeout = int(dbutils.widgets.get("timeout"))
 max_retries_backpressure = int(dbutils.widgets.get("max_retries_backpressure"))
 max_retries_other = int(dbutils.widgets.get("max_retries_other"))
 
-# Use the databricks_python_notebook_to_databricks_sql_notebook.yml prompt
-conversion_prompt_yaml = "pyscripts/conversion_prompt_yaml/databricks_python_notebook_to_databricks_sql_notebook.yml"
+# Determine which conversion YAML to use
+if _conversion_prompt_yaml:
+    conversion_prompt_yaml = _conversion_prompt_yaml
+else:
+    # Use the default databricks_python_notebook_to_databricks_sql_notebook.yml prompt
+    conversion_prompt_yaml = "pyscripts/conversion_prompt_yaml/databricks_python_notebook_to_databricks_sql_notebook.yml"
 
 print(f"Python input directory: {python_input_dir}")
 print(f"SQL output directory: {sql_output_dir}")
+print(f"Conversion prompt YAML: {conversion_prompt_yaml}")
 
 # COMMAND ----------
 
@@ -98,6 +105,7 @@ print(f"SQL output directory: {sql_output_dir}")
 # MAGIC `log_level` | Yes | The logging level to use for the batch inference process. Options are `INFO` for standard logging or `DEBUG` for detailed debug information. | `INFO`
 # MAGIC `comment_lang` | Yes | The language for comments to be added to the converted SQL notebooks. | `English`
 # MAGIC `request_params` | No | The extra chat request parameters in JSON format. Empty value will use model's default parameters. |
+# MAGIC `conversion_prompt_yaml` | No | The path to the YAML file containing the conversion prompts for Python-to-SQL conversion. If not specified, uses the default prompt. |
 # MAGIC `logging_interval` | Yes | The number of requests processed before logging a progress update. | `1`
 # MAGIC `timeout` | Yes | The timeout for an HTTP request on the client side, in seconds. | `300`
 # MAGIC `max_retries_backpressure` | Yes | The maximum number of retries on backpressure status code (such as `429` or `503`). | `10`
