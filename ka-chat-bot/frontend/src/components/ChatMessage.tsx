@@ -401,11 +401,10 @@ const StyledLink = styled.a`
 
 interface ChatMessageProps {
   message: Message;
-  onRegenerate: (messageId: string) => Promise<void>;
   'data-testid'?: string;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { copyMessage } = useChat();
   const isUser = message.role === 'user';
   const [showSources, setShowSources] = useState(false);
@@ -418,10 +417,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
     await copyMessage(message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 5000); // Reset after 5 seconds
-  };
-
-  const handleRegenerate = async () => {
-    await onRegenerate(message.message_id);
   };
 
   const toggleThink = (thinkId: string) => {
@@ -631,11 +626,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate }) => {
                 <FontAwesomeIcon icon={faCheck} />
               </CheckIconWrapper>
             </CopyButton>
-            <RefreshButton 
-              onClick={handleRegenerate} 
-              title="Regenerate" 
-              data-testid={`refresh-button-${message.message_id}`}
-            />
           </MessageActions>
         </MessageFooter>
       </BotMessageContent>

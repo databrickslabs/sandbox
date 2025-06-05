@@ -74,9 +74,8 @@ const MessagesContainer = styled.div`
 `;
 
 const ChatArea: React.FC = () => {
-  const { messages, isSidebarOpen, regenerateMessage } = useChat();
+  const { messages, isSidebarOpen } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isRegenerating, setIsRegenerating] = useState(false);  
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const [includeHistory, setIncludeHistory] = useState(true);
 
@@ -90,17 +89,12 @@ const ChatArea: React.FC = () => {
   }, [messages, hasStartedChat]);
   
   useEffect(() => {
-    if (messagesEndRef.current && !isRegenerating) {
+    if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [messages, isRegenerating]);
+  }, [messages]);
   
   const hasMessages = messages?.length > 0 || hasStartedChat;
-  
-  const handleRegenerate = async (messageId: string) => {
-    setIsRegenerating(true);
-    await regenerateMessage(messageId, includeHistory);
-  };
   
   return (
     <ChatContainer data-testid="chat-area" sidebarOpen={isSidebarOpen}>
@@ -109,7 +103,6 @@ const ChatArea: React.FC = () => {
         <WelcomeContainer visible={!hasMessages} data-testid="welcome-container">
           <WelcomeMessage data-testid="welcome-message">What can I help with?</WelcomeMessage>
           <ChatInput 
-            setIsRegenerating={setIsRegenerating} 
             includeHistory={includeHistory}
             setIncludeHistory={setIncludeHistory}
             data-testid="chat-input" 
@@ -122,11 +115,10 @@ const ChatArea: React.FC = () => {
               <ChatMessage    
                 key={index} 
                 message={message}
-                onRegenerate={handleRegenerate}
                 data-testid={`message-${index}`}
               />
             ))}
-            {!isRegenerating && <div ref={messagesEndRef} />}
+            {<div ref={messagesEndRef} />}
           </MessagesContainer>
         )}
       </ChatContent>
@@ -134,7 +126,6 @@ const ChatArea: React.FC = () => {
       <FixedInputWrapper visible={hasMessages} data-testid="fixed-input-wrapper">
         <ChatInput 
           fixed={true} 
-          setIsRegenerating={setIsRegenerating} 
           includeHistory={includeHistory}
           setIncludeHistory={setIncludeHistory}
         />

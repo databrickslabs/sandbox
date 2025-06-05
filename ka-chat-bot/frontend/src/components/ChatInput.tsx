@@ -83,14 +83,12 @@ const SendButton = styled(InputButton)`
 
 interface ChatInputProps {
   fixed?: boolean;
-  setIsRegenerating: (value: boolean) => void;
   includeHistory: boolean;
   setIncludeHistory: (value: boolean) => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ 
   fixed = false, 
-  setIsRegenerating,
   includeHistory,
   setIncludeHistory 
 }) => {
@@ -108,7 +106,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   
   const handleSubmit = async () => {
     if (inputValue.trim() && !loading) {
-      setIsRegenerating(false);
       setInputValue('');
       await sendMessage(inputValue, includeHistory);
       if (textareaRef.current) {

@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.f260d893.css",
-    "main.js": "/static/js/main.b7fda65e.js",
+    "main.js": "/static/js/main.ddf33c5b.js",
     "static/js/206.8ac086ca.chunk.js": "/static/js/206.8ac086ca.chunk.js",
     "static/media/databricks_text.svg": "/static/media/databricks_text.7adff03989481b9a15f527a4f5ea4ec0.svg",
     "static/media/buttonIcon.svg": "/static/media/buttonIcon.defbe07cf4298fbe1d6170023592c490.svg",
@@ -17,6 +17,6 @@
   },
   "entrypoints": [
     "static/css/main.f260d893.css",
-    "static/js/main.b7fda65e.js"
+    "static/js/main.ddf33c5b.js"
   ]
 }
