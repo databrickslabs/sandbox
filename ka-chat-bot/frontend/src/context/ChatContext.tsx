@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { Message, Chat } from '../types';
-import { sendMessage as apiSendMessage, getChatHistory, API_URL, regenerateMessage as apiRegenerateMessage, logout as apiLogout } from '../api/chatApi';
+import { sendMessage as apiSendMessage, getChatHistory, API_URL, logout as apiLogout } from '../api/chatApi';
 import { v4 as uuid } from 'uuid';
 
 interface ChatContextType {
@@ -14,7 +14,6 @@ interface ChatContextType {
   toggleSidebar: () => void;
   startNewSession: () => void;
   copyMessage: (content: string) => void;
-  regenerateMessage: (messageId: string, includeHistory: boolean) => Promise<void>;
   logout: () => void;
   error: string | null;
   clearError: () => void;
@@ -217,140 +216,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
-  const regenerateMessage = async (messageId: string, includeHistory: boolean = true) => {
-    console.log('Regenerating message:', messages);
-    console.log('Current session ID:', currentSessionId);
-    
-    const messageIndex = messages.findIndex(msg => msg.message_id === messageId);
-    if (messageIndex === -1) {
-      console.error('Message not found:', messageId);
-      setError('Cannot regenerate message: message not found.');
-      return;
-    }
-
-    const previousUserMessage = [...messages]
-      .slice(0, messageIndex)
-      .reverse()
-      .find(msg => msg.role === 'user');
-    
-    if (!previousUserMessage || !currentSessionId) {
-      console.error('Cannot regenerate: missing user message or session ID');
-      setError('Cannot regenerate message: missing context or session ID.');
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-
-    const thinkingMessage: Message = {
-      message_id: messageId,
-      content: '',
-      role: 'assistant',
-      timestamp: new Date(),
-      isThinking: true,
-      model: currentEndpoint
-    };
-    
-    setMessages(prev => {
-      const updatedMessages = [...prev];
-      updatedMessages[messageIndex] = thinkingMessage;
-      return updatedMessages;
-    });
-
-    try {
-      let messageSources: any[] | null = null;
-      let messageMetrics: {
-        timeToFirstToken?: number;
-        totalTime?: number;
-      } | null = null;
-      let accumulatedContent = '';
-      
-      await apiRegenerateMessage(
-        previousUserMessage.content,
-        currentSessionId,
-        messageId,
-        includeHistory,
-        currentEndpoint,
-        (chunk) => {
-          if (chunk.content) {
-            accumulatedContent = chunk.content;
-            setMessages(prev => {
-              const updatedMessages = [...prev];
-              const currentMessage = updatedMessages[messageIndex];
-              updatedMessages[messageIndex] = {
-                ...currentMessage,
-                message_id: messageId,
-                content: accumulatedContent,
-                sources: chunk.sources || messageSources,
-                metrics: chunk.metrics || messageMetrics,
-                isThinking: false,
-                model: currentEndpoint
-              };
-              return updatedMessages;
-            });
-          }
-          if (chunk.sources) {
-            messageSources = chunk.sources;
-          }
-          if (chunk.metrics) {
-            messageMetrics = chunk.metrics;
-          }
-        }
-      );
-
-      const finalMessage: Message = {
-        message_id: messageId,
-        content: accumulatedContent,
-        role: 'assistant',
-        timestamp: new Date(),
-        isThinking: false,
-        model: currentEndpoint,
-        sources: messageSources,
-        metrics: messageMetrics
-      };
-
-      setMessages(prev => prev.map(msg => 
-        msg.message_id === messageId ? finalMessage : msg
-      ));
-
-    } catch (error) {
-      console.error('Error regenerating message:', error);
-      setError('Failed to regenerate message. Please try again.');
-      
-      const errorMessage: Message = { 
-        message_id: messageId,
-        content: error instanceof Error && error.message === 'HTTP error! status: 429' 
-          ? 'The service is currently experiencing high demand. Please wait a moment and try again.'
-          : 'Sorry, I encountered an error while regenerating the message. Please try again.', 
-        role: 'assistant',
-        timestamp: new Date(),
-        model: currentEndpoint,
-        isThinking: false,
-        metrics: null
-      };
-      
-      setMessages(prev => {
-        const updatedMessages = [...prev];
-        const messageIndex = updatedMessages.findIndex(msg => msg.message_id === messageId);
-        if (messageIndex !== -1) {
-          updatedMessages[messageIndex] = errorMessage;
-        }
-        return updatedMessages;
-      });
-      console.log('error message:', errorMessage);
-    } finally {
-      try {
-        const historyResponse = await fetch(`${API_URL}/chats`);
-        const historyData = await historyResponse.json();
-        setChats(historyData.sessions || []);
-      } catch (error) {
-        console.error('Error fetching chat history:', error);
-        setError('Failed to update chat history.');
-      }
-      setLoading(false);
-    }
-  };
-
   const logout = () => {
     // Clear local state
     setCurrentChat(null);
@@ -379,7 +244,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       toggleSidebar,
       startNewSession,
       copyMessage,
-      regenerateMessage,
       logout,
       error,
       clearError,

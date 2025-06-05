@@ -18,7 +18,7 @@ from chat_database import ChatDatabase
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from models import MessageRequest, MessageResponse, ChatHistoryItem, ChatHistoryResponse, CreateChatRequest, RegenerateRequest
-from utils.config import URL, SERVING_ENDPOINT_NAME, DATABRICKS_HOST
+from utils.config import SERVING_ENDPOINT_NAME, DATABRICKS_HOST
 from utils import *
 from utils.logging_handler import with_logging
 from utils.app_state import app_state
@@ -227,103 +227,6 @@ async def chat(
 async def get_chat_history(user_info: dict = Depends(get_user_info),chat_db: ChatDatabase = Depends(get_chat_db)):
     user_id = user_info["user_id"]
     return chat_db.get_chat_history(user_id)
-
-
-@api_app.post("/regenerate")
-async def regenerate_message(
-    request: RegenerateRequest,
-    user_info: dict = Depends(get_user_info),
-    headers: dict = Depends(get_auth_headers),
-    chat_db: ChatDatabase = Depends(get_chat_db),
-    chat_history_cache: ChatHistoryCache = Depends(get_chat_history_cache),
-    message_handler: MessageHandler = Depends(get_message_handler),
-    streaming_handler: StreamingHandler = Depends(get_streaming_handler),
-    request_handler: RequestHandler = Depends(get_request_handler),
-    streaming_semaphore: asyncio.Semaphore = Depends(get_streaming_semaphore),
-    request_queue: asyncio.Queue = Depends(get_request_queue),
-    streaming_support_cache: dict = Depends(get_streaming_support_cache)
-):
-    try:
-        user_id = user_info["user_id"]
-        chat_history = await load_chat_history(request.session_id, user_id, False, chat_history_cache, chat_db)
-        message_index = next(
-            (i for i, msg in enumerate(chat_history) 
-             if msg.get('message_id') == request.message_id), 
-            None
-        )
-        if message_index is None:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Message {request.message_id} not found in chat session {request.session_id}."
-            )
-        original_message = chat_history[message_index]
-        original_timestamp = original_message.get('timestamp')
-        if not original_timestamp:
-            original_timestamp = datetime.now().isoformat()
-
-        history_up_to_message = chat_history[:message_index]
-
-        async def generate():
-            timeout = httpx.Timeout(connect=5.0, read=30.0, write=5.0, pool=5.0)
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                serving_endpoint_name = request.serving_endpoint_name or SERVING_ENDPOINT_NAME
-                supports_streaming = await check_endpoint_capabilities(serving_endpoint_name, streaming_support_cache)
-                request_data = {
-                "messages": [
-                    *([{"role": msg["role"], "content": msg["content"]} for msg in history_up_to_message[:-1]] 
-                        if request.include_history else []),
-                    {"role": "user", "content": history_up_to_message[-1]["content"]}
-                    ]
-                }
-                request_data["databricks_options"] = {"return_trace": True}
-
-                start_time = time.time()
-                first_token_time = None
-                accumulated_content = ""
-                sources = None
-                ttft = None
-                if supports_streaming:
-                    request_data["stream"] = True
-                    async with streaming_semaphore:
-                        async with client.stream(
-                            'POST',
-                            URL,
-                            headers=headers,
-                            json=request_data,
-                            timeout=timeout
-                        ) as response:
-                            if response.status_code == 200:
-                                async for response_chunk in streaming_handler.handle_streaming_regeneration(
-                                    response, request_data, headers, request.session_id, request.message_id, user_id,user_info,
-                                    original_timestamp, start_time, first_token_time, accumulated_content, sources, ttft, request_handler, message_handler,
-                                    streaming_support_cache, True, True
-                                ):
-                                    yield response_chunk
-
-                                
-                else:
-                    async for response_chunk in streaming_handler.handle_non_streaming_regeneration(
-                        request_handler, request.session_id, request.message_id, URL, 
-                        headers, request_data, user_id, user_info,
-                        original_timestamp, first_token_time, sources, ttft, message_handler
-                    ):
-                        yield response_chunk
-
-        return StreamingResponse(
-            generate(),
-            media_type="text/event-stream",
-            headers={
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error regenerating message: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred while regenerating the message. " + str(e)
-        )
-
 
 # Add logout endpoint
 @api_app.get("/logout")
