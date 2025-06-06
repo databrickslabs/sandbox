@@ -431,7 +431,7 @@ if sql_notebooks:
                 "size_mb": notebook.get("size_mb", 0)
             })
     
-    # Display results
+    # Display results summary
     successful_exports = [r for r in export_results if r["success"]]
     failed_exports = [r for r in export_results if not r["success"]]
     
@@ -441,6 +441,89 @@ if sql_notebooks:
 else:
     print("No SQL notebooks to export")
     export_results = []
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Results Summary
+# MAGIC The following tables show the detailed conversion and export results for all Python notebooks.
+
+# COMMAND ----------
+
+# DBTITLE 1,Python-to-SQL Conversion Summary
+if 'export_results' in locals() and export_results:
+    # Display SQL output directory URL
+    from pyscripts.databricks_credentials import DatabricksCredentials
+    full_url = f"{DatabricksCredentials().host}#workspace{sql_output_dir}"
+    displayHTML(f'<p><strong>SQL Output Directory URL: </strong><a href="{full_url}" target="_blank">{full_url}</a></p>')
+    
+    # Create a temporary view of export results
+    import pandas as pd
+    export_results_df = pd.DataFrame(export_results)
+    spark.createDataFrame(export_results_df).createOrReplaceTempView("temp_sql_export_results")
+    
+    # Display detailed conversion and export status
+    spark.sql(f"""
+        SELECT 
+            python_notebook_path,
+            CASE 
+                WHEN success = true THEN 'Successfully converted and exported'
+                ELSE 'Failed to convert or export'
+            END as conversion_status,
+            sql_output_path,
+            ROUND(size_mb, 2) as size_mb,
+            error
+        FROM temp_sql_export_results
+        ORDER BY python_notebook_path
+    """).display()
+    
+    # Display summary statistics
+    spark.sql(f"""
+        SELECT 
+            COUNT(*) as total_notebooks,
+            SUM(CASE WHEN success = true THEN 1 ELSE 0 END) as successful_conversions,
+            SUM(CASE WHEN success = false THEN 1 ELSE 0 END) as failed_conversions,
+            ROUND(AVG(size_mb), 2) as avg_size_mb,
+            ROUND(SUM(size_mb), 2) as total_size_mb
+        FROM temp_sql_export_results
+    """).display()
+else:
+    print("No conversion results to display")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Conversion Errors (if any)
+# MAGIC The following table shows detailed error information for failed conversions.
+
+# COMMAND ----------
+
+# DBTITLE 1,Conversion Errors Detail
+if 'conversion_errors' in locals() and conversion_errors:
+    conversion_errors_df = pd.DataFrame(conversion_errors)
+    spark.createDataFrame(conversion_errors_df).createOrReplaceTempView("temp_conversion_errors")
+    
+    spark.sql(f"""
+        SELECT 
+            python_notebook_path,
+            error
+        FROM temp_conversion_errors
+        ORDER BY python_notebook_path
+    """).display()
+    
+    print(f"\nTotal conversion errors: {len(conversion_errors)}")
+else:
+    print("No conversion errors to display")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Next Steps
+# MAGIC The Python-to-SQL notebook conversion process is now complete. Please review the results:
+# MAGIC
+# MAGIC 1. **Successfully converted notebooks**: Review the generated SQL notebooks in the output directory to ensure they meet your requirements.
+# MAGIC 2. **Failed conversions**: Check the error messages above and address any issues with the source Python notebooks.
+# MAGIC 3. **SQL syntax validation**: Test the converted SQL notebooks in your Databricks environment to ensure they execute correctly.
 
 # COMMAND ----------
 
