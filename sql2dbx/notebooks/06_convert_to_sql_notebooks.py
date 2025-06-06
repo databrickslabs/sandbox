@@ -26,15 +26,18 @@
 # COMMAND ----------
 
 # DBTITLE 1,Import Libraries
-import json
-import os
 import base64
-from typing import List, Dict, Any, Tuple
+import json
+from typing import Any, Dict, List, Tuple
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import workspace
-from pyscripts.batch_inference_helper import (AsyncChatClient,
-                                              BatchInferenceManager,
-                                              BatchInferenceRequest)
+
+from pyscripts.batch_inference_helper import (
+    AsyncChatClient,
+    BatchInferenceManager,
+    BatchInferenceRequest,
+)
 from pyscripts.conversion_prompt_helper import ConversionPromptHelper
 
 # COMMAND ----------
@@ -381,13 +384,11 @@ if sql_notebooks:
             # Determine output path for SQL notebook
             relative_path = notebook["relative_path"]
             
-            # Change extension from .py to .sql
-            if relative_path.endswith('.py'):
-                sql_relative_path = relative_path[:-3] + '.sql'
-            else:
-                sql_relative_path = relative_path + '.sql'
+            # Databricks workspace notebook paths don't have extensions
+            # Just use the same path for SQL output
+            sql_relative_path = relative_path
             
-            sql_output_path = os.path.join(sql_output_dir, sql_relative_path).replace('\\', '/')
+            sql_output_path = f"{sql_output_dir.rstrip('/')}/{sql_relative_path}"
             
             # Export notebook directly using WorkspaceClient
             w = WorkspaceClient()
