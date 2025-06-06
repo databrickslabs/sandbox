@@ -1,0 +1,233 @@
+system_message: |
+  Convert Amazon Redshift SQL code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple Redshift statements (including but not limited to CREATE PROCEDURE statements).
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # Redshift Specific Guidelines
+  ## 1. Function Mapping
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `ADD_MONTHS(expr, n)` => `add_months(expr, n)`
+  - `APPROXIMATE COUNT(DISTINCT expr)` => Use `approx_count_distinct(expr)` or add a comment if behavior differs
+  - `CONVERT_TIMEZONE('from_zone', 'to_zone', col)` => Consider Spark functions like `from_utc_timestamp(...)` / `to_utc_timestamp(...)`
+  - `DATEADD(unit, n, date_col)` => `date_add(date_col, n)`
+  - `DATEDIFF(unit, date_col1, date_col2)` => `datediff(date_col2, date_col1)`
+  - `LISTAGG(expr, delimiter)` => Often emulated via `collect_list()` + `concat_ws()`
+  - `SPLIT_TO_ARRAY(str, delimiter)` => `split(str, delimiter)`
+  - `SYSDATE` or `GETDATE()` => `current_timestamp()`
+
+  ## 2. Data Type Mapping
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BIGINT` => `LONG`
+  - `BOOLEAN` => `BOOLEAN`
+  - `BYTEINT` => `TINYINT`
+  - `CHAR`, `VARCHAR`, `TEXT` => `STRING`
+  - `DECIMAL(p, s)` => `DECIMAL(p, s)`
+  - `INT` or `INTEGER` => `INT`
+  - `SUPER`, `HLLSKETCH` => `STRING` (note unsupported features)
+  - `TIMESTAMPTZ`, `TIMETZ` => `TIMESTAMP` (time zone logic may differ)
+  - `VARBYTE` => `BINARY` or `STRING` depending on usage
+
+  ## 3. Syntax Transformation
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - Redshift-specific statements (e.g., `UNLOAD`, `CREATE INDEX`, `DISTKEY`, `SORTKEY`, `ENCODE`) are not supported in Databricks; either comment them out or note they are ignored.
+  - IDENTITY columns in Redshift (`IDENTITY(start,inc)`) can be mapped to `GENERATED ALWAYS AS IDENTITY` in Delta, but exact behavior may differ. If not feasible, comment out or explain the limitation.
+  - Redshift system tables or catalogs (`SVL_`, `STV_`, etc.) have no direct Spark equivalent; comment out or adapt as needed.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TEMP TABLE recentorders (
+        orderid INT,
+        customername VARCHAR(100),
+        totalamount DECIMAL(10,2),
+        orderdate DATE
+    );
+
+    INSERT INTO recentorders
+    SELECT 
+        o.orderid,
+        c.firstname || ' ' || c.lastname AS customername,
+        SUM(oi.price * oi.quantity) AS totalamount,
+        o.orderdate
+    FROM orders o
+    JOIN customers c ON o.customerid = c.customerid
+    JOIN orderitems oi ON o.orderid = oi.orderid
+    WHERE o.orderdate > DATEADD(month, -3, current_timestamp)
+    GROUP BY o.orderid, c.firstname, c.lastname, o.orderdate;
+
+    SELECT customername, SUM(totalamount) AS totalspent
+    FROM recentorders
+    GROUP BY customername
+    ORDER BY totalspent DESC
+    LIMIT 10;
+- role: assistant
+  content: |
+    # Create a temporary table with Delta (using OR REPLACE to avoid conflicts)
+    spark.sql("""
+    CREATE OR REPLACE TABLE recentorders (
+        orderid INT,
+        customername STRING,
+        totalamount DECIMAL(10,2),
+        orderdate DATE
+    )
+    """)
+
+    # Populate the table
+    spark.sql("""
+    INSERT INTO recentorders
+    SELECT
+        o.orderid,
+        concat_ws(' ', c.firstname, c.lastname) AS customername,
+        SUM(oi.price * oi.quantity) AS totalamount,
+        o.orderdate
+    FROM orders o
+    JOIN customers c ON o.customerid = c.customerid
+    JOIN orderitems oi ON o.orderid = oi.orderid
+    WHERE o.orderdate > date_add(current_date(), -90)
+    GROUP BY o.orderid, c.firstname, c.lastname, o.orderdate
+    """)
+
+    # Query for top spenders
+    top_spenders = spark.sql("""
+    SELECT customername, SUM(totalamount) AS totalspent
+    FROM recentorders
+    GROUP BY customername
+    ORDER BY totalspent DESC
+    LIMIT 10
+    """)
+
+    # Display results
+    display(top_spenders)
+
+    # Explicitly drop the temporary equivalent table
+    spark.sql("DROP TABLE IF EXISTS recentorders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE public.updateproductprice(
+        p_productid INT,
+        p_newprice DECIMAL(10,2)
+    )
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF (SELECT COUNT(*) FROM products WHERE productid = p_productid) = 0 THEN
+            RAISE EXCEPTION 'Product not found';
+        END IF;
+
+        UPDATE products
+        SET price = p_newprice
+        WHERE productid = p_productid;
+
+        SELECT * FROM products WHERE productid = p_productid;
+    END;
+    $$;
+- role: assistant
+  content: |
+    # Use Databricks widgets for procedure parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Validate and convert parameters
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM products WHERE productid = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Perform update
+    spark.sql(f"""
+    UPDATE products
+    SET price = {new_price}
+    WHERE productid = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM products WHERE productid = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE public.updateproductpricewithtx(
+        p_productid INT,
+        p_newprice DECIMAL(10,2)
+    )
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+    BEGIN
+        BEGIN;
+
+        UPDATE products
+        SET price = p_newprice
+        WHERE productid = p_productid;
+
+        IF p_newprice < 0 THEN
+            RAISE EXCEPTION 'Price cannot be negative';
+        END IF;
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RAISE;
+    END;
+    $$;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        raise ValueError("Invalid input parameters.")
+
+    # Capture the latest timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Reject negative price logic (simulating Redshift's exception)
+        if new_price < 0:
+            raise ValueError("Price cannot be negative")
+
+        # Update the product
+        spark.sql(f"""
+            UPDATE products
+            SET price = {new_price}
+            WHERE productid = {product_id}
+        """)
+    except Exception as e:
+        # Attempt rollback if we have a timestamp
+        if restore_ts:
+            spark.sql(f"RESTORE TABLE products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Rollback via table restore completed.")
+        raise e
+
+    # Final check
+    final_df = spark.sql(f"SELECT * FROM products WHERE productid = {product_id}")
+    display(final_df)

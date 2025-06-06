@@ -1,0 +1,240 @@
+system_message: |
+  Convert MySQL code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple MySQL statements (including but not limited to CREATE PROCEDURE statements).
+  - Output: Python code with Python comments (in {comment_lang}) explaining the code and any necessary context.
+
+  ${common_python_instructions_and_guidelines}
+
+  # MySQL Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `CONVERT_TZ(timestamp, from_tz, to_tz)` => No direct equivalent; consider `to_utc_timestamp(...)` and `from_utc_timestamp(...)`.
+  - `CURDATE()`, `NOW()`, `SYSDATE()` => `current_date()`, `current_timestamp()`.
+  - `DATEDIFF(date1, date2)` => `datediff(date2, date1)` (note argument order).
+  - `DATE_ADD(date, INTERVAL n unit)` / `DATE_SUB(...)` => `date_add(...)` if operating in days, otherwise use `timestampadd` or similar logic.
+  - `DAYOFWEEK(...)`, `WEEK(...)`, `MONTH(...)`, `YEAR(...)`, etc. => Use Spark built-ins but be mindful of potential off-by-one or mode differences (e.g., `WEEKOFYEAR`).
+  - `FROM_UNIXTIME(ts, format)` => `from_unixtime(ts)` combined with `date_format(...)` if formatting is needed.
+  - `GROUP_CONCAT(col SEPARATOR ',')` => Use `concat_ws(',', collect_list(col))` or an equivalent approach in Spark SQL.
+  - `IFNULL(expr, replacement)` => `NVL(expr, replacement)` or `COALESCE(expr, replacement)`.
+  - `REGEXP_LIKE(str, pattern)` => `str RLIKE pattern` or `regexp_like(str, pattern)` (depending on Spark version).
+  - `STR_TO_DATE(expr, '%format')` => `to_date(expr, 'format')` or `to_timestamp(expr, 'format')` depending on whether you need a date or timestamp.
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BIGINT UNSIGNED` => Typically `INT`, `BIGINT`, or `DECIMAL(...)` if you need precision.
+  - `BLOB`, `LONGBLOB`, `MEDIUMBLOB`, `TINYBLOB` => `BINARY` or `STRING`.
+  - `CAST(... AS CHAR)` => `CAST(... AS STRING)`.
+  - `CAST(... AS UNSIGNED)` => `CAST(... AS INT)` or similar numeric type.
+  - `INT UNSIGNED` => Typically `INT`, `BIGINT`, or `DECIMAL(...)` if you need precision.
+  - `MEDIUMINT`, `TINYINT` => Often converted to `INT` (or `SMALLINT` for `TINYINT`).
+  - `MEDIUMTEXT`, `LONGTEXT`, `TEXT`, `TINYTEXT` => `STRING`.
+  - `YEAR` => `INT` or `STRING`.
+
+  ## 3. Syntax Transformation:
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - MySQL-specific commands such as `DELIMITER $$`, `LEAVE`, or `CALL procedure(...)` have no direct Spark SQL equivalent; comment them out or replace with Python logic.
+  - Stored procedures => Typically replaced with Databricks notebooks or Python functions using `dbutils.widgets` for parameter passing.
+  - Variables (e.g., `@var`) => Use Python variables or `dbutils.widgets` for external parameterization.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE TEMPORARY TABLE RecentOrders (
+        OrderID INT,
+        CustomerName VARCHAR(100),
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    );
+
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        CONCAT(c.FirstName, ' ', c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > DATE_SUB(CURRENT_DATE(), INTERVAL 3 MONTH)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10;
+- role: assistant
+  content: |
+    # Create a Delta table to mimic the temporary table
+    spark.sql("""
+    CREATE OR REPLACE TABLE RecentOrders (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Populate the table
+    spark.sql("""
+    INSERT INTO RecentOrders
+    SELECT 
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_sub(current_date(), 90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Query the top spenders
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM RecentOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+    display(top_customers)
+
+    # Clean up the equivalent of the temporary table
+    spark.sql("DROP TABLE IF EXISTS RecentOrders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    DELIMITER $$
+    CREATE PROCEDURE UpdateProductPrice(
+        IN p_ProductID INT,
+        IN p_NewPrice DECIMAL(10,2)
+    )
+    BEGIN
+        IF (SELECT COUNT(*) FROM Products WHERE ProductID = p_ProductID) = 0 THEN
+            SELECT 'Product not found' AS msg;
+            LEAVE proc;
+        END IF;
+
+        UPDATE Products
+        SET Price = p_NewPrice
+        WHERE ProductID = p_ProductID;
+
+        SELECT * FROM Products WHERE ProductID = p_ProductID;
+    END $$
+    DELIMITER ;
+- role: assistant
+  content: |
+    # Use widgets for procedure parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Validate and retrieve parameters
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameter types.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_count = spark.sql(f"SELECT COUNT(*) AS cnt FROM Products WHERE ProductID = {product_id}") \
+                        .collect()[0]['cnt']
+    if exists_count == 0:
+        print("Product not found")
+        dbutils.notebook.exit("No such product")
+
+    # Update the product’s price
+    spark.sql(f"""
+    UPDATE Products
+    SET Price = {new_price}
+    WHERE ProductID = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    DELIMITER $$
+    CREATE PROCEDURE UpdateProductPriceWithTransaction(
+        IN p_ProductID INT,
+        IN p_NewPrice DECIMAL(10,2)
+    )
+    BEGIN
+        START TRANSACTION;
+
+        IF (SELECT COUNT(*) FROM Products WHERE ProductID = p_ProductID) = 0 THEN
+            ROLLBACK;
+            SELECT 'No such product' AS msg;
+            LEAVE trans_proc;
+        END IF;
+
+        UPDATE Products
+        SET Price = p_NewPrice
+        WHERE ProductID = p_ProductID;
+
+        COMMIT;
+
+        SELECT * FROM Products WHERE ProductID = p_ProductID;
+    END $$
+    DELIMITER ;
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid inputs.")
+        dbutils.notebook.exit("Error")
+
+    # For rollback simulation, capture latest version (Delta only)
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Check if product exists
+        exists_count = spark.sql(f"""
+            SELECT COUNT(*) AS cnt
+            FROM Products
+            WHERE ProductID = {product_id}
+        """).collect()[0]['cnt']
+
+        if exists_count == 0:
+            print("No such product")
+            dbutils.notebook.exit("No action taken")
+
+        # “Transaction” update
+        spark.sql(f"""
+            UPDATE Products
+            SET Price = {new_price}
+            WHERE ProductID = {product_id}
+        """)
+
+    except Exception as e:
+        # Mimic ROLLBACK with Delta RESTORE
+        if restore_ts:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Rollback: Table restored to previous version.")
+        raise e
+
+    # Return updated product
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)

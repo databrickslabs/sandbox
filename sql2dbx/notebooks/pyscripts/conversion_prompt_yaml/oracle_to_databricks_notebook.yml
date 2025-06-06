@@ -1,0 +1,238 @@
+system_message: |
+  Convert Oracle SQL (including PL/SQL) code to Python code that runs on Databricks according to the following instructions and guidelines:
+
+  # Input and Output
+  - Input: A single SQL file containing one or multiple Oracle SQL or PL/SQL statements (such as `CREATE OR REPLACE PROCEDURE`, anonymous PL/SQL blocks, etc.).
+  - Output: Python code with Python comments (in `{comment_lang}`) explaining the code and highlighting non-convertible parts.
+
+  ${common_python_instructions_and_guidelines}
+
+  # Oracle Specific Guidelines
+  ## 1. Function Mapping:
+  Map dialect-specific functions to their Databricks equivalents as follows:
+
+  - `DBMS_OUTPUT.put_line(...)` => `print(...)`
+  - `NVL(expr, replacement)` => Remain as `NVL(...)` (Spark supports this).
+  - `RAISE_APPLICATION_ERROR(code, msg)` => `raise Exception(msg)` or `print(msg)`, depending on context.
+  - `SUBSTR(expr, start, length)` => `substring(expr, start, length)` or keep as `SUBSTR(...)`.
+  - `SYSDATE` => `current_date()`
+  - `SYSTIMESTAMP` => `current_timestamp()`
+  - `TO_CHAR(date_expr, 'fmt')` => `date_format(date_expr, 'Spark-compatible format')`
+  - `TO_NUMBER(expr)` => `CAST(expr AS DECIMAL(...))` or `CAST(expr AS INT)` depending on usage
+  - `TRIM(LEADING / TRAILING / BOTH)` => `LTRIM(...)`, `RTRIM(...)`, or `TRIM(...)`. If exact Oracle behavior is critical, comment and explain differences.
+  - `TRUNC(date_expr, 'DD')` => `date_trunc('DAY', date_expr)`
+
+  ## 2. Data Type Mapping:
+  Map dialect-specific data types to Spark SQL data types as follows:
+
+  - `BLOB` => `BINARY`
+  - `CLOB` / `NCLOB` => `STRING`
+  - `DATE` => `DATE`
+  - `NUMBER(p, s)` => `DECIMAL(p, s)` (or `INT` if p/s allow)
+  - `TIMESTAMP` => `TIMESTAMP`
+  - `VARCHAR2` / `NVARCHAR2` => `STRING`
+
+  ## 3. Syntax Transformation:
+  Map dialect-specific syntax constructs to their Databricks equivalents as follows:
+
+  - PL/SQL Conditionals (`IF` / `ELSIF` / `ELSE`) => Convert to Python `if` / `elif` / `else`.
+  - Sequences (`NEXTVAL`, `CURRVAL`) => No direct Spark equivalent. Comment out or implement a custom workaround (e.g., storing sequence values in a Delta table).
+  - `EXECUTE IMMEDIATE` => Build the dynamic SQL string in Python, then call `spark.sql(dynamic_sql)`.
+  - Outer Join Notation (`col = col(+)`) => Rewrite as `LEFT JOIN` or `RIGHT JOIN`.
+  - Bulk operations (`BULK COLLECT`, etc.) => Prefer set-based Spark DataFrame operations.
+  - Oracle Index / Partition Hints => Comment them out, since Spark does not support them.
+  - `IF EXISTS (SELECT ...)` => Check with `spark.sql(...).count() > 0`.
+  - Use Python variables (or widgets) instead of PL/SQL variables.
+
+few_shots:
+# Example 1: Basic Queries with Temporary Tables
+- role: user
+  content: |
+    CREATE GLOBAL TEMPORARY TABLE TEMP_ORDERS (
+        OrderID       NUMBER,
+        CustomerName  VARCHAR2(100),
+        TotalAmount   NUMBER(10,2),
+        OrderDate     DATE
+    ) ON COMMIT PRESERVE ROWS;
+
+    INSERT INTO TEMP_ORDERS
+    SELECT 
+        o.OrderID,
+        c.FirstName || ' ' || c.LastName AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > ADD_MONTHS(SYSDATE, -3)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate;
+
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM TEMP_ORDERS
+    GROUP BY CustomerName
+    ORDER BY SUM(TotalAmount) DESC
+    FETCH FIRST 10 ROWS ONLY;
+- role: assistant
+  content: |
+    # Create or replace a Delta table to mimic the temporary table
+    spark.sql("""
+    CREATE OR REPLACE TABLE TempOrders (
+        OrderID INT,
+        CustomerName STRING,
+        TotalAmount DECIMAL(10,2),
+        OrderDate DATE
+    )
+    """)
+
+    # Populate the temporary table
+    spark.sql("""
+    INSERT INTO TempOrders
+    SELECT
+        o.OrderID,
+        concat_ws(' ', c.FirstName, c.LastName) AS CustomerName,
+        SUM(oi.Price * oi.Quantity) AS TotalAmount,
+        o.OrderDate
+    FROM Orders o
+    JOIN Customers c ON o.CustomerID = c.CustomerID
+    JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    WHERE o.OrderDate > date_add(current_date(), -90)
+    GROUP BY o.OrderID, c.FirstName, c.LastName, o.OrderDate
+    """)
+
+    # Query for top customers
+    top_customers = spark.sql("""
+    SELECT CustomerName, SUM(TotalAmount) AS TotalSpent
+    FROM TempOrders
+    GROUP BY CustomerName
+    ORDER BY TotalSpent DESC
+    LIMIT 10
+    """)
+
+    # Display results
+    display(top_customers)
+
+    # Explicitly drop the temporary equivalent table
+    spark.sql("DROP TABLE IF EXISTS TempOrders")
+
+# Example 2: Stored Procedure
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE UpdateProductPrice(
+        p_ProductID IN NUMBER,
+        p_NewPrice  IN NUMBER
+    ) AS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM Products
+        WHERE ProductID = p_ProductID;
+
+        IF v_count = 0 THEN
+            DBMS_OUTPUT.put_line('Product not found');
+            RETURN;
+        END IF;
+
+        UPDATE Products
+        SET Price = p_NewPrice
+        WHERE ProductID = p_ProductID;
+
+        FOR rec IN (
+            SELECT * FROM Products WHERE ProductID = p_ProductID
+        ) LOOP
+            DBMS_OUTPUT.put_line('Updated Product: ' || rec.ProductID || ' Price: ' || rec.Price);
+        END LOOP;
+    END;
+    /
+- role: assistant
+  content: |
+    # Use widgets for parameter input
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Validate input
+    try:
+        product_id = int(dbutils.widgets.get("ProductID"))
+        new_price = float(dbutils.widgets.get("NewPrice"))
+    except ValueError:
+        print("Invalid parameters.")
+        dbutils.notebook.exit("Error")
+
+    # Check if product exists
+    exists_df = spark.sql(f"SELECT 1 FROM Products WHERE ProductID = {product_id}")
+    if exists_df.count() == 0:
+        print("Product not found.")
+        dbutils.notebook.exit("No such product.")
+
+    # Update price
+    spark.sql(f"""
+    UPDATE Products
+    SET Price = {new_price}
+    WHERE ProductID = {product_id}
+    """)
+
+    # Return updated product
+    updated_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(updated_df)
+
+# Example 3: Stored Procedure with Transaction Handling
+- role: user
+  content: |
+    CREATE OR REPLACE PROCEDURE UpdateProductPriceWithTransaction(
+        p_ProductID IN NUMBER,
+        p_NewPrice  IN NUMBER
+    ) AS
+    BEGIN
+        SAVEPOINT start_trans;
+        BEGIN
+            UPDATE Products
+            SET Price = p_NewPrice
+            WHERE ProductID = p_ProductID;
+            COMMIT;  
+        EXCEPTION
+            WHEN OTHERS THEN
+                ROLLBACK TO start_trans;
+                RAISE_APPLICATION_ERROR(-20001, 'Error updating product');
+        END;
+
+        FOR rec IN (
+            SELECT * FROM Products WHERE ProductID = p_ProductID
+        ) LOOP
+            DBMS_OUTPUT.put_line('Updated Product: ' || rec.ProductID || ' Price: ' || rec.Price);
+        END LOOP;
+    END;
+    /
+- role: assistant
+  content: |
+    # Widgets for parameters
+    dbutils.widgets.text("ProductID", "")
+    dbutils.widgets.text("NewPrice", "")
+
+    # Convert inputs
+    product_id = int(dbutils.widgets.get("ProductID"))
+    new_price = float(dbutils.widgets.get("NewPrice"))
+
+    # Attempt to capture the current table version/timestamp for rollback
+    try:
+        hist = spark.sql("DESCRIBE HISTORY Products LIMIT 1").collect()[0]
+        restore_ts = hist["timestamp"]
+    except:
+        restore_ts = None
+
+    try:
+        # Perform the update
+        spark.sql(f"""
+        UPDATE Products
+        SET Price = {new_price}
+        WHERE ProductID = {product_id}
+        """)
+    except Exception as e:
+        # Roll back via restore if available
+        if restore_ts is not None:
+            spark.sql(f"RESTORE TABLE Products TO TIMESTAMP AS OF '{restore_ts}'")
+            print("Table restored to previous version.")
+        raise e
+
+    # Show final result
+    final_df = spark.sql(f"SELECT * FROM Products WHERE ProductID = {product_id}")
+    display(final_df)
