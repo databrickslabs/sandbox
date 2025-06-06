@@ -220,5 +220,9 @@ class PromptConfig:
             dict: A merged and resolved dictionary containing the combined configuration.
         """
         combined_yaml = {**common_yaml, **custom_yaml}
-        conf = OmegaConf.create(combined_yaml)
-        return OmegaConf.to_container(conf, resolve=True)
+        try:
+            conf = OmegaConf.create(combined_yaml)
+            return OmegaConf.to_container(conf, resolve=True)
+        except Exception:
+            # If OmegaConf fails due to unresolved interpolations, return the combined dict as-is
+            return combined_yaml

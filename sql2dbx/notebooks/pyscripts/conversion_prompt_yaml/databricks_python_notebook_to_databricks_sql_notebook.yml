@@ -1,16 +1,25 @@
 system_message: |
   Convert Databricks Python notebook code to Databricks SQL notebook code.
 
-  Key conversion patterns:
-  - Convert spark.sql() calls to direct SQL statements
-  - Convert dbutils.widgets.get() to SQL parameter references (:parameter_name)
-  - Convert Python functions that generate SQL to SQL variables with EXECUTE IMMEDIATE
-  - Convert timezone handling (JST = UTC+9) to SQL date arithmetic
-  - Use DECLARE OR REPLACE VARIABLE and SET VARIABLE for dynamic values
-  - Use IDENTIFIER() for dynamic table references when needed
-  - Remove Python imports, functions, and print statements
-  - Reorganize cell boundaries (-- COMMAND ----------) to ensure complete SQL statements within each cell
-  - Add comments to explain the conversion where appropriate
+  ## General Conversion Rules:
+  - Convert `spark.sql(f"...")` calls to direct SQL statements
+  - Handle widget parameters based on usage:
+    - For simple, static queries: Use parameter markers `:parameter_name`
+    - For dynamic SQL or when values need manipulation: Use `DECLARE OR REPLACE VARIABLE` with DEFAULT values matching the widget defaults
+  - When building dynamic SQL that needs to be executed:
+    - Construct the SQL string using variables and `||` concatenation operator
+    - Execute using `EXECUTE IMMEDIATE`
+  - For dynamic table references, use `IDENTIFIER()` function with the full table path
+  - Use `CONCAT_WS('.',...)` for building database.schema.table paths cleanly
+  - Remove all Python code including imports, function definitions, and loops
+  - Organize notebook cells with `-- COMMAND ----------` to separate logical units
+
+  ## Specific Conversion Patterns:
+  - Timezone handling (JST = UTC+9): Convert to `DATEADD(HOUR, 9, CURRENT_TIMESTAMP())`
+  - Date formatting: Convert `strftime()` to `DATE_FORMAT()` with SQL format strings
+  - Print statements: Convert to `SELECT ... AS status` to show progress messages
+  - Conditional logic: Convert Python if/else to SQL CASE WHEN expressions
+  - Multi-line dynamic SQL strings: Use triple quotes `"""` for readability
 
 few_shots:
 - role: user

@@ -169,6 +169,31 @@ class TestConversionPromptHelper(unittest.TestCase):
         system_message = helper.get_system_message()
         self.assertIn("Instructions", system_message)
 
+    def test_yaml_with_unresolved_interpolation(self):
+        """Test that YAML with unresolved interpolations is handled gracefully"""
+        yaml_path = os.path.join(self.temp_dir, "unresolved_interpolation.yml")
+        content = {
+            "system_message": "Convert SQL to Python using {undefined_variable}",
+            "few_shots": []
+        }
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            yaml.dump(content, f)
+
+        # Should not raise an exception due to fallback handling
+        helper = ConversionPromptHelper(yaml_path, "English")
+        system_message = helper.get_system_message()
+        # The undefined interpolation should remain as-is
+        self.assertIn("{undefined_variable}", system_message)
+
+    def test_databricks_python_to_sql_notebook_yaml(self):
+        """Test loading databricks_python_notebook_to_databricks_sql_notebook.yml"""
+        yaml_path = "notebooks/pyscripts/conversion_prompt_yaml/databricks_python_notebook_to_databricks_sql_notebook.yml"
+        helper = ConversionPromptHelper(yaml_path, "English")
+        system_message = helper.get_system_message()
+        self.assertIn("Convert Databricks Python notebook code", system_message)
+        few_shots = helper.get_few_shots()
+        self.assertGreater(len(few_shots), 0)
+
 
 if __name__ == '__main__':
     unittest.main()
