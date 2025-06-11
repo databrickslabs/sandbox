@@ -1,0 +1,14 @@
+version: 1
+name: "conversational-agent-app"
+description: "Interact with your structured data using natural language to generate deep insights and analytics—no SQL expertise required."
+
+resource_specs:
+  - name: "serving_endpoint"
+    description: "Serving endpoint for the data chat app"
+    serving_endpoint_spec:
+      permission: "CAN_QUERY"
+user_api_scopes:
+  - serving.serving-endpoints
+  - dashboards.genie
+  - files.files
+  - sql
