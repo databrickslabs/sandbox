@@ -76,13 +76,25 @@ class GenieClient:
         
         # Extract data_array from the correct nested location
         data_array = []
-        if hasattr(response, 'statement_response'):
-            if hasattr(response.statement_response, 'result'):
+        if hasattr(response, 'statement_response') and response.statement_response is not None:
+            if (hasattr(response.statement_response, 'result') and 
+                response.statement_response.result is not None):
                 data_array = response.statement_response.result.data_array or []
+            else:
+                raise ValueError("Query execution failed: No result data available. The query may have failed or returned no data.")
+        else:
+            raise ValueError("Query execution failed: No statement response available from the server.")
+        
+        # Extract schema safely
+        schema = {}
+        if (hasattr(response, 'statement_response') and response.statement_response is not None and
+            hasattr(response.statement_response, 'manifest') and response.statement_response.manifest is not None and
+            hasattr(response.statement_response.manifest, 'schema') and response.statement_response.manifest.schema is not None):
+            schema = response.statement_response.manifest.schema.as_dict()
             
         return {
             'data_array': data_array,
-            'schema': response.statement_response.manifest.schema.as_dict() if hasattr(response, 'statement_response') else {}
+            'schema': schema
         }
 
     def execute_query(self, conversation_id: str, message_id: str, attachment_id: str) -> Dict[str, Any]:

@@ -430,7 +430,20 @@ def get_model_response(trigger_data, current_messages, chat_history, selected_sp
         response, query_text = genie_query(user_input, user_token, selected_space_id)
         
         if isinstance(response, str):
-            content = dcc.Markdown(response, className="message-text")
+            # Escape square brackets to prevent markdown auto-linking
+            import re
+            processed_response = response
+            
+            # Escape all square brackets to prevent markdown from interpreting them as links
+            processed_response = processed_response.replace('[', '\\[').replace(']', '\\]')
+            
+            # Escape parentheses to prevent markdown from interpreting them as links
+            processed_response = processed_response.replace('(', '\\(').replace(')', '\\)')
+            
+            # Escape angle brackets to prevent markdown from interpreting them as links
+            processed_response = processed_response.replace('<', '\\<').replace('>', '\\>')
+            
+            content = dcc.Markdown(processed_response, className="message-text")
         else:
             # Data table response
             df = pd.DataFrame(response)
