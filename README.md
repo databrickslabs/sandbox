@@ -2,6 +2,8 @@
 
 [![lines of code](https://tokei.rs/b1/github/databrickslabs/sandbox)]([https://codecov.io/github/databrickslabs/sandbox](https://github.com/databrickslabs/sandbox))
 
+Try with a signed commit
+
 Experimental labs projects
 
 ## Installation
