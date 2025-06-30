@@ -1,5 +1,5 @@
 fastapi==0.104.1
-uvicorn==0.24.0
+uvicorn==0.35.0
 pydantic==2.4.2
 python-dotenv==1.0.0
 databricks-sdk==0.12.0
