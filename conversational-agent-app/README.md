@@ -1,6 +1,6 @@
 ---
 title: "Conversational Agent App"
-language: python"
+language: Python
 author: "Vivian(Wenwen) Xie"
 date: 2025-06-09
 ---
