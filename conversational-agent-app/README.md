@@ -71,7 +71,6 @@ For more details, refer to the [official Databricks documentation](https://docs.
 
 ## Troubleshooting
 1. After you install the app from Markeplace, check the Authorization page for API scope details. 
-![](./assets/genie-space11.png)
 ![](./assets/genie-space12.png)
 
 Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all four scopes:
@@ -132,7 +131,7 @@ databricks account custom-app-integration get '12345667-1234-5678-a85d-eac774235
 
 
 3. Make sure the users have proper access to the underlying resources:
- - For quering tables, users need at least `USE CATALOG` permissions on the Unity catalog and `USE SCHEMA` on the schema, `SELECT` permission on the table 
+ - For querying tables, users need at least `USE CATALOG` permissions on the Unity catalog and `USE SCHEMA` on the schema, `SELECT` permission on the table 
  - For genie space, users need at least `Can Run` permission 
  - For SQL warehouse, users need at least `Can use` permission 
  - For model serving endpoint, users need at least `Can Query` permission 
