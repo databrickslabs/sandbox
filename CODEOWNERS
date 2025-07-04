@@ -11,6 +11,7 @@ conversational-agent-app   @vivian-xie-db @yuanchaoma-db
 database-diagram-builder   @alexott
 downstreams                @nfx @alexott
 go-libs                    @nfx @alexott
+gxp_validation             @oleksandrabovkun
 ip_access_list_analyzer    @alexott
 ka-chat-bot                @taiga-db
 metascan                   @nfx @alexott
