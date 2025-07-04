@@ -74,16 +74,16 @@ For more details, refer to the [official Databricks documentation](https://docs.
 ![](./assets/genie-space11.png)
 ![](./assets/genie-space12.png)
 
-Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all the four scopes:
+Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all four scopes:
   - serving.serving-endpoints
   - dashboards.genie
   - files.files
   - sql
-  
+
 ![](./assets/genie-space10.png)
 
 
-2. If you directly clone the git repo, start an app instance and try to add scope, notice that serving.serving-endpoints is not in the scope list yet in the UI, which is a work-in-progress - will get added later. 
+2. If you directly clone the git repo, start an app instance and try to add scope, notice that serving.serving-endpoints is not in the scope list yet in the UI, which is a work-in-progress and will get added later. 
 ![](./assets/genie-space13.png)
 
 What you need to do is using Databricks API or CLI to manually grant the user serving.serving-endpoints.
