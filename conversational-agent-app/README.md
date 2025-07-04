@@ -1,6 +1,6 @@
 ---
 title: "Conversational Agent App"
-language: pythongit commit -S -m "YOUR_COMMIT_MESSAGE"
+language: python"
 author: "Vivian(Wenwen) Xie"
 date: 2025-06-09
 ---
