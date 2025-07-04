@@ -87,7 +87,7 @@ Then you open the url link the first time, ensure that you see this OBO scope au
 ![](./assets/genie-space13.png)
 
 What you need to do is using Databricks API or CLI to manually grant the user serving.serving-endpoints.
-To do this, you can use either the CLI, SDK or API as an Account Admin. To show an example using CLI:
+To do this, you can use either the [CLI](https://docs.databricks.com/aws/en/dev-tools/cli), [SDK](https://docs.databricks.com/aws/en/dev-tools/sdk-python) or [API](https://docs.databricks.com/api/account/customappintegration/get) as an Account Admin. To show an example using CLI:
  - Take the Oauth2 App client ID:
 
 ![](./assets/genie-space14.png)
