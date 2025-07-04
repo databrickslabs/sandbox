@@ -121,12 +121,12 @@ databricks account custom-app-integration get '12345667-1234-5678-a85d-eac774235
   }
 }
 ```
- - Update the scopes with below command line, notice you will copy all the original scopes and add the serving-endpoints at the end:
+ - Update the scopes with below command line, notice you will copy all the original scopes over and add the serving-endpoints at the end:
 ```
  databricks account custom-app-integration update '65d90ec2-54ba-4fcb-a85d-eac774235aea' --json '{"scopes": ["openid", "profile", "email", "all-apis", "offline_access", "serving.serving-endpoints"]}'
 ```
 
- - If it doesn't reflect in the app, clear the cookie in the browser developer tools
+ - If it doesn't reflect in the app, clear the cookie in the browser developer tools, and you may need to recreate the app or reinstall.
 
 ![](./assets/genie-space16.png)
 
