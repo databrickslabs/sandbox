@@ -1,6 +1,6 @@
 ---
 title: "Conversational Agent App"
-language: python
+language: pythongit commit -S -m "YOUR_COMMIT_MESSAGE"
 author: "Vivian(Wenwen) Xie"
 date: 2025-06-09
 ---
@@ -70,13 +70,16 @@ For detailed instructions on configuring resources, refer to the [official Datab
 For more details, refer to the [official Databricks documentation](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/deploy).
 
 ## Troubleshooting
-1. After you install the app from Markeplace, check the Authorization page for API scope details.Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all the four scopes:
+1. After you install the app from Markeplace, check the Authorization page for API scope details. 
+![](./assets/genie-space11.png)
+![](./assets/genie-space12.png)
+
+Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all the four scopes:
   - serving.serving-endpoints
   - dashboards.genie
   - files.files
   - sql
-![](./assets/genie-space11.png)
-![](./assets/genie-space12.png)
+  
 ![](./assets/genie-space10.png)
 
 
