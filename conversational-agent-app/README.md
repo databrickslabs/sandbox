@@ -126,7 +126,7 @@ databricks account custom-app-integration get '12345667-1234-5678-a85d-eac774235
  databricks account custom-app-integration update '65d90ec2-54ba-4fcb-a85d-eac774235aea' --json '{"scopes": ["openid", "profile", "email", "all-apis", "offline_access", "serving.serving-endpoints"]}'
 ```
 
- - If it doesn't reflect in the app, clear the cookie in the browser developer tools, and you may need to recreate the app or reinstall.
+ - If it doesn't reflect in the app, clear the cookie in the browser developer tools, and you may need to recreate the app or reinstall. You can also try opening the url in incognito mode.
 
 ![](./assets/genie-space16.png)
 
