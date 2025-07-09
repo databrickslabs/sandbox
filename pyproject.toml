@@ -10,7 +10,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10"
-databricks-sdk = "0.40.0"
+databricks-sdk = "0.58.0"
 pyyaml = "^6.0.2"
 mlflow = {extras = ["databricks"], version = "^2.16.0"}
 databricks-labs-blueprint = "0.10.1"
