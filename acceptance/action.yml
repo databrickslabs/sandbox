@@ -25,7 +25,7 @@ inputs:
     required: false
     default: false
   codegen_path:
-    description: 'Path to the .codegen.json file to use for configuring the acceptance tests'
+    description: 'Relative path to the .codegen.json file to use for configuring the acceptance tests'
     required: false  # by default the first .codegen.json found in the project is used
 outputs:
   sample:
