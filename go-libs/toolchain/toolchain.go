@@ -34,12 +34,12 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	if codegenPath != nil && *codegenPath != "" {
 		raw, err = getFileContent(*codegenPath)
 		if err != nil {
-			return nil, fmt.Errorf("provided 'codegen_path' does not exist: %w", err)
+			return nil, fmt.Errorf("provided 'codegen_path' does not exist in the project: %w", err)
 		}
 	} else {
 		raw, err = getFileContent(".codegen.json")
 		if err != nil {
-			return nil, fmt.Errorf("read: %w", err)
+			return nil, fmt.Errorf("failed to read .codegen.json: %w", err)
 		}
 	}
 
