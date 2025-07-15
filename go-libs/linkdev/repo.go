@@ -58,7 +58,7 @@ func (r Repo) Retest(ctx context.Context, upstreamFolder string) error {
 		return fmt.Errorf("fileset: %w", err)
 	}
 	// defer cleanup()
-	tc, err := toolchain.FromFileset(downstreamFiles)
+	tc, err := toolchain.FromFileset(downstreamFiles, nil)
 	if err != nil {
 		return fmt.Errorf("toolchain: %w", err)
 	}

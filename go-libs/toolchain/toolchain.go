@@ -15,17 +15,33 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/process"
 )
 
-var ErrNotExist = fmt.Errorf("no .codegen.json found. %w", fs.ErrNotExist)
+func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error) {
+	var raw []byte
+	var err error
 
-func FromFileset(files fileset.FileSet) (*Toolchain, error) {
-	configs := files.Filter(".codegen.json")
-	if len(configs) == 0 {
-		return nil, ErrNotExist
+	// Helper function to filter files and retrieve raw content
+	getFileContent := func(filter string) ([]byte, error) {
+		filteredFiles := files.Filter(filter)
+		if len(filteredFiles) == 0 {
+			return nil, fmt.Errorf("file not found in fileset: %s", filter)
+		}
+		return filteredFiles[0].Raw()
 	}
-	raw, err := configs[0].Raw()
-	if err != nil {
-		return nil, fmt.Errorf("read: %w", err)
+
+	// Check if codegenPath is provided and retrieve content
+	if codegenPath != nil && *codegenPath != "" {
+		raw, err = getFileContent(*codegenPath)
+		if err != nil {
+			return nil, fmt.Errorf("provided 'codegen_path' does not exist in the project: %w", fs.ErrNotExist)
+		}
+	} else {
+		raw, err = getFileContent(".codegen.json")
+		if err != nil {
+			return nil, fmt.Errorf("no .codegen.json found. %w", fs.ErrNotExist)
+		}
 	}
+
+	// Unmarshal JSON content into dotCodegen struct
 	var dc dotCodegen
 	err = json.Unmarshal(raw, &dc)
 	if err != nil {

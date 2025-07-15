@@ -58,8 +58,82 @@ sequenceDiagram
 
 ## Usage
 
-Add to your `.github/workflows` folder:
+Add a file named `acceptance.yml` to the `.github/workflows` folder in your repository. 
+This file defines a GitHub Actions workflow for running acceptance tests on pull requests. 
+The workflow sets up the environment, installs dependencies, executes tests, and uploads artifacts for further analysis.
 
+Example `acceptance.yml` for Python projects:
+
+```yaml
+name: acceptance
+
+on:
+  pull_request:
+    types: [ opened, synchronize, ready_for_review ]
+  merge_group:
+    types: [ checks_requested ]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          cache: 'pip'
+          cache-dependency-path: '**/pyproject.toml'
+          python-version: '3.10'
+
+      - name: Install hatch
+        run: pip install hatch==1.9.4
+
+      - name: Run integration tests
+        uses: databrickslabs/sandbox/acceptance@acceptance/v0.4.4
+        with:
+          vault_uri: ${{ secrets.VAULT_URI }}
+          timeout: 2h
+          # optional path to codegen file containing configuration for the tests
+          # by default first `codegen.json` file found in the repository is used
+          # codegen_path: tests/integration/.codegen.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The project must include a `.codegen.json` file, which defines the toolchain configuration for the action. 
+This configuration specifies details such as versioning, required tools, and the paths to acceptance tests. 
+If a `codegen_path` field is not explicitly provided, the action will automatically search the project for the `.codegen.json` file and use the first one it locates.
+
+Example `.codegen.json`:
+```json
+{
+  "version": {
+    "src/databricks/labs/project_name/__about__.py": "__version__ = \"$VERSION\""
+  },
+  "toolchain": {
+    "required": ["python3", "hatch"],
+    "pre_setup": ["hatch env create"],
+    "prepend_path": ".venv/bin",
+    "acceptance_path": "tests/integration"
+  }
+}
+```
+
+Note: if `acceptance_path` is not provided in the `codegen.json`, the action will execute all tests in the project by default.
+
+Example for uploading artifacts to GitHub Actions:
 ```yaml
 name: acceptance
 
