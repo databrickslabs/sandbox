@@ -39,13 +39,8 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	} else {
 		raw, err = getFileContent(".codegen.json")
 		if err != nil {
-			return nil, ErrNotExist
+			return nil, fmt.Errorf("read: %w", err)
 		}
-	}
-
-    // Handle read errors
-	if err != nil {
-		return nil, fmt.Errorf("read: %w", err)
 	}
 
     // Unmarshal JSON content into dotCodegen struct
