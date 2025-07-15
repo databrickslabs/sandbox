@@ -15,8 +15,6 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/process"
 )
 
-var ErrNotExist = fmt.Errorf("no .codegen.json found. %w", fs.ErrNotExist)
-
 func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error) {
 	var raw []byte
 	var err error
@@ -34,12 +32,12 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	if codegenPath != nil && *codegenPath != "" {
 		raw, err = getFileContent(*codegenPath)
 		if err != nil {
-			return nil, fmt.Errorf("provided 'codegen_path' does not exist in the project: %w", err)
+			return nil, fmt.Errorf("provided 'codegen_path' does not exist in the project: %w", fs.ErrNotExist)
 		}
 	} else {
 		raw, err = getFileContent(".codegen.json")
 		if err != nil {
-			return nil, fmt.Errorf("failed to read .codegen.json: %w", err)
+			return nil, fmt.Errorf("no .codegen.json found. %w", fs.ErrNotExist)
 		}
 	}
 
