@@ -24,7 +24,7 @@ jobs:
           go-version-file: go-libs/go.mod
 
       - name: Acceptance
-        uses: databrickslabs/sandbox/acceptance@acceptance/v0.4.4
+        uses: databrickslabs/sandbox/acceptance@acceptance/v0.4.3
         with:
           directory: go-libs
           vault_uri: ${{ secrets.VAULT_URI }}
