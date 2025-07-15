@@ -92,7 +92,7 @@ func (py *pyContext) Start(script string, reply *localHookServer) chan error {
 
 func (r pyTestRunner) prepare(ctx context.Context, redact redaction.Redaction, logfile string) (*pyContext, error) {
 	codegenPath := env.Get(ctx, "codegen_path")
-	tc, err := toolchain.FromFileset(r.files, codegenPath)
+	tc, err := toolchain.FromFileset(r.files, &codegenPath)
 	if err != nil {
 		return nil, fmt.Errorf("detect: %w", err)
 	}
