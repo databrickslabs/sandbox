@@ -24,7 +24,7 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	if codegenPath != nil && *codegenPath != "" {
 		f := files.Get(*codegenPath)
 		if f == nil {
-			return nil, fmt.Errorf("provided codegen_json_path does not exist in fileset: %s", *codegenPath)
+			return nil, fmt.Errorf("provided codegen_path does not exist in fileset: %s", *codegenPath)
 		}
 		raw, err = f.Raw()
 	} else {
