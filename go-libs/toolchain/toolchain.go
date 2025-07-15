@@ -17,15 +17,28 @@ import (
 
 var ErrNotExist = fmt.Errorf("no .codegen.json found. %w", fs.ErrNotExist)
 
-func FromFileset(files fileset.FileSet) (*Toolchain, error) {
-	configs := files.Filter(".codegen.json")
-	if len(configs) == 0 {
-		return nil, ErrNotExist
+func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error) {
+	var raw []byte
+	var err error
+
+	if codegenPath != nil && *codegenPath != "" {
+		f := files.Get(*codegenPath)
+		if f == nil {
+			return nil, fmt.Errorf("provided codegen_json_path does not exist in fileset: %s", *codegenPath)
+		}
+		raw, err = f.Raw()
+	} else {
+		configs := files.Filter(".codegen.json")
+		if len(configs) == 0 {
+			return nil, ErrNotExist
+		}
+		raw, err = configs[0].Raw()
 	}
-	raw, err := configs[0].Raw()
+
 	if err != nil {
-		return nil, fmt.Errorf("read: %w", err)
+	    return nil, fmt.Errorf("read: %w", err)
 	}
+
 	var dc dotCodegen
 	err = json.Unmarshal(raw, &dc)
 	if err != nil {

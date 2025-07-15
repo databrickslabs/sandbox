@@ -68,6 +68,9 @@ func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) 
 	defer stop()
 	// make sure that test logs leave their artifacts somewhere we can pickup
 	ctx = env.Set(ctx, ecosystem.LogDirEnv, artifactDir)
+	// set codegen path file used for configuring the acceptance tests
+	codegenPath := a.Action.GetInput("codegen_path")
+	ctx = env.Set(ctx, "codegen_path", codegenPath)
 	redact := loaded.Redaction()
 	report, err := a.runWithTimeout(ctx, redact, directory)
 	if err != nil {
