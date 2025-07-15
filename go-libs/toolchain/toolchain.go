@@ -21,18 +21,24 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	var raw []byte
 	var err error
 
-	if codegenPath != nil && *codegenPath != "" {
-		f := files.Get(*codegenPath)
-		if f == nil {
-			return nil, fmt.Errorf("provided codegen_path does not exist in fileset: %s", *codegenPath)
+    getFileContent := func(filter string) ([]byte, error) {
+		filteredFiles := files.Filter(filter)
+		if len(filteredFiles) == 0 {
+			return nil, fmt.Errorf("file not found in fileset: %s", filter)
 		}
-		raw, err = f.Raw()
+		return filteredFiles[0].Raw()
+	}
+
+	if codegenPath != nil && *codegenPath != "" {
+		raw, err = getFileContent(*codegenPath)
+		if err != nil {
+			return nil, fmt.Errorf("provided 'codegen_path' does not exist: %w", err)
+		}
 	} else {
-		configs := files.Filter(".codegen.json")
-		if len(configs) == 0 {
+		raw, err = getFileContent(".codegen.json")
+		if err != nil {
 			return nil, ErrNotExist
 		}
-		raw, err = configs[0].Raw()
 	}
 
 	if err != nil {
