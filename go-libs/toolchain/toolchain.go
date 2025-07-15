@@ -36,7 +36,7 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	}
 
 	if err != nil {
-	    return nil, fmt.Errorf("read: %w", err)
+		return nil, fmt.Errorf("read: %w", err)
 	}
 
 	var dc dotCodegen
