@@ -58,7 +58,8 @@ func (r Repo) Retest(ctx context.Context, upstreamFolder string) error {
 		return fmt.Errorf("fileset: %w", err)
 	}
 	// defer cleanup()
-	tc, err := toolchain.FromFileset(downstreamFiles)
+	codegenPath := env.Get(ctx, "codegen_path")
+	tc, err := toolchain.FromFileset(downstreamFiles, codegenPath)
 	if err != nil {
 		return fmt.Errorf("toolchain: %w", err)
 	}

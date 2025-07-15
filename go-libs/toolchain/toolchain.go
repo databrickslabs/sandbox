@@ -21,7 +21,8 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 	var raw []byte
 	var err error
 
-    getFileContent := func(filter string) ([]byte, error) {
+    // Helper function to filter files and retrieve raw content
+	getFileContent := func(filter string) ([]byte, error) {
 		filteredFiles := files.Filter(filter)
 		if len(filteredFiles) == 0 {
 			return nil, fmt.Errorf("file not found in fileset: %s", filter)
@@ -29,6 +30,7 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 		return filteredFiles[0].Raw()
 	}
 
+    // Check if codegenPath is provided and retrieve content
 	if codegenPath != nil && *codegenPath != "" {
 		raw, err = getFileContent(*codegenPath)
 		if err != nil {
@@ -41,10 +43,12 @@ func FromFileset(files fileset.FileSet, codegenPath *string) (*Toolchain, error)
 		}
 	}
 
+    // Handle read errors
 	if err != nil {
 		return nil, fmt.Errorf("read: %w", err)
 	}
 
+    // Unmarshal JSON content into dotCodegen struct
 	var dc dotCodegen
 	err = json.Unmarshal(raw, &dc)
 	if err != nil {
