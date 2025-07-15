@@ -112,6 +112,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+The project must include a `.codegen.json` file, which defines the toolchain configuration for the action. 
+This configuration specifies details such as versioning, required tools, and the paths to acceptance tests. 
+If a `codegen_path` field is not explicitly provided, the action will automatically search the project for the `.codegen.json` file and use the first one it locates.
+
 Example `.codegen.json`:
 ```json
 {
@@ -127,7 +131,7 @@ Example `.codegen.json`:
 }
 ```
 
-Note: if `acceptance_path` is not provided in the `codegen.json`, the action will execute all tests by default.
+Note: if `acceptance_path` is not provided in the `codegen.json`, the action will execute all tests in the project by default.
 
 Example for uploading artifacts to GitHub Actions:
 ```yaml
