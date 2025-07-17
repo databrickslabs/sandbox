@@ -11,8 +11,8 @@ github.com/adrg/frontmatter v0.2.0/go.mod h1:93rQCj3z3ZlwyxxpQioRKC1wDLto4aXHrbq
 github.com/briandowns/spinner v1.23.2 h1:Zc6ecUnI+YzLmJniCfDNaMbW0Wid1d5+qcTq4L2FW8w=
 github.com/briandowns/spinner v1.23.2/go.mod h1:LaZeM4wm2Ywy6vO571mvhQNRcWfRUnXOs0RcKV0wYKM=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
-github.com/databricks/databricks-sdk-go v0.74.0 h1:W4u6jEttmrmuA3FdEgWlK4omHidAUaV1S4eN/JsMO8E=
-github.com/databricks/databricks-sdk-go v0.74.0/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
+github.com/databricks/databricks-sdk-go v0.76.0 h1:UZV/iQkrDrwIp/yH/pfa6H7afpUVULa3XWa2xIwy7Ic=
+github.com/databricks/databricks-sdk-go v0.76.0/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
 github.com/databrickslabs/sandbox/go-libs v0.4.1 h1:ZqqcP+ZF69LKvXILvSfZbD9+ssRNCdDb45ipXHdcvbk=
 github.com/databrickslabs/sandbox/go-libs v0.4.1/go.mod h1:R0jABegxKm1gv+ufyexdzQT2iC29uP0NtQRRG7Skbvc=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
