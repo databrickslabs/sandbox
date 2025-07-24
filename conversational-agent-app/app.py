@@ -22,6 +22,9 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Get the Genie space ID from environment variable
+GENIE_SPACE_ID = os.environ.get("GENIE_SPACE")
+
 # Create Dash app
 app = dash.Dash(
     __name__,
@@ -58,21 +61,7 @@ DEFAULT_WELCOME_DESCRIPTION = "Explore and analyze your data with AI-powered ins
 # Define the layout
 app.layout = html.Div([
     html.Div([
-        dcc.Store(id="selected-space-id", data=None, storage_type="local"),
-        dcc.Store(id="spaces-list", data=[]),
         dcc.Store(id="user-info", data={"initial": "Y", "username": "You"}),
-        # Space selection overlay
-        html.Div([
-            html.Div([
-                html.Div([
-                    html.Span(className="space-select-spinner"),
-                    "Loading Genie Spaces..."
-                ], id="space-select-title", className="space-select-title"),
-                dcc.Dropdown(id="space-dropdown", options=[], placeholder="Choose a Genie Space", className="space-select-dropdown", optionHeight=60, searchable=True),
-                html.Button("Select", id="select-space-button", className="space-select-button"),
-                html.Div(id="space-select-error", className="space-select-error")
-            ], className="space-select-card")
-        ], id="space-select-container", className="space-select-container"),
         # Top navigation bar
         html.Div([
             # Left component containing both nav-left and sidebar
@@ -191,16 +180,16 @@ app.layout = html.Div([
                     html.Div("Always review the accuracy of responses.", className="disclaimer-fixed")
                 ], id="fixed-input-wrapper", className="fixed-input-wrapper"),
             ], id="chat-container", className="chat-container"),
-        ], id="main-content", className="main-content", style={"display": "none"}),
+        ], id="main-content", className="main-content"),
         
         html.Div(id='dummy-output'),
+        html.Div(id='dummy-insight-scroll'),
         dcc.Store(id="chat-trigger", data={"trigger": False, "message": ""}),
         dcc.Store(id="chat-history-store", data=[]),
         dcc.Store(id="query-running-store", data=False),
         dcc.Store(id="session-store", data={"current_session": None}),
-        html.Div(id='dummy-insight-scroll')
-    ], id="app-inner-layout"),
-], id="root-container")
+    ], id="root-container", className="root-container")
+], id="app-container", className="app-container")
 
 # Store chat history
 chat_history = []
@@ -256,6 +245,7 @@ def call_llm_for_insights(df, prompt=None):
     # Call OpenAI (replace with your own LLM provider as needed)
     try:
         headers = request.headers
+        # user_token = os.environ.get("DATABRICKS_TOKEN")
         user_token = headers.get('X-Forwarded-Access-Token')
         config = Config(
             host=f"https://{os.environ.get('DATABRICKS_HOST')}",
@@ -411,11 +401,10 @@ def handle_all_inputs(s1_clicks, s2_clicks, s3_clicks, s4_clicks, send_clicks, s
      Output("query-running-store", "data", allow_duplicate=True)],
     [Input("chat-trigger", "data")],
     [State("chat-messages", "children"),
-     State("chat-history-store", "data"),
-     State("selected-space-id", "data")],
+     State("chat-history-store", "data")],
     prevent_initial_call=True
 )
-def get_model_response(trigger_data, current_messages, chat_history, selected_space_id):
+def get_model_response(trigger_data, current_messages, chat_history):
     if not trigger_data or not trigger_data.get("trigger"):
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
@@ -427,7 +416,7 @@ def get_model_response(trigger_data, current_messages, chat_history, selected_sp
         headers = request.headers
         # user_token = os.environ.get("DATABRICKS_TOKEN")
         user_token = headers.get('X-Forwarded-Access-Token')
-        response, query_text = genie_query(user_input, user_token, selected_space_id)
+        response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID)
         
         if isinstance(response, str):
             # Escape square brackets to prevent markdown auto-linking
@@ -754,77 +743,35 @@ def generate_insights(n_clicks, btn_id, chat_history):
     )
 
 # Callback to fetch spaces on load
+# Initialize welcome title and description from space info
 @app.callback(
-    Output("spaces-list", "data"),
-    Input("space-select-container", "id"),
+    [Output("welcome-title", "children"),
+     Output("welcome-description", "children")],
+    Input("user-info", "id"),
     prevent_initial_call=False
 )
-def fetch_spaces(_):
+def initialize_welcome_info(_):
+    if not GENIE_SPACE_ID:
+        return DEFAULT_WELCOME_TITLE, DEFAULT_WELCOME_DESCRIPTION
+    
     try:
+        # Try to fetch space information to get title and description
         headers = request.headers
         # token = os.environ.get("DATABRICKS_TOKEN")
         token = headers.get('X-Forwarded-Access-Token')
         host = os.environ.get("DATABRICKS_HOST")
         client = GenieClient(host=host, space_id="", token=token)
-        spaces = client.list_spaces()
-        return spaces
+        
+        # Get the specific space details
+        space_details = client.get_space(GENIE_SPACE_ID)
+        
+        title = space_details.get("title", DEFAULT_WELCOME_TITLE)
+        description = space_details.get("description", DEFAULT_WELCOME_DESCRIPTION)
+        return title, description
+            
     except Exception as e:
-        return []
-
-# Populate dropdown options
-@app.callback(
-    Output("space-dropdown", "options"),
-    Input("spaces-list", "data"),
-    prevent_initial_call=False
-)
-def update_space_dropdown(spaces):
-    if not spaces:
-        return []
-    options = []
-    for s in spaces:
-        title = s.get('title', '')
-        space_id = s.get('space_id', '')
-        label_lines = [title]
-        label_lines.append(space_id)
-        label = " | ".join(label_lines)  # or use '\\n'.join(label_lines) for multi-line (but most browsers will show as a single line)
-        options.append({"label": label, "value": space_id})
-    return options
-
-# Handle space selection
-@app.callback(
-    [Output("selected-space-id", "data", allow_duplicate=True),
-     Output("space-select-container", "style"),
-     Output("main-content", "style"),
-     Output("space-select-error", "children"),
-     Output("welcome-title", "children"),
-     Output("welcome-description", "children")],
-    Input("select-space-button", "n_clicks"),
-    State("space-dropdown", "value"),
-    State("spaces-list", "data"),
-    prevent_initial_call=True
-)
-def select_space(n_clicks, space_id, spaces):
-    if not n_clicks:
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
-    if not space_id:
-        return dash.no_update, {"display": "flex", "flexDirection": "column", "alignItems": "center", "justifyContent": "center", "height": "100vh"}, {"display": "none"}, "Please select a Genie space.", dash.no_update, dash.no_update
-    # Find the selected space's title and description
-    selected = next((s for s in spaces if s["space_id"] == space_id), None)
-    title = selected["title"] if selected and selected.get("title") else DEFAULT_WELCOME_TITLE
-    description = selected["description"] if selected and selected.get("description") else DEFAULT_WELCOME_DESCRIPTION
-    return space_id, {"display": "none"}, {"display": "block"}, "", title, description
-
-# Add a callback to control visibility of main-content and space-select-container
-@app.callback(
-    [Output("main-content", "style", allow_duplicate=True), Output("space-select-container", "style", allow_duplicate=True)],
-    Input("selected-space-id", "data"),
-    prevent_initial_call=True
-)
-def toggle_main_ui(selected_space_id):
-    if selected_space_id:
-        return {"display": "block"}, {"display": "none"}
-    else:
-        return {"display": "none"}, {"display": "flex", "flexDirection": "column", "alignItems": "center", "justifyContent": "center", "height": "100vh"}
+        logger.warning(f"Could not fetch space information: {e}")
+        return DEFAULT_WELCOME_TITLE, DEFAULT_WELCOME_DESCRIPTION
 
 # Add clientside callback for scrolling to bottom of chat when insight is generated
 app.clientside_callback(
@@ -847,38 +794,19 @@ app.clientside_callback(
     prevent_initial_call=True
 )
 
-@app.callback(
-    Output("selected-space-id", "data", allow_duplicate=True),
-    Input("logout-button", "n_clicks"),
-    prevent_initial_call=True
-)
-def logout_and_clear_space(n_clicks):
-    if n_clicks:
-        return None
-    return dash.no_update
 
-# Add a callback to control the root-container style to prevent scrolling when overlay is visible
+
+# Add a callback to control the root-container style
 @app.callback(
     Output("root-container", "style"),
-    Input("selected-space-id", "data"),
+    Input("user-info", "id"),
     prevent_initial_call=False
 )
-def set_root_style(selected_space_id):
-    if selected_space_id:
+def set_root_style(_):
+    if GENIE_SPACE_ID:
         return {"height": "auto", "overflow": "auto"}
     else:
         return {"height": "100vh", "overflow": "hidden"}
-
-# Add a callback to update the title based on spaces-list
-@app.callback(
-    Output("space-select-title", "children"),
-    Input("spaces-list", "data"),
-    prevent_initial_call=False
-)
-def update_space_select_title(spaces):
-    if not spaces:
-        return [html.Span(className="space-select-spinner"), "Loading Genie Spaces..."]
-    return "Select a Genie Space"
 
 @app.callback(
     Output("query-tooltip", "className"),

@@ -5,3 +5,5 @@ command:
 env:
 - name: "SERVING_ENDPOINT_NAME"
   valueFrom: "serving_endpoint"
+- name: "GENIE_SPACE"
+  valueFrom: "genie_space"
