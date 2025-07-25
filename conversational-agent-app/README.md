@@ -74,7 +74,7 @@ For detailed instructions on configuring resources, refer to the [official Datab
 For more details, refer to the [official Databricks documentation](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/deploy).
 
 ## Troubleshooting
-1. After you install the app from Markeplace, check the Authorization page for API scope details. 
+1. After you install the app from Marketplace, check the Authorization page for API scope details. 
 ![](./assets/genie-space12.png)
 
 Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all four scopes:
