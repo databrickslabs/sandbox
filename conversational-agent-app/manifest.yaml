@@ -7,6 +7,10 @@ resource_specs:
     description: "Serving endpoint for the data chat app"
     serving_endpoint_spec:
       permission: "CAN_QUERY"
+  - name: "genie_space"
+    description: "Genie space for the data chat app"
+    genie_space_spec:
+      permission: "CAN_RUN"
 user_api_scopes:
   - serving.serving-endpoints
   - dashboards.genie
