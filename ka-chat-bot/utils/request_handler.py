@@ -138,6 +138,27 @@ class RequestHandler:
                     'sources': sources,
                     'metrics': {'totalTime': total_time}
                 }
+            elif 'output' in data and len(data['output']) > 0:
+                # New Responses API format
+                output_item = data['output'][0]
+                if output_item.get('type') == 'message' and 'content' in output_item:
+                    content_items = output_item['content']
+                    content = ''
+                    for content_item in content_items:
+                        if content_item.get('type') == 'output_text':
+                            content = content_item.get('text', '')
+                            break
+                    response_data = {
+                        'content': content,
+                        'sources': sources,
+                        'metrics': {'totalTime': total_time}
+                    }
+                else:
+                    response_data = {
+                        'content': 'No content found in response',
+                        'sources': sources,
+                        'metrics': {'totalTime': total_time}
+                    }
             else:
                 response_data = {
                     'content': 'No content found in response',

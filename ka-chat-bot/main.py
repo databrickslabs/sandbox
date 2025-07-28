@@ -130,7 +130,7 @@ async def chat(
             supports_streaming = await check_endpoint_capabilities(serving_endpoint_name, streaming_support_cache)
             logger.info(f"ednpoint {serving_endpoint_name} supports_streaming: {supports_streaming}")
             request_data = {
-                "messages": [
+                "input": [
                     *([{"role": msg["role"], "content": msg["content"]} for msg in chat_history[:-1]] 
                         if message.include_history else []),
                     {"role": "user", "content": message.content}
