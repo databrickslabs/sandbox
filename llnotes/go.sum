@@ -5,8 +5,8 @@ cloud.google.com/go/auth/oauth2adapt v0.2.6/go.mod h1:AlmsELtlEBnaNTL7jCj8VQFLy6
 cloud.google.com/go/compute/metadata v0.6.0 h1:A6hENjEsCDtC1k8byVsgwvVcioamEHvZ4j01OwKxG9I=
 cloud.google.com/go/compute/metadata v0.6.0/go.mod h1:FjyFAW1MW0C203CEOMDTu3Dk1FlqW3Rga40jzHL4hfg=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
-github.com/databricks/databricks-sdk-go v0.73.1 h1:c+o2J+l37WnQWqY4muokpFL1E2a5oJVC5J+Z8oFNCeU=
-github.com/databricks/databricks-sdk-go v0.73.1/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
+github.com/databricks/databricks-sdk-go v0.78.0 h1:JLkqJ2Y1LGeNUnPw1YA/Z0rn98ZIKilYJZ/u6Is2iP4=
+github.com/databricks/databricks-sdk-go v0.78.0/go.mod h1:xBtjeP9nq+6MgTewZW1EcbRkD7aDY9gZvcRPcwPhZjw=
 github.com/databrickslabs/sandbox/go-libs v0.4.1 h1:ZqqcP+ZF69LKvXILvSfZbD9+ssRNCdDb45ipXHdcvbk=
 github.com/databrickslabs/sandbox/go-libs v0.4.1/go.mod h1:R0jABegxKm1gv+ufyexdzQT2iC29uP0NtQRRG7Skbvc=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
