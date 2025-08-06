@@ -66,9 +66,12 @@ export const sendMessage = async (
               // Double parse if the first parse returned a string
               const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
               
+              // Accumulate content as delta chunks arrive
               if (parsedData.content) {
                 accumulatedContent += parsedData.content;
               }
+              
+              // Send accumulated content to the UI for real-time streaming
               onChunk({
                 message_id: parsedData.message_id,
                 content: accumulatedContent,

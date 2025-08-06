@@ -36,54 +36,114 @@ class StreamingHandler:
         update_flag: bool
     ) -> AsyncGenerator[str, None]:
         """Handle streaming response from the model."""
+        thinking_content = ""
+        response_content = ""
+        inside_think_tags = False
+        
         try:
             async for line in response.aiter_lines():
+                logger.info(f"Received raw line: {line}")
+                
                 if line.startswith('data: '):
+                    json_str = line[6:]
+                    
+                    # Handle [DONE] marker
+                    if json_str.strip() == '[DONE]':
+                        logger.info("Received [DONE] marker, ending stream")
+                        break
+                    
                     try:
-                        json_str = line[6:]
+                        logger.info(f"Parsing JSON: {json_str[:200]}...")
                         data = json.loads(json_str)
+                        logger.info(f"Parsed data: {data}")
+                        
                         # Record time of first token
                         if first_token_time is None:
                             first_token_time = time.time()
                             ttft = first_token_time - start_time
+                        
+                        # Handle the new format: response.output_text.delta
+                        if data.get("type") == "response.output_text.delta":
+                            delta_text = data.get("delta", "")
+                            logger.info(f"Processing delta: {delta_text[:100]}...")
                             
-                        if 'choices' in data and len(data['choices']) > 0:
-                            delta = data['choices'][0].get('delta', {})
-                            content = delta.get('content', '')
-                            accumulated_content += content
-                            # Extract sources if this is the final message containing databricks_options
-                            if 'databricks_output' in data:
-                                sources = await request_handler.extract_sources_from_trace(data)
-                            # Include the same message_id in each chunk
-                            response_data = create_response_data(
-                                message_id,
-                                content if content else None,
-                                sources,
-                                ttft if first_token_time is not None else None,
-                                time.time() - start_time,
-                                original_timestamp
-                            )
+                            # Track thinking vs response content for final accumulation
+                            i = 0
+                            while i < len(delta_text):
+                                if not inside_think_tags and delta_text[i:i+7] == "<think>":
+                                    inside_think_tags = True
+                                    thinking_content += "<think>"
+                                    i += 7
+                                elif inside_think_tags and delta_text[i:i+8] == "</think>":
+                                    inside_think_tags = False
+                                    thinking_content += "</think>"
+                                    i += 8
+                                elif inside_think_tags:
+                                    thinking_content += delta_text[i]
+                                    i += 1
+                                else:
+                                    response_content += delta_text[i]
+                                    i += 1
                             
-                            yield f"data: {json.dumps(response_data)}\n\n"
-                        if "delta" in data:
-                            delta = data["delta"]
-                            if delta["role"] == "assistant" and "tool_calls" in delta:
-                                content = "Searching for information..."
-                            elif delta["role"] == "tool":
-                                content = "Processing response..."
-                            elif delta["role"] == "assistant" and delta.get("content"):
-                                content = delta['content']
-                                accumulated_content += content
-                            response_data = create_response_data(
-                                message_id,
-                                content+"\n\n",
-                                sources,
-                                ttft if first_token_time is not None else None,
-                                time.time() - start_time,
-                                original_timestamp
-                            )
-                            yield f"data: {json.dumps(response_data)}\n\n"    
-                    except json.JSONDecodeError:
+                            # Add all delta content to accumulated_content (for final storage)
+                            accumulated_content += delta_text
+                            
+                            # Stream all delta content to frontend (including thinking)
+                            if delta_text:
+                                response_data = create_response_data(
+                                    message_id,
+                                    delta_text,
+                                    sources,
+                                    ttft if first_token_time is not None else None,
+                                    time.time() - start_time,
+                                    original_timestamp
+                                )
+                                yield f"data: {json.dumps(response_data)}\n\n"
+                        
+                        # Handle the final message with complete content
+                        elif data.get("type") == "response.output_item.done":
+                            logger.info("Received output_item.done, processing final response")
+                            item = data.get("item", {})
+                            content_list = item.get("content", [])
+                            
+                            if content_list and len(content_list) > 0:
+                                full_text = content_list[0].get("text", "")
+                                logger.info(f"Full text length: {len(full_text)}")
+                                
+                                # Extract sources from the final response if available
+                                # You might need to adjust this based on your source extraction logic
+                                if 'databricks_output' in data:
+                                    sources = await request_handler.extract_sources_from_trace(data)
+                                    
+                                # Process the final response to separate thinking from response
+                                final_thinking = ""
+                                final_response = ""
+                                inside_think = False
+                                
+                                i = 0
+                                while i < len(full_text):
+                                    if not inside_think and full_text[i:i+7] == "<think>":
+                                        inside_think = True
+                                        final_thinking += "<think>"
+                                        i += 7
+                                    elif inside_think and full_text[i:i+8] == "</think>":
+                                        inside_think = False
+                                        final_thinking += "</think>"
+                                        i += 8
+                                    elif inside_think:
+                                        final_thinking += full_text[i]
+                                        i += 1
+                                    else:
+                                        final_response += full_text[i]
+                                        i += 1
+                                
+                                # Use the final response content
+                                accumulated_content = final_response
+                                logger.info(f"Final response content length: {len(final_response)}")
+                                logger.info(f"Thinking content length: {len(final_thinking)}")
+                    
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Failed to parse JSON: {json_str[:100]}... Error: {e}")
                         continue
             if update_flag:
                 updated_message = message_handler.update_message(

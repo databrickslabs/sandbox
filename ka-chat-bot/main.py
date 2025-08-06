@@ -101,9 +101,12 @@ async def chat(
     request_queue: asyncio.Queue = Depends(get_request_queue),
     streaming_support_cache: dict = Depends(get_streaming_support_cache)
 ):
+    logger.info(f"Chat endpoint called with session_id: {message.session_id}, content length: {len(message.content) if message.content else 0}")
     try:
         user_id = user_info["user_id"]
+        logger.info(f"Processing request for user_id: {user_id}")
         is_first_message = chat_db.is_first_message(message.session_id, user_id)
+        logger.info(f"Is first message: {is_first_message}")
         user_message = message_handler.create_message(
             message_id=str(uuid.uuid4()),
             content=message.content,
@@ -114,9 +117,12 @@ async def chat(
             is_first_message=is_first_message
         )
         # Load chat history with caching
+        logger.info(f"Loading chat history for session {message.session_id}")
         chat_history = await load_chat_history(message.session_id, user_id, is_first_message, chat_history_cache, chat_db)
+        logger.info(f"Loaded {len(chat_history)} messages from chat history")
         
         async def generate():
+            logger.info("Starting response generation")
             streaming_timeout = httpx.Timeout(
                 connect=8.0,
                 read=30.0,
@@ -126,9 +132,10 @@ async def chat(
             # Get the serving endpoint name from the request
             serving_endpoint_name = SERVING_ENDPOINT_NAME
             endpoint_url = f"https://{DATABRICKS_HOST}/serving-endpoints/{serving_endpoint_name}/invocations"
+            logger.info(f"Using endpoint: {endpoint_url}")
             
             supports_streaming = await check_endpoint_capabilities(serving_endpoint_name, streaming_support_cache)
-            logger.info(f"ednpoint {serving_endpoint_name} supports_streaming: {supports_streaming}")
+            logger.info(f"Endpoint {serving_endpoint_name} supports_streaming: {supports_streaming}")
             request_data = {
                 "input": [
                     *([{"role": msg["role"], "content": msg["content"]} for msg in chat_history[:-1]] 
@@ -139,28 +146,37 @@ async def chat(
             request_data["databricks_options"] = {"return_trace": True}
 
             if not supports_streaming:
+                logger.info("Using non-streaming mode")
                 async for response_chunk in streaming_handler.handle_non_streaming_response(
                     request_handler, endpoint_url, headers, request_data, message.session_id, user_id, user_info, message_handler
                 ):
                     yield response_chunk
             else:
+                logger.info("Using streaming mode")
                 async with streaming_semaphore:
+                    logger.info("Acquired streaming semaphore")
                     async with httpx.AsyncClient(timeout=streaming_timeout) as streaming_client:
                         try:
                             request_data["stream"] = True
                             assistant_message_id = str(uuid.uuid4())
+                            logger.info(f"Generated assistant message ID: {assistant_message_id}")
                             first_token_time = None
                             accumulated_content = ""
                             ttft = None
                             start_time = time.time()
+                            logger.info(f"Starting streaming request at {start_time}")
 
+                            logger.info(f"Making streaming POST request to {endpoint_url}")
+                            logger.debug(f"Request data: {json.dumps(request_data, indent=2)}")
                             async with streaming_client.stream('POST', 
                                 endpoint_url,
                                 headers=headers,
                                 json=request_data,
                                 timeout=streaming_timeout
                             ) as response:
+                                logger.info(f"Received response with status code: {response.status_code}")
                                 if response.status_code == 200:
+                                    logger.info("Starting to process streaming response")
                                     
                                     async for response_chunk in streaming_handler.handle_streaming_response(
                                         response, request_data, headers, message.session_id, assistant_message_id,
@@ -171,10 +187,16 @@ async def chat(
                                         yield response_chunk
 
                                 else:
-                                    raise Exception("Streaming not supported")
+                                    logger.error(f"Streaming request failed with status code: {response.status_code}")
+                                    logger.error(f"Response headers: {dict(response.headers)}")
+                                    response_text = await response.aread()
+                                    logger.error(f"Response body: {response_text.decode('utf-8', errors='ignore')[:1000]}")
+                                    raise Exception(f"Streaming not supported - HTTP {response.status_code}")
                         except (httpx.ReadTimeout, httpx.HTTPError, Exception) as e:
-                            logger.error(f"Streaming failed with error: {str(e)}, falling back to non-streaming")
+                            logger.error(f"Streaming failed with error type: {type(e).__name__}, message: {str(e)}")
+                            logger.error(f"Falling back to non-streaming mode")
                             if serving_endpoint_name in streaming_support_cache['endpoints']:
+                                logger.info(f"Updating cache to mark endpoint as non-streaming")
                                 streaming_support_cache['endpoints'][serving_endpoint_name].update({
                                     'supports_streaming': False,
                                     'last_checked': datetime.now()
@@ -190,6 +212,7 @@ async def chat(
                                 yield response_chunk
                         
 
+        logger.info("Returning StreamingResponse")
         return StreamingResponse(
             generate(),
             media_type="text/event-stream",
@@ -200,8 +223,12 @@ async def chat(
         )
 
     except Exception as e:
+        logger.error(f"Unhandled exception in chat endpoint: {type(e).__name__}: {str(e)}")
+        logger.error(f"Exception details", exc_info=True)
+        
         # Handle rate limit errors specifically
         if isinstance(e, httpx.HTTPStatusError) and e.response.status_code == 429:
+            logger.warning("Rate limit error encountered")
             error_message = "The service is currently experiencing high demand. Please wait a moment and try again."
         
         error_message = message_handler.create_error_message(
@@ -209,6 +236,7 @@ async def chat(
             user_id=user_id,
             error_content="An error occurred while processing your request. " + str(e)
         )
+        logger.info(f"Created error message: {error_message.message_id}")
         
         async def error_generate():
             yield f"data: {error_message.model_dump_json()}\n\n"
