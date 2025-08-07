@@ -454,11 +454,40 @@ async def websocket_chat(
                                         try:
                                             raw_data = json.loads(json_data)
                                             logger.info(f"WebSocket sending raw data: {raw_data}")
+                                            
+                                            # Accumulate content for saving to database
+                                            if raw_data.get('type') == 'response.output_text.delta' and 'delta' in raw_data:
+                                                accumulated_content += raw_data['delta']
+                                            elif raw_data.get('type') == 'response.output_item.done' and raw_data.get('item', {}).get('content'):
+                                                # Use the final complete content if available
+                                                if raw_data['item']['content'] and len(raw_data['item']['content']) > 0:
+                                                    final_content = raw_data['item']['content'][0].get('text', '')
+                                                    if final_content and len(final_content) > len(accumulated_content):
+                                                        accumulated_content = final_content
+                                            
                                             await websocket.send_json(raw_data)
                                         except json.JSONDecodeError as e:
                                             logger.error(f"JSON decode error: {e}")
                                     elif json_data == '[DONE]':
                                         logger.info("WebSocket received [DONE], ending stream")
+                                        
+                                        # Save the accumulated assistant response to database
+                                        if accumulated_content:
+                                            try:
+                                                assistant_message = message_handler.create_message(
+                                                    message_id=assistant_message_id,
+                                                    content=accumulated_content,
+                                                    role="assistant",
+                                                    session_id=message_request.session_id,
+                                                    user_id=user_id,
+                                                    user_info=user_info,
+                                                    sources=None,  # TODO: extract sources if available
+                                                    metrics={'totalTime': time.time() - start_time}
+                                                )
+                                                logger.info(f"WebSocket saved assistant message with {len(accumulated_content)} characters")
+                                            except Exception as e:
+                                                logger.error(f"Failed to save assistant message: {str(e)}")
+                                        
                                         break
                                 elif raw_line.strip():
                                     logger.info(f"WebSocket received non-data line: {raw_line[:100]}")
