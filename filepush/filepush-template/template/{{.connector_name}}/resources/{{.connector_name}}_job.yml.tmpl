@@ -1,0 +1,11 @@
+# {{.connector_name}}_job.yml
+# The main job for {{.connector_name}}
+
+resources:
+  jobs:
+    {{.connector_name}}_job:
+      name: {{.connector_name}}_job
+      tasks:
+        - task_key: {{.connector_name}}_pipeline_refresh
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.{{.connector_name}}_pipeline.id}
