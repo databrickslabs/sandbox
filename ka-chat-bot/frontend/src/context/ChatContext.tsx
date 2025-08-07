@@ -101,8 +101,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
       
       await apiSendMessage(content, currentSessionId, includeHistory, currentEndpoint, (chunk) => {
+        console.log('🔄 CHATCONTEXT: Received chunk in callback:', chunk);
+        
         if (chunk.content) {
           accumulatedContent = chunk.content;
+          console.log('🔄 CHATCONTEXT: Updated accumulatedContent to:', accumulatedContent.substring(0, 100) + '...');
         }
         if (chunk.sources) {
           messageSources = chunk.sources;
@@ -112,36 +115,46 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
         if (chunk.message_id) {
           messageId = chunk.message_id;
+          console.log('🔄 CHATCONTEXT: Updated messageId to:', messageId);
         }
     
-        setMessages(prev => prev.map(msg => 
-          msg.message_id === thinkingMessage.message_id 
-            ? { 
-                ...msg, 
-                content: chunk.content || '',
-                sources: chunk.sources,
-                metrics: chunk.metrics,
-                isThinking: false,
-                model: currentEndpoint
-              }
-            : msg
-        ));
+        console.log('🔄 CHATCONTEXT: Updating messages state with content:', chunk.content?.substring(0, 100) + '...');
+        setMessages(prev => {
+          const updated = prev.map(msg => 
+            msg.message_id === thinkingMessage.message_id 
+              ? { 
+                  ...msg, 
+                  content: chunk.content || '',
+                  sources: chunk.sources,
+                  metrics: chunk.metrics,
+                  isThinking: false,
+                  model: currentEndpoint
+                }
+              : msg
+          );
+          console.log('🔄 CHATCONTEXT: Updated messages:', updated);
+          return updated;
+        });
       });
       
-      const botMessage: Message = {
-        message_id: messageId,
-        content: accumulatedContent,
-        role: 'assistant',
-        timestamp: new Date(),
-        isThinking: false,
-        model: currentEndpoint,
-        sources: messageSources,
-        metrics: messageMetrics
-      };
+      // TODO: The final message is now handled by the streaming callback
+      // so we don't need to create a separate final message here
+      console.log('🔄 CHATCONTEXT: Streaming completed, final accumulated content:', accumulatedContent.substring(0, 100) + '...');
+      
+      // const botMessage: Message = {
+      //   message_id: messageId,
+      //   content: accumulatedContent,
+      //   role: 'assistant',
+      //   timestamp: new Date(),
+      //   isThinking: false,
+      //   model: currentEndpoint,
+      //   sources: messageSources,
+      //   metrics: messageMetrics
+      // };
 
-      setMessages(prev => prev.filter(msg => 
-        msg.message_id !== thinkingMessage.message_id 
-      ).concat(botMessage));
+      // setMessages(prev => prev.filter(msg => 
+      //   msg.message_id !== thinkingMessage.message_id 
+      // ).concat(botMessage));
       
     } catch (error) {
       console.error('Error sending message:', error);

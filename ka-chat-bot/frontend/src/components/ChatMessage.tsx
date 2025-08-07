@@ -329,6 +329,18 @@ const ThinkingIndicator = styled.div`
   gap: 8px;
 `;
 
+const GeneratingIndicator = styled.div`
+  font-size: 15px;
+  color: #5F7281;
+  margin: 10px 0;
+  align-self: flex-start;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+`;
+
 const Spinner = styled.div`
   display: inline-block;
   width: 16px;
@@ -441,11 +453,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     const elements = [];
     const content = message.content;
 
+    // Check if we have thinking content that's complete and response content that's incomplete
+    const hasThinking = content.includes('<think>');
+    const thinkingComplete = content.includes('</think>');
+    const hasResponseAfterThinking = thinkingComplete && content.split('</think>')[1].trim().length > 0;
+    const isStreamingResponse = hasThinking && thinkingComplete && !message.isThinking;
+
     while ((match = thinkRegex.exec(content)) !== null) {
       // Add any regular content before this <think>
       if (match.index > lastIndex) {
         elements.push(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.slice(lastIndex, match.index)}</ReactMarkdown>
+          <ReactMarkdown key={`pre-think-${thinkIndex}`} remarkPlugins={[remarkGfm]}>
+            {content.slice(lastIndex, match.index)}
+          </ReactMarkdown>
         );
       }
 
@@ -463,12 +483,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             </ThinkTitle>
           </ThinkHeader>
           <ThinkContent isExpanded={isExpanded}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{match[1]}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{match[1]}</ReactMarkdown>
           </ThinkContent>
         </ThinkContainer>
       );
       lastIndex = thinkRegex.lastIndex;
       thinkIndex++;
+    }
+
+    // Add generating indicator if thinking is complete but response is still being generated
+    if (isStreamingResponse && !hasResponseAfterThinking) {
+      elements.push(
+        <GeneratingIndicator key="generating-indicator">
+          <Spinner />
+          Generating answer...
+        </GeneratingIndicator>
+      );
     }
 
     // insert a divider between content and footnotes
@@ -483,6 +513,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (lastIndex < processedContent.length) {
       elements.push(
         <ReactMarkdown
+          key="main-content"
           remarkPlugins={[remarkGfm]}
           components={{
             a: ({node, ...props}) => {
