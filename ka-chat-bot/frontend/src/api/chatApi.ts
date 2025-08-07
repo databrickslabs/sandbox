@@ -113,6 +113,10 @@ export const sendMessageViaWebSocket = async (
 ): Promise<void> => {
   const ws = await connectWebSocket();
   
+  // Track accumulated content for streaming
+  let accumulatedContent = '';
+  let currentMessageId = '';
+  
   // Set up message listener for this request
   const messageListener = (event: MessageEvent) => {
     try {
@@ -131,14 +135,56 @@ export const sendMessageViaWebSocket = async (
         throw new Error(data.message);
       }
       
-      // Handle normal chat chunks
-      console.log('🔄 FRONTEND WS: Processing chat chunk:', data);
+      // Handle streaming delta messages from serving endpoint
+      if (data.type === 'response.output_text.delta') {
+        console.log('🔄 FRONTEND WS: Processing streaming delta:', data);
+        
+        // Set message ID from first delta
+        if (data.item_id && !currentMessageId) {
+          currentMessageId = data.item_id;
+        }
+        
+        // Accumulate content from delta
+        if (data.delta) {
+          accumulatedContent += data.delta;
+        }
+        
+        // Send accumulated content to UI
+        onChunk({
+          message_id: currentMessageId,
+          content: accumulatedContent,
+          sources: undefined,
+          metrics: undefined,
+          model: servingEndpointName
+        });
+        return;
+      }
+      
+      // Handle completion messages
+      if (data.type === 'response.output_item.done') {
+        console.log('🔄 FRONTEND WS: Processing completion message:', data);
+        // Final message with complete content and sources
+        if (data.item && data.item.content && data.item.content[0]) {
+          const finalContent = data.item.content[0].text;
+          onChunk({
+            message_id: data.item.id,
+            content: finalContent,
+            sources: [], // TODO: extract sources if available
+            metrics: undefined, // TODO: extract metrics if available
+            model: servingEndpointName
+          });
+        }
+        return;
+      }
+      
+      // Handle any other message format (fallback)
+      console.log('🔄 FRONTEND WS: Processing other message:', data);
       onChunk({
-        message_id: data.message_id,
-        content: data.content,
+        message_id: data.message_id || currentMessageId,
+        content: data.content || accumulatedContent,
         sources: data.sources,
         metrics: data.metrics,
-        model: data.model
+        model: data.model || servingEndpointName
       });
     } catch (e) {
       console.error('Error parsing WebSocket message:', e);

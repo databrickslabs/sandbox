@@ -443,25 +443,25 @@ async def websocket_chat(
                             first_token_time = None
                             accumulated_content = ""
                             
-                            # Process streaming response
-                            async for response_chunk in streaming_handler.handle_streaming_response(
-                                response, request_data, headers, message_request.session_id, assistant_message_id,
-                                user_id, user_info, None, start_time, first_token_time,
-                                accumulated_content, None, None, request_handler, message_handler,
-                                streaming_support_cache, True, False
-                            ):
-                                # Parse SSE data and send as JSON over WebSocket
-                                if response_chunk.startswith('data: '):
-                                    json_data = response_chunk[6:].strip()
-                                    if json_data and json_data != '{}':
+                            # Process raw streaming response directly without transformation
+                            async for raw_line in response.aiter_lines():
+                                logger.info(f"WebSocket received raw line: {raw_line}")
+                                
+                                # Parse SSE data and send raw JSON over WebSocket
+                                if raw_line.startswith('data: '):
+                                    json_data = raw_line[6:].strip()
+                                    if json_data and json_data != '{}' and json_data != '[DONE]':
                                         try:
-                                            data = json.loads(json_data)
-                                            logger.info(f"WebSocket sending data: {data}")
-                                            await websocket.send_json(data)
+                                            raw_data = json.loads(json_data)
+                                            logger.info(f"WebSocket sending raw data: {raw_data}")
+                                            await websocket.send_json(raw_data)
                                         except json.JSONDecodeError as e:
                                             logger.error(f"JSON decode error: {e}")
-                                else:
-                                    logger.info(f"WebSocket received non-data chunk: {response_chunk[:100]}")
+                                    elif json_data == '[DONE]':
+                                        logger.info("WebSocket received [DONE], ending stream")
+                                        break
+                                elif raw_line.strip():
+                                    logger.info(f"WebSocket received non-data line: {raw_line[:100]}")
                                             
                     except Exception as e:
                         logger.error(f"WebSocket streaming error: {str(e)}")
