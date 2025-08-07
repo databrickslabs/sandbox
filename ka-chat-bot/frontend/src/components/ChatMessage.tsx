@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import copyIconUrl from '../assets/images/copy_icon.svg';
 import refreshIconUrl from '../assets/images/sync_icon.svg';
 import buttonIconUrl from '../assets/images/buttonIcon.svg';
@@ -358,49 +358,6 @@ const Spinner = styled.div`
   }
 `;
 
-const ThinkContainer = styled.div`
-  margin: 8px -6px;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const ThinkHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
-  border-bottom: 1px solid #e3e8ee;
-  cursor: pointer;
-  user-select: none;
-  min-height: 40px;
-  &:hover {
-    background-color: #f6f9fc;
-  }
-`;
-
-const ThinkTitle = styled.span`
-  width: 100%;
-  justify-content: space-between;
-  color: #3b4252;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const ThinkContent = styled.div<{ isExpanded: boolean }>`
-  padding: ${props => props.isExpanded ? '12px' : '0'};
-  max-height: ${props => props.isExpanded ? '1000px' : '0'};
-  overflow: hidden;
-  background-color: white;
-`;
-
-const ChevronIcon = styled(FontAwesomeIcon)<{ isExpanded: boolean }>`
-  color: #5F7281;
-  margin-left: 8px;
-  transform: rotate(${props => props.isExpanded ? '180deg' : '0deg'});
-`;
 
 const StyledLink = styled.a`
   color: #0066cc;
@@ -419,10 +376,10 @@ interface ChatMessageProps {
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { copyMessage } = useChat();
   const isUser = message.role === 'user';
+  
   const [showSources, setShowSources] = useState(false);
   const [selectedSource, setSelectedSource] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [closedThinks, setClosedThinks] = useState<string[]>([]);
   const chatContentRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = async () => {
@@ -431,125 +388,65 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     setTimeout(() => setCopied(false), 5000); // Reset after 5 seconds
   };
 
-  const toggleThink = (thinkId: string) => {
-    setClosedThinks(prev => {
-      const newSet = [...prev];
-      const index = newSet.indexOf(thinkId);
-      if (index >= 0) {
-        newSet.splice(index, 1);
-      } else {
-        newSet.push(thinkId);
-      }
-      return newSet;
-    });
-  };
 
   const renderThinkContent = (message: Message) => {
-    // Robustly parse <think> sections, including unclosed tags
-    const thinkRegex = /<think>([\s\S]*?)(<\/think>|$)/g;
-    let lastIndex = 0;
-    let match;
-    let thinkIndex = 0;
-    const elements = [];
-    const content = message.content;
-
-    // Check if we have thinking content that's complete and response content that's incomplete
-    const hasThinking = content.includes('<think>');
-    const thinkingComplete = content.includes('</think>');
-    const hasResponseAfterThinking = thinkingComplete && content.split('</think>')[1].trim().length > 0;
-    const isStreamingResponse = hasThinking && thinkingComplete && !message.isThinking;
-
-    while ((match = thinkRegex.exec(content)) !== null) {
-      // Add any regular content before this <think>
-      if (match.index > lastIndex) {
-        elements.push(
-          <ReactMarkdown key={`pre-think-${thinkIndex}`} remarkPlugins={[remarkGfm]}>
-            {content.slice(lastIndex, match.index)}
-          </ReactMarkdown>
-        );
-      }
-
-      const thinkId = 'think-' + thinkIndex;
-      const isExpanded = !closedThinks.includes(thinkId);
-      elements.push(
-        <ThinkContainer key={thinkId}>
-          <ThinkHeader onClick={() => toggleThink(thinkId)}>
-            <ThinkTitle>
-              {isExpanded ? 'Thoughts' : 'View thoughts'}
-              <ChevronIcon
-                icon={faChevronDown}
-                isExpanded={isExpanded}
-              />
-            </ThinkTitle>
-          </ThinkHeader>
-          <ThinkContent isExpanded={isExpanded}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{match[1]}</ReactMarkdown>
-          </ThinkContent>
-        </ThinkContainer>
-      );
-      lastIndex = thinkRegex.lastIndex;
-      thinkIndex++;
+    // Simply remove <think> tags and render the content without thinking boxes
+    let content = message.content;
+    
+    // Remove all <think>...</think> sections completely
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, '');
+    
+    // Also remove any unclosed <think> tags at the end
+    content = content.replace(/<think>[\s\S]*$/g, '');
+    
+    // Clean up any extra whitespace
+    content = content.trim();
+    
+    // If no content left after removing think tags, show nothing
+    if (!content) {
+      return null;
     }
 
-    // Add generating indicator if thinking is complete but response is still being generated
-    if (isStreamingResponse && !hasResponseAfterThinking) {
-      elements.push(
-        <GeneratingIndicator key="generating-indicator">
-          <Spinner />
-          Generating answer...
-        </GeneratingIndicator>
-      );
-    }
-
-    // insert a divider between content and footnotes
-    let processedContent = content;
+    // Insert a divider between content and footnotes
     const footnoteDefRegex = /^\[\^([^\]]+)\]:/m;
-    const footNoteMatch = processedContent.match(footnoteDefRegex);
+    const footNoteMatch = content.match(footnoteDefRegex);
     if (footNoteMatch) {
       const insertPos = footNoteMatch.index;
-      processedContent = processedContent.slice(0, insertPos) + '\n\n---\n\n' + processedContent.slice(insertPos);
+      content = content.slice(0, insertPos) + '\n\n---\n\n' + content.slice(insertPos);
     }
 
-    if (lastIndex < processedContent.length) {
-      elements.push(
-        <ReactMarkdown
-          key="main-content"
-          remarkPlugins={[remarkGfm]}
-          components={{
-            a: ({node, ...props}) => {
-              const container = document.querySelector('#messages-container');
-              // scroll for footnote links + open in new tab for full urls
-              const href = props.href || '';
-              const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                if (href.startsWith('#')) {
-                  e.preventDefault();
-                  const target = container?.querySelector(href);
-                  console.log('target', target);
-                  if (target) {
-                    // Only scroll if not already in view
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({node, ...props}) => {
+            const container = document.querySelector('#messages-container');
+            const href = props.href || '';
+            const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+              if (href.startsWith('#')) {
+                e.preventDefault();
+                const target = container?.querySelector(href);
+                if (target) {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-              };
-              return (
-                <StyledLink
-                  {...props}
-                  onClick={handleClick}
-                  target={'_blank'}
-                  rel={'noopener noreferrer'}
-                >
-                  {isNaN(Number(props.children)) ? props.children : `[${props.children}]`}
-                </StyledLink>
-              );
-            }
-          }}
-        >
-          {processedContent.slice(lastIndex)}
-        </ReactMarkdown>
-      );
-    }
-
-    return elements;
+              }
+            };
+            return (
+              <StyledLink
+                {...props}
+                onClick={handleClick}
+                target={'_blank'}
+                rel={'noopener noreferrer'}
+              >
+                {isNaN(Number(props.children)) ? props.children : `[${props.children}]`}
+              </StyledLink>
+            );
+          }
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    );
   };
 
   const renderSources = () => {

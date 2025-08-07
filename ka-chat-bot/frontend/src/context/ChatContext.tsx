@@ -86,7 +86,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       isThinking: true
     };
 
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    // Clear any leftover thinking states from previous messages, then add new messages
+    setMessages(prev => [
+      ...prev.map(msg => msg.isThinking ? { ...msg, isThinking: false } : msg),
+      userMessage, 
+      thinkingMessage
+    ]);
     setLoading(true);
     setError(null);
 
@@ -101,11 +106,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
       
       await apiSendMessage(content, currentSessionId, includeHistory, currentEndpoint, (chunk) => {
-        console.log('🔄 CHATCONTEXT: Received chunk in callback:', chunk);
-        
         if (chunk.content) {
           accumulatedContent = chunk.content;
-          console.log('🔄 CHATCONTEXT: Updated accumulatedContent to:', accumulatedContent.substring(0, 100) + '...');
         }
         if (chunk.sources) {
           messageSources = chunk.sources;
@@ -115,24 +117,26 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
         if (chunk.message_id) {
           messageId = chunk.message_id;
-          console.log('🔄 CHATCONTEXT: Updated messageId to:', messageId);
         }
-    
-        console.log('🔄 CHATCONTEXT: Updating messages state with content:', chunk.content?.substring(0, 100) + '...');
+        
+        // Only set isThinking to false when we receive the completion message
+        const isComplete = chunk.isComplete || false;
+        
         setMessages(prev => {
-          const updated = prev.map(msg => 
-            msg.message_id === thinkingMessage.message_id 
-              ? { 
-                  ...msg, 
-                  content: chunk.content || '',
-                  sources: chunk.sources,
-                  metrics: chunk.metrics,
-                  isThinking: false,
-                  model: currentEndpoint
-                }
-              : msg
-          );
-          console.log('🔄 CHATCONTEXT: Updated messages:', updated);
+          const updated = prev.map((msg, index) => {
+            // Only update the last message if it's the thinking message
+            if (index === prev.length - 1 && msg.message_id === thinkingMessage.message_id && msg.role === 'assistant') {
+              return { 
+                ...msg, 
+                content: chunk.content || '',
+                sources: chunk.sources,
+                metrics: chunk.metrics,
+                isThinking: !isComplete, // Keep thinking until completion
+                model: currentEndpoint
+              };
+            }
+            return msg;
+          });
           return updated;
         });
       });

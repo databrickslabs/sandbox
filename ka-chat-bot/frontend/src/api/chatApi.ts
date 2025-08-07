@@ -108,7 +108,8 @@ export const sendMessageViaWebSocket = async (
       timeToFirstToken?: number;
       totalTime?: number;
     },
-    model?: string
+    model?: string,
+    isComplete?: boolean
   }) => void,
 ): Promise<void> => {
   const ws = await connectWebSocket();
@@ -155,7 +156,8 @@ export const sendMessageViaWebSocket = async (
           content: accumulatedContent,
           sources: undefined,
           metrics: undefined,
-          model: servingEndpointName
+          model: servingEndpointName,
+          isComplete: false
         };
         console.log('🔄 FRONTEND WS: Calling onChunk with:', chunkData);
         onChunk(chunkData);
@@ -168,13 +170,26 @@ export const sendMessageViaWebSocket = async (
         // Final message with complete content and sources
         if (data.item && data.item.content && data.item.content[0]) {
           const finalContent = data.item.content[0].text;
+          console.log('🔄 FRONTEND WS: Final content from completion:', finalContent.substring(0, 200) + '...');
+          console.log('🔄 FRONTEND WS: Accumulated content during streaming:', accumulatedContent.substring(0, 200) + '...');
+          
+          // Check if final content includes <think> tags
+          const finalHasThink = finalContent.includes('<think>');
+          const accumulatedHasThink = accumulatedContent.includes('<think>');
+          console.log('🔄 FRONTEND WS: Final has <think>:', finalHasThink, 'Accumulated has <think>:', accumulatedHasThink);
+          
+          // Use accumulated content if it has thinking and final doesn't, otherwise use final
+          const contentToUse = (accumulatedHasThink && !finalHasThink) ? accumulatedContent : finalContent;
+          
           const finalChunkData = {
-            message_id: data.item.id,
-            content: finalContent,
+            message_id: currentMessageId || data.item.id,
+            content: contentToUse,
             sources: [], // TODO: extract sources if available
             metrics: undefined, // TODO: extract metrics if available
-            model: servingEndpointName
+            model: servingEndpointName,
+            isComplete: true
           };
+          console.log('🔄 FRONTEND WS: Using content:', contentToUse === finalContent ? 'FINAL' : 'ACCUMULATED');
           console.log('🔄 FRONTEND WS: Calling onChunk with final data:', finalChunkData);
           onChunk(finalChunkData);
         }
@@ -224,7 +239,8 @@ export const sendMessageViaHTTP = async (
       timeToFirstToken?: number;
       totalTime?: number;
     },
-    model?: string
+    model?: string,
+    isComplete?: boolean
   }) => void,
 ): Promise<void> => {
   try {
