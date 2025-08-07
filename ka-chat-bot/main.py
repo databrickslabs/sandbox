@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Response, Request, Query, Header
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Response, Request, Query, Header, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, RedirectResponse
@@ -123,9 +123,12 @@ async def chat(
         
         async def generate():
             logger.info("Starting response generation")
+            
+            # Now implement proper concurrent heartbeats during HTTP request
+            logger.info("Starting concurrent request with heartbeats...")
             streaming_timeout = httpx.Timeout(
                 connect=8.0,
-                read=30.0,
+                read=120.0,
                 write=8.0,
                 pool=8.0
             )
@@ -168,30 +171,83 @@ async def chat(
 
                             logger.info(f"Making streaming POST request to {endpoint_url}")
                             logger.debug(f"Request data: {json.dumps(request_data, indent=2)}")
-                            async with streaming_client.stream('POST', 
-                                endpoint_url,
-                                headers=headers,
-                                json=request_data,
-                                timeout=streaming_timeout
-                            ) as response:
-                                logger.info(f"Received response with status code: {response.status_code}")
-                                if response.status_code == 200:
-                                    logger.info("Starting to process streaming response")
-                                    
-                                    async for response_chunk in streaming_handler.handle_streaming_response(
-                                        response, request_data, headers, message.session_id, assistant_message_id,
-                                        user_id, user_info, None, start_time, first_token_time,
-                                        accumulated_content, None, ttft, request_handler, message_handler, 
-                                        streaming_support_cache, True, False
-                                    ):
-                                        yield response_chunk
-
-                                else:
-                                    logger.error(f"Streaming request failed with status code: {response.status_code}")
-                                    logger.error(f"Response headers: {dict(response.headers)}")
-                                    response_text = await response.aread()
-                                    logger.error(f"Response body: {response_text.decode('utf-8', errors='ignore')[:1000]}")
-                                    raise Exception(f"Streaming not supported - HTTP {response.status_code}")
+                            
+                            # Create concurrent tasks for request and heartbeats
+                            request_start_time = time.time()
+                            heartbeat_interval = 10.0
+                            
+                            async def make_http_request():
+                                """Make the actual HTTP request"""
+                                logger.info("Making HTTP request in background task...")
+                                async with streaming_client.stream('POST', 
+                                    endpoint_url,
+                                    headers=headers,
+                                    json=request_data,
+                                    timeout=streaming_timeout
+                                ) as response:
+                                    logger.info(f"HTTP request completed with status: {response.status_code}")
+                                    return response
+                            
+                            async def send_periodic_heartbeats():
+                                """Send heartbeats every 10 seconds"""
+                                heartbeat_count = 0
+                                while True:
+                                    await asyncio.sleep(heartbeat_interval)
+                                    heartbeat_count += 1
+                                    elapsed = time.time() - request_start_time
+                                    logger.info(f"Sending periodic heartbeat #{heartbeat_count} after {elapsed:.1f}s")
+                                    return {
+                                        'type': 'heartbeat',
+                                        'message': f'waiting for response ({elapsed:.0f}s)', 
+                                        'count': heartbeat_count
+                                    }
+                            
+                            # Start both tasks concurrently
+                            http_task = asyncio.create_task(make_http_request())
+                            heartbeat_task = asyncio.create_task(send_periodic_heartbeats())
+                            
+                            # Send initial heartbeat
+                            yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'starting request'})}\n\n"
+                            
+                            # Wait for either HTTP response or heartbeat
+                            while not http_task.done():
+                                done, pending = await asyncio.wait(
+                                    [http_task, heartbeat_task], 
+                                    return_when=asyncio.FIRST_COMPLETED,
+                                    timeout=1.0  # Check every second
+                                )
+                                
+                                if heartbeat_task in done:
+                                    # Heartbeat is ready - send it and restart heartbeat task
+                                    heartbeat_data = await heartbeat_task
+                                    yield f"data: {json.dumps(heartbeat_data)}\n\n"
+                                    heartbeat_task = asyncio.create_task(send_periodic_heartbeats())
+                            
+                            # Cancel heartbeat task since request is done
+                            heartbeat_task.cancel()
+                            
+                            # Get the HTTP response
+                            response = await http_task
+                            elapsed_total = time.time() - request_start_time
+                            logger.info(f"Got response object after {elapsed_total:.1f}s")
+                            logger.info(f"Received response with status code: {response.status_code}")
+                            if response.status_code == 200:
+                                logger.info("Starting to process streaming response")
+                                logger.info("Calling streaming_handler.handle_streaming_response")
+                                async for response_chunk in streaming_handler.handle_streaming_response(
+                                    response, request_data, headers, message.session_id, assistant_message_id,
+                                    user_id, user_info, None, start_time, first_token_time,
+                                    accumulated_content, None, ttft, request_handler, message_handler,
+                                    streaming_support_cache, True, False
+                                ):
+                                    logger.info(f"Main: Got response chunk from streaming handler")
+                                    yield response_chunk
+                            else:
+                                logger.error(f"Streaming request failed with status code: {response.status_code}")
+                                logger.error(f"Response headers: {dict(response.headers)}")
+                                response_text = await response.aread()
+                                logger.error(f"Response body: {response_text.decode('utf-8', errors='ignore')[:1000]}")
+                                raise Exception(f"Streaming not supported - HTTP {response.status_code}")
                         except (httpx.ReadTimeout, httpx.HTTPError, Exception) as e:
                             logger.error(f"Streaming failed with error type: {type(e).__name__}, message: {str(e)}")
                             logger.error(f"Falling back to non-streaming mode")
@@ -250,6 +306,188 @@ async def chat(
                 'Connection': 'keep-alive',
             }
         )
+
+# WebSocket endpoint for chat to bypass proxy timeouts
+@api_app.websocket("/chat-ws")
+async def websocket_chat(
+    websocket: WebSocket,
+    chat_db: ChatDatabase = Depends(get_chat_db),
+    chat_history_cache: ChatHistoryCache = Depends(get_chat_history_cache),
+    message_handler: MessageHandler = Depends(get_message_handler),
+    streaming_handler: StreamingHandler = Depends(get_streaming_handler),
+    request_handler: RequestHandler = Depends(get_request_handler),
+    streaming_semaphore: asyncio.Semaphore = Depends(get_streaming_semaphore),
+    request_queue: asyncio.Queue = Depends(get_request_queue),
+    streaming_support_cache: dict = Depends(get_streaming_support_cache)
+):
+    await websocket.accept()
+    logger.info("WebSocket connection established")
+    
+    try:
+        # Get token from WebSocket headers (set by proxy during handshake)
+        headers_dict = dict(websocket.headers)
+        token = headers_dict.get('x-forwarded-access-token')
+        
+        logger.info(f"WebSocket headers: {list(headers_dict.keys())}")
+        
+        if token and token.strip():
+            actual_token = token.strip()
+            logger.info(f"WebSocket using X-Forwarded-Access-Token: '{token[:20]}...' (truncated)")
+        else:
+            logger.warning(f"WebSocket: No X-Forwarded-Access-Token header found. Available headers: {list(headers_dict.keys())}")
+            await websocket.close(code=1008, reason="No authentication token provided")
+            return
+            
+        headers = {"Authorization": f"Bearer {actual_token}"}
+        
+        # Call get_user_info properly - it expects to use dependency injection
+        try:
+            w = WorkspaceClient(token=actual_token, auth_type="pat")
+            current_user = w.current_user.me()
+            user_info = {
+                "email": current_user.user_name,
+                "user_id": current_user.id,
+                "username": current_user.user_name,
+                "displayName": current_user.display_name
+            }
+        except Exception as e:
+            logger.error(f"Error getting user info: {str(e)}")
+            await websocket.close(code=1008, reason="Authentication failed")
+            return
+            
+        user_id = user_info["user_id"]
+        logger.info(f"WebSocket authenticated for user_id: {user_id}")
+        
+        while True:
+            # Receive message from client
+            data = await websocket.receive_json()
+            logger.info(f"WebSocket received message: {data}")
+            
+            message_request = MessageRequest(**data)
+            logger.info(f"Processing WebSocket message for session_id: {message_request.session_id}")
+            
+            is_first_message = chat_db.is_first_message(message_request.session_id, user_id)
+            user_message = message_handler.create_message(
+                message_id=str(uuid.uuid4()),
+                content=message_request.content,
+                role="user",
+                session_id=message_request.session_id,
+                user_id=user_id,
+                user_info=user_info,
+                is_first_message=is_first_message
+            )
+            
+            # Load chat history with caching
+            chat_history = await load_chat_history(message_request.session_id, user_id, is_first_message, chat_history_cache, chat_db)
+            
+            # Use longer timeout since WebSocket bypasses proxy timeout
+            streaming_timeout = httpx.Timeout(
+                connect=10.0,
+                read=300.0,  # 5 minutes
+                write=10.0,
+                pool=10.0
+            )
+            
+            serving_endpoint_name = SERVING_ENDPOINT_NAME
+            endpoint_url = f"https://{DATABRICKS_HOST}/serving-endpoints/{serving_endpoint_name}/invocations"
+            
+            supports_streaming = await check_endpoint_capabilities(serving_endpoint_name, streaming_support_cache)
+            request_data = {
+                "input": [
+                    *([{"role": msg["role"], "content": msg["content"]} for msg in chat_history[:-1]] 
+                        if message_request.include_history else []),
+                    {"role": "user", "content": message_request.content}
+                ],
+                "stream": True
+            }
+            request_data["databricks_options"] = {"return_trace": True}
+            
+            # Send heartbeat every 30 seconds to keep WebSocket alive
+            async def send_heartbeats():
+                heartbeat_count = 0
+                start_time = time.time()
+                while True:
+                    await asyncio.sleep(30.0)
+                    heartbeat_count += 1
+                    elapsed = time.time() - start_time
+                    try:
+                        await websocket.send_json({
+                            'type': 'heartbeat',
+                            'message': f'processing request ({elapsed:.0f}s)', 
+                            'count': heartbeat_count
+                        })
+                        logger.info(f"Sent WebSocket heartbeat #{heartbeat_count} after {elapsed:.1f}s")
+                    except Exception as e:
+                        logger.error(f"Failed to send heartbeat: {e}")
+                        break
+
+            async with streaming_semaphore:
+                async with httpx.AsyncClient(timeout=streaming_timeout) as streaming_client:
+                    # Start heartbeat task
+                    heartbeat_task = asyncio.create_task(send_heartbeats())
+                    
+                    try:
+                        logger.info("Making streaming request to Databricks")
+                        async with streaming_client.stream('POST', 
+                            endpoint_url,
+                            headers=headers,
+                            json=request_data,
+                            timeout=streaming_timeout
+                        ) as response:
+                            
+                            if response.status_code != 200:
+                                raise Exception(f"HTTP {response.status_code}: {await response.aread()}")
+                            
+                            assistant_message_id = str(uuid.uuid4())
+                            start_time = time.time()
+                            first_token_time = None
+                            accumulated_content = ""
+                            
+                            # Process streaming response
+                            async for response_chunk in streaming_handler.handle_streaming_response(
+                                response, request_data, headers, message_request.session_id, assistant_message_id,
+                                user_id, user_info, None, start_time, first_token_time,
+                                accumulated_content, None, None, request_handler, message_handler,
+                                streaming_support_cache, True, False
+                            ):
+                                # Parse SSE data and send as JSON over WebSocket
+                                if response_chunk.startswith('data: '):
+                                    json_data = response_chunk[6:].strip()
+                                    if json_data and json_data != '{}':
+                                        try:
+                                            data = json.loads(json_data)
+                                            logger.info(f"WebSocket sending data: {data}")
+                                            await websocket.send_json(data)
+                                        except json.JSONDecodeError as e:
+                                            logger.error(f"JSON decode error: {e}")
+                                else:
+                                    logger.info(f"WebSocket received non-data chunk: {response_chunk[:100]}")
+                                            
+                    except Exception as e:
+                        logger.error(f"WebSocket streaming error: {str(e)}")
+                        await websocket.send_json({
+                            'type': 'error',
+                            'message': f"Streaming error: {str(e)}"
+                        })
+                    finally:
+                        # Cancel heartbeat task
+                        heartbeat_task.cancel()
+                        try:
+                            await heartbeat_task
+                        except asyncio.CancelledError:
+                            pass
+                            
+    except WebSocketDisconnect:
+        logger.info("WebSocket client disconnected")
+    except Exception as e:
+        logger.error(f"WebSocket error: {str(e)}")
+        try:
+            await websocket.send_json({
+                'type': 'error',
+                'message': f"An error occurred: {str(e)}"
+            })
+        except:
+            pass
 
 @api_app.get("/chats", response_model=ChatHistoryResponse)
 async def get_chat_history(user_info: dict = Depends(get_user_info),chat_db: ChatDatabase = Depends(get_chat_db)):

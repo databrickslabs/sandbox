@@ -1,5 +1,6 @@
 import json
 import time
+import asyncio
 from typing import AsyncGenerator, Optional, Dict
 from fastapi.responses import StreamingResponse
 import httpx
@@ -12,6 +13,7 @@ from utils.request_handler import RequestHandler
 from datetime import datetime
 from utils.config import SERVING_ENDPOINT_NAME
 logger = logging.getLogger(__name__)
+
 class StreamingHandler:
 
     @staticmethod
@@ -39,10 +41,53 @@ class StreamingHandler:
         thinking_content = ""
         response_content = ""
         inside_think_tags = False
+        last_chunk_time = time.time()
+        heartbeat_interval = 10.0  # Send heartbeat every 45 seconds
         
         try:
-            async for line in response.aiter_lines():
-                logger.info(f"Received raw line: {line}")
+            lines_iterator = response.aiter_lines()
+            logger.info(f"Started streaming handler with heartbeat interval: {heartbeat_interval}s")
+            
+            iteration_count = 0
+            while True:
+                iteration_count += 1
+                current_time = time.time()
+                time_since_last_chunk = current_time - last_chunk_time
+                
+                logger.info(f"Iteration {iteration_count}: Time since last chunk: {time_since_last_chunk:.2f}s")
+                
+                try:
+                    # Wait for next line with timeout
+                    logger.info(f"Waiting for next line with {heartbeat_interval}s timeout...")
+                    line = await asyncio.wait_for(lines_iterator.__anext__(), timeout=heartbeat_interval)
+                    logger.info(f"Received raw line: {line}")
+                    last_chunk_time = time.time()
+                    
+                except asyncio.TimeoutError:
+                    # No data received within heartbeat interval - send heartbeat
+                    current_time = time.time()
+                    time_waited = current_time - last_chunk_time
+                    logger.info(f"TIMEOUT after {time_waited:.2f}s - Sending heartbeat to prevent proxy timeout")
+                    heartbeat_msg = {
+                        "type": "heartbeat",
+                        "timestamp": current_time,
+                        "message": "keeping connection alive"
+                    }
+                    heartbeat_json = json.dumps(heartbeat_msg)
+                    logger.info(f"Yielding heartbeat: {heartbeat_json}")
+                    yield f"data: {heartbeat_json}\n\n"
+                    last_chunk_time = current_time
+                    logger.info("Heartbeat sent, continuing to wait for data...")
+                    continue
+                
+                except StopAsyncIteration:
+                    # Stream ended normally
+                    logger.info("Stream ended normally (StopAsyncIteration)")
+                    break
+                
+                except Exception as e:
+                    logger.error(f"Unexpected error in streaming loop: {type(e).__name__}: {str(e)}")
+                    raise
                 
                 if line.startswith('data: '):
                     json_str = line[6:]
@@ -98,7 +143,10 @@ class StreamingHandler:
                                     time.time() - start_time,
                                     original_timestamp
                                 )
+                                logger.info(f"Yielding real content chunk: {delta_text[:50]}...")
                                 yield f"data: {json.dumps(response_data)}\n\n"
+                                last_chunk_time = time.time()  # Update heartbeat timer
+                                logger.info(f"Updated last_chunk_time to {last_chunk_time}")
                         
                         # Handle the final message with complete content
                         elif data.get("type") == "response.output_item.done":
@@ -199,7 +247,29 @@ class StreamingHandler:
         """Handle non-streaming response from the model."""
         try:
             start_time = time.time()
-            response = await request_handler.enqueue_request(url, headers, request_data)
+            last_heartbeat = start_time
+            heartbeat_interval = 45.0
+            
+            # Send initial heartbeat to keep connection alive during request
+            yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'processing request'})}\n\n"
+            
+            # Start the actual request
+            response_task = asyncio.create_task(
+                request_handler.enqueue_request(url, headers, request_data)
+            )
+            
+            # Send heartbeats while waiting for response
+            while not response_task.done():
+                current_time = time.time()
+                if current_time - last_heartbeat > heartbeat_interval:
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'still processing'})}\n\n"
+                    last_heartbeat = current_time
+                
+                # Wait a bit before checking again
+                await asyncio.sleep(5)
+            
+            # Get the response once the task is done
+            response = await response_task
             response_data = await request_handler.handle_databricks_response(response, start_time)
             
             assistant_message = message_handler.create_message(
