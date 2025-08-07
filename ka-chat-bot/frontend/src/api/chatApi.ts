@@ -150,13 +150,15 @@ export const sendMessageViaWebSocket = async (
         }
         
         // Send accumulated content to UI
-        onChunk({
+        const chunkData = {
           message_id: currentMessageId,
           content: accumulatedContent,
           sources: undefined,
           metrics: undefined,
           model: servingEndpointName
-        });
+        };
+        console.log('🔄 FRONTEND WS: Calling onChunk with:', chunkData);
+        onChunk(chunkData);
         return;
       }
       
@@ -166,13 +168,15 @@ export const sendMessageViaWebSocket = async (
         // Final message with complete content and sources
         if (data.item && data.item.content && data.item.content[0]) {
           const finalContent = data.item.content[0].text;
-          onChunk({
+          const finalChunkData = {
             message_id: data.item.id,
             content: finalContent,
             sources: [], // TODO: extract sources if available
             metrics: undefined, // TODO: extract metrics if available
             model: servingEndpointName
-          });
+          };
+          console.log('🔄 FRONTEND WS: Calling onChunk with final data:', finalChunkData);
+          onChunk(finalChunkData);
         }
         return;
       }
