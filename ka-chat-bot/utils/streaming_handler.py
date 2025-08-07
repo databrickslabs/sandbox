@@ -41,53 +41,11 @@ class StreamingHandler:
         thinking_content = ""
         response_content = ""
         inside_think_tags = False
-        last_chunk_time = time.time()
-        heartbeat_interval = 10.0  # Send heartbeat every 45 seconds
         
         try:
-            lines_iterator = response.aiter_lines()
-            logger.info(f"Started streaming handler with heartbeat interval: {heartbeat_interval}s")
+            logger.info("Started streaming handler")
             
-            iteration_count = 0
-            while True:
-                iteration_count += 1
-                current_time = time.time()
-                time_since_last_chunk = current_time - last_chunk_time
-                
-                logger.info(f"Iteration {iteration_count}: Time since last chunk: {time_since_last_chunk:.2f}s")
-                
-                try:
-                    # Wait for next line with timeout
-                    logger.info(f"Waiting for next line with {heartbeat_interval}s timeout...")
-                    line = await asyncio.wait_for(lines_iterator.__anext__(), timeout=heartbeat_interval)
-                    logger.info(f"Received raw line: {line}")
-                    last_chunk_time = time.time()
-                    
-                except asyncio.TimeoutError:
-                    # No data received within heartbeat interval - send heartbeat
-                    current_time = time.time()
-                    time_waited = current_time - last_chunk_time
-                    logger.info(f"TIMEOUT after {time_waited:.2f}s - Sending heartbeat to prevent proxy timeout")
-                    heartbeat_msg = {
-                        "type": "heartbeat",
-                        "timestamp": current_time,
-                        "message": "keeping connection alive"
-                    }
-                    heartbeat_json = json.dumps(heartbeat_msg)
-                    logger.info(f"Yielding heartbeat: {heartbeat_json}")
-                    yield f"data: {heartbeat_json}\n\n"
-                    last_chunk_time = current_time
-                    logger.info("Heartbeat sent, continuing to wait for data...")
-                    continue
-                
-                except StopAsyncIteration:
-                    # Stream ended normally
-                    logger.info("Stream ended normally (StopAsyncIteration)")
-                    break
-                
-                except Exception as e:
-                    logger.error(f"Unexpected error in streaming loop: {type(e).__name__}: {str(e)}")
-                    raise
+            async for line in response.aiter_lines():
                 
                 if line.startswith('data: '):
                     json_str = line[6:]

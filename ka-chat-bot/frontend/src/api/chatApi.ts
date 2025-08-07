@@ -110,10 +110,6 @@ export const sendMessageViaWebSocket = async (
     try {
       const data = JSON.parse(event.data);
       
-      // Handle heartbeat messages - they're just for keeping connection alive
-      if (data.type === 'heartbeat') {
-        return;
-      }
       
       // Handle error messages
       if (data.type === 'error') {

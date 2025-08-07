@@ -402,29 +402,9 @@ async def websocket_chat(
             }
             request_data["databricks_options"] = {"return_trace": True}
             
-            # Send heartbeat every 30 seconds to keep WebSocket alive
-            async def send_heartbeats():
-                heartbeat_count = 0
-                start_time = time.time()
-                while True:
-                    await asyncio.sleep(30.0)
-                    heartbeat_count += 1
-                    elapsed = time.time() - start_time
-                    try:
-                        await websocket.send_json({
-                            'type': 'heartbeat',
-                            'message': f'processing request ({elapsed:.0f}s)', 
-                            'count': heartbeat_count
-                        })
-                        logger.info(f"Sent WebSocket heartbeat #{heartbeat_count} after {elapsed:.1f}s")
-                    except Exception as e:
-                        logger.error(f"Failed to send heartbeat: {e}")
-                        break
 
             async with streaming_semaphore:
                 async with httpx.AsyncClient(timeout=streaming_timeout) as streaming_client:
-                    # Start heartbeat task
-                    heartbeat_task = asyncio.create_task(send_heartbeats())
                     
                     try:
                         logger.info("Making streaming request to Databricks")
@@ -499,12 +479,7 @@ async def websocket_chat(
                             'message': f"Streaming error: {str(e)}"
                         })
                     finally:
-                        # Cancel heartbeat task
-                        heartbeat_task.cancel()
-                        try:
-                            await heartbeat_task
-                        except asyncio.CancelledError:
-                            pass
+                        pass
                             
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
