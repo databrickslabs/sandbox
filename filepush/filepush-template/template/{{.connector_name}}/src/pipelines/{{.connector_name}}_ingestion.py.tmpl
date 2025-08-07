@@ -1,13 +1,13 @@
 import dlt
 
 @dlt.table(
-  name="{{.connector_name}}_raw",
-  comment="A streaming table created by filepush bundle {{.connector_name}}.",
+  name="{{template `raw_table_name` .}}",
+  comment="A streaming table created by filepush bundle {{.connector_name}}. This holds the raw data from the uploaded files.",
   table_properties={
     "volume_path": "{{template `volume_path` .}}"
   }
 )
-def {{.connector_name}}_raw():
+def {{template `raw_table_name` .}}():
   with open(f"./{{.connector_name}}_readfiles_kernel.sql", "r") as f:
     kernel_query = f.read()
   return spark.sql(kernel_query)
