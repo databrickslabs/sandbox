@@ -10,6 +10,7 @@ acceptance                 @nfx @alexott
 conversational-agent-app   @vivian-xie-db @yuanchaoma-db
 database-diagram-builder   @alexott
 downstreams                @nfx @alexott
+filepush                   @chi-yang-db
 go-libs                    @nfx @alexott
 ip_access_list_analyzer    @alexott
 ka-chat-bot                @taiga-db
