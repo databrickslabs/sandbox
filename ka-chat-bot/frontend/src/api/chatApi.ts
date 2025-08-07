@@ -10,19 +10,6 @@ let reconnectAttempts = 0;
 let maxReconnectAttempts = 3;
 let reconnectTimeoutId: NodeJS.Timeout | null = null;
 
-// Get token from browser (this assumes token is passed via headers by proxy)
-const getToken = (): string => {
-  const token = window.localStorage.getItem('auth_token') || '';
-  console.log('Frontend getToken: localStorage auth_token =', token ? `${token.substring(0,20)}...` : 'EMPTY');
-  
-  // In remote environments, the proxy should provide the token somehow
-  // Check if we can get it from anywhere else
-  if (!token) {
-    console.log('Frontend getToken: No token found in localStorage');
-  }
-  
-  return token;
-};
 
 // WebSocket connection management with reconnection
 const connectWebSocket = (): Promise<WebSocket> => {
@@ -122,11 +109,9 @@ export const sendMessageViaWebSocket = async (
   const messageListener = (event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
-      console.log('🔄 FRONTEND WS: Received message:', data);
       
       // Handle heartbeat messages - they're just for keeping connection alive
       if (data.type === 'heartbeat') {
-        console.log('🔄 FRONTEND WS: Received heartbeat', data);
         return;
       }
       
@@ -138,7 +123,6 @@ export const sendMessageViaWebSocket = async (
       
       // Handle streaming delta messages from serving endpoint
       if (data.type === 'response.output_text.delta') {
-        console.log('🔄 FRONTEND WS: Processing streaming delta:', data);
         
         // Set message ID from first delta
         if (data.item_id && !currentMessageId) {
@@ -159,24 +143,19 @@ export const sendMessageViaWebSocket = async (
           model: servingEndpointName,
           isComplete: false
         };
-        console.log('🔄 FRONTEND WS: Calling onChunk with:', chunkData);
         onChunk(chunkData);
         return;
       }
       
       // Handle completion messages
       if (data.type === 'response.output_item.done') {
-        console.log('🔄 FRONTEND WS: Processing completion message:', data);
         // Final message with complete content and sources
         if (data.item && data.item.content && data.item.content[0]) {
           const finalContent = data.item.content[0].text;
-          console.log('🔄 FRONTEND WS: Final content from completion:', finalContent.substring(0, 200) + '...');
-          console.log('🔄 FRONTEND WS: Accumulated content during streaming:', accumulatedContent.substring(0, 200) + '...');
           
           // Check if final content includes <think> tags
           const finalHasThink = finalContent.includes('<think>');
           const accumulatedHasThink = accumulatedContent.includes('<think>');
-          console.log('🔄 FRONTEND WS: Final has <think>:', finalHasThink, 'Accumulated has <think>:', accumulatedHasThink);
           
           // Use accumulated content if it has thinking and final doesn't, otherwise use final
           const contentToUse = (accumulatedHasThink && !finalHasThink) ? accumulatedContent : finalContent;
@@ -189,15 +168,12 @@ export const sendMessageViaWebSocket = async (
             model: servingEndpointName,
             isComplete: true
           };
-          console.log('🔄 FRONTEND WS: Using content:', contentToUse === finalContent ? 'FINAL' : 'ACCUMULATED');
-          console.log('🔄 FRONTEND WS: Calling onChunk with final data:', finalChunkData);
           onChunk(finalChunkData);
         }
         return;
       }
       
       // Handle any other message format (fallback)
-      console.log('🔄 FRONTEND WS: Processing other message:', data);
       onChunk({
         message_id: data.message_id || currentMessageId,
         content: data.content || accumulatedContent,
@@ -221,105 +197,9 @@ export const sendMessageViaWebSocket = async (
     serving_endpoint_name: servingEndpointName
   };
   
-  console.log('🔄 FRONTEND WS: Sending message via WebSocket:', messageRequest);
   ws.send(JSON.stringify(messageRequest));
 };
 
-// Original HTTP-based sendMessage function (renamed for clarity)
-export const sendMessageViaHTTP = async (
-  content: string, 
-  sessionId: string,
-  includeHistory: boolean,
-  servingEndpointName: string,
-  onChunk: (chunk: { 
-    message_id: string,
-    content?: string, 
-    sources?: any[],
-    metrics?: {
-      timeToFirstToken?: number;
-      totalTime?: number;
-    },
-    model?: string,
-    isComplete?: boolean
-  }) => void,
-): Promise<void> => {
-  try {
-    const response = await fetch(
-      `${API_URL}/chat`, 
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-        },
-        body: JSON.stringify({ 
-          content,
-          session_id: sessionId,
-          include_history: includeHistory,
-          serving_endpoint_name: servingEndpointName
-        })
-      }
-    );
-    if (!response.ok) {
-      console.log("response.ok", response.ok);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      console.log("No reader available");
-      throw new Error('No reader available');
-    }
-
-    const decoder = new TextDecoder();
-    let accumulatedContent = '';
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const jsonStr = line.slice(6);
-          if (jsonStr && jsonStr !== '{}') {
-            try {
-              const data = JSON.parse(jsonStr);
-              // Double parse if the first parse returned a string
-              const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-              
-              // Skip heartbeat messages - they're just for keeping connection alive
-              if (parsedData.type === 'heartbeat') {
-                console.log('🔄 FRONTEND: Received heartbeat, keeping connection alive', parsedData);
-                continue;
-              }
-              
-              // Accumulate content as delta chunks arrive
-              if (parsedData.content) {
-                accumulatedContent += parsedData.content;
-              }
-              
-              // Send accumulated content to the UI for real-time streaming
-              onChunk({
-                message_id: parsedData.message_id,
-                content: accumulatedContent,
-                sources: parsedData.sources,
-                metrics: parsedData.metrics
-              });
-            } catch (e) {
-              console.error('Error parsing JSON:', e);
-            }
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
-  }
-};
 
 export const getChatHistory = async (): Promise<{ sessions: Chat[] }> => {
   try {

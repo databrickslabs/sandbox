@@ -96,28 +96,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      let accumulatedContent = '';
-      let messageSources: any[] | null = null;
-      let messageMetrics: { timeToFirstToken?: number; totalTime?: number } | null = null;
-      let messageId = '';
-      
       if (!currentSessionId) {
         throw new Error('No active session ID');
       }
       
       await apiSendMessage(content, currentSessionId, includeHistory, currentEndpoint, (chunk) => {
-        if (chunk.content) {
-          accumulatedContent = chunk.content;
-        }
-        if (chunk.sources) {
-          messageSources = chunk.sources;
-        }
-        if (chunk.metrics) {
-          messageMetrics = chunk.metrics;
-        }
-        if (chunk.message_id) {
-          messageId = chunk.message_id;
-        }
         
         // Only set isThinking to false when we receive the completion message
         const isComplete = chunk.isComplete || false;
@@ -140,25 +123,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           return updated;
         });
       });
-      
-      // TODO: The final message is now handled by the streaming callback
-      // so we don't need to create a separate final message here
-      console.log('🔄 CHATCONTEXT: Streaming completed, final accumulated content:', accumulatedContent.substring(0, 100) + '...');
-      
-      // const botMessage: Message = {
-      //   message_id: messageId,
-      //   content: accumulatedContent,
-      //   role: 'assistant',
-      //   timestamp: new Date(),
-      //   isThinking: false,
-      //   model: currentEndpoint,
-      //   sources: messageSources,
-      //   metrics: messageMetrics
-      // };
-
-      // setMessages(prev => prev.filter(msg => 
-      //   msg.message_id !== thinkingMessage.message_id 
-      // ).concat(botMessage));
       
     } catch (error) {
       console.error('Error sending message:', error);

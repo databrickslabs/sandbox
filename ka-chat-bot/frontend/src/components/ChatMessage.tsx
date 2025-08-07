@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import copyIconUrl from '../assets/images/copy_icon.svg';
-import refreshIconUrl from '../assets/images/sync_icon.svg';
 import buttonIconUrl from '../assets/images/buttonIcon.svg';
 import downIconUrl from '../assets/images/down_icon.svg';
 import { Message } from '../types';
@@ -128,16 +127,6 @@ const CheckIconWrapper = styled.div<{ $copied: boolean }>`
   `}
 `;
 
-const RefreshButton = styled(ActionButton)`
-  background-image: url(${refreshIconUrl});
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-  &:hover {
-    background-color: rgba(34, 114, 180, 0.08);
-    color: #0E538B;
-  }
-`;
 
 const SourcesSection = styled.div`
   margin-top: 16px;
