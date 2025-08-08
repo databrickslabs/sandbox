@@ -3,6 +3,32 @@ import { Chat } from '../types';
 export const API_URL = '/chat-api';
 export const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/chat-api';
 
+// Simple async mutex implementation
+class AsyncMutex {
+  private mutex = Promise.resolve();
+
+  async acquire(): Promise<() => void> {
+    let release: () => void;
+    const oldMutex = this.mutex;
+    
+    this.mutex = new Promise(resolve => {
+      release = resolve;
+    });
+    
+    await oldMutex;
+    return release!;
+  }
+
+  async runExclusive<T>(callback: () => Promise<T>): Promise<T> {
+    const release = await this.acquire();
+    try {
+      return await callback();
+    } finally {
+      release();
+    }
+  }
+}
+
 // Global WebSocket instance and reconnection management
 let chatWebSocket: WebSocket | null = null;
 let wsConnectionPromise: Promise<WebSocket> | null = null;
@@ -10,7 +36,7 @@ let reconnectAttempts = 0;
 let maxReconnectAttempts = 3;
 let reconnectTimeoutId: NodeJS.Timeout | null = null;
 // Mutex for connection synchronization
-let connectionMutex = false;
+const connectionMutex = new AsyncMutex();
 
 
 // WebSocket connection management with reconnection
@@ -20,33 +46,14 @@ const connectWebSocket = (): Promise<WebSocket> => {
     return wsConnectionPromise;
   }
 
-  // Check if already trying to connect (race condition protection)
-  if (connectionMutex) {
-    // Wait a bit and retry to get the connection promise
-    return new Promise((resolve) => {
-      const checkInterval = setInterval(() => {
-        if (wsConnectionPromise) {
-          clearInterval(checkInterval);
-          resolve(wsConnectionPromise);
-        } else if (!connectionMutex) {
-          // Mutex was released without creating a connection, try again
-          clearInterval(checkInterval);
-          resolve(connectWebSocket());
-        }
-      }, 10);
-    });
-  }
+  // Use mutex to ensure only one connection attempt at a time
+  return connectionMutex.runExclusive(async () => {
+    // Double-check pattern: verify promise wasn't created while waiting for mutex
+    if (wsConnectionPromise) {
+      return wsConnectionPromise;
+    }
 
-  // Acquire mutex before creating connection
-  connectionMutex = true;
-
-  // Double-check pattern: verify promise wasn't created while waiting for mutex
-  if (wsConnectionPromise) {
-    connectionMutex = false;
-    return wsConnectionPromise;
-  }
-
-  wsConnectionPromise = new Promise((resolve, reject) => {
+    wsConnectionPromise = new Promise((resolve, reject) => {
     // Token will be read from headers by the proxy, no need for query parameter
     const wsUrl = `${WS_URL}/chat-ws`;
     
@@ -57,7 +64,6 @@ const connectWebSocket = (): Promise<WebSocket> => {
       console.log('WebSocket connected successfully');
       chatWebSocket = ws;
       reconnectAttempts = 0; // Reset on successful connection
-      connectionMutex = false; // Release mutex on successful connection
       if (reconnectTimeoutId) {
         clearTimeout(reconnectTimeoutId);
         reconnectTimeoutId = null;
@@ -68,7 +74,6 @@ const connectWebSocket = (): Promise<WebSocket> => {
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       wsConnectionPromise = null;
-      connectionMutex = false; // Release mutex on error
       reject(error);
     };
     
@@ -76,7 +81,6 @@ const connectWebSocket = (): Promise<WebSocket> => {
       console.log('WebSocket closed:', event.code, event.reason);
       chatWebSocket = null;
       wsConnectionPromise = null;
-      connectionMutex = false; // Release mutex on close
       
       // Attempt reconnection if not a manual close and we haven't exceeded max attempts
       if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
@@ -92,9 +96,10 @@ const connectWebSocket = (): Promise<WebSocket> => {
         reconnectAttempts = 0; // Reset for future connection attempts
       }
     };
+    });
+    
+    return wsConnectionPromise;
   });
-  
-  return wsConnectionPromise;
 };
 
 const disconnectWebSocket = () => {
@@ -110,7 +115,6 @@ const disconnectWebSocket = () => {
   }
   
   wsConnectionPromise = null;
-  connectionMutex = false; // Reset mutex on manual disconnect
   reconnectAttempts = 0;
 };
 
@@ -141,6 +145,26 @@ export const sendMessageViaWebSocket = async (
   // Wrap in a Promise to properly handle completion and cleanup
   return new Promise<void>((resolve, reject) => {
     let isCompleted = false;
+    let timeoutId: NodeJS.Timeout;
+    
+    // Helper function to clean up resources
+    const cleanup = () => {
+      isCompleted = true;
+      ws.removeEventListener('message', messageListener);
+      clearTimeout(timeoutId);
+    };
+    
+    // Helper function to resolve with cleanup
+    const resolveWithCleanup = () => {
+      cleanup();
+      resolve();
+    };
+    
+    // Helper function to reject with cleanup
+    const rejectWithCleanup = (error: Error) => {
+      cleanup();
+      reject(error);
+    };
     
     // Set up message listener for this request
     const messageListener = (event: MessageEvent) => {
@@ -150,9 +174,7 @@ export const sendMessageViaWebSocket = async (
         // Handle error messages
         if (data.type === 'error') {
           console.error('WebSocket error:', data.message);
-          isCompleted = true;
-          ws.removeEventListener('message', messageListener);
-          reject(new Error(data.message));
+          rejectWithCleanup(new Error(data.message));
           return;
         }
         
@@ -206,9 +228,7 @@ export const sendMessageViaWebSocket = async (
           }
           
           // Mark as completed and clean up
-          isCompleted = true;
-          ws.removeEventListener('message', messageListener);
-          resolve();
+          resolveWithCleanup();
           return;
         }
         
@@ -224,38 +244,21 @@ export const sendMessageViaWebSocket = async (
         
         // If this was a complete message, clean up
         if (data.isComplete) {
-          isCompleted = true;
-          ws.removeEventListener('message', messageListener);
-          resolve();
+          resolveWithCleanup();
         }
       } catch (e) {
         console.error('Error parsing WebSocket message:', e);
-        isCompleted = true;
-        ws.removeEventListener('message', messageListener);
-        reject(e);
+        rejectWithCleanup(e instanceof Error ? e : new Error(String(e)));
       }
     };
     
     // Add timeout to prevent hanging forever
-    const timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       if (!isCompleted) {
         console.error('WebSocket message timeout');
-        ws.removeEventListener('message', messageListener);
-        reject(new Error('Message processing timeout'));
+        rejectWithCleanup(new Error('Message processing timeout'));
       }
     }, 300000); // 5 minute timeout
-    
-    // Clean up timeout on completion
-    const originalResolve = resolve;
-    const originalReject = reject;
-    resolve = () => {
-      clearTimeout(timeoutId);
-      originalResolve();
-    };
-    reject = (error) => {
-      clearTimeout(timeoutId);
-      originalReject(error);
-    };
     
     ws.addEventListener('message', messageListener);
     
@@ -270,9 +273,7 @@ export const sendMessageViaWebSocket = async (
     try {
       ws.send(JSON.stringify(messageRequest));
     } catch (error) {
-      ws.removeEventListener('message', messageListener);
-      clearTimeout(timeoutId);
-      reject(error);
+      rejectWithCleanup(error instanceof Error ? error : new Error(String(error)));
     }
   });
 };
