@@ -9,7 +9,7 @@ interface ChatContextType {
   messages: Message[];
   loading: boolean;
   sendMessage: (content: string, includeHistory: boolean) => Promise<void>;
-  selectChat: (chatId: string) => void;
+  selectChat: (chatId: string) => Promise<void>;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   startNewSession: () => void;
@@ -146,32 +146,56 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           : msg
       ));
     } finally {
-      try {
-        const historyResponse = await fetch(`${API_URL}/chats`);
-        const historyData = await historyResponse.json();
-        if (historyData.sessions) {
-          setChats(historyData.sessions);
+      // Update sidebar with latest chat sessions after a delay
+      setTimeout(async () => {
+        try {
+          const historyResponse = await fetch(`${API_URL}/chats`);
+          const historyData = await historyResponse.json();
+          if (historyData.sessions) {
+            setChats(historyData.sessions);
+          }
+        } catch (error) {
+          console.error('Error fetching chat history for sidebar:', error);
         }
-      } catch (error) {
-        console.error('Error fetching chat history:', error);
-        setError('Failed to update chat history.');
-      }
+      }, 200); // 200ms delay to let database write complete
+      
       setLoading(false);
     }
   };
 
-  const selectChat = (sessionId: string) => {
+  const selectChat = async (sessionId: string) => {
     const selected = chats.find(chat => chat.sessionId === sessionId);
     
     if (selected) {
       setCurrentChat(selected);
       setCurrentSessionId(sessionId);
       
-      const sessionMessages = chats
-        .filter(chat => chat.sessionId === selected.sessionId)
-        .flatMap(chat => chat.messages);
+      // If selecting the current session, keep current messages as they're more up-to-date
+      if (sessionId === currentSessionId) {
+        return;
+      }
       
-      setMessages(sessionMessages);
+      // For other sessions, fetch fresh chat history to ensure we have latest messages
+      try {
+        const historyResponse = await fetch(`${API_URL}/chats`);
+        const historyData = await historyResponse.json();
+        if (historyData.sessions) {
+          setChats(historyData.sessions);
+          
+          // Find the updated session data
+          const updatedSelected = historyData.sessions.find((chat: any) => chat.sessionId === sessionId);
+          if (updatedSelected) {
+            setMessages(updatedSelected.messages);
+          } else {
+            setMessages(selected.messages); // fallback to cached data
+          }
+        } else {
+          setMessages(selected.messages); // fallback to cached data
+        }
+      } catch (error) {
+        console.error('Error fetching fresh chat history:', error);
+        setMessages(selected.messages); // fallback to cached data
+      }
     }
   };
 

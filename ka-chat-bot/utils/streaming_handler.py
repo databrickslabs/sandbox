@@ -103,9 +103,7 @@ class StreamingHandler:
                                 )
                                 logger.info(f"Yielding real content chunk: {delta_text[:50]}...")
                                 yield f"data: {json.dumps(response_data)}\n\n"
-                                last_chunk_time = time.time()  # Update heartbeat timer
-                                logger.info(f"Updated last_chunk_time to {last_chunk_time}")
-                        
+
                         # Handle the final message with complete content
                         elif data.get("type") == "response.output_item.done":
                             logger.info("Received output_item.done, processing final response")
@@ -205,26 +203,11 @@ class StreamingHandler:
         """Handle non-streaming response from the model."""
         try:
             start_time = time.time()
-            last_heartbeat = start_time
-            heartbeat_interval = 45.0
-            
-            # Send initial heartbeat to keep connection alive during request
-            yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'processing request'})}\n\n"
-            
+
             # Start the actual request
             response_task = asyncio.create_task(
                 request_handler.enqueue_request(url, headers, request_data)
             )
-            
-            # Send heartbeats while waiting for response
-            while not response_task.done():
-                current_time = time.time()
-                if current_time - last_heartbeat > heartbeat_interval:
-                    yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'still processing'})}\n\n"
-                    last_heartbeat = current_time
-                
-                # Wait a bit before checking again
-                await asyncio.sleep(5)
             
             # Get the response once the task is done
             response = await response_task
