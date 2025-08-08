@@ -328,19 +328,17 @@ async def websocket_chat(
         headers_dict = dict(websocket.headers)
         token = headers_dict.get('x-forwarded-access-token')
         
-        logger.info(f"WebSocket headers: {list(headers_dict.keys())}")
-        
         if token and token.strip():
             actual_token = token.strip()
-            logger.info(f"WebSocket using X-Forwarded-Access-Token: '{token[:20]}...' (truncated)")
+            logger.info(f"WebSocket using X-Forwarded-Access-Token")
         else:
             # Fallback to LOCAL_API_TOKEN environment variable
             env_token = os.environ.get("LOCAL_API_TOKEN")
             if env_token and env_token.strip():
                 actual_token = env_token.strip()
-                logger.info(f"WebSocket: No X-Forwarded-Access-Token header found, using LOCAL_API_TOKEN: '{env_token[:20]}...' (truncated)")
+                logger.info(f"WebSocket: No X-Forwarded-Access-Token header found, using LOCAL_API_TOKEN")
             else:
-                logger.warning(f"WebSocket: No authentication token found in headers or LOCAL_API_TOKEN. Available headers: {list(headers_dict.keys())}")
+                logger.warning(f"WebSocket: No authentication token found in headers or LOCAL_API_TOKEN.")
                 await websocket.close(code=1008, reason="No authentication token provided")
                 return
             

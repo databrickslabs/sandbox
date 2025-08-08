@@ -17,6 +17,39 @@ logger = logging.getLogger(__name__)
 class StreamingHandler:
 
     @staticmethod
+    def _parse_thinking_tags(text: str, thinking_content: str = "", response_content: str = "", inside_think_tags: bool = False):
+        """
+        Parse text to separate thinking content from response content.
+        
+        Args:
+            text: The text to parse
+            thinking_content: Existing thinking content to append to
+            response_content: Existing response content to append to
+            inside_think_tags: Whether we're currently inside thinking tags
+            
+        Returns:
+            Tuple of (thinking_content, response_content, inside_think_tags)
+        """
+        i = 0
+        while i < len(text):
+            if not inside_think_tags and text[i:i+7] == "<think>":
+                inside_think_tags = True
+                thinking_content += "<think>"
+                i += 7
+            elif inside_think_tags and text[i:i+8] == "</think>":
+                inside_think_tags = False
+                thinking_content += "</think>"
+                i += 8
+            elif inside_think_tags:
+                thinking_content += text[i]
+                i += 1
+            else:
+                response_content += text[i]
+                i += 1
+        
+        return thinking_content, response_content, inside_think_tags
+
+    @staticmethod
     async def handle_streaming_response(
         response: httpx.Response,
         request_data: Dict,
@@ -71,22 +104,9 @@ class StreamingHandler:
                             logger.info(f"Processing delta: {delta_text[:100]}...")
                             
                             # Track thinking vs response content for final accumulation
-                            i = 0
-                            while i < len(delta_text):
-                                if not inside_think_tags and delta_text[i:i+7] == "<think>":
-                                    inside_think_tags = True
-                                    thinking_content += "<think>"
-                                    i += 7
-                                elif inside_think_tags and delta_text[i:i+8] == "</think>":
-                                    inside_think_tags = False
-                                    thinking_content += "</think>"
-                                    i += 8
-                                elif inside_think_tags:
-                                    thinking_content += delta_text[i]
-                                    i += 1
-                                else:
-                                    response_content += delta_text[i]
-                                    i += 1
+                            thinking_content, response_content, inside_think_tags = StreamingHandler._parse_thinking_tags(
+                                delta_text, thinking_content, response_content, inside_think_tags
+                            )
                             
                             # Add all delta content to accumulated_content (for final storage)
                             accumulated_content += delta_text
@@ -120,26 +140,7 @@ class StreamingHandler:
                                     sources = await request_handler.extract_sources_from_trace(data)
                                     
                                 # Process the final response to separate thinking from response
-                                final_thinking = ""
-                                final_response = ""
-                                inside_think = False
-                                
-                                i = 0
-                                while i < len(full_text):
-                                    if not inside_think and full_text[i:i+7] == "<think>":
-                                        inside_think = True
-                                        final_thinking += "<think>"
-                                        i += 7
-                                    elif inside_think and full_text[i:i+8] == "</think>":
-                                        inside_think = False
-                                        final_thinking += "</think>"
-                                        i += 8
-                                    elif inside_think:
-                                        final_thinking += full_text[i]
-                                        i += 1
-                                    else:
-                                        final_response += full_text[i]
-                                        i += 1
+                                final_thinking, final_response, _ = StreamingHandler._parse_thinking_tags(full_text)
                                 
                                 # Use the final response content
                                 accumulated_content = final_response

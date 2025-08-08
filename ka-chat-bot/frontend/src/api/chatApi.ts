@@ -9,11 +9,40 @@ let wsConnectionPromise: Promise<WebSocket> | null = null;
 let reconnectAttempts = 0;
 let maxReconnectAttempts = 3;
 let reconnectTimeoutId: NodeJS.Timeout | null = null;
+// Mutex for connection synchronization
+let connectionMutex = false;
 
 
 // WebSocket connection management with reconnection
 const connectWebSocket = (): Promise<WebSocket> => {
+  // Return existing promise if connection is in progress or established
   if (wsConnectionPromise) {
+    return wsConnectionPromise;
+  }
+
+  // Check if already trying to connect (race condition protection)
+  if (connectionMutex) {
+    // Wait a bit and retry to get the connection promise
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (wsConnectionPromise) {
+          clearInterval(checkInterval);
+          resolve(wsConnectionPromise);
+        } else if (!connectionMutex) {
+          // Mutex was released without creating a connection, try again
+          clearInterval(checkInterval);
+          resolve(connectWebSocket());
+        }
+      }, 10);
+    });
+  }
+
+  // Acquire mutex before creating connection
+  connectionMutex = true;
+
+  // Double-check pattern: verify promise wasn't created while waiting for mutex
+  if (wsConnectionPromise) {
+    connectionMutex = false;
     return wsConnectionPromise;
   }
 
@@ -28,6 +57,7 @@ const connectWebSocket = (): Promise<WebSocket> => {
       console.log('WebSocket connected successfully');
       chatWebSocket = ws;
       reconnectAttempts = 0; // Reset on successful connection
+      connectionMutex = false; // Release mutex on successful connection
       if (reconnectTimeoutId) {
         clearTimeout(reconnectTimeoutId);
         reconnectTimeoutId = null;
@@ -38,6 +68,7 @@ const connectWebSocket = (): Promise<WebSocket> => {
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       wsConnectionPromise = null;
+      connectionMutex = false; // Release mutex on error
       reject(error);
     };
     
@@ -45,6 +76,7 @@ const connectWebSocket = (): Promise<WebSocket> => {
       console.log('WebSocket closed:', event.code, event.reason);
       chatWebSocket = null;
       wsConnectionPromise = null;
+      connectionMutex = false; // Release mutex on close
       
       // Attempt reconnection if not a manual close and we haven't exceeded max attempts
       if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
@@ -78,6 +110,7 @@ const disconnectWebSocket = () => {
   }
   
   wsConnectionPromise = null;
+  connectionMutex = false; // Reset mutex on manual disconnect
   reconnectAttempts = 0;
 };
 
@@ -105,95 +138,143 @@ export const sendMessageViaWebSocket = async (
   let accumulatedContent = '';
   let currentMessageId = '';
   
-  // Set up message listener for this request
-  const messageListener = (event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      
-      
-      // Handle error messages
-      if (data.type === 'error') {
-        console.error('WebSocket error:', data.message);
-        throw new Error(data.message);
-      }
-      
-      // Handle streaming delta messages from serving endpoint
-      if (data.type === 'response.output_text.delta') {
+  // Wrap in a Promise to properly handle completion and cleanup
+  return new Promise<void>((resolve, reject) => {
+    let isCompleted = false;
+    
+    // Set up message listener for this request
+    const messageListener = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
         
-        // Set message ID from first delta
-        if (data.item_id && !currentMessageId) {
-          currentMessageId = data.item_id;
+        // Handle error messages
+        if (data.type === 'error') {
+          console.error('WebSocket error:', data.message);
+          isCompleted = true;
+          ws.removeEventListener('message', messageListener);
+          reject(new Error(data.message));
+          return;
         }
         
-        // Accumulate content from delta
-        if (data.delta) {
-          accumulatedContent += data.delta;
-        }
-        
-        // Send accumulated content to UI
-        const chunkData = {
-          message_id: currentMessageId,
-          content: accumulatedContent,
-          sources: undefined,
-          metrics: undefined,
-          model: servingEndpointName,
-          isComplete: false
-        };
-        onChunk(chunkData);
-        return;
-      }
-      
-      // Handle completion messages
-      if (data.type === 'response.output_item.done') {
-        // Final message with complete content and sources
-        if (data.item && data.item.content && data.item.content[0]) {
-          const finalContent = data.item.content[0].text;
+        // Handle streaming delta messages from serving endpoint
+        if (data.type === 'response.output_text.delta') {
+          // Set message ID from first delta
+          if (data.item_id && !currentMessageId) {
+            currentMessageId = data.item_id;
+          }
           
-          // Check if final content includes <think> tags
-          const finalHasThink = finalContent.includes('<think>');
-          const accumulatedHasThink = accumulatedContent.includes('<think>');
+          // Accumulate content from delta
+          if (data.delta) {
+            accumulatedContent += data.delta;
+          }
           
-          // Use accumulated content if it has thinking and final doesn't, otherwise use final
-          const contentToUse = (accumulatedHasThink && !finalHasThink) ? accumulatedContent : finalContent;
-          
-          const finalChunkData = {
-            message_id: currentMessageId || data.item.id,
-            content: contentToUse,
-            sources: [], // TODO: extract sources if available
-            metrics: undefined, // TODO: extract metrics if available
+          // Send accumulated content to UI
+          const chunkData = {
+            message_id: currentMessageId,
+            content: accumulatedContent,
+            sources: undefined,
+            metrics: undefined,
             model: servingEndpointName,
-            isComplete: true
+            isComplete: false
           };
-          onChunk(finalChunkData);
+          onChunk(chunkData);
+          return;
         }
-        return;
+        
+        // Handle completion messages
+        if (data.type === 'response.output_item.done') {
+          // Final message with complete content and sources
+          if (data.item && data.item.content && data.item.content[0]) {
+            const finalContent = data.item.content[0].text;
+            
+            // Check if final content includes <think> tags
+            const finalHasThink = finalContent.includes('<think>');
+            const accumulatedHasThink = accumulatedContent.includes('<think>');
+            
+            // Use accumulated content if it has thinking and final doesn't, otherwise use final
+            const contentToUse = (accumulatedHasThink && !finalHasThink) ? accumulatedContent : finalContent;
+            
+            const finalChunkData = {
+              message_id: currentMessageId || data.item.id,
+              content: contentToUse,
+              sources: [], // TODO: extract sources if available
+              metrics: undefined, // TODO: extract metrics if available
+              model: servingEndpointName,
+              isComplete: true
+            };
+            onChunk(finalChunkData);
+          }
+          
+          // Mark as completed and clean up
+          isCompleted = true;
+          ws.removeEventListener('message', messageListener);
+          resolve();
+          return;
+        }
+        
+        // Handle any other message format (fallback)
+        onChunk({
+          message_id: data.message_id || currentMessageId,
+          content: data.content || accumulatedContent,
+          sources: data.sources,
+          metrics: data.metrics,
+          model: data.model || servingEndpointName,
+          isComplete: data.isComplete
+        });
+        
+        // If this was a complete message, clean up
+        if (data.isComplete) {
+          isCompleted = true;
+          ws.removeEventListener('message', messageListener);
+          resolve();
+        }
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e);
+        isCompleted = true;
+        ws.removeEventListener('message', messageListener);
+        reject(e);
       }
-      
-      // Handle any other message format (fallback)
-      onChunk({
-        message_id: data.message_id || currentMessageId,
-        content: data.content || accumulatedContent,
-        sources: data.sources,
-        metrics: data.metrics,
-        model: data.model || servingEndpointName
-      });
-    } catch (e) {
-      console.error('Error parsing WebSocket message:', e);
-      throw e;
+    };
+    
+    // Add timeout to prevent hanging forever
+    const timeoutId = setTimeout(() => {
+      if (!isCompleted) {
+        console.error('WebSocket message timeout');
+        ws.removeEventListener('message', messageListener);
+        reject(new Error('Message processing timeout'));
+      }
+    }, 300000); // 5 minute timeout
+    
+    // Clean up timeout on completion
+    const originalResolve = resolve;
+    const originalReject = reject;
+    resolve = () => {
+      clearTimeout(timeoutId);
+      originalResolve();
+    };
+    reject = (error) => {
+      clearTimeout(timeoutId);
+      originalReject(error);
+    };
+    
+    ws.addEventListener('message', messageListener);
+    
+    // Send the message
+    const messageRequest = {
+      content,
+      session_id: sessionId,
+      include_history: includeHistory,
+      serving_endpoint_name: servingEndpointName
+    };
+    
+    try {
+      ws.send(JSON.stringify(messageRequest));
+    } catch (error) {
+      ws.removeEventListener('message', messageListener);
+      clearTimeout(timeoutId);
+      reject(error);
     }
-  };
-  
-  ws.addEventListener('message', messageListener);
-  
-  // Send the message
-  const messageRequest = {
-    content,
-    session_id: sessionId,
-    include_history: includeHistory,
-    serving_endpoint_name: servingEndpointName
-  };
-  
-  ws.send(JSON.stringify(messageRequest));
+  });
 };
 
 
