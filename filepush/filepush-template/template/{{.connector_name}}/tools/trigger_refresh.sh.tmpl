@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-databricks pipelines start-update $($(dirname $0)/get_pipeline_id.sh)
+databricks bundle run {{.connector_name}}_pipeline

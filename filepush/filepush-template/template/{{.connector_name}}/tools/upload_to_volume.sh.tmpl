@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-databricks fs cp $1 dbfs:{{template `volume_path` .}}
+databricks fs cp $1 {{template `volume_path_url` .}}

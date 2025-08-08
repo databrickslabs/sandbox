@@ -2,6 +2,10 @@
   /Volumes/{{.catalog_name}}/{{.schema_name}}/{{.connector_name}}_volume
 {{- end }}
 
+{{ define `volume_path_url` -}}
+  dbfs:{{template `volume_path` .}}
+{{- end }}
+
 {{ define `raw_table_name` -}}
   {{.connector_name}}_raw
 {{- end}}
