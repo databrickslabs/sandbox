@@ -334,9 +334,15 @@ async def websocket_chat(
             actual_token = token.strip()
             logger.info(f"WebSocket using X-Forwarded-Access-Token: '{token[:20]}...' (truncated)")
         else:
-            logger.warning(f"WebSocket: No X-Forwarded-Access-Token header found. Available headers: {list(headers_dict.keys())}")
-            await websocket.close(code=1008, reason="No authentication token provided")
-            return
+            # Fallback to LOCAL_API_TOKEN environment variable
+            env_token = os.environ.get("LOCAL_API_TOKEN")
+            if env_token and env_token.strip():
+                actual_token = env_token.strip()
+                logger.info(f"WebSocket: No X-Forwarded-Access-Token header found, using LOCAL_API_TOKEN: '{env_token[:20]}...' (truncated)")
+            else:
+                logger.warning(f"WebSocket: No authentication token found in headers or LOCAL_API_TOKEN. Available headers: {list(headers_dict.keys())}")
+                await websocket.close(code=1008, reason="No authentication token provided")
+                return
             
         headers = {"Authorization": f"Bearer {actual_token}"}
         
@@ -405,7 +411,6 @@ async def websocket_chat(
 
             async with streaming_semaphore:
                 async with httpx.AsyncClient(timeout=streaming_timeout) as streaming_client:
-                    
                     try:
                         logger.info("Making streaming request to Databricks")
                         async with streaming_client.stream('POST', 
@@ -464,14 +469,10 @@ async def websocket_chat(
                                                     sources=None,  # TODO: extract sources if available
                                                     metrics={'totalTime': time.time() - start_time}
                                                 )
-                                                logger.info(f"WebSocket saved assistant message with {len(accumulated_content)} characters")
                                             except Exception as e:
                                                 logger.error(f"Failed to save assistant message: {str(e)}")
                                         
                                         break
-                                elif raw_line.strip():
-                                    logger.info(f"WebSocket received non-data line: {raw_line[:100]}")
-                                            
                     except Exception as e:
                         logger.error(f"WebSocket streaming error: {str(e)}")
                         await websocket.send_json({

@@ -318,18 +318,6 @@ const ThinkingIndicator = styled.div`
   gap: 8px;
 `;
 
-const GeneratingIndicator = styled.div`
-  font-size: 15px;
-  color: #5F7281;
-  margin: 10px 0;
-  align-self: flex-start;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-`;
-
 const Spinner = styled.div`
   display: inline-block;
   width: 16px;
