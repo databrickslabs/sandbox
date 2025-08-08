@@ -11,4 +11,4 @@ resources:
             pipeline_id: ${resources.pipelines.{{.connector_name}}_pipeline.id}
       trigger:
         file_arrival:
-          url: {{template `volume_path_url` .}}
+          url: {{template `volume_path` .}}
