@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-databricks tables get {{template `raw_table_name` .}} --output json | jq '.properties.volume_path'
+databricks tables get {{.catalog_name}}.{{.schema_name}}.{{template `raw_table_name` .}} --output json | jq '.properties.volume_path'
