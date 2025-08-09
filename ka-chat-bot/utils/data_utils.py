@@ -2,19 +2,28 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import copy
 import os
+import logging
 from chat_database import ChatDatabase
 from utils.chat_history_cache import ChatHistoryCache
-from fastapi import Request, Header, Depends
+from fastapi import Request, Header, Depends, HTTPException
 from datetime import timedelta
 from databricks.sdk import WorkspaceClient
 from models import MessageResponse
 
+logger = logging.getLogger(__name__)
+
 
 def get_token(
     x_forwarded_access_token: str = Header(None, alias="X-Forwarded-Access-Token")
-) -> dict:
+) -> str:
     # Try to get the token from the header, else from the environment variable
-    return x_forwarded_access_token or os.environ.get("LOCAL_API_TOKEN")
+    if x_forwarded_access_token:
+        logger.info(f"get_token: Using X-Forwarded-Access-Token: '{x_forwarded_access_token[:20]}...' (truncated)")
+        return x_forwarded_access_token
+    else:
+        env_token = os.environ.get("LOCAL_API_TOKEN")
+        logger.info(f"get_token: No header token, using LOCAL_API_TOKEN: '{env_token[:20] if env_token else 'NOT_SET'}...' (truncated)")
+        return env_token
 
 async def check_endpoint_capabilities(
     model: str,
