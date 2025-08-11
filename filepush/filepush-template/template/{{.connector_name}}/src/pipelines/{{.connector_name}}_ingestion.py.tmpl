@@ -9,5 +9,5 @@ import dlt
 )
 def {{template `raw_table_name` .}}():
   with open(f"./{{.connector_name}}_readfiles_kernel.sql", "r") as f:
-    kernel_query = f.read()
+    kernel_query = kernel_query.replace("read_files(", "STREAM read_files(")
   return spark.sql(kernel_query)
