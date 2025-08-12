@@ -1,6 +1,13 @@
+-- Kernel template for read_files
 SELECT
   *
 FROM
   read_files(
-    '{{template `volume_path` .}}'
+    '%s'
+    ,
+    -- Do not change anything above
+    -- Add any additional options below
+    -- Example:
+    -- header => 'true',
+    -- escape => '"'
   )
