@@ -170,6 +170,9 @@ async def chat(
                             logger.info(f"Making streaming POST request to {endpoint_url}")
                             logger.debug(f"Request data: {json.dumps(request_data, indent=2)}")
                             
+                            # Send initial connection message to establish SSE stream
+                            yield f"data: {json.dumps({'type': 'connection', 'message': 'connected'})}\n\n"
+                            
                             # Make the streaming request directly without heartbeats
                             async with streaming_client.stream('POST', 
                                 endpoint_url,
