@@ -113,7 +113,7 @@ const ChatArea: React.FC = () => {
           <MessagesContainer data-testid="messages-container" id="messages-container">
             {messages.map((message, index) => (
               <ChatMessage    
-                key={index} 
+                key={message.message_id} 
                 message={message}
                 data-testid={`message-${index}`}
               />
