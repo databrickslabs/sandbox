@@ -1,5 +1,5 @@
 {{ define `volume_path` -}}
-  /Volumes/{{.catalog_name}}/{{.schema_name}}/{{.connector_name}}_volume/
+  /Volumes/{{.catalog_name}}/{{.schema_name}}/{{.schema_name}}_volume/
 {{- end }}
 
 {{ define `volume_data_path` -}}
@@ -18,6 +18,6 @@
   dbfs:{{template `volume_path` .}}
 {{- end }}
 
-{{ define `raw_table_name` -}}
+{{ define `raw_table_name_format` -}}
   {{.connector_name}}_raw
 {{- end}}

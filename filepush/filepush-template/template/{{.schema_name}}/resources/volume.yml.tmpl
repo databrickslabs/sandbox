@@ -1,0 +1,8 @@
+# The file staging volume for schema{{.schema_name}}
+
+resources:
+  volumes:
+    {{.schema_name}}_volume:
+      name: {{.schema_name}}_volume
+      catalog_name: {{.catalog_name}}
+      schema_name: {{.schema_name}}
