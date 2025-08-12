@@ -124,8 +124,6 @@ async def chat(
         async def generate():
             logger.info("Starting response generation")
             
-            # Now implement proper concurrent heartbeats during HTTP request
-            logger.info("Starting concurrent request with heartbeats...")
             streaming_timeout = httpx.Timeout(
                 connect=8.0,
                 read=120.0,
@@ -172,82 +170,31 @@ async def chat(
                             logger.info(f"Making streaming POST request to {endpoint_url}")
                             logger.debug(f"Request data: {json.dumps(request_data, indent=2)}")
                             
-                            # Create concurrent tasks for request and heartbeats
-                            request_start_time = time.time()
-                            heartbeat_interval = 10.0
-                            
-                            async def make_http_request():
-                                """Make the actual HTTP request"""
-                                logger.info("Making HTTP request in background task...")
-                                async with streaming_client.stream('POST', 
-                                    endpoint_url,
-                                    headers=headers,
-                                    json=request_data,
-                                    timeout=streaming_timeout
-                                ) as response:
-                                    logger.info(f"HTTP request completed with status: {response.status_code}")
-                                    return response
-                            
-                            async def send_periodic_heartbeats():
-                                """Send heartbeats every 10 seconds"""
-                                heartbeat_count = 0
-                                while True:
-                                    await asyncio.sleep(heartbeat_interval)
-                                    heartbeat_count += 1
-                                    elapsed = time.time() - request_start_time
-                                    logger.info(f"Sending periodic heartbeat #{heartbeat_count} after {elapsed:.1f}s")
-                                    return {
-                                        'type': 'heartbeat',
-                                        'message': f'waiting for response ({elapsed:.0f}s)', 
-                                        'count': heartbeat_count
-                                    }
-                            
-                            # Start both tasks concurrently
-                            http_task = asyncio.create_task(make_http_request())
-                            heartbeat_task = asyncio.create_task(send_periodic_heartbeats())
-                            
-                            # Send initial heartbeat
-                            yield f"data: {json.dumps({'type': 'heartbeat', 'message': 'starting request'})}\n\n"
-                            
-                            # Wait for either HTTP response or heartbeat
-                            while not http_task.done():
-                                done, pending = await asyncio.wait(
-                                    [http_task, heartbeat_task], 
-                                    return_when=asyncio.FIRST_COMPLETED,
-                                    timeout=1.0  # Check every second
-                                )
-                                
-                                if heartbeat_task in done:
-                                    # Heartbeat is ready - send it and restart heartbeat task
-                                    heartbeat_data = await heartbeat_task
-                                    yield f"data: {json.dumps(heartbeat_data)}\n\n"
-                                    heartbeat_task = asyncio.create_task(send_periodic_heartbeats())
-                            
-                            # Cancel heartbeat task since request is done
-                            heartbeat_task.cancel()
-                            
-                            # Get the HTTP response
-                            response = await http_task
-                            elapsed_total = time.time() - request_start_time
-                            logger.info(f"Got response object after {elapsed_total:.1f}s")
-                            logger.info(f"Received response with status code: {response.status_code}")
-                            if response.status_code == 200:
-                                logger.info("Starting to process streaming response")
-                                logger.info("Calling streaming_handler.handle_streaming_response")
-                                async for response_chunk in streaming_handler.handle_streaming_response(
-                                    response, request_data, headers, message.session_id, assistant_message_id,
-                                    user_id, user_info, None, start_time, first_token_time,
-                                    accumulated_content, None, ttft, request_handler, message_handler,
-                                    streaming_support_cache, True, False
-                                ):
-                                    logger.info(f"Main: Got response chunk from streaming handler")
-                                    yield response_chunk
-                            else:
-                                logger.error(f"Streaming request failed with status code: {response.status_code}")
-                                logger.error(f"Response headers: {dict(response.headers)}")
-                                response_text = await response.aread()
-                                logger.error(f"Response body: {response_text.decode('utf-8', errors='ignore')[:1000]}")
-                                raise Exception(f"Streaming not supported - HTTP {response.status_code}")
+                            # Make the streaming request directly without heartbeats
+                            async with streaming_client.stream('POST', 
+                                endpoint_url,
+                                headers=headers,
+                                json=request_data,
+                                timeout=streaming_timeout
+                            ) as response:
+                                logger.info(f"Received response with status code: {response.status_code}")
+                                if response.status_code == 200:
+                                    logger.info("Starting to process streaming response")
+                                    logger.info("Calling streaming_handler.handle_streaming_response")
+                                    async for response_chunk in streaming_handler.handle_streaming_response(
+                                        response, request_data, headers, message.session_id, assistant_message_id,
+                                        user_id, user_info, None, start_time, first_token_time,
+                                        accumulated_content, None, ttft, request_handler, message_handler,
+                                        streaming_support_cache, True, False
+                                    ):
+                                        logger.info(f"Main: Got response chunk from streaming handler")
+                                        yield response_chunk
+                                else:
+                                    logger.error(f"Streaming request failed with status code: {response.status_code}")
+                                    logger.error(f"Response headers: {dict(response.headers)}")
+                                    response_text = await response.aread()
+                                    logger.error(f"Response body: {response_text.decode('utf-8', errors='ignore')[:1000]}")
+                                    raise Exception(f"Streaming not supported - HTTP {response.status_code}")
                         except (httpx.ReadTimeout, httpx.HTTPError, Exception) as e:
                             logger.error(f"Streaming failed with error type: {type(e).__name__}, message: {str(e)}")
                             logger.error(f"Falling back to non-streaming mode")
