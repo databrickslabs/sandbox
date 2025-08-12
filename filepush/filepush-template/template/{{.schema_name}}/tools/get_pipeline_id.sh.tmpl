@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+databricks bundle summary --output json | jq -r .resources.pipelines.{{.schema_name}}_pipeline.id

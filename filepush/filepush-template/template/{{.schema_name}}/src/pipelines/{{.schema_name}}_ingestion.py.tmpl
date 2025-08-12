@@ -2,19 +2,6 @@ import dlt
 from dbruntime.dbutils import FileInfo
 import re
 
-@dlt.table(
-  name="{{template `raw_table_name` .}}",
-  comment="A streaming table created by filepush bundle {{.connector_name}}. This holds the raw data from the uploaded files.",
-  table_properties={
-    "volume_path": "{{template `volume_path` .}}"
-  }
-)
-def {{template `raw_table_name` .}}():
-  with open(f"./{{.connector_name}}_readfiles_kernel.sql", "r") as f:
-    kernel_query = f.read()
-    kernel_query = kernel_query.replace("read_files(", "STREAM read_files(")
-  return spark.sql(kernel_query)
-
 # Dynamic Tables
 def sanitize_table_name(name: str) -> str:
   """

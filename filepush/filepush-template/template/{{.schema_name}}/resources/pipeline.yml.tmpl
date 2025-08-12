@@ -1,0 +1,14 @@
+# The table refresh pipeline for schema {{.schema_name}}
+
+resources:
+  pipelines:
+    {{.schema_name}}_pipeline:
+      name: {{.schema_name}}_pipeline
+      catalog: {{.catalog_name}}
+      schema: {{.schema_name}}
+      serverless: true
+      libraries:
+        - file:
+            path: ../src/pipelines/{{.schema_name}}_ingestion.py
+      configuration:
+        volume_path: /Volumes/{{.catalog_name}}/${resources.schemas.{{.schema_name}}.name}/{{.schema_name}}_volume/

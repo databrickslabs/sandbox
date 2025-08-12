@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+databricks tables get {{.catalog_name}}.{{.schema_name}}.$1 --output json | jq '.properties.volume_path'

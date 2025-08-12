@@ -1,11 +1,5 @@
 {
   "properties": {
-    "connector_name": {
-      "type": "string",
-      "default": "filepushconnector",
-      "description": "Name of the filepush connector.",
-      "order": 1
-    },
     "catalog_name": {
       "type": "string",
       "default": "{{default_catalog}}",
@@ -19,5 +13,5 @@
       "order": 3
     }
   },
-  "success_message": "\nYour bundle '{{.connector_name}}' has been created."
+  "success_message": "\nYour file push bundle in {{.catalog_name}}.{{.schema_name}} has been created."
 }
