@@ -13,5 +13,5 @@
       "order": 3
     }
   },
-  "success_message": "\nYour file push bundle in {{.catalog_name}}.{{.schema_name}} has been created."
+  "success_message": "\nYour file push bundle under catalog and schema {{.catalog_name}}.{{.schema_name}} has been created."
 }
