@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-databricks fs cp $2 {{template `volume_path_url` .}}/$1
+. $(dirname $0)/env.sh
+databricks fs mkdir dbfs:${FILEPUSH_VOLUME_PATH}$1/
+databricks fs cp $2 dbfs:${FILEPUSH_VOLUME_PATH}$1/
