@@ -66,7 +66,7 @@ def make_dlt_table(subdir_name: str, subdir_path: str):
       name=table_name,
       comment=f"Auto-created from subfolder: {subdir_path} (streaming via Auto Loader)",
       table_properties={
-        "volume_path": f"{subdir_path}"
+        "filepush.volume_path": f"{subdir_path}"
       }
     )
     def _auto_loader_table():
@@ -77,6 +77,6 @@ def make_dlt_table(subdir_name: str, subdir_path: str):
   else:
     print(f"Waiting for files to land in {subdir_path}")
 
-volume_path_root = spark.conf.get("volume_path")
+volume_path_root = spark.conf.get("filepush.volume_path")
 for subdir_name, subdir_path in list_immediate_subdirs(volume_path_root):
   make_dlt_table(subdir_name, subdir_path)
