@@ -5,3 +5,5 @@ resources:
     {{.schema_name}}:
       name: {{.schema_name}}
       catalog_name: {{.catalog_name}}
+      properties:
+        filepush.volume_path: /Volumes/{{.catalog_name}}/{{.schema_name}}/{{.schema_name}}_volume/

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 . $(dirname $0)/env.sh
-databricks bundle run {{.schema_name}}_job
+databricks bundle run $FILEPUSH_JOB_NAME
