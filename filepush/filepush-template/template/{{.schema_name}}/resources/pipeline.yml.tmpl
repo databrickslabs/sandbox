@@ -9,6 +9,6 @@ resources:
       serverless: true
       libraries:
         - file:
-            path: ../src/pipelines/{{.schema_name}}_ingestion.py
+            path: ../src/pipelines/ingestion.py
       configuration:
-        volume_path: /Volumes/{{.catalog_name}}/${resources.schemas.{{.schema_name}}.name}/{{.schema_name}}_volume/
+        filepush.volume_path: /Volumes/{{.catalog_name}}/${resources.schemas.{{.schema_name}}.name}/{{.schema_name}}_volume/
