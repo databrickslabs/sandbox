@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
-. $(dirname $0)/env.sh
+usage() {
+    echo "Usage: $(basename $0) [--target=dev|prod]"
+}
+export -f usage
+. $(dirname $0)/env.sh $@
 databricks bundle run $FILEPUSH_JOB_NAME
