@@ -8,5 +8,5 @@ if [ -z "$1" ] || [ -z "$2" ]; then
   usage
   exit 1
 fi
-databricks fs mkdir dbfs:${FILEPUSH_VOLUME_PATH}$1/
-databricks fs cp $2 dbfs:${FILEPUSH_VOLUME_PATH}$1/
+databricks fs mkdir dbfs:${FILEPUSH_VOLUME_PATH}$1/ -t $BUNDLE_TARGET
+databricks fs cp $2 dbfs:${FILEPUSH_VOLUME_PATH}$1/ -t $BUNDLE_TARGET
