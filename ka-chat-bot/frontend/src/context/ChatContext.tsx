@@ -9,7 +9,7 @@ interface ChatContextType {
   messages: Message[];
   loading: boolean;
   sendMessage: (content: string, includeHistory: boolean) => Promise<void>;
-  selectChat: (chatId: string) => void;
+  selectChat: (chatId: string) => Promise<void>;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   startNewSession: () => void;
@@ -86,62 +86,43 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       isThinking: true
     };
 
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    // Clear any leftover thinking states from previous messages, then add new messages
+    setMessages(prev => [
+      ...prev.map(msg => msg.isThinking ? { ...msg, isThinking: false } : msg),
+      userMessage, 
+      thinkingMessage
+    ]);
     setLoading(true);
     setError(null);
 
     try {
-      let accumulatedContent = '';
-      let messageSources: any[] | null = null;
-      let messageMetrics: { timeToFirstToken?: number; totalTime?: number } | null = null;
-      let messageId = '';
-      
       if (!currentSessionId) {
         throw new Error('No active session ID');
       }
       
       await apiSendMessage(content, currentSessionId, includeHistory, currentEndpoint, (chunk) => {
-        if (chunk.content) {
-          accumulatedContent = chunk.content;
-        }
-        if (chunk.sources) {
-          messageSources = chunk.sources;
-        }
-        if (chunk.metrics) {
-          messageMetrics = chunk.metrics;
-        }
-        if (chunk.message_id) {
-          messageId = chunk.message_id;
-        }
-    
-        setMessages(prev => prev.map(msg => 
-          msg.message_id === thinkingMessage.message_id 
-            ? { 
+        
+        // Only set isThinking to false when we receive the completion message
+        const isComplete = chunk.isComplete || false;
+        
+        setMessages(prev => {
+          const updated = prev.map((msg, index) => {
+            // Only update the last message if it's the thinking message
+            if (index === prev.length - 1 && msg.message_id === thinkingMessage.message_id && msg.role === 'assistant') {
+              return { 
                 ...msg, 
                 content: chunk.content || '',
                 sources: chunk.sources,
                 metrics: chunk.metrics,
-                isThinking: false,
+                isThinking: !isComplete, // Keep thinking until completion
                 model: currentEndpoint
-              }
-            : msg
-        ));
+              };
+            }
+            return msg;
+          });
+          return updated;
+        });
       });
-      
-      const botMessage: Message = {
-        message_id: messageId,
-        content: accumulatedContent,
-        role: 'assistant',
-        timestamp: new Date(),
-        isThinking: false,
-        model: currentEndpoint,
-        sources: messageSources,
-        metrics: messageMetrics
-      };
-
-      setMessages(prev => prev.filter(msg => 
-        msg.message_id !== thinkingMessage.message_id 
-      ).concat(botMessage));
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -165,32 +146,56 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           : msg
       ));
     } finally {
-      try {
-        const historyResponse = await fetch(`${API_URL}/chats`);
-        const historyData = await historyResponse.json();
-        if (historyData.sessions) {
-          setChats(historyData.sessions);
+      // Update sidebar with latest chat sessions after a delay
+      setTimeout(async () => {
+        try {
+          const historyResponse = await fetch(`${API_URL}/chats`);
+          const historyData = await historyResponse.json();
+          if (historyData.sessions) {
+            setChats(historyData.sessions);
+          }
+        } catch (error) {
+          console.error('Error fetching chat history for sidebar:', error);
         }
-      } catch (error) {
-        console.error('Error fetching chat history:', error);
-        setError('Failed to update chat history.');
-      }
+      }, 200); // 200ms delay to let database write complete
+      
       setLoading(false);
     }
   };
 
-  const selectChat = (sessionId: string) => {
+  const selectChat = async (sessionId: string) => {
     const selected = chats.find(chat => chat.sessionId === sessionId);
     
     if (selected) {
       setCurrentChat(selected);
       setCurrentSessionId(sessionId);
       
-      const sessionMessages = chats
-        .filter(chat => chat.sessionId === selected.sessionId)
-        .flatMap(chat => chat.messages);
+      // If selecting the current session, keep current messages as they're more up-to-date
+      if (sessionId === currentSessionId) {
+        return;
+      }
       
-      setMessages(sessionMessages);
+      // For other sessions, fetch fresh chat history to ensure we have latest messages
+      try {
+        const historyResponse = await fetch(`${API_URL}/chats`);
+        const historyData = await historyResponse.json();
+        if (historyData.sessions) {
+          setChats(historyData.sessions);
+          
+          // Find the updated session data
+          const updatedSelected = historyData.sessions.find((chat: any) => chat.sessionId === sessionId);
+          if (updatedSelected) {
+            setMessages(updatedSelected.messages);
+          } else {
+            setMessages(selected.messages); // fallback to cached data
+          }
+        } else {
+          setMessages(selected.messages); // fallback to cached data
+        }
+      } catch (error) {
+        console.error('Error fetching fresh chat history:', error);
+        setMessages(selected.messages); // fallback to cached data
+      }
     }
   };
 
