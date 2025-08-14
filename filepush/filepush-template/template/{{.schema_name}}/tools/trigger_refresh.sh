@@ -4,4 +4,4 @@ usage() {
 }
 export -f usage
 . $(dirname $0)/env.sh $@
-databricks bundle run $FILEPUSH_JOB_NAME
+databricks bundle run $FILEPUSH_JOB_NAME -t $BUNDLE_TARGET

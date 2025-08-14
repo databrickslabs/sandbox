@@ -4,4 +4,4 @@ usage() {
 }
 export -f usage
 . $(dirname $0)/env.sh $@
-databricks schemas get ${FILEPUSH_CATALOG_NAME}.${FILEPUSH_SCHEMA_NAME} --output json | jq '.properties["filepush.volume_path"]'
+databricks schemas get ${FILEPUSH_CATALOG_NAME}.${FILEPUSH_SCHEMA_NAME} -t $BUNDLE_TARGET --output json | jq '.properties["filepush.volume_path"]'
