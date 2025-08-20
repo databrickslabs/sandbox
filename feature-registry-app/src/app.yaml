@@ -1,0 +1,11 @@
+command: [
+  "streamlit", 
+  "run",
+  "feature_registry.py"
+]
+
+env:
+  - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+    value: "false"
+  - name: UC_CATALOGS_ALLOWLIST # Set this to the path of the yaml file that contains the allow-listed UC catalogs. The Feature Registry App will restrict the search of features only to this list of catalogs.
+    value: "uc_catalogs_allowlist.yaml"
