@@ -97,7 +97,7 @@ try:
             )
         with schema_ui_col:
             # By default, search through all schemas in the catalog.
-            # If a schema is selected, teh app will rerun and search only in that schema.
+            # If a schema is selected, the app will rerun and search only in that schema.
             schema = st.selectbox(
                 label="Schema",
                 options=uc_data.get_schemas(catalog),
