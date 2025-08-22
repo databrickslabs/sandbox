@@ -107,7 +107,6 @@ class TestCachedUcData(unittest.TestCase):
 
         # Assert: CachedUcData.get_tables returned the list of Table instances
         self.assertEqual(len(result), 2)
-        print(result, [uc_table_1, uc_table_2])
         self.assertEqual(result[0].uc_table, uc_table_1)
         self.assertEqual(result[1].uc_table, uc_table_2)
 

@@ -26,9 +26,6 @@ class TestTable(unittest.TestCase):
         
         # Configure the mock TableInfo class to recognize our mock as an instance
         self.mock_table_info_class.side_effect = lambda **kwargs: self.mock_uc_table
-        # The following line was added by llm agent but does not work with MagicMocks
-        # ToDo: Identify the right fix
-        # self.mock_table_info_class.__instancecheck__.return_value = True
         
         # Create table
         self.table = Table(uc_table=self.mock_uc_table)
