@@ -10,7 +10,7 @@ lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
 	@staticcheck ./...
 
-test:
+test: vendor
 	@echo "✓ Running tests ..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
