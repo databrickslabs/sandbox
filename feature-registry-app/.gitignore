@@ -1,0 +1,11 @@
+# Databricks
+.databricks/
+.databricks.sync-snapshots
+
+# Python
+__pycache__/
+.pytest_cache/
+.coverage
+
+# Environment & Config
+deploy_config.sh
