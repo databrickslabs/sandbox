@@ -1,0 +1,8 @@
+version: 1
+name: "feature-registry-app"
+description: "A web application that allows users to explore existing features in Unity Catalog."
+
+user_api_scopes:
+  - "catalog.catalogs:read"
+  - "catalog.schemas:read"
+  - "catalog.tables:read"
