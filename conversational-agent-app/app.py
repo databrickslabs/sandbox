@@ -413,7 +413,6 @@ def get_model_response(trigger_data, current_messages, chat_history):
     
     try:
         headers = request.headers
-        # user_token = os.environ.get("DATABRICKS_TOKEN")
         user_token = headers.get('X-Forwarded-Access-Token')
         response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID)
         
