@@ -3,11 +3,11 @@ name: "conversational-agent-app"
 description: "Interact with your structured data using natural language to generate deep insights and analytics—no SQL expertise required."
 
 resource_specs:
-  - name: "serving_endpoint"
+  - name: "serving-endpoint"
     description: "Serving endpoint for the data chat app"
     serving_endpoint_spec:
       permission: "CAN_QUERY"
-  - name: "genie_space"
+  - name: "genie-space"
     description: "Genie space for the data chat app"
     genie_space_spec:
       permission: "CAN_RUN"
