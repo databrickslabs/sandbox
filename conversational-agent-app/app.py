@@ -756,7 +756,6 @@ def initialize_welcome_info(_):
     try:
         # Try to fetch space information to get title and description
         headers = request.headers
-        # token = os.environ.get("DATABRICKS_TOKEN")
         token = headers.get('X-Forwarded-Access-Token')
         host = os.environ.get("DATABRICKS_HOST")
         client = GenieClient(host=host, space_id="", token=token)
