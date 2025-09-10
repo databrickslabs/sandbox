@@ -245,7 +245,6 @@ def call_llm_for_insights(df, prompt=None):
     # Call OpenAI (replace with your own LLM provider as needed)
     try:
         headers = request.headers
-        # user_token = os.environ.get("DATABRICKS_TOKEN")
         user_token = headers.get('X-Forwarded-Access-Token')
         config = Config(
             host=f"https://{os.environ.get('DATABRICKS_HOST')}",
