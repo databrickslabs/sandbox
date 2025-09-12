@@ -1,0 +1,25 @@
+# The main job for schema dab
+# This job will trigger in the schema pipeline
+
+resources:
+  jobs:
+    filetrigger_job:
+      name: ${var.schema_name}_filetrigger_job
+      tasks:
+        - task_key: pipeline_refresh
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.refresh_pipeline.id}
+    configuration_job:
+      name: ${var.schema_name}_configuration_job
+      tasks:
+        - task_key: initialization
+          spark_python_task:
+            python_file: ../src/initialization.py
+          environment_key: serverless
+        - task_key: trigger_refresh
+          run_job_task:
+            job_id: ${resources.jobs.filetrigger_job.id}
+      environments:
+        - environment_key: serverless
+          spec:
+            client: "3"

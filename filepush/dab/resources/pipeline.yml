@@ -1,0 +1,12 @@
+# The table refresh pipeline for schema dab
+
+resources:
+  pipelines:
+    refresh_pipeline:
+      name: ${var.schema_name}_refresh_pipeline
+      catalog: ${var.catalog_name}
+      schema: ${var.schema_name}
+      serverless: true
+      libraries:
+        - file:
+            path: ../src/pipelines/ingestion.py
