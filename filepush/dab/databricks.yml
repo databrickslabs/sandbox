@@ -1,0 +1,36 @@
+# databricks.yml
+# This is the configuration for the file push DAB dab.
+
+bundle:
+  name: dab
+
+include:
+  - resources/*.yml
+
+# experimental:
+#   skip_name_prefix_for_schema: true
+
+targets:
+  # The deployment targets. See https://docs.databricks.com/en/dev-tools/bundles/deployment-modes.html
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://e2-dogfood.staging.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://e2-dogfood.staging.cloud.databricks.com
+      # root_path: /Workspace/Users/chi.yang@databricks.com/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: chi.yang@databricks.com
+        level: CAN_MANAGE
+
+variables:
+  catalog_name:
+    description: The existing catalog where the schema will be created.
+    default: main
+  schema_name:
+    description: The name of the schema where the tables and ingestion pipeline will be created.
+    default: filepushschema
