@@ -4,13 +4,16 @@
 resources:
   jobs:
     filetrigger_job:
-      name: ${var.schema_name}_filetrigger_job
+      name: ${var.resource_name_prefix}filetrigger_job
       tasks:
         - task_key: pipeline_refresh
           pipeline_task:
             pipeline_id: ${resources.pipelines.refresh_pipeline.id}
+      trigger:
+        file_arrival:
+          url: ${resources.volumes.filepush_volume.volume_path}/data/
     configuration_job:
-      name: ${var.schema_name}_configuration_job
+      name: ${var.resource_name_prefix}configuration_job
       tasks:
         - task_key: initialization
           spark_python_task:

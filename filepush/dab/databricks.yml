@@ -34,3 +34,7 @@ variables:
   schema_name:
     description: The name of the schema where the tables and ingestion pipeline will be created.
     default: filepushschema
+  resource_name_prefix:
+    description: The prefix for the resource names.
+    default: ${var.catalog_name}_${var.schema_name}_
+    
