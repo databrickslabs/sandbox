@@ -3,6 +3,6 @@
 resources:
   volumes:
     filepush_volume:
-      name: ${var.schema_name}_filepush_volume
+      name: ${var.resource_name_prefix}filepush_volume
       catalog_name: ${var.catalog_name}
       schema_name: ${var.schema_name}
