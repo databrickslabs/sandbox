@@ -23,6 +23,12 @@ resources:
               - "{{job.parameters.catalog_name}}"
               - "--schema_name"
               - "{{job.parameters.schema_name}}"
+              - "--volume_path_root"
+              - "{{job.parameters.volume_path_root}}"
+              - "--volume_path_data"
+              - "{{job.parameters.volume_path_data}}"
+              - "--logging_level"
+              - "${bundle.target}"
           environment_key: serverless
         - task_key: trigger_refresh
           run_job_task:
@@ -38,3 +44,7 @@ resources:
           default: ${var.catalog_name}
         - name: schema_name
           default: ${resources.schemas.main_schema.name}
+        - name: volume_path_root
+          default: ${resources.volumes.filepush_volume.volume_path}
+        - name: volume_path_data
+          default: ${resources.volumes.filepush_volume.volume_path}/data
