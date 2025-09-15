@@ -5,11 +5,10 @@ resources:
     refresh_pipeline:
       name: ${var.resource_name_prefix}refresh_pipeline
       catalog: ${var.catalog_name}
-      schema: ${var.schema_name}
+      schema: ${resources.schemas.main_schema.name}
       serverless: true
       libraries:
         - file:
             path: ../src/pipelines/ingestion.py
       configuration:
         filepush.volume_path_root: ${resources.volumes.filepush_volume.volume_path}
-        filepush.volume_path_data: ${resources.volumes.filepush_volume.volume_path}/data
