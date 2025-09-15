@@ -7,14 +7,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--catalog_name", type=str, required=True)
 parser.add_argument("--schema_name", type=str, required=True)
 parser.add_argument("--volume_path_root", type=str, required=True)
-parser.add_argument("--volume_path_data", type=str, required=True)
 parser.add_argument("--logging_level", type=str, required=False, default="dev")
 args = parser.parse_args()
 
 catalog_name = args.catalog_name
 schema_name = args.schema_name
 volume_path_root = args.volume_path_root
-volume_path_data = args.volume_path_data
+volume_path_data = args.volume_path_root + "/data"
 logging_level = logging.DEBUG if args.logging_level == "dev" else logging.INFO
 
 # Logging
@@ -39,6 +38,6 @@ logger.info(f"Schema {catalog_name}.{schema_name} configured")
 
 # Initialize volume folder structure
 logger.info(f"Initializing volume folder structure {volume_path_root}")
-logger.debug(f"Creating volume directory {volume_path_data}")
+logger.debug(f"Creating data directory {volume_path_data}")
 ws.files.create_directory(volume_path_data)
 logger.info(f"Volume {volume_path_root} configured")
