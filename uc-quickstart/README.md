@@ -14,6 +14,23 @@ tags:
 
 Welcome to the **databricks-uc-quickstart** repository! This project helps you deploy Unity Catalog (UC) on Databricks swiftly and efficiently, using Terraform scripts pre-configured with recommended settings. Eliminate tedious setup and configuration overhead to quickly launch your data governance initiatives.
 
+## 📋 Best Practices Enforced
+
+This quickstart enforces the following Unity Catalog best practices:
+
+- **Catalog Design Defaults**: Pre-configured catalog structures optimized for data governance
+- **Workspace Defaults**: Standard workspace configurations for consistent deployments
+- **Role Permission Defaults**: Pre-defined role-based access controls following least privilege principles
+- **Storage Setup Defaults**: Optimized storage configurations for Unity Catalog
+- **Data Sharing Defaults**: Secure data sharing configurations ready for collaboration
+- **Research UC Default and Compatibility**: Ensures compatibility with existing Databricks features
+- **Volume Defaults**: Standard volume configurations for data storage
+- **Enable System Tables and Grant Role Access**: Automatic system table enablement with appropriate role permissions
+
+Additionally, this quickstart includes **Industry Templates for ABAC** (Attribute-Based Access Control) implemented through Python and SQL notebooks, allowing users to leverage industry-ready functions and policies for fine-grained access control.
+
+The Terraform configurations can be customized by modifying the variables in your deployment, while ABAC policies are managed through the provided notebooks.
+
 ## 🌟 Key Benefits
 
 - **Automated Terraform Deployment**: Effortlessly set up and manage Unity Catalog.
@@ -32,6 +49,11 @@ Ensure you have:
 - A Databricks Account
 - [Terraform Installed](https://developer.hashicorp.com/terraform/downloads)
 - Basic knowledge of Databricks and Terraform
+
+**Workspace Requirements:**
+- An existing Databricks workspace is required
+- Workspace ID must be provided in the Terraform configuration (see template.tfvars.example)
+- The quickstart will configure Unity Catalog resources and permissions within your existing workspace
 
 ### 🛠 Installation Steps
 
@@ -71,18 +93,7 @@ Once deployment is complete, verify the setup directly within your Databricks wo
 
 Explore detailed customization guides and additional usage scenarios on our [Wiki](https://github.com/yourusername/databricks-uc-quickstart/wiki).
 
-## 🤝 Contributing
-
-We welcome your contributions! Here's how you can help enhance this project:
-
-- Fork the repository and branch from `main`.
-- Adhere to the project’s coding standards.
-- Clearly comment and document any code changes.
-- Submit a pull request explaining your improvements.
-
-For detailed guidelines, please read our [Contribution Guidelines](CONTRIBUTING.md).
-
 ## 📄 License
 
-This project is licensed under the MIT License—see [LICENSE](LICENSE) for full details.
+This project is licensed under the Databricks License—see [LICENSE](../LICENSE) for full details.
 

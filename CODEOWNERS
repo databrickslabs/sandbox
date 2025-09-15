@@ -19,5 +19,5 @@ runtime-packages           @nfx @alexott
 sql_migration_copilot      @robertwhiffin
 tacklebox                  @Jonathan-Choi
 uc-catalog-cloning         @esiol-db @vasco-lopes
-uc-quickstart              @louiscsq
+uc-quickstart              @abhidatabricks @louiscsq
 .github                    @nfx @alexott @gueniai
