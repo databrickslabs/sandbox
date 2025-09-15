@@ -11,4 +11,5 @@ resources:
         - file:
             path: ../src/pipelines/ingestion.py
       configuration:
-        filepush.volume_path: ${resources.volumes.filepush_volume.volume_path}
+        filepush.volume_path_root: ${resources.volumes.filepush_volume.volume_path}
+        filepush.volume_path_data: ${resources.volumes.filepush_volume.volume_path}/data
