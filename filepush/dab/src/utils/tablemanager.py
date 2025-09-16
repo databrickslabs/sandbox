@@ -1,4 +1,9 @@
+
 from pyspark.sql.streaming import DataStreamReader
+
+def get_table_configs() -> dict:
+  config_path = json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "configs", "config.json")
+  return load_json(config_path)
 
 def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStreamReader:
   fmt = table_config.get("format")
