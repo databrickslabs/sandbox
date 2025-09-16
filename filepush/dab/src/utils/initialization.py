@@ -41,6 +41,11 @@ logger.info(f"Schema {catalog_name}.{schema_name} configured")
 logger.info(f"Initializing volume folder structure {volume_path_root}")
 logger.debug(f"Creating data directory {volume_path_data}")
 ws.files.create_directory(volume_path_data)
+with open("../configs/tables.json", "r") as f:
+    for table in json.load(f):
+        table_volume_path_data = {volume_path_data}/{table['name']}
+        logger.debug(f"Creating table directory {table_volume_path_data}")
+        ws.files.create_directory(table_volume_path_data)
 logger.info(f"Volume {volume_path_root} configured")
 
 # Dump configs to environment json
