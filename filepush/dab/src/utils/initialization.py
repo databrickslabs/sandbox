@@ -44,7 +44,7 @@ ws.files.create_directory(volume_path_data)
 logger.info(f"Volume {volume_path_root} configured")
 
 # Dump configs to environment json
-with open("./configs/environment.json", "w") as f:
+with open("../configs/environment.json", "w") as f:
     json.dump({
         "catalog_name": catalog_name,
         "schema_name": schema_name,
