@@ -1,0 +1,11 @@
+[
+  {
+    "name": "dummy",
+    "format": "csv",
+    "format_options": {
+      "header": "true",
+      "escape": "\""
+    },
+    "schema_hints": "id int, name string"
+  }
+]

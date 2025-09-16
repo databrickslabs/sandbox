@@ -17,7 +17,7 @@ resources:
       tasks:
         - task_key: initialization
           spark_python_task:
-            python_file: ../src/initialization.py
+            python_file: ../src/utils/initialization.py
             parameters:
               - "--catalog_name"
               - "{{job.parameters.catalog_name}}"
