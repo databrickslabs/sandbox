@@ -1,6 +1,7 @@
-import argparse
-import logging
 from databricks.sdk import WorkspaceClient
+import argparse
+import json
+import logging
 
 # Parse arguments
 parser = argparse.ArgumentParser()
@@ -41,3 +42,12 @@ logger.info(f"Initializing volume folder structure {volume_path_root}")
 logger.debug(f"Creating data directory {volume_path_data}")
 ws.files.create_directory(volume_path_data)
 logger.info(f"Volume {volume_path_root} configured")
+
+# Dump configs to environment json
+with open("./configs/environment.json", "w") as f:
+    json.dump({
+        "catalog_name": catalog_name,
+        "schema_name": schema_name,
+        "volume_path_root": volume_path_root,
+        "volume_path_data": volume_path_data
+    }, f)
