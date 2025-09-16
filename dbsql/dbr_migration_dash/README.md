@@ -1,39 +1,41 @@
-# Databricks Runtime Deprecation Impact Dashboard
+# DBR End-of-Service Monitor
 
-This dashboard provides visibility into **Databricks Runtime (DBR)** usage across both **Jobs** and **All-Purpose clusters**, helping organizations understand and mitigate risks associated with **runtime deprecations** or **end-of-support timelines**.
+This repository contains two main components:
 
-> **Note:** This dashboard is **not officially supported by Databricks** and is provided as a **community contribution**. Estimates may not reflect actual billing and require [system tables](https://docs.databricks.com/administration-guide/system-tables/index.html) and a **Unity Catalog-enabled workspace**.
+## 1. `dbr-eos-monitor-dabs/` — Databricks Asset Bundle (DABs)
+The **`dbr-eos-monitor-dabs/`** folder contains a [Databricks Asset Bundle](https://docs.databricks.com/en/dev-tools/bundles/index.html) that automates:
 
----
+- **Refreshing the DBR lookup table** — Updates data about cluster DBR versions and their end-of-service dates.
+- **Refreshing the Lakeview dashboard** — Ensures the “DBR Monitor Dashboard” always displays the latest DBR cluster status.
 
-## What It Does
+### Key components
+- **Jobs:** `DBR_Monitor_Refresh`  scheduled to run 6am daily.
+  - **Task 1:** Runs the `DBR_Lookup_Table.ipynb` notebook to update DBR metadata.  
+  - **Task 2:** Refreshes the `DBR Monitor Dashboard` bound to a Serverless SQL Warehouse.
+- **Serverless SQL Warehouse:** `DBR Monitor Serverless` — Created automatically for dashboard queries.
+- **Dashboard:** `DBR Monitor Dashboard` — Shows clusters and days until DBR end-of-service.
 
-This dashboard helps answer:
-
-- Which DBR versions are in use across jobs and clusters?
-- How much spend is associated with unsupported or deprecated runtimes?
-- Which users and jobs are impacted?
-- What’s the annualized cost exposure to legacy runtimes?
-
-It leverages the following system tables:
-- `system.compute.clusters`
-- `system.billing.usage`
-- `system.billing.list_prices`
-
----
-
-## Installation Instructions
-
-To use this dashboard:
-
-1. Navigate to your **Databricks Workspace**.
-2. Go to the **Dashboards** section.
-3. Click on **Create Dashboard**, then use the dropdown arrow to select **Import dashboard from file**.
-4. Upload the included JSON file:
-   - `Databricks Runtime Deprecation Impact Dashboard.lvdash.json`
+### How to deploy
+1. Clone this repo into your Databricks workspace **Git Folder**.
+2. In your Databricks workspace, go to **Create → Git Folder** and paste this Git URL (https://github.com/Bunch0fAtoms/dbr_eos.git).
+3. Click **"Open in asset bundle editor"**.
+4. Click in the top right, **"deploy bundle"**.
+5. After deployment, open the created Dashboard (DBR Monitor Dashboard) and the Job (DBR Monitor Refresh).
 
 ---
 
-## Community Support
+## 2. `alerts/` — DBR EOS Alerts (not DABs-managed)
+The **`alerts/`** folder contains definitions and scripts for **Alerts v2** that **notify recipients when job or interactive clusters are running a DBR that is past end-of-service**.
 
-This tool is community-supported and intended to help customers proactively manage the Databricks Runtime (DBR) lifecycle. Contributions, improvements, and issues are welcome via pull requests or GitHub Issues.
+### Update notifications and custom template
+- **Please update** the alert notifications fields to include all who should be notified of clusters running EOS DBR
+- **Please update** the custom template href for the dashboard to reflect your `DBR Monitor Dashboard` URL
+
+### Why not in DABs?
+Databricks Asset Bundles do **not** currently support managing Alerts v2 directly.  
+Instead, the `alerts/` folder:
+- Stores the alert configuration in JSON.
+- Pulls the alerts to your workspace via GIT.
+- The alert runs on a Serverless SQL Warehouse, scheduled to run 6:20am daily.
+- It queries for clusters where: days_until_eos <= threshold
+- Once you update the notifications then they'll be alerted when triggered
