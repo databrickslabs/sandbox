@@ -32,15 +32,7 @@ def has_data_file(table_name: str) -> bool:
 def is_table_created(table_name: str) -> bool:
   # Initialize workspace client
   ws = WorkspaceClient()
-  return ws.tables.exists(full_name=f"{envmanager.get_config()["catalog_name"]}.{envmanager.get_config()["schema_name"]}.{table_name}").table_exists
-
-def get_placeholder_stream(reader: DataStreamReader) -> DataStreamReader:
-  # Streaming source that produces empty micro-batches (but is STILL streaming)
-  return (
-    reader.format("rate").option("rowsPerSecond", 1).load()
-      .selectExpr("CAST(NULL AS STRING) AS _rescued_data")
-      .where("1=0")  # no rows, just preserves streaming lineage
-  )
+  return ws.tables.exists(full_name=f"{envmanager.get_config()['catalog_name']}.{envmanager.get_config()['schema_name']}.{table_name}").table_exists
 
 def get_configs() -> list:
   json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "configs", "tables.json")
