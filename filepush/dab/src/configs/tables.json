@@ -1,6 +1,18 @@
 [
   {
-    "name": "dummy",
+    "name": "dummy1",
+    "format": "csv"
+  },
+  {
+    "name": "dummy2",
+    "format": "csv",
+    "format_options": {
+      "header": "true",
+      "escape": "\""
+    }
+  },
+  {
+    "name": "dummy3",
     "format": "csv",
     "format_options": {
       "header": "true",

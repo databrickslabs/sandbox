@@ -13,7 +13,10 @@ for table_config in table_configs:
     comment = "File push created table",
     table_properties = {"filepush.table_volume_path_data": tablemanager.get_table_volume_path(table_name)}
   )
-  @dlt.append_flow(target = table_name)
+  @dlt.append_flow(
+    target = table_name,
+    name = table_name
+  )
   def append_to_table():
     reader = spark.readStream.format("cloudFiles")
     reader = tablemanager.apply_table_config(reader, table_config)
