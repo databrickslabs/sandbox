@@ -19,15 +19,15 @@
 # COMMAND ----------
 
 table_config = r'''
-{
-  "name": "all_employees",
-  "format": "csv",
-  "format_options": {
-    "header": "true",
-    "escape": "\""
-  },
-  "schema_hints": "id int, name string"
-}
+  {
+    "name": "dummy",
+    "format": "csv",
+    "format_options": {
+      "header": "true",
+      "escape": "\""
+    },
+    "schema_hints": "id int, name string"
+  }
 '''
 
 # COMMAND ----------
@@ -50,7 +50,7 @@ table_configs = tablemanager.get_configs()
 matches = [table_config for table_config in table_configs if table_config.get("name") == table_name]
 assert len(matches) == 1, f"Expect exactly 1 config for table `{table_name}`. Found {len(matches)}. Please fix the config file and run configuration_job"
 table_volume_path_data = tablemanager.get_table_volume_path(table_name)
-assert tablemanager.has_data_file(table_name), f"No data file found in {table_volume_path_data}. Please upload at least 1 file."
+assert tablemanager.has_data_file(table_name), f"No data file found in {table_volume_path_data}. Please upload at least 1 file to {table_volume_path_data}"
 
 print(f"Table Volume Path: {table_volume_path_data}")
 
