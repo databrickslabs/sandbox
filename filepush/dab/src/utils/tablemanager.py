@@ -29,6 +29,19 @@ def has_data_file(table_name: str) -> bool:
     return False
   return True
 
+def is_table_created(table_name: str) -> bool:
+  # Initialize workspace client
+  ws = WorkspaceClient()
+  return ws.tables.exists(full_name=f"{envmanager.get_config()["catalog_name"]}.{envmanager.get_config()["schema_name"]}.{table_name}").table_exists
+
+def get_placeholder_stream(reader: DataStreamReader) -> DataStreamReader:
+  # Streaming source that produces empty micro-batches (but is STILL streaming)
+  return (
+    reader.format("rate").option("rowsPerSecond", 1).load()
+      .selectExpr("CAST(NULL AS STRING) AS _rescued_data")
+      .where("1=0")  # no rows, just preserves streaming lineage
+  )
+
 def get_configs() -> list:
   json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "configs", "tables.json")
   assert os.path.exists(json_path), f"Missing table configs file: {json_path}. Please following README.md to create one, deploy and run configuration_job." 
@@ -47,8 +60,6 @@ def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStre
     reader = reader.option(k, v)
   
   # schema hints
-  # always have _rescued_data
-  reader = reader.schema("_rescued_data STRING")
   schema_hints = table_config.get("schema_hints")
   if schema_hints:
     reader = reader.option("cloudFiles.schemaHints", schema_hints)
