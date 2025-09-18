@@ -8,8 +8,8 @@
 # MAGIC   "name": "all_employees",
 # MAGIC   "format": "csv",
 # MAGIC   "format_options": {
-# MAGIC     "header": "true",
-# MAGIC     "escape": "\""
+# MAGIC     "escape": "\"",
+# MAGIC     "multiLine": "false"
 # MAGIC   }
 # MAGIC   "schema_hints": "id int, name string"
 # MAGIC }
@@ -20,10 +20,9 @@
 
 table_config = r'''
   {
-    "name": "dummy",
+    "name": "dummy1",
     "format": "csv",
     "format_options": {
-      "header": "true",
       "escape": "\""
     },
     "schema_hints": "id int, name string"
@@ -59,7 +58,6 @@ print(f"Table Volume Path: {table_volume_path_data}")
 import tempfile
 
 with tempfile.TemporaryDirectory() as tmpdir:
-  reader = spark.readStream.format("cloudFiles")
-  reader = tablemanager.apply_table_config(reader, table_config_json)
+  reader = tablemanager.apply_table_config(spark.readStream, table_config_json)
   reader.option("cloudFiles.schemaLocation", tmpdir)
   display(reader.load(table_volume_path_data))
