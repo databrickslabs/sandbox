@@ -51,6 +51,7 @@ class CSV(AutoLoaderFormat):
     self.options |= {
       AutoLoaderOption("header", "true", True),
       AutoLoaderOption("mergeSchema", "true", True),
+      AutoLoaderOption("columnNameOfCorruptRecord", "_corrupt_record", True),
       AutoLoaderOption("delimiter", ","),
       AutoLoaderOption("escape", "\""),
       AutoLoaderOption("multiLine", "false"),
@@ -62,6 +63,7 @@ class JSON(AutoLoaderFormat):
     self.name = "JSON"
     self.options |= {
       AutoLoaderOption("mergeSchema", "true", True),
+      AutoLoaderOption("columnNameOfCorruptRecord", "_corrupt_record", True),
       AutoLoaderOption("allowComments", "true"),
       AutoLoaderOption("allowSingleQuotes", "true"),
       AutoLoaderOption("inferTimestamp", "true"),
