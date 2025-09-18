@@ -45,7 +45,7 @@ def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStre
   # format-specific options from user input
   user_fmt_opts = table_config.get("format_options", {})
   # validate and get the final modified options
-  final_fmt_opts = formatmanager.get_format_manager(fmt).get_modified_options(user_fmt_opts)
+  final_fmt_opts = formatmanager.get_format_manager(fmt).get_merged_options(user_fmt_opts)
 
   reader = reader.format("cloudFiles").option("cloudFiles.format", fmt)
   for k, v in final_fmt_opts.items():
