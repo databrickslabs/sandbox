@@ -1,24 +1,28 @@
 import dlt
 from utils import tablemanager
 
+def _make_append_flow(table_name, table_config, table_volume_path):
+  def _body():
+    reader = tablemanager.apply_table_config(spark.readStream, table_config)
+    if not tablemanager.has_data_file(table_name):
+      reader = reader.schema("_rescued_data STRING")
+    return reader.load(table_volume_path)
+
+  # give the function a unique name (nice for logs / debug)
+  _body.__name__ = f"append_{table_name.lower()}"
+
+  # apply the decorator programmatically
+  return dlt.append_flow(target=table_name, name=table_name)(_body)
+
 table_configs = tablemanager.get_configs()
 
-for table_config in table_configs:
-  table_name = table_config['name']
-  table_volume_path = tablemanager.get_table_volume_path(table_name)
+for cfg in table_configs:
+  tbl = cfg["name"]
+  path = tablemanager.get_table_volume_path(tbl)
 
   dlt.create_streaming_table(
-    name = table_name,
-    comment = "File push created table",
-    table_properties = {"filepush.table_volume_path_data": table_volume_path}
+    name=tbl,
+    comment="File push created table",
+    table_properties={"filepush.table_volume_path_data": path},
   )
-  @dlt.append_flow(
-    target = table_name,
-    name = table_name
-  )
-  def append_to_table():
-    reader = spark.readStream.format("cloudFiles")
-    reader = tablemanager.apply_table_config(reader, table_config)
-    if not tablemanager.has_data_file(table_name):
-      reader.schema("_rescued_data STRING") # Use _rescued_data as placeholder
-    return reader.load(table_volume_path)
+  _make_append_flow(tbl, cfg, path)
