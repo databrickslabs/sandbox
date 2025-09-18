@@ -35,6 +35,14 @@ class AutoLoaderFormat:
     self.validate_user_options(options)
     defaults = self.get_userfacing_options()
     return {k: v for k, v in options.items() if k in defaults and v != defaults[k]}
+  
+  def get_merged_options(self, options: dict[str, str]) -> dict[str, str]:
+    self.validate_user_options(options)
+    defaults = self.get_userfacing_options()
+
+    merged = defaults.copy()
+    merged.update({k: v for k, v in options.items() if k in defaults})
+    return merged
 
 class CSV(AutoLoaderFormat):
   def __init__(self):

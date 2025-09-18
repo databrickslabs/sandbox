@@ -20,7 +20,7 @@
 
 table_config = r'''
   {
-    "name": "dummy1",
+    "name": "employees",
     "format": "csv",
     "format_options": {
       "escape": "\""

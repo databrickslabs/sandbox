@@ -1,17 +1,6 @@
 [
   {
-    "name": "dummy1",
-    "format": "csv"
-  },
-  {
-    "name": "dummy2",
-    "format": "csv",
-    "format_options": {
-      "escape": "\""
-    }
-  },
-  {
-    "name": "dummy3",
+    "name": "employees",
     "format": "csv",
     "format_options": {
       "escape": "\""
