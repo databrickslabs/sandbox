@@ -7,7 +7,6 @@
     "name": "dummy2",
     "format": "csv",
     "format_options": {
-      "header": "true",
       "escape": "\""
     }
   },
@@ -15,7 +14,6 @@
     "name": "dummy3",
     "format": "csv",
     "format_options": {
-      "header": "true",
       "escape": "\""
     },
     "schema_hints": "id int, name string"
