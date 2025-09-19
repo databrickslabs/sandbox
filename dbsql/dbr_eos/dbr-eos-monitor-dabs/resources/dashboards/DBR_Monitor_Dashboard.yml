@@ -1,0 +1,6 @@
+resources:
+  dashboards:
+    DBR_Monitor_Dashboard:
+      display_name: "DBR Monitor Dashboard"
+      file_path: "DBR Monitor Dashboard.lvdash.json"
+      warehouse_id: ${resources.sql_warehouses.dbr_monitor_wh.id}

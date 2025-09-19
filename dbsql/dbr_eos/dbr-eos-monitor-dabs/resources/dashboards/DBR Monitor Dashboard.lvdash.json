@@ -1,0 +1,4392 @@
+{
+  "datasets": [
+    {
+      "name": "196e0923",
+      "displayName": "DBR_Version_Param",
+      "queryLines": [
+        "WITH extracted_versions AS (\n",
+        "  SELECT\n",
+        "    NULLIF(regexp_extract(dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version\n",
+        "  FROM\n",
+        "    system.compute.clusters\n",
+        ")\n",
+        "SELECT DISTINCT\n",
+        "  dbr_version\n",
+        "FROM\n",
+        "  extracted_versions\n",
+        "WHERE\n",
+        "  dbr_version IS NOT NULL"
+      ]
+    },
+    {
+      "name": "965bfd51",
+      "displayName": "Workspaces_Param",
+      "queryLines": [
+        " SELECT\n",
+        "    DISTINCT workspace_id\n",
+        "  FROM\n",
+        "    system.billing.usage \n",
+        "  WHERE\n",
+        "    billing_origin_product = 'JOBS'\n",
+        "    AND usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND usage_metadata.job_id IS NOT NULL\n",
+        "    AND usage_date >= CURRENT_DATE - INTERVAL 30 DAYS;"
+      ]
+    },
+    {
+      "name": "1d24dce4",
+      "displayName": "DBR_is_supported_Param",
+      "queryLines": [
+        "WITH is_supported_filter_values AS (\n",
+        "  SELECT * FROM VALUES\n",
+        "  ('All'), ('true'), ('false') AS t(value)\n",
+        ")\n",
+        "SELECT * FROM is_supported_filter_values"
+      ]
+    },
+    {
+      "name": "f708f193",
+      "displayName": "Job_Level_Usage_And_Cost_Analysis",
+      "queryLines": [
+        "-- Filter and project early\n",
+        "WITH\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_metadata.job_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.identity_metadata.run_as,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'JOBS'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_metadata.job_id IS NOT NULL\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = ARRAY('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "    GROUP BY ALL\n",
+        "),\n",
+        "\n",
+        "-- Price lookup\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name,\n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM system.billing.list_prices\n",
+        "  WHERE price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "-- Join with cluster and parse DBR version\n",
+        "usage_with_dbr AS (\n",
+        "  SELECT\n",
+        "    fu.workspace_id,\n",
+        "    fu.cluster_id,\n",
+        "    fu.job_id,\n",
+        "    fu.usage_date,\n",
+        "    fu.usage_quantity,\n",
+        "    fu.run_as,\n",
+        "    pl.price_per_dbu,\n",
+        "    NULLIF(regexp_extract(c.dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version\n",
+        "  FROM\n",
+        "    filtered_usage fu\n",
+        "  JOIN system.compute.clusters c\n",
+        "    ON fu.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup pl\n",
+        "    ON fu.sku_name = pl.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "-- Aggregate per job\n",
+        "job_data AS (\n",
+        " SELECT\n",
+        "   u.workspace_id,\n",
+        "   u.job_id,\n",
+        "   u.dbr_version,\n",
+        "   coalesce(wn.dbr_version, u.dbr_version) as dbr_version_lts_ind,\n",
+        "   CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "   max(u.usage_date) as latest_usage_date,\n",
+        "   ARRAY_AGG(DISTINCT u.run_as) AS run_identities,\n",
+        "   SUM(u.usage_quantity * u.price_per_dbu) AS total_cost,\n",
+        "   MAX(CASE\n",
+        "     WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "     ELSE FALSE\n",
+        "   END) AS is_supported\n",
+        " FROM\n",
+        "   usage_with_dbr u\n",
+        " LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "   ON u.dbr_version = wn.clean_dbr_version\n",
+        " GROUP BY\n",
+        "   u.workspace_id, u.job_id, u.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "-- Final output\n",
+        "SELECT \n",
+        "  workspace_id,\n",
+        "  job_id,\n",
+        "  dbr_version,\n",
+        "  dbr_version_lts_ind,\n",
+        "  is_supported,\n",
+        "  days_till_eos,\n",
+        "  run_identities,\n",
+        "  latest_usage_date,\n",
+        "  case when days_till_eos < 1 then \"< 1\" when days_till_eos < 90 then \"1 - 90\" when days_till_eos > 90 then \"90 +\" else \"null\" end as days_till_eos_grp,\n",
+        "  total_cost\n",
+        "FROM\n",
+        "  job_data\n",
+        "  WHERE (:dbr_versions = ARRAY('All') \n",
+        "    OR array_contains(:dbr_versions, dbr_version))\n",
+        "    AND (:is_supported = 'All'\n",
+        "    OR is_supported = :is_supported)\n",
+        "ORDER BY \n",
+        "  days_till_eos ASC,\n",
+        "  total_cost DESC;"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "801275ef",
+      "displayName": "Jobs_by_Workspace",
+      "queryLines": [
+        "-- Filter and project early\n",
+        "WITH\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_metadata.job_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.identity_metadata.run_as,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'JOBS'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_metadata.job_id IS NOT NULL\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = ARRAY('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "    GROUP BY ALL\n",
+        "),\n",
+        "\n",
+        "-- Price lookup\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name,\n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM system.billing.list_prices\n",
+        "  WHERE price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "-- Join with cluster and parse DBR version\n",
+        "usage_with_dbr AS (\n",
+        "  SELECT\n",
+        "    fu.workspace_id,\n",
+        "    fu.cluster_id,\n",
+        "    fu.job_id,\n",
+        "    fu.usage_date,\n",
+        "    fu.usage_quantity,\n",
+        "    fu.run_as,\n",
+        "    pl.price_per_dbu,\n",
+        "    NULLIF(regexp_extract(c.dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version\n",
+        "  FROM\n",
+        "    filtered_usage fu\n",
+        "  JOIN system.compute.clusters c\n",
+        "    ON fu.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup pl\n",
+        "    ON fu.sku_name = pl.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "-- Aggregate per job\n",
+        "job_data AS (\n",
+        " SELECT\n",
+        "   u.workspace_id,\n",
+        "   u.job_id,\n",
+        "   u.dbr_version,\n",
+        "   coalesce(wn.dbr_version, u.dbr_version) as dbr_version_lts_ind,\n",
+        "   CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "   max(u.usage_date) as latest_usage_date,\n",
+        "   ARRAY_AGG(DISTINCT u.run_as) AS run_identities,\n",
+        "   SUM(u.usage_quantity * u.price_per_dbu) AS total_cost,\n",
+        "   MAX(CASE\n",
+        "     WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "     ELSE FALSE\n",
+        "   END) AS is_supported\n",
+        " FROM\n",
+        "   usage_with_dbr u\n",
+        " LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "   ON u.dbr_version = wn.clean_dbr_version\n",
+        " GROUP BY\n",
+        "   u.workspace_id, u.job_id, u.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "-- Final output\n",
+        "SELECT \n",
+        "  workspace_id,\n",
+        "  sum (case when days_till_eos < 1 then 1 else 0 end) as less_than_1,\n",
+        "  sum ( case when days_till_eos between 1 and 90 then 1 else 0 end) as between_1_and_90,\n",
+        "  sum ( case when days_till_eos > 90 then 1 else 0 end) as more_than_90,\n",
+        "  sum(1) as total_jobs\n",
+        " \n",
+        "FROM\n",
+        "  job_data\n",
+        "WHERE \n",
+        "  (:dbr_versions = ARRAY('All') \n",
+        "OR array_contains(:dbr_versions, dbr_version))\n",
+        "  AND (:is_supported = 'All'\n",
+        " OR is_supported = :is_supported)\n",
+        "GROUP BY 1\n",
+        "ORDER BY less_than_1 DESC, between_1_and_90 DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "61884200",
+      "displayName": "Jobs_by_Owner",
+      "queryLines": [
+        "-- Filter and project early\n",
+        "WITH\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_metadata.job_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.identity_metadata.run_as,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'JOBS'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_metadata.job_id IS NOT NULL\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = ARRAY('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "    GROUP BY ALL\n",
+        "),\n",
+        "\n",
+        "-- Price lookup\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name,\n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM system.billing.list_prices\n",
+        "  WHERE price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "-- Join with cluster and parse DBR version\n",
+        "usage_with_dbr AS (\n",
+        "  SELECT\n",
+        "    fu.workspace_id,\n",
+        "    fu.cluster_id,\n",
+        "    fu.job_id,\n",
+        "    fu.usage_date,\n",
+        "    fu.usage_quantity,\n",
+        "    fu.run_as,\n",
+        "    pl.price_per_dbu,\n",
+        "    NULLIF(regexp_extract(c.dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version\n",
+        "  FROM\n",
+        "    filtered_usage fu\n",
+        "  JOIN system.compute.clusters c\n",
+        "    ON fu.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup pl\n",
+        "    ON fu.sku_name = pl.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "-- Aggregate per job\n",
+        "job_data AS (\n",
+        " SELECT\n",
+        "   u.workspace_id,\n",
+        "   u.job_id,\n",
+        "   u.dbr_version,\n",
+        "   coalesce(wn.dbr_version, u.dbr_version) as dbr_version_lts_ind,\n",
+        "   CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "   max(u.usage_date) as latest_usage_date,\n",
+        "   ARRAY_AGG(DISTINCT u.run_as) AS run_identities,\n",
+        "   SUM(u.usage_quantity * u.price_per_dbu) AS total_cost,\n",
+        "   MAX(CASE\n",
+        "     WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "     ELSE FALSE\n",
+        "   END) AS is_supported\n",
+        " FROM\n",
+        "   usage_with_dbr u\n",
+        " LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "   ON u.dbr_version = wn.clean_dbr_version\n",
+        " GROUP BY\n",
+        "   u.workspace_id, u.job_id, u.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "-- Final output\n",
+        "SELECT \n",
+        "  run_identities,\n",
+        "  sum (case when days_till_eos < 1 then 1 else 0 end) as less_than_1,\n",
+        "  sum ( case when days_till_eos between 1 and 90 then 1 else 0 end) as between_1_and_90,\n",
+        "  sum ( case when days_till_eos > 90 then 1 else 0 end) as more_than_90,\n",
+        "  sum(1) as total_jobs\n",
+        " \n",
+        "FROM\n",
+        "  job_data\n",
+        "WHERE \n",
+        "  (:dbr_versions = ARRAY('All') \n",
+        "OR array_contains(:dbr_versions, dbr_version))\n",
+        "  AND (:is_supported = 'All'\n",
+        " OR is_supported = :is_supported)\n",
+        "GROUP BY 1\n",
+        "ORDER BY less_than_1 DESC, between_1_and_90 DESC"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9b35fba1",
+      "displayName": "All_Purpose_Usage_And_Cost_Analysis",
+      "queryLines": [
+        "-- Get clusters and latest change time\n",
+        "WITH \n",
+        "latest_cluster_versions AS (\n",
+        "  SELECT\n",
+        "    cluster_id,\n",
+        "    MAX(change_time) AS latest_change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters\n",
+        "  GROUP BY\n",
+        "    cluster_id\n",
+        "),\n",
+        "\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'ALL_PURPOSE'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = Array('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "),\n",
+        "\n",
+        "latest_cluster_info AS (\n",
+        "  SELECT\n",
+        "    c.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    c.dbr_version,\n",
+        "    c.change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters c\n",
+        "  JOIN latest_cluster_versions lcv\n",
+        "    ON c.cluster_id = lcv.cluster_id\n",
+        "    AND c.change_time = lcv.latest_change_time\n",
+        "),\n",
+        "\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name, \n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM \n",
+        "    system.billing.list_prices\n",
+        "  WHERE \n",
+        "    price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "combined AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    u.usage_date,\n",
+        "    NULLIF(regexp_extract(dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version,\n",
+        "    u.usage_quantity * p.price_per_dbu AS cost\n",
+        "  FROM\n",
+        "    filtered_usage u\n",
+        "  JOIN latest_cluster_info c ON u.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup p ON u.sku_name = p.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "aggregated AS (\n",
+        "  SELECT\n",
+        "    workspace_id,\n",
+        "    cluster_id,\n",
+        "    cluster_name,\n",
+        "    owned_by,\n",
+        "    combined.dbr_version,\n",
+        "    coalesce(wn.dbr_version, combined.dbr_version) as dbr_version_lts_ind,\n",
+        "    CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "    max(usage_date) as latest_usage_date,\n",
+        "    SUM(cost) AS total_cost,\n",
+        "    MAX(CASE\n",
+        "      WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "      ELSE FALSE\n",
+        "    END) AS is_supported\n",
+        "  FROM\n",
+        "    combined\n",
+        "  LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "    ON combined.dbr_version = wn.clean_dbr_version\n",
+        "  WHERE \n",
+        "   :dbr_versions = ARRAY('All')\n",
+        "   OR array_contains(:dbr_versions, combined.dbr_version)\n",
+        "  GROUP BY\n",
+        "    workspace_id, cluster_id, cluster_name, owned_by, combined.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "SELECT \n",
+        "  workspace_id,\n",
+        "  cluster_id,\n",
+        "  cluster_name,\n",
+        "  owned_by,\n",
+        "  dbr_version,\n",
+        "  dbr_version_lts_ind,\n",
+        "  is_supported,\n",
+        "  days_till_eos,\n",
+        "  latest_usage_date,\n",
+        "  total_cost,\n",
+        "  case when days_till_eos < 1 then \"< 1\" when days_till_eos < 90 then \"1 - 90\" when days_till_eos > 90 then \"90 +\" else \"null\" end as days_till_eos_grp\n",
+        "\n",
+        "FROM\n",
+        "  aggregated\n",
+        "WHERE (:is_supported = 'All'\n",
+        "   OR is_supported = :is_supported)\n",
+        "GROUP BY 1,2,3,4,5,6,7,8,9,10,11\n",
+        "ORDER BY\n",
+        "  days_till_eos ASC,\n",
+        "  total_cost DESC;\n"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "125366e0",
+      "displayName": "All_Purpose_by_Workspace",
+      "queryLines": [
+        "-- Get clusters and latest change time\n",
+        "WITH \n",
+        "latest_cluster_versions AS (\n",
+        "  SELECT\n",
+        "    cluster_id,\n",
+        "    MAX(change_time) AS latest_change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters\n",
+        "  GROUP BY\n",
+        "    cluster_id\n",
+        "),\n",
+        "\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'ALL_PURPOSE'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = Array('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "),\n",
+        "\n",
+        "latest_cluster_info AS (\n",
+        "  SELECT\n",
+        "    c.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    c.dbr_version,\n",
+        "    c.change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters c\n",
+        "  JOIN latest_cluster_versions lcv\n",
+        "    ON c.cluster_id = lcv.cluster_id\n",
+        "    AND c.change_time = lcv.latest_change_time\n",
+        "),\n",
+        "\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name, \n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM \n",
+        "    system.billing.list_prices\n",
+        "  WHERE \n",
+        "    price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "combined AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    u.usage_date,\n",
+        "    NULLIF(regexp_extract(dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version,\n",
+        "    u.usage_quantity * p.price_per_dbu AS cost\n",
+        "  FROM\n",
+        "    filtered_usage u\n",
+        "  JOIN latest_cluster_info c ON u.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup p ON u.sku_name = p.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "aggregated AS (\n",
+        "  SELECT\n",
+        "    workspace_id,\n",
+        "    cluster_id,\n",
+        "    cluster_name,\n",
+        "    owned_by,\n",
+        "    combined.dbr_version,\n",
+        "    coalesce(wn.dbr_version, combined.dbr_version) as dbr_version_lts_ind,\n",
+        "    CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "    max(usage_date) as latest_usage_date,\n",
+        "    SUM(cost) AS total_cost,\n",
+        "    MAX(CASE\n",
+        "      WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "      ELSE FALSE\n",
+        "    END) AS is_supported\n",
+        "  FROM\n",
+        "    combined\n",
+        "  LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "    ON combined.dbr_version = wn.clean_dbr_version\n",
+        "  WHERE \n",
+        "   :dbr_versions = ARRAY('All')\n",
+        "   OR array_contains(:dbr_versions, combined.dbr_version)\n",
+        "  GROUP BY\n",
+        "    workspace_id, cluster_id, cluster_name, owned_by, combined.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "SELECT \n",
+        "  workspace_id,\n",
+        "  sum (case when days_till_eos < 1 then 1 else 0 end) as less_than_1,\n",
+        "  sum ( case when days_till_eos between 1 and 90 then 1 else 0 end) as between_1_and_90,\n",
+        "  sum ( case when days_till_eos > 90 then 1 else 0 end) as more_than_90,\n",
+        "  sum(1) as total_jobs\n",
+        " \n",
+        "FROM aggregated\n",
+        "WHERE (:is_supported = 'All'\n",
+        "   OR is_supported = :is_supported)\n",
+        "GROUP BY 1\n",
+        "ORDER BY less_than_1 DESC, between_1_and_90 DESC\n"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eeb8f96a",
+      "displayName": "All_Purpose_by_Owner",
+      "queryLines": [
+        "-- Get clusters and latest change time\n",
+        "WITH \n",
+        "latest_cluster_versions AS (\n",
+        "  SELECT\n",
+        "    cluster_id,\n",
+        "    MAX(change_time) AS latest_change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters\n",
+        "  GROUP BY\n",
+        "    cluster_id\n",
+        "),\n",
+        "\n",
+        "filtered_usage AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.usage_metadata.cluster_id,\n",
+        "    u.usage_quantity,\n",
+        "    u.sku_name,\n",
+        "    u.usage_date\n",
+        "  FROM\n",
+        "    system.billing.usage u\n",
+        "  WHERE\n",
+        "    u.billing_origin_product = 'ALL_PURPOSE'\n",
+        "    AND u.usage_metadata.node_type != 'SERVERLESS'\n",
+        "    AND u.usage_date >= CURRENT_DATE - INTERVAL 30 DAYS\n",
+        "    AND (:workspace_ids = Array('All') OR array_contains(:workspace_ids, u.workspace_id))\n",
+        "),\n",
+        "\n",
+        "latest_cluster_info AS (\n",
+        "  SELECT\n",
+        "    c.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    c.dbr_version,\n",
+        "    c.change_time\n",
+        "  FROM\n",
+        "    system.compute.clusters c\n",
+        "  JOIN latest_cluster_versions lcv\n",
+        "    ON c.cluster_id = lcv.cluster_id\n",
+        "    AND c.change_time = lcv.latest_change_time\n",
+        "),\n",
+        "\n",
+        "price_lookup AS (\n",
+        "  SELECT \n",
+        "    sku_name, \n",
+        "    pricing.effective_list.default AS price_per_dbu\n",
+        "  FROM \n",
+        "    system.billing.list_prices\n",
+        "  WHERE \n",
+        "    price_end_time IS NULL\n",
+        "),\n",
+        "\n",
+        "combined AS (\n",
+        "  SELECT\n",
+        "    u.workspace_id,\n",
+        "    u.cluster_id,\n",
+        "    c.cluster_name,\n",
+        "    c.owned_by,\n",
+        "    u.usage_date,\n",
+        "    NULLIF(regexp_extract(dbr_version, '\\\\d+\\\\.\\\\d', 0), '') AS dbr_version,\n",
+        "    u.usage_quantity * p.price_per_dbu AS cost\n",
+        "  FROM\n",
+        "    filtered_usage u\n",
+        "  JOIN latest_cluster_info c ON u.cluster_id = c.cluster_id\n",
+        "  JOIN price_lookup p ON u.sku_name = p.sku_name\n",
+        "  WHERE dbr_version IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "aggregated AS (\n",
+        "  SELECT\n",
+        "    workspace_id,\n",
+        "    cluster_id,\n",
+        "    cluster_name,\n",
+        "    owned_by,\n",
+        "    combined.dbr_version,\n",
+        "    coalesce(wn.dbr_version, combined.dbr_version) as dbr_version_lts_ind,\n",
+        "    CASE WHEN wn.end_of_support_date IS NOT NULL THEN datediff(wn.end_of_support_date, current_date) ELSE 0 END AS days_till_eos, --days till end of support\n",
+        "    max(usage_date) as latest_usage_date,\n",
+        "    SUM(cost) AS total_cost,\n",
+        "    MAX(CASE\n",
+        "      WHEN wn.end_of_support_date IS NOT NULL AND CURRENT_DATE <= wn.end_of_support_date THEN TRUE\n",
+        "      ELSE FALSE\n",
+        "    END) AS is_supported\n",
+        "  FROM\n",
+        "    combined\n",
+        "  LEFT JOIN IDENTIFIER(:wn_catalog || '.' || :wn_schema || '.' || :wn_table) wn\n",
+        "    ON combined.dbr_version = wn.clean_dbr_version\n",
+        "  WHERE \n",
+        "   :dbr_versions = ARRAY('All')\n",
+        "   OR array_contains(:dbr_versions, combined.dbr_version)\n",
+        "  GROUP BY\n",
+        "    workspace_id, cluster_id, cluster_name, owned_by, combined.dbr_version, dbr_version_lts_ind, days_till_eos\n",
+        ")\n",
+        "\n",
+        "SELECT \n",
+        "  owned_by,\n",
+        "  sum (case when days_till_eos < 1 then 1 else 0 end) as less_than_1,\n",
+        "  sum ( case when days_till_eos between 1 and 90 then 1 else 0 end) as between_1_and_90,\n",
+        "  sum ( case when days_till_eos > 90 then 1 else 0 end) as more_than_90,\n",
+        "  sum(1) as total_jobs\n",
+        " \n",
+        "FROM aggregated\n",
+        "WHERE (:is_supported = 'All'\n",
+        "   OR is_supported = :is_supported)\n",
+        "GROUP BY 1\n",
+        "ORDER BY less_than_1 DESC, between_1_and_90 DESC\n"
+      ],
+      "parameters": [
+        {
+          "displayName": "workspace_ids",
+          "keyword": "workspace_ids",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_catalog",
+          "keyword": "wn_catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbdemos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_schema",
+          "keyword": "wn_schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "lookup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "wn_table",
+          "keyword": "wn_table",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "dbr_version"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dbr_versions",
+          "keyword": "dbr_versions",
+          "dataType": "STRING",
+          "complexType": "MULTI",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "is_supported",
+          "keyword": "is_supported",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "947c00d1",
+      "displayName": "Jobs",
+      "layout": [
+        {
+          "widget": {
+            "name": "6cf905ef",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1b37b2ee2b4190eba788_workspace_id",
+                "query": {
+                  "datasetName": "965bfd51",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "workspace_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_workspace_ids",
+                "query": {
+                  "datasetName": "f708f193",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_workspace_ids",
+                "query": {
+                  "datasetName": "801275ef",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_workspace_ids",
+                "query": {
+                  "datasetName": "61884200",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "workspace_id",
+                    "displayName": "workspace_id",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1b37b2ee2b4190eba788_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_workspace_ids"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_workspace_ids"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_workspace_ids"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Workspace",
+                "headerAlignment": "left"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "11201a21",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f708f193",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "job_id",
+                      "expression": "`job_id`"
+                    },
+                    {
+                      "name": "dbr_version_lts_ind",
+                      "expression": "`dbr_version_lts_ind`"
+                    },
+                    {
+                      "name": "total_cost",
+                      "expression": "`total_cost`"
+                    },
+                    {
+                      "name": "run_identities",
+                      "expression": "`run_identities`"
+                    },
+                    {
+                      "name": "latest_usage_date",
+                      "expression": "`latest_usage_date`"
+                    },
+                    {
+                      "name": "days_till_eos",
+                      "expression": "`days_till_eos`"
+                    },
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "workspace_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 0,
+                    "title": "workspace_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "workspace_id"
+                  },
+                  {
+                    "fieldName": "job_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 1,
+                    "title": "job_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "job_id"
+                  },
+                  {
+                    "fieldName": "dbr_version_lts_ind",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 2,
+                    "title": "dbr_version",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "dbr_version_lts_ind"
+                  },
+                  {
+                    "fieldName": "total_cost",
+                    "numberFormat": "$0,0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 5,
+                    "title": "MonthlyJobCost",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Only take into account $DBU spend and are estimates.",
+                    "displayName": "total_cost"
+                  },
+                  {
+                    "fieldName": "run_identities",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 6,
+                    "title": "RunIdentities",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "description": "Contains run identities across all job runs from the past month.",
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "run_identities"
+                  },
+                  {
+                    "fieldName": "latest_usage_date",
+                    "dateTimeFormat": "YYYY-MM-DD",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "date",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 7,
+                    "title": "latest_usage_date",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "latest_usage_date"
+                  },
+                  {
+                    "fieldName": "days_till_eos",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 8,
+                    "title": "days_till_eos",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "days_till_eos"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "dbr_version",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 3,
+                  "title": "dbr_version",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false,
+                  "cellFormat": {
+                    "default": {
+                      "foregroundColor": null
+                    },
+                    "rules": [
+                      {
+                        "if": {
+                          "column": "is_supported",
+                          "fn": "=",
+                          "literal": "false"
+                        },
+                        "value": {
+                          "foregroundColor": "#FFAB00"
+                        }
+                      },
+                      {
+                        "if": {
+                          "column": "is_supported",
+                          "fn": "=",
+                          "literal": "true"
+                        },
+                        "value": {
+                          "foregroundColor": "#077A9D"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "is_supported",
+                  "type": "boolean",
+                  "displayAs": "boolean",
+                  "order": 4,
+                  "title": "is_supported",
+                  "allowSearch": false,
+                  "alignContent": "right",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "days_till_eos_grp",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 9,
+                  "title": "days_till_eos_grp",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 500,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": true,
+              "frame": {
+                "showTitle": true,
+                "title": "Full Job Breakdown",
+                "showDescription": false,
+                "description": "TODO: Make sure this logic with the widget works correctly. "
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 6,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "4f24af61",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# DBR Days Until End Of Support — Jobs\n",
+                "\n",
+                "This view analyzes **scheduled and production Jobs** over the past 30 days to identify clusters impacted by Databricks Runtime (DBR) **deprecations or end-of-support timelines**.\n",
+                "\n",
+                "We recommend upgrading all job clusters running DBR that are nearing or past the end of service to serverless.\n",
+                "Serverless clusters automatically manage DBR for you, ensuring they are supported.\n",
+                "\n",
+                "Data is sourced from:\n",
+                "- `system.compute.clusters`\n",
+                "- `system.billing.usage`\n",
+                "- `system.billing.list_prices`\n",
+                "- Databricks runtime release docs\n",
+                "\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "16eba52d",
+            "multilineTextboxSpec": {
+              "lines": [
+                "> **Note:** Requires system tables to be enabled and a Unity Catalog-enabled workspace.  \n",
+                "> Financial values shown are **estimates** and may not reflect actual billing. This dashboard is not officially supported by Databricks.\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 28,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "0eae8aba",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1a9bb99ad91fa06d88e4_dbr_version",
+                "query": {
+                  "datasetName": "196e0923",
+                  "fields": [
+                    {
+                      "name": "dbr_version",
+                      "expression": "`dbr_version`"
+                    },
+                    {
+                      "name": "dbr_version_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_dbr_versions",
+                "query": {
+                  "datasetName": "f708f193",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_dbr_versions",
+                "query": {
+                  "datasetName": "801275ef",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_dbr_versions",
+                "query": {
+                  "datasetName": "61884200",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "dbr_version",
+                    "displayName": "dbr_version",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1a9bb99ad91fa06d88e4_dbr_version"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_dbr_versions"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_dbr_versions"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_dbr_versions"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBR Version"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "9274bb3d",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f0279ad4841d94bf16a0657746468f_value",
+                "query": {
+                  "datasetName": "1d24dce4",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "`value`"
+                    },
+                    {
+                      "name": "value_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_is_supported",
+                "query": {
+                  "datasetName": "f708f193",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_is_supported",
+                "query": {
+                  "datasetName": "801275ef",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_is_supported",
+                "query": {
+                  "datasetName": "61884200",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "value",
+                    "displayName": "value",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f0279ad4841d94bf16a0657746468f_value"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1bbe8e82aea9e0608b29_is_supported"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029b8a48c1a509a4813c2bf2655c5_is_supported"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f02a8885261a85b59dc70850c3b505_is_supported"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBR is supported"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "ed4397e1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "801275ef",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "less_than_1",
+                      "expression": "`less_than_1`"
+                    },
+                    {
+                      "name": "between_1_and_90",
+                      "expression": "`between_1_and_90`"
+                    },
+                    {
+                      "name": "more_than_90",
+                      "expression": "`more_than_90`"
+                    },
+                    {
+                      "name": "total_jobs",
+                      "expression": "`total_jobs`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "workspace_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "workspace_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "workspace_id"
+                  },
+                  {
+                    "fieldName": "less_than_1",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "< 1",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#FFAB00"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "less_than_1"
+                  },
+                  {
+                    "fieldName": "between_1_and_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "1 - 90",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#AB4057"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "between_1_and_90"
+                  },
+                  {
+                    "fieldName": "more_than_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "90 +",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#077A9D"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "more_than_90"
+                  },
+                  {
+                    "fieldName": "total_jobs",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "total jobs",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_jobs"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 500,
+              "paginationSize": "default",
+              "condensed": false,
+              "withRowNumber": false,
+              "frame": {
+                "title": "Workspace Job Count by Days till EOS",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "e66f6f4c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f708f193",
+                  "fields": [
+                    {
+                      "name": "count(job_id)",
+                      "expression": "COUNT(`job_id`)"
+                    },
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "count(job_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  },
+                  "displayName": "Count of Job ID"
+                },
+                "color": {
+                  "fieldName": "days_till_eos_grp",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "1 - 90",
+                        "color": "#AB4057"
+                      }
+                    ],
+                    "sort": {
+                      "by": "custom-order",
+                      "orderedValues": [
+                        "< 1",
+                        "1 - 90",
+                        "90 +"
+                      ]
+                    }
+                  },
+                  "displayName": "days_till_eos_grp"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "Jobs by Support Status"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "15aeb950",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f708f193",
+                  "fields": [
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    },
+                    {
+                      "name": "median(days_till_eos)",
+                      "expression": "MEDIAN(`days_till_eos`)"
+                    },
+                    {
+                      "name": "dbr_version_lts_ind",
+                      "expression": "`dbr_version_lts_ind`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "dbr_version_lts_ind",
+                  "axis": {
+                    "hideLabels": false
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "custom-order",
+                      "orderedValues": [
+                        "9.1",
+                        "10.4 LTS",
+                        "11.3 LTS",
+                        "12.2 LTS",
+                        "13.3 LTS",
+                        "14.2",
+                        "14.3 LTS",
+                        "15.1",
+                        "15.3",
+                        "15.4 LTS",
+                        "16.1",
+                        "16.2",
+                        "16.3",
+                        "16.4"
+                      ]
+                    }
+                  },
+                  "displayName": "DBR Version"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count"
+                },
+                "color": {
+                  "fieldName": "days_till_eos_grp",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "< 1",
+                        "color": "#FFAB00"
+                      },
+                      {
+                        "value": "1 - 90",
+                        "color": "#AB4057"
+                      },
+                      {
+                        "value": "90 +",
+                        "color": "#077A9D"
+                      }
+                    ]
+                  },
+                  "displayName": "days_till_eos_grp"
+                },
+                "label": {
+                  "show": false
+                },
+                "extra": [
+                  {
+                    "fieldName": "median(days_till_eos)",
+                    "displayName": "Median of days_till_eos"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Job Count Per DBR Version"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 6,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "a36c7e14",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "61884200",
+                  "fields": [
+                    {
+                      "name": "run_identities",
+                      "expression": "`run_identities`"
+                    },
+                    {
+                      "name": "less_than_1",
+                      "expression": "`less_than_1`"
+                    },
+                    {
+                      "name": "between_1_and_90",
+                      "expression": "`between_1_and_90`"
+                    },
+                    {
+                      "name": "more_than_90",
+                      "expression": "`more_than_90`"
+                    },
+                    {
+                      "name": "total_jobs",
+                      "expression": "`total_jobs`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "run_identities",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "run_identities",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "run_identities"
+                  },
+                  {
+                    "fieldName": "less_than_1",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "< 1",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#FFAB00"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "less_than_1"
+                  },
+                  {
+                    "fieldName": "between_1_and_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "1 - 90",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#AB4057"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "between_1_and_90"
+                  },
+                  {
+                    "fieldName": "more_than_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "90 +",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#077A9D"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "more_than_90"
+                  },
+                  {
+                    "fieldName": "total_jobs",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "total jobs",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_jobs"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 500,
+              "paginationSize": "default",
+              "condensed": false,
+              "withRowNumber": false,
+              "frame": {
+                "title": "Run Identities Job Count by Days till EOS",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "b07e7319",
+      "displayName": "All-Purpose Clusters",
+      "layout": [
+        {
+          "widget": {
+            "name": "fcaba801",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# DBR Days Until End Of Support — All-Purpose Clusters\n",
+                "\n",
+                "This view analyzes **All-Purpose compute usage** over the past 30 days to identify clusters impacted by Databricks Runtime (DBR) **deprecations or end-of-support timelines**.\n",
+                "\n",
+                "We recommend upgrading all clusters running DBR that are nearing or past the end of service to serverless.\n",
+                "Serverless clusters automatically manage DBR for you, ensuring they are supported.\n",
+                "\n",
+                "Data is sourced from:\n",
+                "- `system.compute.clusters`\n",
+                "- `system.billing.usage`\n",
+                "- `system.billing.list_prices`\n",
+                "- Databricks runtime release docs\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "88ecdc99",
+            "multilineTextboxSpec": {
+              "lines": [
+                "> **Note:** Requires system tables to be enabled and a Unity Catalog-enabled workspace.  \n",
+                "> Financial values shown are **estimates** and may not reflect actual billing. This dashboard is not officially supported by Databricks.\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 28,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "2a00a8bc",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1b37b2ee2b4190eba788_workspace_id",
+                "query": {
+                  "datasetName": "965bfd51",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "workspace_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_workspace_ids",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_workspace_ids",
+                "query": {
+                  "datasetName": "125366e0",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_workspace_ids",
+                "query": {
+                  "datasetName": "eeb8f96a",
+                  "parameters": [
+                    {
+                      "name": "workspace_ids",
+                      "keyword": "workspace_ids"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "workspace_id",
+                    "displayName": "workspace_id",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1b37b2ee2b4190eba788_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_workspace_ids"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_workspace_ids"
+                  },
+                  {
+                    "parameterName": "workspace_ids",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_workspace_ids"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Workspace",
+                "headerAlignment": "left"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "a369d104",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1a9bb99ad91fa06d88e4_dbr_version",
+                "query": {
+                  "datasetName": "196e0923",
+                  "fields": [
+                    {
+                      "name": "dbr_version",
+                      "expression": "`dbr_version`"
+                    },
+                    {
+                      "name": "dbr_version_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_dbr_versions",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_dbr_versions",
+                "query": {
+                  "datasetName": "125366e0",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_dbr_versions",
+                "query": {
+                  "datasetName": "eeb8f96a",
+                  "parameters": [
+                    {
+                      "name": "dbr_versions",
+                      "keyword": "dbr_versions"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "dbr_version",
+                    "displayName": "dbr_version",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1a9bb99ad91fa06d88e4_dbr_version"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_dbr_versions"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_dbr_versions"
+                  },
+                  {
+                    "parameterName": "dbr_versions",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_dbr_versions"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBR Version"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "422ef59b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "cluster_id",
+                      "expression": "`cluster_id`"
+                    },
+                    {
+                      "name": "cluster_name",
+                      "expression": "`cluster_name`"
+                    },
+                    {
+                      "name": "dbr_version_lts_ind",
+                      "expression": "`dbr_version_lts_ind`"
+                    },
+                    {
+                      "name": "total_cost",
+                      "expression": "`total_cost`"
+                    },
+                    {
+                      "name": "owned_by",
+                      "expression": "`owned_by`"
+                    },
+                    {
+                      "name": "latest_usage_date",
+                      "expression": "`latest_usage_date`"
+                    },
+                    {
+                      "name": "days_till_eos",
+                      "expression": "`days_till_eos`"
+                    },
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "workspace_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 1,
+                    "title": "workspace_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "workspace_id"
+                  },
+                  {
+                    "fieldName": "cluster_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 2,
+                    "title": "cluster_id",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "cluster_id"
+                  },
+                  {
+                    "fieldName": "cluster_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 3,
+                    "title": "cluster_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "defaultColumnWidth": 300,
+                    "displayName": "cluster_name"
+                  },
+                  {
+                    "fieldName": "dbr_version_lts_ind",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 4,
+                    "title": "dbr_version",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "dbr_version_lts_ind"
+                  },
+                  {
+                    "fieldName": "total_cost",
+                    "numberFormat": "$0,00.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 6,
+                    "title": "MonthlyCost",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Only take into account $DBU spend and are estimates.",
+                    "displayName": "total_cost"
+                  },
+                  {
+                    "fieldName": "owned_by",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 7,
+                    "title": "OwnedBy",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "owned_by"
+                  },
+                  {
+                    "fieldName": "latest_usage_date",
+                    "dateTimeFormat": "YYYY-MM-DD",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "date",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 8,
+                    "title": "latest_usage_date",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "latest_usage_date"
+                  },
+                  {
+                    "fieldName": "days_till_eos",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 9,
+                    "title": "days_till_eos",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "1 - 90"
+                          },
+                          "value": {
+                            "foregroundColor": "#AB4057"
+                          }
+                        },
+                        {
+                          "if": {
+                            "column": "days_till_eos_grp",
+                            "fn": "=",
+                            "literal": "< 1"
+                          },
+                          "value": {
+                            "foregroundColor": "#FFAB00"
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "days_till_eos"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "is_supported",
+                  "type": "boolean",
+                  "displayAs": "boolean",
+                  "order": 0,
+                  "title": "is_supported",
+                  "allowSearch": false,
+                  "alignContent": "right",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "numberFormat": "0.00",
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "dbr_version",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 5,
+                  "title": "RuntimeVersion",
+                  "allowSearch": false,
+                  "alignContent": "right",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false,
+                  "cellFormat": {
+                    "default": {
+                      "foregroundColor": null
+                    },
+                    "rules": [
+                      {
+                        "if": {
+                          "column": "is_supported",
+                          "fn": "=",
+                          "literal": "false"
+                        },
+                        "value": {
+                          "foregroundColor": "#FFAB00"
+                        }
+                      },
+                      {
+                        "if": {
+                          "column": "is_supported",
+                          "fn": "=",
+                          "literal": "true"
+                        },
+                        "value": {
+                          "foregroundColor": "#077A9D"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "days_till_eos_grp",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 10,
+                  "title": "days_till_eos_grp",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 500,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": true,
+              "frame": {
+                "showTitle": true,
+                "title": "Full All-Purpose Cluster Breakdown",
+                "showDescription": false,
+                "description": "TODO: Make sure this logic with the widget works correctly. "
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 6,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "e8775f72",
+            "queries": [
+              {
+                "name": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f0279ad4841d94bf16a0657746468f_value",
+                "query": {
+                  "datasetName": "1d24dce4",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "`value`"
+                    },
+                    {
+                      "name": "value_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_is_supported",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_is_supported",
+                "query": {
+                  "datasetName": "125366e0",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_is_supported",
+                "query": {
+                  "datasetName": "eeb8f96a",
+                  "parameters": [
+                    {
+                      "name": "is_supported",
+                      "keyword": "is_supported"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "value",
+                    "displayName": "value",
+                    "queryName": "dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f0279ad4841d94bf16a0657746468f_value"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f025ee3aae1c31a209ff0391046867_is_supported"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029c045a419c78e90556dd897038a_is_supported"
+                  },
+                  {
+                    "parameterName": "is_supported",
+                    "queryName": "parameter_dashboards/01f025ee3aae128d96991aedb265e2d5/datasets/01f029cd1b0216bebbb4fdfc4ffe3be5_is_supported"
+                  }
+                ]
+              },
+              "scale": {
+                "type": "categorical",
+                "sort": {
+                  "by": "custom-order",
+                  "orderedValues": [
+                    "All",
+                    "false",
+                    "true"
+                  ]
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBR is supported"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "84625c82",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "125366e0",
+                  "fields": [
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    },
+                    {
+                      "name": "less_than_1",
+                      "expression": "`less_than_1`"
+                    },
+                    {
+                      "name": "between_1_and_90",
+                      "expression": "`between_1_and_90`"
+                    },
+                    {
+                      "name": "more_than_90",
+                      "expression": "`more_than_90`"
+                    },
+                    {
+                      "name": "total_jobs",
+                      "expression": "`total_jobs`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "workspace_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "workspace_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "workspace_id"
+                  },
+                  {
+                    "fieldName": "less_than_1",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "< 1",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#FFAB00"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "less_than_1"
+                  },
+                  {
+                    "fieldName": "between_1_and_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "1 - 90",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#AB4057"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "between_1_and_90"
+                  },
+                  {
+                    "fieldName": "more_than_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "90 +",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#077A9D"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "more_than_90"
+                  },
+                  {
+                    "fieldName": "total_jobs",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "Total",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_jobs"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": false,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Workspace Cluster Count by Days till EOS"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "46fe7c4f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "fields": [
+                    {
+                      "name": "count(cluster_id)",
+                      "expression": "COUNT(`cluster_id`)"
+                    },
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "count(cluster_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Clusters"
+                },
+                "color": {
+                  "fieldName": "days_till_eos_grp",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "custom-order",
+                      "orderedValues": [
+                        "< 1",
+                        "1 - 90",
+                        "90 +"
+                      ]
+                    },
+                    "mappings": [
+                      {
+                        "value": "1 - 90",
+                        "color": "#AB4057"
+                      },
+                      {
+                        "value": "< 1",
+                        "color": "#FFAB00"
+                      }
+                    ]
+                  },
+                  "displayName": "days_till_eos_grp"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "Clusters by Support Status"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "561713ba",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9b35fba1",
+                  "fields": [
+                    {
+                      "name": "days_till_eos_grp",
+                      "expression": "`days_till_eos_grp`"
+                    },
+                    {
+                      "name": "median(days_till_eos)",
+                      "expression": "MEDIAN(`days_till_eos`)"
+                    },
+                    {
+                      "name": "dbr_version_lts_ind",
+                      "expression": "`dbr_version_lts_ind`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "dbr_version_lts_ind",
+                  "axis": {
+                    "title": "DBR Version"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "custom-order",
+                      "orderedValues": [
+                        "2.1",
+                        "7.5",
+                        "10.1",
+                        "10.4 LTS",
+                        "11.3 LTS",
+                        "12.2 LTS",
+                        "13.3 LTS",
+                        "14.3 LTS",
+                        "15.3",
+                        "15.4 LTS",
+                        "16.0",
+                        "16.1",
+                        "16.2",
+                        "16.3",
+                        "16.4"
+                      ]
+                    }
+                  },
+                  "displayName": "DBR Version"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": " Count"
+                },
+                "color": {
+                  "fieldName": "days_till_eos_grp",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "< 1",
+                        "color": "#FFAB00"
+                      },
+                      {
+                        "value": "1 - 90",
+                        "color": "#AB4057"
+                      },
+                      {
+                        "value": "90 +",
+                        "color": "#077A9D"
+                      }
+                    ]
+                  },
+                  "displayName": "days_till_eos_grp"
+                },
+                "extra": [
+                  {
+                    "fieldName": "median(days_till_eos)",
+                    "displayName": "days_till_eos"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Cluster Count Per DBR Version"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 6,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bb8f8491",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "eeb8f96a",
+                  "fields": [
+                    {
+                      "name": "owned_by",
+                      "expression": "`owned_by`"
+                    },
+                    {
+                      "name": "less_than_1",
+                      "expression": "`less_than_1`"
+                    },
+                    {
+                      "name": "between_1_and_90",
+                      "expression": "`between_1_and_90`"
+                    },
+                    {
+                      "name": "more_than_90",
+                      "expression": "`more_than_90`"
+                    },
+                    {
+                      "name": "total_jobs",
+                      "expression": "`total_jobs`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "owned_by",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "owned_by",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "owned_by"
+                  },
+                  {
+                    "fieldName": "less_than_1",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "< 1",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#FFAB00"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "less_than_1"
+                  },
+                  {
+                    "fieldName": "between_1_and_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "1 - 90",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#AB4057"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "between_1_and_90"
+                  },
+                  {
+                    "fieldName": "more_than_90",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "90 +",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": "#077A9D"
+                      },
+                      "rules": []
+                    },
+                    "displayName": "more_than_90"
+                  },
+                  {
+                    "fieldName": "total_jobs",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "Total",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_jobs"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 500,
+              "paginationSize": "default",
+              "condensed": false,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Owner Cluster Count by Days till EOS"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}
