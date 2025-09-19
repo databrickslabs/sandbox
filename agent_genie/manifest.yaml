@@ -1,5 +1,5 @@
 version: 1
-name: "agent-genie++"
+name: "agent-genie"
 description: "A sample Databricks application demonstrating various resource types and permissions"
 
 resource_specs:
