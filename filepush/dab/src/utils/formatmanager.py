@@ -15,6 +15,9 @@ class AutoLoaderFormat:
       AutoLoaderOption("cloudFiles.inferColumnTypes", "true", True),
       AutoLoaderOption("cloudFiles.schemaEvolutionMode", "addNewColumns", True),
     }
+    self.expectations: dict[str, str] = {
+      "Rescued data should be null": "_rescued_data IS NULL"
+    }
 
   def __iter__(self):
     yield (self.name, self)
@@ -56,6 +59,9 @@ class CSV(AutoLoaderFormat):
       AutoLoaderOption("escape", "\""),
       AutoLoaderOption("multiLine", "false"),
     }
+    self.expectations |= {
+      "Corrupted record should be null": "_corrupt_record IS NULL"
+    }
 
 class JSON(AutoLoaderFormat):
   def __init__(self):
@@ -68,6 +74,9 @@ class JSON(AutoLoaderFormat):
       AutoLoaderOption("allowSingleQuotes", "true"),
       AutoLoaderOption("inferTimestamp", "true"),
       AutoLoaderOption("multiLine", "true"),
+    }
+    self.expectations |= {
+      "Corrupted record should be null": "_corrupt_record IS NULL"
     }
 
 _supported_formats: dict[str, AutoLoaderFormat] = {f.name: f for f in (CSV(), JSON())}
