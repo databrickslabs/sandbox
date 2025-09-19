@@ -34,6 +34,10 @@ table_config = r'''
 import json
 import tempfile
 from utils import tablemanager
+from utils import envmanager
+
+if not envmanager.has_default_storage():
+  print("WARNING: Current catalog is not using default storage, some file push feature may not be available")
 
 # Load table config
 table_config_json = json.loads(table_config)
