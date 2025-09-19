@@ -13,11 +13,11 @@ resource_specs:
     genie_space_spec:
       permission: "CAN_EDIT"  # use CAN_USE if your workspace doesn't support CAN_EDIT
 
-  - name: "tavily-api-key"
-    description: "(Optional) For external search over internet, you may use Tavily API Key (https://docs.tavily.com/documentation/quickstart)" 
-    input_spec:
-      type: "text"
-      required: false
+  # - name: "tavily-api-key"
+  #   description: "(Optional) For external search over internet, you may use Tavily API Key (https://docs.tavily.com/documentation/quickstart)" 
+  #   input_spec:
+  #     type: "text"
+  #     required: false
 
 user_api_scopes:
   - "sql"
