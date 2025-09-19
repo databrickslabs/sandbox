@@ -50,8 +50,7 @@ This app shows how to create a simple interface that connects to the Genie API, 
 ### Setup Locally
 1. Clone the repository:
    ```bash
-   git clone <your_repo_url>
-   cd conversational-agent-app/agent-genie/agent_genie
+   git clone [<your_repo_url>](https://github.com/nitinaggarwal-databricks/sandbox/tree/0e5d157b6a653cc05dd61e9619ac156d07689dce/agent_genie)
    ```
 
 2. Create and activate a virtual environment:
