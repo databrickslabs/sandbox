@@ -1,24 +1,23 @@
 version: 1
-name: "agent-genie"
+name: "agent-genie++"
 description: "A sample Databricks application demonstrating various resource types and permissions"
+
 resource_specs:
   - name: "serving-endpoint"
     description: "Machine learning model serving endpoint"
     serving_endpoint_spec:
       permission: "CAN_QUERY"
+
   - name: "genie-space"
     description: "Databricks Genie Space for multi-agent apps"
     genie_space_spec:
       permission: "CAN_EDIT"  # use CAN_USE if your workspace doesn't support CAN_EDIT
+
   - name: "tavily-api-key"
-    description: "Tavily API key for external knowledge search"
-    secret_spec:
-      permission: "READ"
-  - name: "data-volume"
-    description: "Unity Catalog volume for data storage"
-    uc_securable_spec:
-      securable_type: "VOLUME"
-      permission: "READ_VOLUME"
+    description: "(Optional) For external search over internet, you may use Tavily API Key (https://docs.tavily.com/documentation/quickstart)" 
+    input_spec:
+      type: "text"
+      required: false
 
 user_api_scopes:
   - "sql"
