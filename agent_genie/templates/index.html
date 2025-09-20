@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databricks Genie++ Omni-Analytics Platform</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #e0ecff, #f4f7fc);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+
+        /* Main content */
+        .main-content {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* This centers everything horizontally */
+            justify-content: center;
+            text-align: center; /* This centers the text inside h1 */
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1a73e8;
+            font-weight: 600;
+            margin: 0;
+        }
+
+
+        .section-description {
+            color: #5f6368;
+            text-align: center;
+            margin: 0 auto 20px auto;
+            max-width: 1000px;
+            width: 100%;
+            display: block;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 16px 24px;
+            margin: 0 12px;
+            width: 200px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #5f6368;
+            font-weight: 500;
+        }
+
+        .query-type-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .business-indicator {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .predictive-indicator {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 1200px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            height: 600px;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message {
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            border-radius: 16px;
+            max-width: 80%;
+            line-height: 1.5;
+            transition: all 0.3s ease;
+            animation: messageAppear 0.3s ease-out;
+        }
+
+        .user-message {
+            background: #1a73e8;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #f1f3f4;
+            color: #202124;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        .typing {
+            font-style: italic;
+            color: #999;
+            align-self: flex-start;
+            margin-left: 10px;
+            animation: typing 1s infinite;
+        }
+
+        .message-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .chat-input {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            padding: 18px 20px;
+            background: #f9f9f9;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: box-shadow 0.2s;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+        }
+
+        .chat-input button {
+            padding: 12px 20px;
+            margin-left: 12px;
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #125fc3;
+        }
+
+        .chat-input button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Enhanced table styles with scrolling */
+        .table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-top: 16px;
+            border: 1px solid #e1e5e9;
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+        }
+
+        /* Custom scrollbar styling */
+        .table-container::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 6px;
+            border: 2px solid #f1f1f1;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a67d8, #667eea);
+        }
+
+        .table-container::-webkit-scrollbar-corner {
+            background: #f1f1f1;
+        }
+
+        /* Table wrapper for horizontal scrolling */
+        .table-wrapper {
+            min-width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: #ffffff;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            position: relative;
+            user-select: none;
+        }
+
+        tr {
+            transition: all 0.2s ease;
+        }
+
+        tr:hover {
+            background-color: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        tr:nth-child(even) {
+            background-color: #fbfcfd;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        td {
+            position: relative;
+            border-right: 1px solid #f0f0f0;
+        }
+
+        td:last-child {
+            border-right: none;
+        }
+
+        td.highlight {
+            color: #dc3545;
+            font-weight: 600;
+            background-color: #fff5f5;
+        }
+
+        /* Expandable row styles */
+        .expand-btn {
+            background: linear-gradient(135deg, #1a73e8, #125fc3);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+        }
+
+        .expand-btn:hover {
+            background: linear-gradient(135deg, #125fc3, #0d47a1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+        }
+
+        .expand-btn.expanded {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .expand-btn.expanded:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+        }
+
+        /* Enhanced cell content styling */
+        .cell-content {
+            display: block;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .cell-content.expanded {
+            max-width: none;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Enhanced full content display */
+        .cell-full-content {
+            display: none;
+            margin-top: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            border-left: 4px solid #1a73e8;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #495057;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .cell-full-content.show {
+            display: block;
+            animation: expandContent 0.4s ease-out;
+        }
+
+        /* Improved animations */
+        @keyframes expandContent {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 400px;
+                transform: translateY(0);
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+                transform: translateY(0);
+            }
+        }
+
+        /* Row expansion indicator */
+        .row-expanded {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5) !important;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .row-expanded:hover {
+            background: linear-gradient(135deg, #e1f5fe, #f1e6ff) !important;
+        }
+
+        /* Scroll indicators */
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .table-container.scrollable-x::before {
+            opacity: 1;
+        }
+
+        .table-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .table-container.scrollable-y::after {
+            opacity: 1;
+        }
+
+        /* Enhanced table cell styling for large content */
+        td, th {
+            min-width: 120px;
+            max-width: 300px;
+            white-space: nowrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        td.expandable-cell {
+            white-space: normal;
+            vertical-align: top;
+            padding: 8px 12px;
+        }
+
+        /* Large content cell wrapper */
+        .cell-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* Content preview section */
+        .content-preview {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* Content preview improvements */
+        .content-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .content-length-info {
+            font-size: 11px;
+            color: #6c757d;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+
+        /* Column resizing styles */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 15;
+            transition: background-color 0.2s ease;
+        }
+
+        .resize-handle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .resize-handle.active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Visual feedback during resize */
+        .resize-line {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #1a73e8;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .resize-line.active {
+            opacity: 1;
+        }
+
+        /* Table with resizable columns */
+        .resizable-table {
+            table-layout: fixed;
+        }
+
+        .resizable-table th,
+        .resizable-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Prevent text selection during resize */
+        .resizing {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .csv-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #f1f8ff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .csv-button:hover {
+            background: #dcefff;
+        }
+
+        .suggested-tags {
+            padding: 18px 20px;
+            background: #f8fbff;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .suggested-tags-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tag-category {
+            margin-bottom: 12px;
+        }
+
+        .tag-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .suggested-tags button {
+            background: #e3eafc;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #1a73e8;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .suggested-tags button:hover {
+            background: #d1defb;
+        }
+
+        /* Fixed Questions Styles */
+        .fixed-questions {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            animation: fadeIn 0.5s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        .fixed-questions-header {
+            padding: 18px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fbff;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
+
+        .fixed-questions-header:hover {
+            background: #ddeeff;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            color: #1a73e8;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .fixed-questions-content {
+            max-height: 300px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 18px 20px;
+        }
+
+        .fixed-questions-content.collapsed {
+            max-height: 0;
+            padding: 0 20px;
+        }
+
+        .fixed-questions .tag-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .fixed-questions button {
+            background: #ffffff;
+            border: 2px solid #b8daf8;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #1a73e8;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.1);
+            margin: 4px 0;
+        }
+
+        .fixed-questions button:hover {
+            background: #e3eafc;
+            border-color: #1a73e8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        /* Feedback section styles */
+        .feedback-section {
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #1a73e8;
+            font-size: 13px;
+        }
+
+        .feedback-question {
+            color: #5f6368;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .feedback-btn {
+            padding: 6px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #5f6368;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feedback-btn:hover {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+
+        .feedback-btn.selected {
+            background: #1a73e8;
+            border-color: #1a73e8;
+            color: #ffffff;
+        }
+
+        .feedback-reason-container {
+            display: none;
+            margin-top: 8px;
+        }
+
+        .feedback-reason-container.show {
+            display: block;
+        }
+
+        .feedback-reason-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .feedback-reason-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .feedback-submit-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .feedback-submit-btn:hover {
+            background: #125fc3;
+        }
+
+        .feedback-submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .feedback-success {
+            color: #137333;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .feedback-error {
+            color: #d93025;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 600px) {
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .chat-container {
+                border-radius: 0;
+            }
+
+            .chat-box {
+                padding: 16px;
+                height: 400px;
+            }
+
+            .chat-input {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .chat-input button {
+                margin-left: 0;
+            }
+            
+            .suggested-tags {
+                padding: 12px;
+            }
+            
+            .tag-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .suggested-tags button {
+                width: 100%;
+            }
+
+
+            .feedback-buttons {
+                flex-direction: column;
+            }
+
+            .feedback-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .fixed-questions .tag-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .fixed-questions button {
+                width: 100%;
+                text-align: left;
+            }
+        }
+
+        .schema-container {
+            width: 100%;
+            max-width: 1200px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            margin: 0 auto 20px auto;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        .schema-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #f1f3f4;
+            padding-bottom: 12px;
+        }
+
+        .schema-header h3 {
+            margin: 0;
+            color: #1a73e8;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .schema-status {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .schema-status.loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .schema-status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .schema-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .schema-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .schema-column {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #bbdefb;
+        }
+
+        .schema-column.required {
+            background: #e8f5e8;
+            color: #2e7d2e;
+            border: 1px solid #a5d6a7;
+            font-weight: 600;
+        }
+
+        .required-columns-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .required-columns-title {
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="main-content">
+        <div class="header-section">
+            <h1>Databricks Genie++ Omni-Analytics Platform</h1>
+        </div>
+        
+        <div class="section-description">
+            A multi-agent AI engine that answers questions, forecasts trends, classifies data, summarizes records, translates languages, and recommends next-best actions. For any questions or feedback, please reach out to nitin.aggarwal@databricks.com 
+        </div>
+        
+        <!-- Schema Information Section -->
+        <div id="schemaSection" class="fixed-questions" style="display: none; width: 100%; max-width: 1200px; margin: 0 auto 20px auto;">
+            <div class="fixed-questions-header" onclick="toggleDatasetSchema()">
+                <span>📊 Dataset Schema</span>
+                <svg class="collapse-icon" id="datasetSchemaIcon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div class="fixed-questions-content" id="datasetSchemaContent">
+                <div class="schema-header">
+                    <span id="schemaStatus" class="schema-status">Loading...</span>
+                </div>
+                <div id="schemaColumns" class="schema-columns">
+                    <!-- Schema columns will be displayed here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fixed Questions Section -->
+        <div class="fixed-questions" id="fixedQuestions" style="width: 100%; max-width: 1200px; margin: 0 auto 20px auto;">
+            <div class="fixed-questions-header" onclick="toggleFixedQuestions()">
+                <span>Advanced Questions</span>
+                <svg class="collapse-icon" id="fixedQuestionsIcon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div class="fixed-questions-content" id="fixedQuestionsContent">
+                <div class="tag-category">
+                    <div class="tag-buttons">
+                        <button onclick="askFixedQuestion('Explain the dataset beautifully without any *')">
+                            Explain the dataset
+                        </button>
+                        <button onclick="askFixedQuestion('Summarize the record into Spanish')">
+                            Summarize the record into Spanish
+                        </button>
+                        <button onclick="askFixedQuestion('Classify each record into categories: High, Medium, and Low. Also, specify the reason')">
+                            Classify each record using categories: High, Medium, and Low. Also, specify the reason
+                        </button>
+                        <button onclick="askFixedQuestion('Summarize the record, and suggest one next best action for the analyst supporting the business')">
+                            Summarize the record, and suggest one next best action for the analyst supporting the business
+                        </button>
+                        <button onclick="askFixedQuestion('Who is Ali Ghodsi?')">
+                            Who is Ali Ghodsi?
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Suggested Questions Section -->
+        <div class="fixed-questions" id="suggestedQuestionsSection" style="width: 100%; max-width: 1200px; margin: 0 auto 20px auto;">
+            <div class="fixed-questions-header" onclick="toggleSuggestedQuestions()">
+                <span>Suggested Questions</span>
+                <svg class="collapse-icon" id="suggestedQuestionsIcon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div class="fixed-questions-content" id="suggestedQuestionsContent">
+                <div class="tag-category">
+                    <div class="tag-buttons" id="suggestedQuestions">
+                        <span style="color: #666; font-style: italic;">Loading questions based on your data schema...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PDF Upload Section -->
+        <div class="fixed-questions" id="pdfUploadSection" style="width: 100%; max-width: 1200px; margin: 0 auto 20px auto;">
+            <div class="fixed-questions-header" onclick="togglePdfUpload()">
+                <span>📄 Document Analyzer</span>
+                <svg class="collapse-icon" id="pdfUploadIcon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div class="fixed-questions-content" id="pdfUploadContent">
+                <!-- Upload once -->
+                <div class="row" style="margin-bottom: 12px;">
+                    <input id="pdf" type="file" accept="application/pdf" style="width: 100%; margin-bottom: 10px;" />
+                    <button id="uploadBtn" style="padding: 10px 14px; border: 0; border-radius: 10px; cursor: pointer; background: #1a73e8; color: #fff;">Upload</button>
+                    <span id="uploadStatus" style="margin-left: 10px; font-weight: 500;"></span>
+                </div>
+                
+                <!-- Toggle: route all queries to PDF QA when checked -->
+                <div class="row" style="margin-bottom: 12px;">
+                    <input id="usePdf" type="checkbox" />
+                    <label for="usePdf" style="margin-left: 8px; font-weight: 500; color: #5f6368;">Set as default for this chat</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Ask any question..." autocomplete="off">
+                <button id="sendButton">Send</button>
+            </div>
+            <div class="chat-box" id="chatBox">
+                <!-- Messages will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variable to hold the sendMessage function
+        let globalSendMessage = null;
+        
+        // PDF session management
+        let sessionId = null; // set after /upload_pdf
+        
+        // Global functions for fixed questions functionality
+        function toggleFixedQuestions() {
+            const content = document.getElementById('fixedQuestionsContent');
+            const icon = document.getElementById('fixedQuestionsIcon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        // Global function for dataset schema toggle
+        function toggleDatasetSchema() {
+            const content = document.getElementById('datasetSchemaContent');
+            const icon = document.getElementById('datasetSchemaIcon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        // Global function for suggested questions toggle
+        function toggleSuggestedQuestions() {
+            const content = document.getElementById('suggestedQuestionsContent');
+            const icon = document.getElementById('suggestedQuestionsIcon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        // Global function for PDF upload toggle
+        function togglePdfUpload() {
+            const content = document.getElementById('pdfUploadContent');
+            const icon = document.getElementById('pdfUploadIcon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        function askFixedQuestion(question) {
+            const userInput = document.getElementById('userInput');
+            if (userInput && globalSendMessage) {
+                userInput.value = question;
+                globalSendMessage();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('mainContent');
+            
+            const chatBox = document.getElementById('chatBox');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const suggestedQuestionsContainer = document.getElementById('suggestedQuestions');
+            const patientCountElement = document.getElementById('patientCount');
+            const doctorCountElement = document.getElementById('doctorCount');
+            
+            // PDF-related elements
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const usePdfEl = document.getElementById('usePdf');
+            
+            let isWaitingForResponse = false;
+            let currentMessageGroup = null;
+            let schemaColumns = [];
+            
+            // Schema-related elements
+            const schemaSection = document.getElementById('schemaSection');
+            const schemaStatus = document.getElementById('schemaStatus');
+            const schemaColumnsContainer = document.getElementById('schemaColumns');
+            
+            // Initialize the application directly
+            initializeApp();
+            
+            
+            // Fetch schema information function
+            function fetchSchema() {
+                // First check if genie is configured
+                fetch('/genie-config-status')
+                .then(response => response.json())
+                .then(configData => {
+                    if (!configData.genie_configured) {
+                        schemaStatus.textContent = 'Genie not configured in environment';
+                        schemaStatus.className = 'schema-status error';
+                        return;
+                    }
+                    
+                    schemaSection.style.display = 'block';
+                    schemaStatus.textContent = 'Loading schema...';
+                    schemaStatus.className = 'schema-status loading';
+                    
+                    // Use the genie room ID from environment
+                    fetch('/fetch-schema', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ genie_room_id: configData.genie_room_id }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            schemaColumns = data.columns || [];
+                            displaySchemaColumns(schemaColumns);
+                            schemaStatus.textContent = `${schemaColumns.length} columns detected`;
+                            schemaStatus.className = 'schema-status success';
+                            
+                            // Load sample questions after schema is successfully fetched
+                            loadSampleQuestions();
+                        } else {
+                            schemaStatus.textContent = 'Failed to load schema';
+                            schemaStatus.className = 'schema-status error';
+                            console.error('Error fetching schema:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching schema:', error);
+                        schemaStatus.textContent = 'Error loading schema';
+                        schemaStatus.className = 'schema-status error';
+                    });
+                })
+                .catch(error => {
+                    console.error('Error checking genie config:', error);
+                    schemaStatus.textContent = 'Error checking configuration';
+                    schemaStatus.className = 'schema-status error';
+                });
+            }
+            
+            // Display schema columns
+            function displaySchemaColumns(columns, requiredColumns = []) {
+                schemaColumnsContainer.innerHTML = '';
+                
+                columns.forEach(column => {
+                    const columnDiv = document.createElement('div');
+                    columnDiv.className = 'schema-column';
+                    columnDiv.textContent = column;
+                    
+                    // Highlight required columns
+                    if (requiredColumns.includes(column)) {
+                        columnDiv.classList.add('required');
+                    }
+                    
+                    schemaColumnsContainer.appendChild(columnDiv);
+                });
+                
+                // Show required columns info if any
+                if (requiredColumns.length > 0) {
+                    const existingInfo = schemaSection.querySelector('.required-columns-info');
+                    if (existingInfo) {
+                        existingInfo.remove();
+                    }
+                    
+                    const requiredInfo = document.createElement('div');
+                    requiredInfo.className = 'required-columns-info';
+                    requiredInfo.innerHTML = `
+                        <div class="required-columns-title">Required columns for current query:</div>
+                        <div>${requiredColumns.join(', ')}</div>
+                    `;
+                    schemaSection.appendChild(requiredInfo);
+                } else {
+                    // Remove required columns info if no required columns
+                    const existingInfo = schemaSection.querySelector('.required-columns-info');
+                    if (existingInfo) {
+                        existingInfo.remove();
+                    }
+                }
+            }
+            
+            // Initialize app function
+            function initializeApp() {
+                // Show welcome message
+                const welcomeMessage = document.createElement('div');
+                welcomeMessage.className = 'chat-message bot-message';
+                welcomeMessage.textContent = 'Welcome to Databricks Genie++ Omni-Analytics Platform! The system is configured and ready to use.';
+                chatBox.appendChild(welcomeMessage);
+                
+                // Fetch schema information
+                fetchSchema();
+                
+                // Fetch statistics
+                fetchStatistics();
+                
+                // Refresh statistics every 5 minutes
+                setInterval(fetchStatistics, 300000);
+                
+                // Focus input field
+                userInput.focus();
+            }
+            
+            // Fetch statistics
+            function fetchStatistics() {
+                fetch('/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (patientCountElement) patientCountElement.textContent = data.patient_count.toLocaleString();
+                        if (doctorCountElement) doctorCountElement.textContent = data.doctor_count.toLocaleString();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching statistics:', error);
+                        if (patientCountElement) patientCountElement.textContent = 'N/A';
+                        if (doctorCountElement) doctorCountElement.textContent = 'N/A';
+                    });
+            }
+            
+            
+            // Load sample questions
+            function loadSampleQuestions() {
+                // Clear existing content (including loading message)
+                suggestedQuestionsContainer.innerHTML = '';
+                
+                fetch('/sample-questions?section=all')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Load suggested questions
+                        if (data.questions && Array.isArray(data.questions)) {
+                            data.questions.forEach(question => {
+                                const button = document.createElement('button');
+                                button.textContent = question;
+                                button.addEventListener('click', () => {
+                                    userInput.value = question;
+                                    sendMessage();
+                                });
+                                suggestedQuestionsContainer.appendChild(button);
+                            });
+                        } else {
+                            console.error('Unexpected data format:', data);
+                            // Show error message if questions format is unexpected
+                            const errorMsg = document.createElement('span');
+                            errorMsg.style.color = '#666';
+                            errorMsg.style.fontStyle = 'italic';
+                            errorMsg.textContent = 'Unable to load dynamic questions. Please try asking your own questions.';
+                            suggestedQuestionsContainer.appendChild(errorMsg);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading sample questions:', error);
+                        // Show error message if fetch fails
+                        const errorMsg = document.createElement('span');
+                        errorMsg.style.color = '#666';
+                        errorMsg.style.fontStyle = 'italic';
+                        errorMsg.textContent = 'Unable to load questions. Please try asking your own questions.';
+                        suggestedQuestionsContainer.appendChild(errorMsg);
+                    });
+            }
+            
+            // Send message function
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message || isWaitingForResponse) return;
+                
+                // Create a new message group for this conversation pair
+                currentMessageGroup = document.createElement('div');
+                currentMessageGroup.className = 'message-group';
+                chatBox.prepend(currentMessageGroup);
+                
+                // Add user message to the current group
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'chat-message user-message';
+                userMessageDiv.textContent = message;
+                currentMessageGroup.appendChild(userMessageDiv);
+                
+                // Clear input
+                userInput.value = '';
+                
+                // Disable input while waiting
+                isWaitingForResponse = true;
+                sendButton.disabled = true;
+                sendButton.textContent = 'Waiting...';
+                
+                // Show typing indicator in the current group
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'chat-message typing';
+                typingIndicator.id = 'typingIndicator';
+                typingIndicator.textContent = 'Thinking...';
+                currentMessageGroup.appendChild(typingIndicator);
+                
+                // Handle PDF mode logic
+                if (usePdfEl.checked && !sessionId) {
+                    // PDF mode is checked but no session exists - try to auto-upload
+                    const file = document.getElementById('pdf').files[0];
+                    if (!file) {
+                        // No file selected at all
+                        const noFileIndicator = document.getElementById('typingIndicator');
+                        if (noFileIndicator) noFileIndicator.remove();
+                        
+                        addBotMessage('Please select a PDF file first, then upload it or try sending your question again.');
+                        
+                        // Re-enable input
+                        isWaitingForResponse = false;
+                        sendButton.disabled = false;
+                        sendButton.textContent = 'Send';
+                        return;
+                    }
+                    
+                    // File is selected but not uploaded - auto-upload it
+                    try {
+                        // Update typing indicator to show upload progress
+                        const uploadIndicator = document.getElementById('typingIndicator');
+                        if (uploadIndicator) uploadIndicator.textContent = 'Uploading PDF...';
+                        
+                        const uploadResult = await uploadPdf();
+                        if (!uploadResult.success) {
+                            // Upload failed
+                            const failIndicator = document.getElementById('typingIndicator');
+                            if (failIndicator) failIndicator.remove();
+                            
+                            addBotMessage(`Upload failed: ${uploadResult.error}. Please try uploading manually.`);
+                            
+                            // Re-enable input
+                            isWaitingForResponse = false;
+                            sendButton.disabled = false;
+                            sendButton.textContent = 'Send';
+                            return;
+                        }
+                        
+                        // Upload successful, update typing indicator
+                        const processIndicator = document.getElementById('typingIndicator');
+                        if (processIndicator) processIndicator.textContent = 'Processing your question...';
+                        
+                    } catch (error) {
+                        // Upload error
+                        const errorIndicator = document.getElementById('typingIndicator');
+                        if (errorIndicator) errorIndicator.remove();
+                        
+                        addBotMessage(`Upload error: ${error.message}. Please try again.`);
+                        
+                        // Re-enable input
+                        isWaitingForResponse = false;
+                        sendButton.disabled = false;
+                        sendButton.textContent = 'Send';
+                        return;
+                    }
+                }
+                
+                // Prepare request data
+                const requestData = { 
+                    query: message 
+                };
+                
+                // Add session_id if PDF mode is enabled and we have a session
+                if (usePdfEl.checked && sessionId) {
+                    requestData.session_id = sessionId;
+                }
+                
+                // Send request to server
+                fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Remove typing indicator
+                    const indicator = document.getElementById('typingIndicator');
+                    if (indicator) indicator.remove();
+                    
+                    // Debug logging
+                    console.log('🔍 Response data received:', data);
+                    console.log('🔍 SQL query in response:', data.sql_query);
+                    console.log('🔍 Response type:', data.response_type);
+                    
+                    if (data.error) {
+                        addBotMessage(`Error: ${data.error}`, null, data.interaction_id, data.sql_query);
+                    } else if (data.response_type === 'table') {
+                        addTableResponse(data);
+                    } else {
+                        addBotMessage(data.message, data.query_type, data.interaction_id, data.sql_query);
+                    }
+                    
+                    // Update schema display with required columns if available
+                    if (data.required_columns && Array.isArray(data.required_columns)) {
+                        displaySchemaColumns(schemaColumns, data.required_columns);
+                    }
+                    
+                    // Refresh statistics after each query response
+                    fetchStatistics();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Remove typing indicator
+                    const indicator = document.getElementById('typingIndicator');
+                    if (indicator) indicator.remove();
+                    
+                    addBotMessage('Sorry, there was an error processing your request. Please try again.');
+                })
+                .finally(() => {
+                    // Re-enable input
+                    isWaitingForResponse = false;
+                    sendButton.disabled = false;
+                    sendButton.textContent = 'Send';
+                });
+            }
+            
+            // Make sendMessage available globally for fixed questions
+            globalSendMessage = sendMessage;
+            
+            // Add bot text message to current group
+            function addBotMessage(text, queryType = null, interactionId = null, sqlQuery = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message bot-message';
+                
+                // Add query type indicator for bot messages
+                if (queryType) {
+                    const indicatorSpan = document.createElement('span');
+                    indicatorSpan.className = `query-type-indicator ${queryType}-indicator`;
+                    indicatorSpan.textContent = queryType === 'business' ? 'Business Analytics' : 'Predictive Analytics';
+                    messageDiv.appendChild(indicatorSpan);
+                    
+                    const messageText = document.createElement('div');
+                    messageText.textContent = text;
+                    messageDiv.appendChild(messageText);
+                } else {
+                    messageDiv.textContent = text;
+                }
+                
+                // Add SQL query section if available
+                console.log('🔍 addBotMessage checking SQL query:', sqlQuery, 'trimmed:', sqlQuery && sqlQuery.trim());
+                if (sqlQuery && sqlQuery.trim()) {
+                    console.log('🔍 Creating SQL section for bot message');
+                    const sqlSection = createSqlSection(sqlQuery);
+                    messageDiv.appendChild(sqlSection);
+                } else {
+                    console.log('🔍 No SQL query to display for bot message');
+                }
+                
+                // Add feedback section if interaction ID is available
+                if (interactionId) {
+                    const feedbackSection = createFeedbackSection(interactionId);
+                    messageDiv.appendChild(feedbackSection);
+                }
+                
+                // Add to current message group
+                if (currentMessageGroup) {
+                    currentMessageGroup.appendChild(messageDiv);
+                } else {
+                    // Fallback if no current group
+                    chatBox.prepend(messageDiv);
+                }
+            }
+            
+            // Create SQL query section for displaying generated SQL
+            function createSqlSection(sqlQuery) {
+                console.log('🔍 createSqlSection called with:', sqlQuery);
+                const sqlSection = document.createElement('div');
+                sqlSection.className = 'sql-section';
+                sqlSection.style.cssText = `
+                    margin-top: 16px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border: 1px solid #e1e5e9;
+                    border-radius: 8px;
+                    border-left: 4px solid #1a73e8;
+                `;
+                
+                // Create header with toggle button
+                const sqlHeader = document.createElement('div');
+                sqlHeader.style.cssText = `
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    cursor: pointer;
+                `;
+                
+                const sqlTitle = document.createElement('span');
+                sqlTitle.textContent = '📊 Generated SQL Query';
+                sqlTitle.style.cssText = `
+                    font-weight: 600;
+                    color: #1a73e8;
+                    font-size: 14px;
+                `;
+                
+                const toggleIcon = document.createElement('span');
+                toggleIcon.textContent = '▼';
+                toggleIcon.style.cssText = `
+                    color: #1a73e8;
+                    font-size: 12px;
+                    transition: transform 0.3s ease;
+                `;
+                
+                sqlHeader.appendChild(sqlTitle);
+                sqlHeader.appendChild(toggleIcon);
+                
+                // Create SQL content container
+                const sqlContent = document.createElement('div');
+                sqlContent.className = 'sql-content';
+                sqlContent.style.cssText = `
+                    background: #ffffff;
+                    border: 1px solid #e1e5e9;
+                    border-radius: 6px;
+                    padding: 12px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
+                    line-height: 1.4;
+                    white-space: pre-wrap;
+                    overflow-x: auto;
+                    color: #2d3748;
+                    max-height: 200px;
+                    overflow-y: auto;
+                `;
+                sqlContent.textContent = sqlQuery;
+                
+                // Create copy button
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copy SQL';
+                copyButton.style.cssText = `
+                    margin-top: 8px;
+                    padding: 6px 12px;
+                    background: #1a73e8;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                `;
+                
+                copyButton.addEventListener('click', () => {
+                    navigator.clipboard.writeText(sqlQuery).then(() => {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.style.background = '#28a745';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy SQL';
+                            copyButton.style.background = '#1a73e8';
+                        }, 2000);
+                    }).catch(() => {
+                        copyButton.textContent = 'Copy failed';
+                        copyButton.style.background = '#dc3545';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy SQL';
+                            copyButton.style.background = '#1a73e8';
+                        }, 2000);
+                    });
+                });
+                
+                copyButton.addEventListener('mouseenter', () => {
+                    if (copyButton.textContent === 'Copy SQL') {
+                        copyButton.style.background = '#125fc3';
+                    }
+                });
+                
+                copyButton.addEventListener('mouseleave', () => {
+                    if (copyButton.textContent === 'Copy SQL') {
+                        copyButton.style.background = '#1a73e8';
+                    }
+                });
+                
+                // Create collapsible content container
+                const collapsibleContent = document.createElement('div');
+                collapsibleContent.appendChild(sqlContent);
+                collapsibleContent.appendChild(copyButton);
+                
+                // Add toggle functionality
+                let isCollapsed = false;
+                sqlHeader.addEventListener('click', () => {
+                    isCollapsed = !isCollapsed;
+                    if (isCollapsed) {
+                        collapsibleContent.style.display = 'none';
+                        toggleIcon.textContent = '▶';
+                        toggleIcon.style.transform = 'rotate(-90deg)';
+                    } else {
+                        collapsibleContent.style.display = 'block';
+                        toggleIcon.textContent = '▼';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                    }
+                });
+                
+                sqlSection.appendChild(sqlHeader);
+                sqlSection.appendChild(collapsibleContent);
+                
+                return sqlSection;
+            }
+            
+            // Create feedback section for a message
+            function createFeedbackSection(interactionId) {
+                const feedbackSection = document.createElement('div');
+                feedbackSection.className = 'feedback-section';
+                feedbackSection.setAttribute('data-interaction-id', interactionId);
+                
+                feedbackSection.innerHTML = `
+                    <div class="feedback-question">Was this helpful?</div>
+                    <div class="feedback-buttons">
+                        <button class="feedback-btn" data-helpful="true">Yes</button>
+                        <button class="feedback-btn" data-helpful="false">No</button>
+                    </div>
+                    <div class="feedback-reason-container">
+                        <textarea class="feedback-reason-input" placeholder="Tell us why this wasn't helpful (optional)..." maxlength="500"></textarea>
+                        <button class="feedback-submit-btn">Submit Feedback</button>
+                    </div>
+                `;
+                
+                // Add event listeners for feedback buttons
+                const feedbackButtons = feedbackSection.querySelectorAll('.feedback-btn');
+                const reasonContainer = feedbackSection.querySelector('.feedback-reason-container');
+                const submitBtn = feedbackSection.querySelector('.feedback-submit-btn');
+                const reasonInput = feedbackSection.querySelector('.feedback-reason-input');
+                
+                let selectedHelpful = null;
+                
+                feedbackButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Remove previous selection
+                        feedbackButtons.forEach(b => b.classList.remove('selected'));
+                        
+                        // Select current button
+                        btn.classList.add('selected');
+                        selectedHelpful = btn.getAttribute('data-helpful') === 'true';
+                        
+                        // Show reason input if "No" is selected
+                        if (!selectedHelpful) {
+                            reasonContainer.classList.add('show');
+                            reasonInput.focus();
+                        } else {
+                            reasonContainer.classList.remove('show');
+                            // Auto-submit for "Yes" responses
+                            submitFeedback(interactionId, selectedHelpful, '', feedbackSection);
+                        }
+                    });
+                });
+                
+                // Handle submit button click
+                submitBtn.addEventListener('click', () => {
+                    if (selectedHelpful !== null) {
+                        const reason = reasonInput.value.trim();
+                        submitFeedback(interactionId, selectedHelpful, reason, feedbackSection);
+                    }
+                });
+                
+                // Handle enter key in textarea
+                reasonInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (selectedHelpful !== null) {
+                            const reason = reasonInput.value.trim();
+                            submitFeedback(interactionId, selectedHelpful, reason, feedbackSection);
+                        }
+                    }
+                });
+                
+                return feedbackSection;
+            }
+            
+            // Submit feedback to the server
+            function submitFeedback(interactionId, isHelpful, feedbackReason, feedbackSection) {
+                const submitBtn = feedbackSection.querySelector('.feedback-submit-btn');
+                const originalText = submitBtn.textContent;
+                
+                // Disable button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
+                // Detect response type based on the message content
+                const messageContainer = feedbackSection.closest('.chat-message');
+                const hasTable = messageContainer?.querySelector('.table-container') !== null;
+                const responseType = hasTable ? 'table' : 'text';
+                
+                // Prepare feedback data
+                const feedbackData = {
+                    interaction_id: interactionId,
+                    is_helpful: isHelpful,
+                    feedback_reason: feedbackReason || null,
+                    user_query: currentMessageGroup?.querySelector('.user-message')?.textContent || '',
+                    response_type: responseType
+                };
+                
+                // Submit feedback
+                fetch('/submit-feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(feedbackData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        feedbackSection.innerHTML = `
+                            <div class="feedback-success">
+                                ✓ Thank you for your feedback!
+                            </div>
+                        `;
+                    } else {
+                        // Show error message
+                        feedbackSection.innerHTML = `
+                            <div class="feedback-error">
+                                ⚠️ Failed to submit feedback: ${data.error || 'Unknown error'}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting feedback:', error);
+                    feedbackSection.innerHTML = `
+                        <div class="feedback-error">
+                            ⚠️ Failed to submit feedback. Please try again.
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
+            }
+            
+            // Column resizing functionality
+            function setupColumnResizing(table, tableContainer, resizeLine) {
+                let isResizing = false;
+                let currentColumn = null;
+                let startX = 0;
+                let startWidth = 0;
+                
+                // Handle mouse down on resize handles
+                table.addEventListener('mousedown', function(e) {
+                    if (e.target.classList.contains('resize-handle')) {
+                        isResizing = true;
+                        currentColumn = parseInt(e.target.getAttribute('data-column'));
+                        startX = e.pageX;
+                        
+                        const th = e.target.parentElement;
+                        startWidth = parseInt(window.getComputedStyle(th).width);
+                        
+                        // Add visual feedback
+                        e.target.classList.add('active');
+                        document.body.classList.add('resizing');
+                        resizeLine.classList.add('active');
+                        
+                        // Position resize line
+                        const rect = th.getBoundingClientRect();
+                        const containerRect = tableContainer.getBoundingClientRect();
+                        resizeLine.style.left = (rect.right - containerRect.left - 1) + 'px';
+                        
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+                
+                // Handle mouse move during resize
+                document.addEventListener('mousemove', function(e) {
+                    if (!isResizing) return;
+                    
+                    const diff = e.pageX - startX;
+                    const newWidth = Math.max(50, startWidth + diff); // Minimum width of 50px
+                    
+                    // Update column width
+                    const th = table.querySelector(`th[data-column-index="${currentColumn}"]`);
+                    if (th) {
+                        th.style.width = newWidth + 'px';
+                        
+                        // Update all cells in this column
+                        const rows = table.querySelectorAll('tr');
+                        rows.forEach(row => {
+                            const cell = row.children[currentColumn];
+                            if (cell) {
+                                cell.style.width = newWidth + 'px';
+                            }
+                        });
+                    }
+                    
+                    // Update resize line position
+                    const rect = th.getBoundingClientRect();
+                    const containerRect = tableContainer.getBoundingClientRect();
+                    resizeLine.style.left = (rect.right - containerRect.left - 1) + 'px';
+                    
+                    e.preventDefault();
+                });
+                
+                // Handle mouse up to stop resizing
+                document.addEventListener('mouseup', function(e) {
+                    if (isResizing) {
+                        isResizing = false;
+                        currentColumn = null;
+                        
+                        // Remove visual feedback
+                        document.querySelectorAll('.resize-handle.active').forEach(handle => {
+                            handle.classList.remove('active');
+                        });
+                        document.body.classList.remove('resizing');
+                        resizeLine.classList.remove('active');
+                    }
+                });
+                
+                // Add hover effects for resize handles
+                table.addEventListener('mouseover', function(e) {
+                    if (e.target.classList.contains('resize-handle') && !isResizing) {
+                        e.target.classList.add('hover');
+                    }
+                });
+                
+                table.addEventListener('mouseout', function(e) {
+                    if (e.target.classList.contains('resize-handle')) {
+                        e.target.classList.remove('hover');
+                    }
+                });
+            }
+            
+            // Helper function to calculate optimal column widths based on content
+            function calculateOptimalColumnWidths(data) {
+                const minWidth = 120;
+                const maxWidth = 400;
+                const defaultWidth = 180;
+                
+                return data.columns.map((column, colIndex) => {
+                    // Calculate width based on header length
+                    let headerWidth = column.length * 8 + 40; // Estimate based on character count
+                    
+                    // Calculate width based on content
+                    let maxContentWidth = 0;
+                    data.data.forEach(row => {
+                        const cellValue = row[column] !== null ? String(row[column]) : '';
+                        // For long content, we'll use a smaller preview width
+                        if (cellValue.length > 80) {
+                            maxContentWidth = Math.max(maxContentWidth, 250);
+                        } else {
+                            maxContentWidth = Math.max(maxContentWidth, cellValue.length * 8 + 20);
+                        }
+                    });
+                    
+                    // Use the larger of header or content width, within limits
+                    const calculatedWidth = Math.max(headerWidth, maxContentWidth);
+                    return Math.min(Math.max(calculatedWidth, minWidth), maxWidth);
+                });
+            }
+            
+            // Helper function to format cell content for better readability
+            function formatCellContent(content) {
+                if (!content) return '';
+                
+                // Escape HTML to prevent injection
+                const escapeHtml = (text) => {
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    };
+                    return text.replace(/[&<>"']/g, m => map[m]);
+                };
+                
+                let formatted = escapeHtml(content);
+                
+                // Preserve line breaks
+                formatted = formatted.replace(/\n/g, '<br>');
+                
+                // Preserve tabs with proper spacing
+                formatted = formatted.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+                
+                // Highlight JSON-like structures
+                if (formatted.includes('{') && formatted.includes('}')) {
+                    try {
+                        // Try to parse and pretty-print JSON
+                        const parsed = JSON.parse(content);
+                        formatted = '<pre>' + JSON.stringify(parsed, null, 2) + '</pre>';
+                    } catch (e) {
+                        // Not valid JSON, keep original formatting
+                    }
+                }
+                
+                // Highlight URLs
+                formatted = formatted.replace(
+                    /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g, 
+                    '<a href="$1" target="_blank" style="color: #1a73e8; text-decoration: underline;">$1</a>'
+                );
+                
+                return formatted;
+            }
+            
+            // Add table response to chat
+            function addTableResponse(data) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message bot-message';
+                
+                // Add query type indicator
+                if (data.query_type) {
+                    const indicatorSpan = document.createElement('span');
+                    indicatorSpan.className = `query-type-indicator ${data.query_type}-indicator`;
+                    indicatorSpan.textContent = data.query_type === 'business' ? 'Business Analytics' : 'Predictive Analytics';
+                    messageDiv.appendChild(indicatorSpan);
+                }
+                
+                const tableWrapper = document.createElement('div');
+                tableWrapper.innerHTML = '<p>Here are the results:</p>';
+                
+                // Create table container with enhanced styling
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+                
+                const table = document.createElement('table');
+                table.className = 'resizable-table';
+                
+                // Create resize line indicator
+                const resizeLine = document.createElement('div');
+                resizeLine.className = 'resize-line';
+                tableContainer.appendChild(resizeLine);
+                
+                // Create table header with resizable columns
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                
+                // Calculate smart column widths based on content
+                const columnWidths = calculateOptimalColumnWidths(data);
+                
+                data.columns.forEach((column, index) => {
+                    const th = document.createElement('th');
+                    th.textContent = column;
+                    th.style.width = columnWidths[index] + 'px';
+                    th.setAttribute('data-column-index', index);
+                    
+                    // Add resize handle to all columns except the last one
+                    if (index < data.columns.length - 1) {
+                        const resizeHandle = document.createElement('div');
+                        resizeHandle.className = 'resize-handle';
+                        resizeHandle.setAttribute('data-column', index);
+                        th.appendChild(resizeHandle);
+                    }
+                    
+                    headerRow.appendChild(th);
+                });
+                
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Create table body with expandable functionality
+                const tbody = document.createElement('tbody');
+                
+                data.data.forEach((row, rowIndex) => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-row-index', rowIndex);
+                    
+                    data.columns.forEach((column, colIndex) => {
+                        const td = document.createElement('td');
+                        td.style.width = columnWidths[colIndex] + 'px';
+                        const cellValue = row[column] !== null ? String(row[column]) : '';
+                        
+                        // Create a content container with scroll capability
+                        const contentContainer = document.createElement('div');
+                        contentContainer.style.maxHeight = '200px';
+                        contentContainer.style.overflowY = 'auto';
+                        contentContainer.style.overflowX = 'auto';
+                        contentContainer.style.wordWrap = 'break-word';
+                        contentContainer.style.whiteSpace = 'pre-wrap';
+                        
+                        // Enhanced content formatting for better readability
+                        const formattedContent = formatCellContent(cellValue);
+                        contentContainer.innerHTML = formattedContent;
+                        
+                        td.appendChild(contentContainer);
+                        tr.appendChild(td);
+                    });
+                    
+                    tbody.appendChild(tr);
+                });
+                
+                table.appendChild(tbody);
+                tableContainer.appendChild(table);
+                tableWrapper.appendChild(tableContainer);
+                
+                // Add scroll detection functionality
+                function updateScrollIndicators() {
+                    const container = tableContainer;
+                    const canScrollHorizontally = container.scrollWidth > container.clientWidth;
+                    const canScrollVertically = container.scrollHeight > container.clientHeight;
+                    
+                    if (canScrollHorizontally) {
+                        container.classList.add('scrollable-x');
+                    } else {
+                        container.classList.remove('scrollable-x');
+                    }
+                    
+                    if (canScrollVertically) {
+                        container.classList.add('scrollable-y');
+                    } else {
+                        container.classList.remove('scrollable-y');
+                    }
+                }
+                
+                // Initial check and resize observer
+                setTimeout(updateScrollIndicators, 100);
+                
+                // Update on resize
+                if (window.ResizeObserver) {
+                    const resizeObserver = new ResizeObserver(updateScrollIndicators);
+                    resizeObserver.observe(tableContainer);
+                }
+                
+                // Update on scroll (to show/hide scroll indicators based on position)
+                tableContainer.addEventListener('scroll', updateScrollIndicators);
+                
+                // Add column resizing functionality
+                setupColumnResizing(table, tableContainer, resizeLine);
+                
+                // Add download button for table data
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'csv-button';
+                downloadButton.textContent = 'Download as CSV';
+                downloadButton.addEventListener('click', () => {
+                    downloadCSV(data.data, data.columns);
+                });
+                
+                tableWrapper.appendChild(downloadButton);
+                messageDiv.appendChild(tableWrapper);
+                
+                // Add SQL query section if available
+                console.log('🔍 addTableResponse checking SQL query:', data.sql_query, 'trimmed:', data.sql_query && data.sql_query.trim());
+                if (data.sql_query && data.sql_query.trim()) {
+                    console.log('🔍 Creating SQL section for table response');
+                    const sqlSection = createSqlSection(data.sql_query);
+                    messageDiv.appendChild(sqlSection);
+                } else {
+                    console.log('🔍 No SQL query to display for table response');
+                }
+                
+                // Add feedback section if interaction ID is available
+                if (data.interaction_id) {
+                    const feedbackSection = createFeedbackSection(data.interaction_id);
+                    messageDiv.appendChild(feedbackSection);
+                }
+                
+                // Add to current message group
+                if (currentMessageGroup) {
+                    currentMessageGroup.appendChild(messageDiv);
+                } else {
+                    // Fallback if no current group
+                    chatBox.prepend(messageDiv);
+                }
+            }
+            
+            // Download table data as CSV
+            function downloadCSV(data, columns) {
+                let csvContent = columns.join(',') + '\r\n';
+                
+                data.forEach(row => {
+                    const values = columns.map(column => {
+                        const value = row[column] !== null ? row[column] : '';
+                        // Escape commas and quotes
+                        return `"${String(value).replace(/"/g, '""')}"`;
+                    });
+                    csvContent += values.join(',') + '\r\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'data.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Initialize collapsible sections as collapsed on load
+            setTimeout(() => {
+                // Initialize fixed questions as collapsed
+                const fixedContent = document.getElementById('fixedQuestionsContent');
+                const fixedIcon = document.getElementById('fixedQuestionsIcon');
+                if (fixedContent && fixedIcon) {
+                    fixedContent.classList.add('collapsed');
+                    fixedIcon.classList.add('collapsed');
+                }
+                
+                // Initialize dataset schema as collapsed
+                const schemaContent = document.getElementById('datasetSchemaContent');
+                const schemaIcon = document.getElementById('datasetSchemaIcon');
+                if (schemaContent && schemaIcon) {
+                    schemaContent.classList.add('collapsed');
+                    schemaIcon.classList.add('collapsed');
+                }
+                
+                // Initialize suggested questions as collapsed
+                const suggestedContent = document.getElementById('suggestedQuestionsContent');
+                const suggestedIcon = document.getElementById('suggestedQuestionsIcon');
+                if (suggestedContent && suggestedIcon) {
+                    suggestedContent.classList.add('collapsed');
+                    suggestedIcon.classList.add('collapsed');
+                }
+                
+                // Initialize PDF upload as collapsed
+                const pdfUploadContent = document.getElementById('pdfUploadContent');
+                const pdfUploadIcon = document.getElementById('pdfUploadIcon');
+                if (pdfUploadContent && pdfUploadIcon) {
+                    pdfUploadContent.classList.add('collapsed');
+                    pdfUploadIcon.classList.add('collapsed');
+                }
+            }, 100);
+
+            // File size validation function
+            function validateFileSize(file) {
+                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                if (file.size > maxSize) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    return {
+                        valid: false,
+                        error: `File size (${fileSizeMB}MB) exceeds the 10MB limit. Please select a smaller PDF file.`
+                    };
+                }
+                return { valid: true };
+            }
+
+            // Display file information
+            function displayFileInfo(file) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                uploadStatus.textContent = `Selected: ${file.name} (${fileSizeMB}MB)`;
+                uploadStatus.style.color = '#28a745';
+            }
+
+            // Reusable PDF upload function
+            async function uploadPdf() {
+                const file = document.getElementById('pdf').files[0];
+                if (!file) { 
+                    return { success: false, error: 'No PDF file selected' };
+                }
+
+                // Validate file size before upload
+                const validation = validateFileSize(file);
+                if (!validation.valid) {
+                    uploadStatus.textContent = validation.error;
+                    uploadStatus.style.color = '#dc3545';
+                    return { success: false, error: validation.error };
+                }
+
+                const form = new FormData();
+                form.append('file', file);
+
+                uploadStatus.textContent = 'Uploading…';
+                uploadStatus.style.color = '#1a73e8';
+                
+                try {
+                    const res = await fetch('/upload_pdf', { method: 'POST', body: form });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+                    
+                    sessionId = data.session_id;
+                    uploadStatus.textContent = 'Uploaded ✓';
+                    uploadStatus.style.color = '#28a745';
+                    return { success: true, sessionId: data.session_id };
+                } catch (e) {
+                    uploadStatus.textContent = 'Error: ' + e.message;
+                    uploadStatus.style.color = '#dc3545';
+                    return { success: false, error: e.message };
+                }
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // PDF upload event listeners
+            uploadBtn.addEventListener('click', async () => {
+                const result = await uploadPdf();
+                if (!result.success && result.error === 'No PDF file selected') {
+                    alert('Choose a PDF first.');
+                }
+            });
+
+            // File input change listener for immediate validation
+            document.getElementById('pdf').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const validation = validateFileSize(file);
+                    if (validation.valid) {
+                        displayFileInfo(file);
+                    } else {
+                        uploadStatus.textContent = validation.error;
+                        uploadStatus.style.color = '#dc3545';
+                        // Clear the file input to prevent upload attempts
+                        event.target.value = '';
+                    }
+                } else {
+                    uploadStatus.textContent = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
