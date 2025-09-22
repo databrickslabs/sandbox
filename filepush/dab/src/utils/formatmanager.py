@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from . import envmanager
 
 @dataclass(frozen=True, slots=True)
 class AutoLoaderOption:
@@ -14,6 +15,9 @@ class AutoLoaderFormat:
     self.options: set[AutoLoaderOption] = {
       AutoLoaderOption("cloudFiles.inferColumnTypes", "true", True),
       AutoLoaderOption("cloudFiles.schemaEvolutionMode", "addNewColumns", True),
+      AutoLoaderOption("cloudFiles.cleanSource", "MOVE", True),
+      AutoLoaderOption("cloudFiles.cleanSource.retentionDuration", "14 days", True),
+      AutoLoaderOption("cloudFiles.cleanSource.moveDestination", f"{envmanager.get_config()['volume_path_archive']}/{{table_name}}", True)
     }
     self.expectations: dict[str, str] = {
       "Rescued data should be null": "_rescued_data IS NULL"
@@ -39,12 +43,18 @@ class AutoLoaderFormat:
     defaults = self.get_userfacing_options()
     return {k: v for k, v in options.items() if k in defaults and v != defaults[k]}
   
-  def get_merged_options(self, options: dict[str, str]) -> dict[str, str]:
+  def get_merged_options(self, options: dict[str, str], table_name: str) -> dict[str, str]:
     self.validate_user_options(options)
     defaults = self.get_userfacing_options()
 
     merged = defaults.copy()
     merged.update({k: v for k, v in options.items() if k in defaults})
+
+    # Format the moveDestination if table_name is supplied
+    move_dest_key = "cloudFiles.cleanSource.moveDestination"
+    if table_name is not None and move_dest_key in merged:
+      merged[move_dest_key] = merged[move_dest_key].format(table_name=table_name)
+
     return merged
 
 class CSV(AutoLoaderFormat):

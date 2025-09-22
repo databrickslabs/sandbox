@@ -54,11 +54,12 @@ def is_table_created(table_name: str) -> bool:
 
 def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStreamReader:
   validate_config(table_config)
+  name = table_config.get("name")
   fmt = table_config.get("format")
 
   # format options
   user_fmt_opts = table_config.get("format_options", {})
-  final_fmt_opts = formatmanager.get_format_manager(fmt).get_merged_options(user_fmt_opts)
+  final_fmt_opts = formatmanager.get_format_manager(fmt).get_merged_options(user_fmt_opts, name)
   reader = reader.format("cloudFiles").option("cloudFiles.format", fmt)
   for k, v in final_fmt_opts.items():
     reader = reader.option(k, v)
