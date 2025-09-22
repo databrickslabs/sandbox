@@ -15,6 +15,7 @@ catalog_name = args.catalog_name
 schema_name = args.schema_name
 volume_path_root = args.volume_path_root
 volume_path_data = args.volume_path_root + "/data"
+volume_path_archive = args.volume_path_root + "/archive"
 logging_level = logging.DEBUG if args.logging_level == "dev" else logging.INFO
 
 # Logging
@@ -33,7 +34,8 @@ logger.debug(f"Volume path root: {volume_path_root}")
 logger.debug(f"Volume path data: {volume_path_data}")
 ws.schemas.update(full_name=f"{catalog_name}.{schema_name}", properties={
   "filepush.volume_path_root": volume_path_root,
-  "filepush.volume_path_data": volume_path_data
+  "filepush.volume_path_data": volume_path_data,
+  "filepush.volume_path_data": volume_path_archive
 })
 logger.info(f"Schema {catalog_name}.{schema_name} configured")
 
@@ -41,11 +43,16 @@ logger.info(f"Schema {catalog_name}.{schema_name} configured")
 logger.info(f"Initializing volume folder structure {volume_path_root}")
 logger.debug(f"Creating data directory {volume_path_data}")
 ws.files.create_directory(volume_path_data)
+logger.debug(f"Creating archive directory {volume_path_archive}")
+ws.files.create_directory(volume_path_archive)
 with open("../configs/tables.json", "r") as f:
   for table in json.load(f):
     table_volume_path_data = f"{volume_path_data}/{table['name']}"
     logger.debug(f"Creating table directory {table_volume_path_data}")
     ws.files.create_directory(table_volume_path_data)
+    table_volume_path_archive = f"{volume_path_archive}/{table['name']}"
+    logger.debug(f"Creating table archive directory {table_volume_path_archive}")
+    ws.files.create_directory(table_volume_path_archive)
 logger.info(f"Volume {volume_path_root} configured")
 
 # Dump configs to environment json
@@ -54,5 +61,6 @@ with open("../configs/environment.json", "w") as f:
     "catalog_name": catalog_name,
     "schema_name": schema_name,
     "volume_path_root": volume_path_root,
-    "volume_path_data": volume_path_data
+    "volume_path_data": volume_path_data,
+    "volume_path_archive": volume_path_archive
   }, f)
