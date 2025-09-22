@@ -56,10 +56,11 @@ def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStre
   validate_config(table_config)
   name = table_config.get("name")
   fmt = table_config.get("format")
+  fmt_mgr = formatmanager.get_format_manager(fmt)
 
   # format options
   user_fmt_opts = table_config.get("format_options", {})
-  final_fmt_opts = formatmanager.get_format_manager(fmt).get_merged_options(user_fmt_opts, name)
+  final_fmt_opts = fmt_mgr.get_merged_options(user_fmt_opts, name)
   reader = reader.format("cloudFiles").option("cloudFiles.format", fmt)
   for k, v in final_fmt_opts.items():
     reader = reader.option(k, v)
@@ -67,7 +68,9 @@ def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStre
   # schema hints
   schema_hints = table_config.get("schema_hints")
   if schema_hints:
-    reader = reader.option("cloudFiles.schemaHints", schema_hints)
+    reader = reader.option("cloudFiles.schemaHints", ",".join({schema_hints} | fmt_mgr.default_schema))
+  else:
+    reader = reader.option("cloudFiles.schemaHints", ",".join(fmt_mgr.default_schema))
 
   return reader
   
