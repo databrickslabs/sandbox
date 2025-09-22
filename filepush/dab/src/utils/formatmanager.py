@@ -22,6 +22,7 @@ class AutoLoaderFormat:
     self.expectations: dict[str, str] = {
       "Rescued data should be null": "_rescued_data IS NULL"
     }
+    self.default_schema: set[str] = {"_rescued_data STRING"}
 
   def __iter__(self):
     yield (self.name, self)
@@ -64,6 +65,7 @@ class CSV(AutoLoaderFormat):
     self.options |= {
       AutoLoaderOption("header", "true", True),
       AutoLoaderOption("mergeSchema", "true", True),
+      AutoLoaderOption("mode", "PERMISSIVE", True),
       AutoLoaderOption("columnNameOfCorruptRecord", "_corrupt_record", True),
       AutoLoaderOption("delimiter", ","),
       AutoLoaderOption("escape", "\""),
@@ -72,6 +74,7 @@ class CSV(AutoLoaderFormat):
     self.expectations |= {
       "Corrupted record should be null": "_corrupt_record IS NULL"
     }
+    self.default_schema |= {"_corrupt_record STRING"}
 
 class JSON(AutoLoaderFormat):
   def __init__(self):
@@ -79,6 +82,7 @@ class JSON(AutoLoaderFormat):
     self.name = "JSON"
     self.options |= {
       AutoLoaderOption("mergeSchema", "true", True),
+      AutoLoaderOption("mode", "PERMISSIVE", True),
       AutoLoaderOption("columnNameOfCorruptRecord", "_corrupt_record", True),
       AutoLoaderOption("allowComments", "true"),
       AutoLoaderOption("allowSingleQuotes", "true"),
@@ -88,6 +92,7 @@ class JSON(AutoLoaderFormat):
     self.expectations |= {
       "Corrupted record should be null": "_corrupt_record IS NULL"
     }
+    self.default_schema |= {"_corrupt_record STRING"}
 
 _supported_formats: dict[str, AutoLoaderFormat] = {f.name: f for f in (CSV(), JSON())}
 
