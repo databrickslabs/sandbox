@@ -52,14 +52,13 @@ For supported `format_options`, see the [Auto Loader options](https://docs.datab
   {
     "name": "table1",
     "format": "csv",
-    "format_options": { "escape": "\\"" },
+    "format_options": { "escape": "\"" },
     "schema_hints": "id int, name string"
   },
   {
     "name": "table2",
     "format": "json"
   }
-  // ...
 ]
 ```
 
