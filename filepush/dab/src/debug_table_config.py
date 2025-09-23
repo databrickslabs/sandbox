@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Paste the table config JSON you would like to debug and assign to variable `table_config`
+# MAGIC ## Paste the table config JSON you would like to debug from `./configs/tables.json` and assign to variable `table_config`
 # MAGIC For example,
 # MAGIC ```
 # MAGIC table_config = r'''
@@ -15,6 +15,7 @@
 # MAGIC }
 # MAGIC '''
 # MAGIC ```
+# MAGIC Only `name` and `format` are required for a table.
 
 # COMMAND ----------
 
@@ -28,6 +29,11 @@ table_config = r'''
     "schema_hints": "id int, name string"
   }
 '''
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Click `Run all` and inspect the parsed result. Iterate on the config until the result looks good
 
 # COMMAND ----------
 
@@ -50,3 +56,8 @@ assert tablemanager.has_data_file(table_name), f"No data file found in {table_vo
 # Put schema location in temp directory
 with tempfile.TemporaryDirectory() as tmpdir:
   display(tablemanager.get_df_with_config(spark, table_config_json, tmpdir))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Copy and paste the modified config back to the `./configs/tables.json` in the DAB folder
