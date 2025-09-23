@@ -44,11 +44,9 @@ table_config_json = json.loads(table_config)
 tablemanager.validate_config(table_config_json)
 table_name = table_config_json["name"]
 table_volume_path_data = tablemanager.get_table_volume_path(table_name)
-table_reader = tablemanager.apply_table_config(spark.readStream, table_config_json)
 
 assert tablemanager.has_data_file(table_name), f"No data file found in {table_volume_path_data}. Please upload at least 1 file to {table_volume_path_data}"
 
 # Put schema location in temp directory
 with tempfile.TemporaryDirectory() as tmpdir:
-  table_reader.option("cloudFiles.schemaLocation", tmpdir)
-  display(table_reader.load(table_volume_path_data))
+  display(tablemanager.get_df_with_config(spark, table_config_json, tmpdir))

@@ -24,8 +24,8 @@ class AutoLoaderFormat:
     }
     self.default_schema: set[str] = {"_rescued_data STRING"}
 
-  def __iter__(self):
-    yield (self.name, self)
+  def get_default_schema(self) -> str:
+    return ", ".join(self.default_schema)
 
   def get_userfacing_options(self) -> dict[str, str]:
     return {opt.key: opt.value for opt in self.options if not opt.hidden}
@@ -51,9 +51,9 @@ class AutoLoaderFormat:
     merged = defaults.copy()
     merged.update({k: v for k, v in options.items() if k in defaults})
 
-    # Format the moveDestination if table_name is supplied
+    # Format the moveDestination with table_name
     move_dest_key = "cloudFiles.cleanSource.moveDestination"
-    if table_name is not None and move_dest_key in merged:
+    if move_dest_key in merged:
       merged[move_dest_key] = merged[move_dest_key].format(table_name=table_name)
 
     return merged
