@@ -56,11 +56,14 @@ with open("../configs/tables.json", "r") as f:
 logger.info(f"Volume {volume_path_root} configured")
 
 # Dump configs to environment json
+all_configs = {
+  "catalog_name": catalog_name,
+  "schema_name": schema_name,
+  "volume_path_root": volume_path_root,
+  "volume_path_data": volume_path_data,
+  "volume_path_archive": volume_path_archive
+}
 with open("../configs/environment.json", "w") as f:
-  json.dump({
-    "catalog_name": catalog_name,
-    "schema_name": schema_name,
-    "volume_path_root": volume_path_root,
-    "volume_path_data": volume_path_data,
-    "volume_path_archive": volume_path_archive
-  }, f)
+  json.dump(all_configs, f)
+
+logger.info(f"==========\n%s\n==========", "\n".join(f"{k}: {v}" for k, v in all_configs.items()))
