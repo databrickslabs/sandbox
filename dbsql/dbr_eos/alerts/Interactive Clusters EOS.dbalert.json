@@ -103,6 +103,6 @@
     "Serverless clusters automatically manage DBR for you, ensuring they are supported.<br>",
     "Query result value: {{QUERY_RESULT_VALUE}}<br>",
     "<a href=\"{{ALERT_URL}}\">Go to alert</a> | ",
-    "<a href=\"https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f02ac3cb7c120cbe01a4e762bb4284/published/pages/b07e7319?o=1444828305810485\">Go to dashboard</a>"
+    "<a href=\"{{DASHBOARD_URL}}\">Go to dashboard</a>"
   ]
 }
