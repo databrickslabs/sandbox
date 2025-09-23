@@ -2,13 +2,13 @@ import dlt
 from utils import tablemanager
 from utils import formatmanager
 
-def _make_append_flow(table_name, table_config, table_volume_path, format_mgr):
+def _make_append_flow(table_name, table_config, table_volume_path):
   def _body():
-    reader = tablemanager.apply_table_config(spark.readStream, table_config)
     # use _rescued_data as placeholder when no data file is present
     if not tablemanager.has_data_file(table_name):
-      reader = reader.schema(",".join(format_mgr.default_schema))
-    return reader.load(table_volume_path)
+      return tablemanager.get_placeholder_df_with_config(spark, table_config)
+    else:
+      return tablemanager.get_df_with_config(spark, table_config)
 
   # give the function a unique name (nice for logs / debug)
   _body.__name__ = f"append_{table_name.lower()}"
@@ -31,4 +31,4 @@ for cfg in table_configs:
     table_properties={"filepush.table_volume_path_data": path},
     expect_all=expts
   )
-  _make_append_flow(tbl, cfg, path, fmt)
+  _make_append_flow(tbl, cfg, path)

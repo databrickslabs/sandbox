@@ -3,6 +3,7 @@ import json
 from . import envmanager
 from . import formatmanager
 from pyspark.sql.streaming import DataStreamReader
+from pyspark.sql import DataFrame, SparkSession
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors.platform import NotFound
 
@@ -52,25 +53,45 @@ def is_table_created(table_name: str) -> bool:
   ws = WorkspaceClient()
   return ws.tables.exists(full_name=f"{envmanager.get_config()['catalog_name']}.{envmanager.get_config()['schema_name']}.{table_name}").table_exists
 
-def apply_table_config(reader: DataStreamReader, table_config: dict) -> DataStreamReader:
-  validate_config(table_config)
+def _apply_table_options(reader: DataStreamReader, table_config: dict, fmt_mgr) -> DataStreamReader:
   name = table_config.get("name")
   fmt = table_config.get("format")
-  fmt_mgr = formatmanager.get_format_manager(fmt)
 
   # format options
   user_fmt_opts = table_config.get("format_options", {})
   final_fmt_opts = fmt_mgr.get_merged_options(user_fmt_opts, name)
-  reader = reader.format("cloudFiles").option("cloudFiles.format", fmt)
+  reader = reader.option("cloudFiles.format", fmt)
   for k, v in final_fmt_opts.items():
     reader = reader.option(k, v)
   
   # schema hints
   schema_hints = table_config.get("schema_hints")
   if schema_hints:
-    reader = reader.option("cloudFiles.schemaHints", ",".join({schema_hints} | fmt_mgr.default_schema))
+    reader = reader.option("cloudFiles.schemaHints", ", ".join({schema_hints} | fmt_mgr.default_schema))
   else:
-    reader = reader.option("cloudFiles.schemaHints", ",".join(fmt_mgr.default_schema))
+    reader = reader.option("cloudFiles.schemaHints", ", ".join(fmt_mgr.default_schema))
 
   return reader
-  
+
+def get_df_with_config(spark: SparkSession, table_config: dict, schema_location: str = None) -> DataFrame:
+  validate_config(table_config)
+  fmt = table_config.get("format")
+  fmt_mgr = formatmanager.get_format_manager(fmt)
+
+  reader = spark.readStream.format("cloudFiles")
+  reader = _apply_table_options(reader, table_config, fmt_mgr)
+  if schema_location:
+    reader = reader.option("cloudFiles.schemaLocation", schema_location)
+
+  # include file metadata
+  return reader.load(get_table_volume_path(table_config.get("name"))).selectExpr("*", "_metadata")
+
+def get_placeholder_df_with_config(spark: SparkSession, table_config: dict) -> DataFrame:
+  validate_config(table_config)
+  fmt = table_config.get("format")
+  fmt_mgr = formatmanager.get_format_manager(fmt)
+
+  reader = spark.readStream.format("cloudFiles")
+  reader = _apply_table_options(reader, table_config, fmt_mgr).schema(fmt_mgr.get_default_schema())
+
+  return reader.load(get_table_volume_path(table_config.get("name")))
