@@ -1,6 +1,6 @@
 [
   {
-    "name": "employees",
+    "name": "example_table",
     "format": "csv",
     "format_options": {
       "escape": "\""
