@@ -68,8 +68,8 @@ For supported `format_options`, see the [Auto Loader options](https://docs.datab
 
 ```bash
 cd dab
-_databricks bundle deploy
-_databricks bundle run configuration_job
+databricks bundle deploy
+databricks bundle run configuration_job
 ```
 
 Wait for the configuration job to finish before moving on.
@@ -93,7 +93,7 @@ Upload files to the path above using any of the [Volumes file APIs](https://docs
 **REST API example**:
 
 ```bash
-# prerequisites: export DATABRICKS_HOST and DATABRICKS_TOKEN
+# prerequisites: export DATABRICKS_HOST and DATABRICKS_TOKEN (PAT token)
 curl -X PUT "$DATABRICKS_HOST/api/2.0/fs/files/Volumes/main/filepushschema/main_filepushschema_filepush_volume/data/table1/datafile1.csv" \
   -H "Authorization: Bearer $DATABRICKS_TOKEN" \
   -H "Content-Type: application/octet-stream" \
