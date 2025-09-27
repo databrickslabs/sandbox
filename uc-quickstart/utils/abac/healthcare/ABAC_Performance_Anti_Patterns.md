@@ -382,9 +382,10 @@ FROM test_data;
 
 ### **Performance Targets**
 
- 
+
 - **Query Overhead**: <10% additional latency
 - **Memory Usage**: <2x baseline query
+- **Throughput**: >90% of baseline query performance (rows/sec)
 
 ---
 

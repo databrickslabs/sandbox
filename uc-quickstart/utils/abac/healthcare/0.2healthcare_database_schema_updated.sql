@@ -5,12 +5,14 @@
 -- Usage: Set CATALOG_NAME variable before execution
 -- =============================================
 
--- CONFIGURATION: Set your target catalog name here
+-- CONFIGURATION: IMPORTANT - Replace <<your_catalog_name>> with your actual catalog name
 -- Examples: 'apscat', 'main', 'your_catalog_name'
-SET CATALOG_NAME = 'apscat';
+-- Note: Variable substitution (${VARIABLE}) doesn't work reliably in all SQL contexts
+-- Therefore, you MUST replace <<your_catalog_name>> with your actual catalog name before execution
 
 -- Create and use the target catalog and schema
-USE CATALOG 'apscat';
+-- REQUIRED: Replace <<your_catalog_name>> with your actual catalog name (e.g., 'apscat', 'main', etc.)
+USE CATALOG <<your_catalog_name>>;
 CREATE SCHEMA IF NOT EXISTS healthcare
 COMMENT 'Healthcare data schema for ABAC demonstration and testing';
 USE SCHEMA healthcare;

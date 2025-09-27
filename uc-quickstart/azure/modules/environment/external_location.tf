@@ -22,5 +22,6 @@ resource "databricks_external_location" "db_ext_loc" {
     databricks_storage_credential.db_uc_storage_cred,
     azurerm_role_assignment.db_mi_data_contributor
   ]
-  force_destroy = true
+  # Made configurable to prevent accidental data loss in production
+  force_destroy = var.force_destroy_external_location
 }

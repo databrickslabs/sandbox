@@ -58,7 +58,9 @@ resource "aws_iam_policy_attachment" "unity_catalog_attach" {
 # Unity Catalog S3
 resource "aws_s3_bucket" "unity_catalog_bucket" {
   bucket        = var.bucket_name
-  force_destroy = true
+  # Made configurable to prevent accidental data loss in production
+  # This controls whether all bucket contents are deleted on terraform destroy
+  force_destroy = var.force_destroy_s3_bucket
 }
 
 resource "aws_s3_bucket_versioning" "unity_catalog_versioning" {

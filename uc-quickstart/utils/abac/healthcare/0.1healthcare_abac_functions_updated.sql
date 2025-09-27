@@ -6,12 +6,14 @@
 -- Usage: Set CATALOG_NAME variable before execution
 -- =============================================
 
--- CONFIGURATION: Set your target catalog name here
+-- CONFIGURATION: IMPORTANT - Replace <<your_catalog_name>> with your actual catalog name
 -- Examples: 'apscat', 'main', 'your_catalog_name'
-SET CATALOG_NAME = 'apscat';
+-- Note: Variable substitution (${VARIABLE}) doesn't work reliably in all SQL contexts
+-- Therefore, you MUST replace <<your_catalog_name>> with your actual catalog name before execution
 
 -- Set catalog and schema context
-USE CATALOG ${CATALOG_NAME};
+-- REQUIRED: Replace <<your_catalog_name>> with your actual catalog name (e.g., 'apscat', 'main', etc.)
+USE CATALOG <<your_catalog_name>>;
 USE SCHEMA healthcare;
 
 -- =============================================
