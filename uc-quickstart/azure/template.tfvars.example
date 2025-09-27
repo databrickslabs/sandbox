@@ -1,0 +1,21 @@
+# Databricks Environment Variables
+databricks_account_id    = "" // Your Azure Databricks Account ID
+databricks_workspace_id  = "" // The Azure Databricks workspace ID e.g. "adb-{workspace_id}.x.azuredatabricks.net"
+
+# Common Authentication Variables
+databricks_host          = "" // The URL of the workspace e.g "adb-xxxxxxxxxxxxxxx.x.azuredatabricks.net"
+
+# PAT Token Authentication Credentials
+databricks_token         = "" // The personal access token to provision the resources in the Databricks workspace
+
+# Azure-Managed Service Principal credentials
+databricks_resource_id   = "" // Specifies the resource ID of the Databricks workspace e.g /subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Databricks/workspaces/{workspace_name}
+azure_client_id          = "" // Specifies the Application ID of the service principal
+azure_client_secret      = "" // Specifies a client secret associated with the service principal
+azure_tenant_id          = "" // The Azure Tenant ID the service principal resides in
+
+# Azure Resources
+resource_group           = "" // The resource group where storage accounts & access connectors will be deployed to
+
+
+
