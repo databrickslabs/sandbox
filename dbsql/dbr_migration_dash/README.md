@@ -1,5 +1,7 @@
 # Databricks Runtime Deprecation Impact Dashboard
 
+Leaving this README in place, but code and new solution (backed by DABs) has migrated to dbsql/dbr_eos folder
+
 This dashboard provides visibility into **Databricks Runtime (DBR)** usage across both **Jobs** and **All-Purpose clusters**, helping organizations understand and mitigate risks associated with **runtime deprecations** or **end-of-support timelines**.
 
 > **Note:** This dashboard is **not officially supported by Databricks** and is provided as a **community contribution**. Estimates may not reflect actual billing and require [system tables](https://docs.databricks.com/administration-guide/system-tables/index.html) and a **Unity Catalog-enabled workspace**.
