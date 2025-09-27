@@ -10,7 +10,7 @@ This bundle creates:
 ## Quickstart (Workspace UI)
 1. Clone this repo into your Databricks workspace **Git Folder**.
 2. In your Databricks workspace, go to **Create → Git Folder**, select **Sparse checkout mode** and paste this Git URL (https://github.com/databrickslabs/sandbox.git).
-3. Paste **dbsql/dbr_migration_dash** in the Cone patterns box
+3. Paste **dbsql/dbr_eos** in the Cone patterns box
 4. Give the Git folder name something useful like, "DBR_End_of_Service"
 5. Click **"Open in asset bundle editor"**.
 6. Click in the top right, **"deploy bundle"**.
