@@ -85,7 +85,7 @@ databricks tables get main.filepushschema.table1 --output json \
 Example output:
 
 ```text
-"/Volumes/main/filepushschema/main_filepushschema_filepush_volume/data/table1"
+/Volumes/main/filepushschema/main_filepushschema_filepush_volume/data/table1
 ```
 
 Upload files to the path above using any of the [Volumes file APIs](https://docs.databricks.com/aws/en/volumes/volume-files#methods-for-managing-files-in-volumes).
@@ -150,7 +150,7 @@ databricks tables get main.dev_chi_yang_filepushschema.table1 --output json \
 Example output:
 
 ```text
-"/Volumes/main/dev_chi_yang_filepushschema/main_filepushschema_filepush_volume/data/table1"
+/Volumes/main/dev_chi_yang_filepushschema/main_filepushschema_filepush_volume/data/table1
 ```
 
 Then follow the upload instructions from [Quick Start → Step 3](#step-3-retrieve-endpoint--push-files) to send test files.
