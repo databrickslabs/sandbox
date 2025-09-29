@@ -26,8 +26,8 @@ targets:
 
 variables:
   catalog_name:
-    description: The existing catalog where the schema will be created.
-    default: main
+    description: The existing catalog where the NEW schema will be created.
+    default: chi_catalog
   schema_name:
     description: The name of the NEW schema where the tables will be created.
     default: filepushschema
