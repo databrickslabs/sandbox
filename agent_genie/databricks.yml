@@ -1,0 +1,95 @@
+bundle:
+  name: agent-genie-app
+
+variables:
+  project_name:
+    description: "Display name for the app"
+    default: "agent-genie"
+
+  # Env-only fallback; will also be persisted to a secret by the installer job if possible
+  tavily_api_key:
+    description: "Tavily API key (installer job will try to store in a secret scope)"
+    default: ""
+
+  # Where to persist the secret (customize if you already have a scope)
+  secret_scope:
+    description: "Workspace secret scope to store Tavily key"
+    default: "agent_genie_secrets"
+
+  secret_key:
+    description: "Secret key name for Tavily key inside the scope"
+    default: "TAVILY_API_KEY"
+
+  environment:
+    description: "Deployment environment (dev, staging, prod)"
+    default: "dev"
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+resources:
+  apps:
+    agent_genie:
+      name: "${var.project_name}"
+      description: "FastAPI app with Genie + Serving Endpoint integration"
+      source_code_path: "."
+
+      command: [
+        "uvicorn",
+        "app:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ]
+
+      # Inject env for your app at runtime
+      env:
+        - name: "SPACE_ID"
+          value_from: "genie-space"
+        - name: "SERVING_ENDPOINT_NAME"
+          value_from: "serving-endpoint"
+        - name: "TAVILY_API_KEY"
+          value: "${var.tavily_api_key}"   # app can use this directly; secret is optional hardening
+
+      # --- App Resources (end-user picks these at install) ---
+      app_resources:
+        - key: "serving-endpoint"
+          serving_endpoint_spec:
+            permission: "CAN_QUERY"
+        - key: "genie-space"
+          genie_space_spec:
+            permission: "CAN_RUN"
+
+      # --- User Authorized Scopes (Preview) ---
+      user_authorized_scopes:
+        - "sql"
+        - "dashboards.genie"
+        - "files.files"
+        - "serving.serving-endpoints"
+        - "vectorsearch.vector-search-indexes"
+        - "catalog.connections"
+
+  # --- Installer job to persist Tavily key into a secret and write optional config ---
+  jobs:
+    install_app:
+      name: "${var.project_name} - Install/Configure"
+      tasks:
+        - task_key: configure_app
+          notebook_task:
+            notebook_path: "./notebooks/setup_app"   # create this notebook
+            base_parameters:
+              TAVILY_API_KEY: "${var.tavily_api_key}"
+              SECRET_SCOPE: "${var.secret_scope}"
+              SECRET_KEY: "${var.secret_key}"
+          # Add compute for your workspace (example placeholders):
+          # existing_cluster_id: "<your-cluster-id>"
+          # OR:
+          # job_clusters:
+          #   - job_cluster_key: "install_cluster"
+          #     new_cluster:
+          #       spark_version: "14.3.x-scala2.12"
+          #       node_type_id: "i3.xlarge"
+          #       num_workers: 0
