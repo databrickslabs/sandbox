@@ -200,10 +200,11 @@ MANUAL_AI_CONTENT = {
 
                             > SELECT ai_translate('La vida es un hermoso viaje.', 'en');
                             "Life is a beautiful journey.""",
-    "ai_forecast": """Syntax
-                                SQL
+    
+    "ai_forecast": """ Syntax
 
-                                ai_forecast(
+                                SQL
+                               AI_FORECAST(
                                 observed TABLE,
                                 horizon DATE | TIMESTAMP | STRING,
                                 time_col STRING,
@@ -215,13 +216,50 @@ MANUAL_AI_CONTENT = {
                                 parameters STRING DEFAULT '{}'
                                 )
 
-                                ... (truncated for brevity in this message; keep your full content here)
-                                """,
-    "ai_query": """Syntax
+                            Arguments (short)
+
+                                observed → input table (time + value cols).
+                                horizon → end date/time.
+                                time_col → time column name.
+                                value_col → metric(s) to forecast.
+                                group_col → partition by cols (opt).
+                                prediction_interval_width → confidence band (default 0.95).
+                                frequency → time granularity (default auto).
+                                seed → random seed (opt).
+                                parameters → JSON tuning (opt).
+                                Example:
+
+                                WITH
+                                aggregated AS (
+                                SELECT
+                                    DATE(tpep_pickup_datetime) AS ds,
+                                    SUM(fare_amount) AS revenue
+                                FROM
+                                    samples.nyctaxi.trips
+                                GROUP BY
+                                    1
+                                )
+                                SELECT * FROM AI_FORECAST(
+                                TABLE(aggregated),
+                                horizon => '2016-03-31',
+                                time_col => 'ds',
+                                value_col => 'revenue'
+                                );
+                                                                    
+                                                                                                """,
+                "ai_query": """Syntax
                                 To query an endpoint that serves a foundation model:
 
                                 ai_query(endpoint, request)
+                                
+                                Examples
 
-                                ... (truncated for brevity in this message; keep your full content here)
+                                SELECT text, ai_query(
+                                    "databricks-meta-llama-3-3-70b-instruct",
+                                    "Summarize the given text comprehensively, covering key points and main ideas concisely while retaining relevant details and examples. Ensure clarity and accuracy without unnecessary repetition or omissions: " || text,
+                                failOnError => false
+                                ) AS summary
+                                FROM uc_catalog.schema.table;
+
                                 """  # For general predictive queries
 }
