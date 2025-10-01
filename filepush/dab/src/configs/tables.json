@@ -1,0 +1,10 @@
+[
+  {
+    "name": "example_table",
+    "format": "csv",
+    "format_options": {
+      "escape": "\""
+    },
+    "schema_hints": "id int, name string"
+  }
+]
