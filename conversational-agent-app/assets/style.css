@@ -1331,89 +1331,152 @@ input:disabled, button:disabled {
     margin-top: 24px;
 } 
 
-.insight-output strong, .insight-output b{
-    color: #ff0396; /* Pinkish-purple */
+.insight-wrapper {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.insight-body {
+    padding: 24px;
+    background: white;
+    transition: background-color 0.3s ease;
+}
+
+.insight-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #11171C;
+}
+
+.insight-content h1,
+.insight-content h2,
+.insight-content h3,
+.insight-content h4,
+.insight-content h5,
+.insight-content h6 {
+    color: #11171C;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.insight-content h1 {
+    font-size: 24px;
+    border-bottom: 2px solid #e9d5ff;
+    padding-bottom: 8px;
+}
+
+.insight-content h2 {
+    font-size: 20px;
+    color: #11171C;
+}
+
+.insight-content h3 {
+    font-size: 18px;
+    color: #de2ba5;
+}
+
+.insight-content p {
+    margin-bottom: 16px;
+    color: #4b5563;
+}
+
+.insight-content ul,
+.insight-content ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+}
+
+.insight-content li {
+    margin-bottom: 8px;
+    color: #4b5563;
+}
+
+.insight-content strong,
+.insight-content b {
+    color: #de2ba5;
     font-weight: 600;
 }
 
-.space-select-container {
+.insight-content em {
+    color: #de2ba5;
+    font-style: italic;
+}
+
+.insight-content blockquote {
+    border-left: 4px solid #de2ba5;
+    padding-left: 16px;
+    margin: 16px 0;
+    background: #faf5ff;
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+}
+
+.insight-content code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    color: #de2ba5;
+}
+
+.insight-content pre {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 16px 0;
+}
+
+.insight-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+/* Loading state for insights */
+.insight-loading {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    background: #f8fafc;
+    padding: 40px;
+    background: #faf5ff;
+    border-radius: 12px;
+    margin-top: 16px;
 }
 
-.space-select-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
-    padding: 48px 40px 32px 40px;
-    min-width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
+/* Responsive design for insights */
+@media (max-width: 768px) {
+    .insight-header {
+        padding: 16px 20px 12px 20px;
+    }
+    
+    .insight-header-title {
+        font-size: 16px;
+    }
+    
+    .insight-body {
+        padding: 20px;
+    }
+    
+    .insight-content h1 {
+        font-size: 20px;
+    }
+    
+    .insight-content h2 {
+        font-size: 18px;
+    }
+    
+    .insight-content h3 {
+        font-size: 16px;
+    }
 }
 
-.space-select-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: #1A1A1A;
-    letter-spacing: -1px;
-}
-
-.space-select-dropdown {
-    width: 480px;         /* wider than before */
-    min-width: 400px;
-    max-width: 600px;
-    font-size: 15px;
-    padding: 8px 12px;
-}
-.space-select-dropdown:focus {
-    border-color: #4299E0;
-    outline: none;
-}
-
-.space-select-button {
-    margin-top: 8px;
-    padding: 8px 32px;
-    border-radius: 8px;
-    border: 1px solid #2771aa;
-    background: #2771aa;
-    color: #fff;
-    font-size: 16px;
+.insight-output strong, .insight-output b{
+    color: #de2ba5; /* Pinkish-purple */
     font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, border 0.2s;
-}
-.space-select-button:hover {
-    background: #357ABD;
-    border-color: #357ABD;
-}
-
-.space-select-error {
-    color: #e53e3e;
-    font-size: 15px;
-    margin-top: 8px;
-    text-align: center;
-}
-
-.space-select-spinner {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border: 2px solid transparent;
-    border-top: 2px solid #040404;
-    border-right: 2px solid #111212;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-right: 18px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }

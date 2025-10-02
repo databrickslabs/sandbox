@@ -1,0 +1,47 @@
+bundle:
+  name: dbr-eos-monitor-dabs
+
+# Pull in all modular resource files (e.g., resources/dashboard.yml, resources/jobs/*.yml)
+include:
+  - resources/*.yml
+  - resources/*/*.yml
+
+# Vars are used only for prod/CI; dev stays zero-config so the Workspace UI can deploy immediately
+variables:
+  workspace_host:
+    description: "Workspace URL for prod/CI (e.g., https://adb-1234567890123.4.azuredatabricks.net)"
+    default: ""
+  root_path_base:
+    description: "Base workspace path for prod/CI (e.g., /Workspace/Users/<you> or /Workspace/Shared)"
+    default: ""
+  run_as_user:
+    description: "User or SPN for prod run_as"
+    default: ""
+  wn_catalog:
+    description: "UC catalog for DBR_Lookup_Table"
+    default: "dbdemos"
+  wn_schema:
+    description: "UC schema for DBR_Lookup_Table"
+    default: "lookup"
+  wn_table:
+    description: "UC tablename for DBR_Lookup_Table"
+    default: "dbr_version"
+
+targets:
+  # Works in the Workspace UI without edits; host omitted so UI uses the current workspace
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # Use a safe deterministic root to avoid unresolved vars
+      root_path: "~/.bundle/${bundle.name}/dev"
+    # run_as optional in dev (defaults to deployer)
+
+  # Parameterized target for CI/CD or cross-workspace deploys
+  prod:
+    mode: production
+    workspace:
+      host: ${var.workspace_host}
+      root_path: ${var.root_path_base}/.bundle/${bundle.name}/${target.name}
+    run_as:
+      user_name: ${var.run_as_user}    # or service_principal_name: <app-id>

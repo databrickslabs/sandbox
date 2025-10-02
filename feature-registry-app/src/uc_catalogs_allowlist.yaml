@@ -1,0 +1,6 @@
+# Use this file to allowlist only those catalogs from Unity Catalog metastore where data scientists can share or explore existing features. 
+# The Feature Registry App will only explore features in the listed catalogs.
+# If not specified, all catalogs available to the user will be shown.
+
+# - catalog1
+# - catalog2

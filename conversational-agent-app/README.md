@@ -15,10 +15,7 @@ date: 2025-06-09
 This repository demonstrates how to integrate Databricks' AI/BI Genie Conversation APIs into custom Databricks Apps applications, allowing users to interact with their structured data using natural language.
 
 You can also click the Generate insights button and generate deep analysis and trends of your data.
-![](./assets/insights1.png)
-![](./assets/insights2.png)
-
-
+![](./assets/genie2.png)
 
 ## Overview
 
@@ -28,6 +25,7 @@ The Databricks Genie Conversation APIs (in Public Preview) enable you to embed A
 - Ask questions about their data in natural language
 - Get SQL-powered insights without writing code
 - Follow up with contextual questions in a conversation thread
+
 
 ## Key Features
 
@@ -58,6 +56,9 @@ The app can be installed through Databricks Marketplace. If you prefer to clone 
    - Go to the Apps tab and click the **Create app** button. Fill in the necessary fields and click **Next: Configuration**
       - To reuse an existing app, click the link to your app in the **Name** column to go to the detail page of the app, then click **Edit**
    - In the App resources section, click **+ Add resource** and select **Serving endpoint**. Choose a chat endpoint, grant **CAN_QUERY** permission and name it 'serving_endpoint'.
+   select **Genie Space**. Choose a genie space, grant **CAN_RUN** permission and name it 'genie_space'.
+   ![](./assets/genie1.png)
+
    
 For detailed instructions on configuring resources, refer to the [official Databricks documentation](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/resources#configure-resources-for-your-app).
 
@@ -70,7 +71,7 @@ For detailed instructions on configuring resources, refer to the [official Datab
 For more details, refer to the [official Databricks documentation](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/deploy).
 
 ## Troubleshooting
-1. After you install the app from Markeplace, check the Authorization page for API scope details. 
+1. After you install the app from Marketplace, check the Authorization page for API scope details. 
 ![](./assets/genie-space12.png)
 
 Then you open the url link the first time, ensure that you see this OBO scope authorization page, which has all four scopes:

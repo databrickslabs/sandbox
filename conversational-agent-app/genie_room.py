@@ -124,20 +124,11 @@ class GenieClient:
             
         raise TimeoutError(f"Message processing timed out after {timeout} seconds")
 
-    def list_spaces(self) -> list:
-        """List all Genie spaces available to the user."""
-        all_spaces = []
-        next_page_token = None
-
-        while True:
-            response = self.client.genie.list_spaces(page_size=1000, page_token=next_page_token)
-            if hasattr(response, 'spaces') and response.spaces:
-                all_spaces.extend([space.as_dict() for space in response.spaces])
-            next_page_token = getattr(response, 'next_page_token', None)
-            if not next_page_token:
-                break
-        return all_spaces
-
+    def get_space(self, space_id: str) -> dict:
+        """Get details of a specific Genie space."""
+        response = self.client.genie.get_space(space_id=space_id)
+        return response.as_dict()
+    
 def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[str, Union[str, pd.DataFrame], Optional[str]]:
     """
     Start a new conversation with Genie.

@@ -1,0 +1,40 @@
+resources:
+  jobs:
+    DBR_Monitor_Refresh:
+      name: DBR Monitor Refresh
+      description: >
+        Refreshes DBR lookup table to get updated runtimes and end-of-support dates.
+        Refreshes DBR Monitor Dashboard which reports on cluster DBR and days till end-of-support.
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"   # 6:00 AM every day
+        timezone_id: "America/New_York"         # adjust to your timezone
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: Refresh_DBR_Lookup_Table
+          notebook_task:
+            notebook_path: DBR_Lookup_Table.ipynb
+            base_parameters:
+              wn_catalog: ${var.wn_catalog}
+              wn_schema: ${var.wn_schema}
+              wn_table: ${var.wn_table}
+            #source: WORKSPACE
+          environment_key: Default
+        - task_key: Refresh_DBR_Monitor_Dashboard
+          depends_on:
+            - task_key: Refresh_DBR_Lookup_Table
+          dashboard_task:
+            dashboard_id: ${resources.dashboards.DBR_Monitor_Dashboard.id}
+      parameters:
+        - name: wn_catalog
+          default: dbdemos
+        - name: wn_schema
+          default: lookup
+        - name: wn_table
+          default: dbr_version
+      environments:
+        - environment_key: Default
+          spec:
+            client: "2"
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED

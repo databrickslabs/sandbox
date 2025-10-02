@@ -4,10 +4,10 @@ go 1.24
 
 require (
 	github.com/adrg/frontmatter v0.2.0
-	github.com/databricks/databricks-sdk-go v0.80.0
+	github.com/databricks/databricks-sdk-go v0.84.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.1
-	github.com/spf13/pflag v1.0.7
-	github.com/stretchr/testify v1.10.0
+	github.com/spf13/pflag v1.0.10
+	github.com/stretchr/testify v1.11.1
 	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-meta v1.1.0
 )
