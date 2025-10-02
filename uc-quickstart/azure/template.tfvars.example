@@ -5,8 +5,6 @@ databricks_workspace_id  = "" // The Azure Databricks workspace ID e.g. "adb-{wo
 # Common Authentication Variables
 databricks_host          = "" // The URL of the workspace e.g "adb-xxxxxxxxxxxxxxx.x.azuredatabricks.net"
 
-# PAT Token Authentication Credentials
-databricks_token         = "" // The personal access token to provision the resources in the Databricks workspace
 
 # Azure-Managed Service Principal credentials
 databricks_resource_id   = "" // Specifies the resource ID of the Databricks workspace e.g /subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Databricks/workspaces/{workspace_name}

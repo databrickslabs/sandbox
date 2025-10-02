@@ -216,7 +216,7 @@ RETURN
 - No query optimization
 - Impossible to cache
 
-**Performance Impact:** 🔥 **Query planning failure**
+**Performance Impact:** [CRITICAL] **Query planning failure**
 
 ---
 

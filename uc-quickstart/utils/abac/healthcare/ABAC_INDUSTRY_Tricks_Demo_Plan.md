@@ -469,7 +469,7 @@ We're always looking for real-world ABAC use cases and demo scenarios from diffe
 
 **Reach out to us!** We'd love to collaborate on expanding this collection of real-world ABAC demonstration techniques.
 
-**Contact**: Chris Gabriel / Abhishek Pratap Singh
+**Contact**: Slack channel #uc-quickstart
 
 ---
 

@@ -16,7 +16,6 @@ variable "tags" {
 
 variable "databricks_account_id" {}
 variable "databricks_host" {}
-variable "databricks_token" {}
 
 variable "databricks_client_id" {}
 variable "databricks_client_secret" {}

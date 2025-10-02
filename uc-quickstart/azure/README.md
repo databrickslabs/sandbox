@@ -17,7 +17,7 @@
 
 ## 1. **Configure TFVAR file**
 
-Create a tfvar file and name it `db.tfvar`
+Create a tfvar file and name it `terraform.tfvar`
 
 Copy below configurations and replace with relevant entries
 
@@ -80,6 +80,6 @@ Run below commands in sequence to provision the catalogs
 ```
 terraform init
 terraform validate
-terraform plan -var-file="db.tfvars"
-terraform apply -var-file="db.tfvars" -auto-approve
+terraform plan
+terraform apply -auto-approve
 ```

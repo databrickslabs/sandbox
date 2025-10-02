@@ -26,7 +26,6 @@ variable "location" {
 variable "databricks_account_id" {}
 variable "databricks_workspace_id" {}
 variable "databricks_host" {}
-variable "databricks_token" {}
 
 #Authenticating with Azure-managed Service Principal
 variable "databricks_resource_id" {

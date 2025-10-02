@@ -59,39 +59,41 @@ Ensure you have:
 
 1. **Clone this Repository:**
 
-```bash
-git clone https://github.com/yourusername/databricks-uc-quickstart.git
-cd databricks-uc-quickstart
-```
+   ```bash
+   git clone https://github.com/databrickslabs/sandbox.git
+   cd sandbox/uc-quickstart/
+   ```
 
-2. **Initialize Terraform:**
+2. **Configure the ```terraform.tfvars``` by referring to the ```template.tfvars.example```:**
 
-Run this command to fetch necessary Terraform providers and modules:
-
-```bash
-terraform init
-```
+   Copy the example file and customize it with your specific values.
 
 3. **Configure for Your Cloud Provider:**
 
 - Navigate into the appropriate directory (`aws` or `azure`) based on your cloud provider.
 - Follow specific instructions detailed in the README within that folder.
 
-4. **Deploy Unity Catalog:**
+4. **Initialize Terraform:**
 
-Execute the following command to apply your Terraform configuration:
+   Run this command to fetch necessary Terraform providers and modules:
 
-```bash
-terraform apply
-```
+   ```bash
+   terraform init
+   ```
+
+
+5. **Deploy Unity Catalog:**
+
+   Execute the following command to apply your Terraform configuration:
+
+   ```bash
+   terraform apply
+   ```
 
 ### ✅ Verify Deployment
 
 Once deployment is complete, verify the setup directly within your Databricks workspace to ensure all components are correctly configured.
 
-## 📖 Documentation
-
-Explore detailed customization guides and additional usage scenarios on our [Wiki](https://github.com/yourusername/databricks-uc-quickstart/wiki).
 
 ## 📄 License
 

@@ -3,13 +3,6 @@ provider "azurerm" {
   features {}
 }
 
-# provider "databricks" {
-#   alias                       = "workspace"
-#   azure_workspace_resource_id = module.databricks_workspace.databricks_workspace_resid
-#   host = var.databricks_host
-#   token = var.databricks_token
-# }
-
 #Authenticating with Azure-managed Service Principal
 provider "databricks" {
   alias                       = "workspace"

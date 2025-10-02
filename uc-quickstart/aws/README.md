@@ -2,7 +2,7 @@
 
 ## 1. **Configure TFVAR file**
 
-Copy the file `template.tfvars.example` and name it `db.tffvar`
+Copy the file `template.tfvars.example` and name it `terraform.tfvars`
 
 Minimum Permissions for bootstrap SP :
 
@@ -15,7 +15,6 @@ Update the configuration with the relavant entries:
 #Databricks credentials
 databricks_account_id    = "XXX" // Databricks account ID.
 databricks_host          = "https://xxx.cloud.databricks.com" // The URL of the workspace used for UC deployment
-databricks_token(Optional)         = "XXX" // The personal access token of the service pricipal used to provision the resources in the Databricks workspace ### 
 databricks_client_id     = "XXX" // Service principal ID for Databricks with admin permissions.
 databricks_client_secret = "XXX" // Secret for the corresponding service principal.
 databricks_workspace_id  = "XX" // The ID of the workspace to enable Unity Catalog
@@ -33,7 +32,7 @@ Note: AWS and Databricks creds can be injected as environment variables if requi
 
 ## 2. **Provide expected catalog names as input**
 
-Go to the `main.tf` file. Here you can see the entries of the different modules moduleswill be executed.
+Go to the `main.tf` file. Here you can see the entries of the different modules will be executed.
 
 By default 3 catalogs (and associated DB and AWS entities) will get deployed:
 - dev
@@ -109,6 +108,6 @@ Run below commands in sequence to provision the catalogs
 ```
 terraform init
 terraform validate
-terraform plan -var-file="db.tfvars"
-terraform apply -var-file="db.tfvars" -auto-approve
+terraform plan
+terraform apply -auto-approve
 ```

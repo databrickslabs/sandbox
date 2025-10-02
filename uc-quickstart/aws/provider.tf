@@ -2,11 +2,14 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = ">=1.81.0"
+      version = "~> 1.91.0"
     }
     aws = {
       source  = "hashicorp/aws"
       version = ">=5.76.0"
+    }
+    time = {
+      source = "hashicorp/time"
     }
   }
   required_version = ">=1.0"
@@ -27,7 +30,6 @@ provider "databricks" {
   alias         = "workspace"
   # profile = "db-aws"
   host  = var.databricks_host
-  # token = var.databricks_token
   client_id     = var.databricks_client_id
   client_secret = var.databricks_client_secret
 }

@@ -1,15 +1,52 @@
-variable "access_connector_name" {}
-variable "resource_group" {}
-variable "location" {}
-variable "storage_account_name" {}
-variable "tags" {}
-variable "storage_container_name" {}
+variable "access_connector_name" {
+  type        = string
+  description = "Name of the Azure access connector for Unity Catalog"
+}
 
-variable "access_connector_id" {}
-variable "storage_credential_name" {}
-variable "external_location_name" {}
+variable "resource_group" {
+  type        = string
+  description = "Azure resource group name"
+}
 
-variable "catalog_name" {}
+variable "location" {
+  type        = string
+  description = "Azure region/location for resources"
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Name of the Azure storage account"
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to Azure resources"
+}
+
+variable "storage_container_name" {
+  type        = string
+  description = "Name of the storage container"
+}
+
+variable "access_connector_id" {
+  type        = string
+  description = "ID of the Azure access connector"
+}
+
+variable "storage_credential_name" {
+  type        = string
+  description = "Name of the storage credential in Unity Catalog"
+}
+
+variable "external_location_name" {
+  type        = string
+  description = "Name of the external location in Unity Catalog"
+}
+
+variable "catalog_name" {
+  type        = string
+  description = "Name of the Unity Catalog catalog to create"
+}
 
 # Making force_destroy configurable to prevent accidental data loss
 variable "force_destroy_external_location" {

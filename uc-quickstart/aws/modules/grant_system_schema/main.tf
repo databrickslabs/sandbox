@@ -5,7 +5,7 @@ resource "databricks_grant" "system_catalog" {
 }
 
 resource "databricks_grant" "system_schemas" {
-  for_each = toset(["system.access", "system.billing", "system.compute", "system.marketplace", "system.storage"])
+  for_each = toset(["system.access", "system.billing", "system.compute", "system.storage"])
   schema    = each.value
   principal  = var.group_1_name
   privileges = ["USE_SCHEMA", "SELECT"]

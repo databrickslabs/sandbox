@@ -28,11 +28,14 @@
 import requests
 import json
 from typing import List, Dict, Any
-
+import os
 # COMMAND ----------
-
-# Configuration - Update these values for your environment
-workspace_url = "https://e2-demo-field-eng.cloud.databricks.com"  # Update with your workspace URL
+# Configuration - Use environment variable for workspace URL
+workspace_url = os.environ.get("DATABRICKS_WORKSPACE_URL")
+if not workspace_url:
+    # Optionally, you can set a default or raise an error
+    workspace_url = "https://e2-demo-field-eng.cloud.databricks.com"
+    print("⚠️  DATABRICKS_WORKSPACE_URL not set. Using default demo workspace URL. Update this for your environment.")
 
 # Get token from Databricks secrets or environment
 # Option 1: From dbutils (if running in Databricks)

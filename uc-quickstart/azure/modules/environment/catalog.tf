@@ -9,7 +9,7 @@ resource "databricks_catalog" "uc_quickstart_sandbox" {
   depends_on = [
     databricks_external_location.db_ext_loc
   ]
-alright  # Made configurable to prevent accidental data loss in production
+  # Made configurable to prevent accidental data loss in production
   # This setting controls whether the catalog and all its contents are deleted on terraform destroy
   force_destroy = var.force_destroy_catalog
 }
