@@ -184,3 +184,9 @@ cython_debug/
 coverage.txt
 
 *_arm64
+
+**/.terraform/**
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfstate.d/**
+**/*.tfvars
