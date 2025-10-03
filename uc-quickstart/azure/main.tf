@@ -77,7 +77,7 @@ module "sandbox_catalog" {
 //Create the different groups and asssign them to the workspaces
 
 module "prod_sp_group" {
-  source = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
@@ -85,16 +85,14 @@ module "prod_sp_group" {
 
   group_name            = "${local.prefix}-${var.group_1}"
   databricks_account_id = var.databricks_account_id
-  # databricks_account_username = var.databricks_account_username
-  # databricks_account_password = var.databricks_account_password
+  databricks_workspace_id = var.databricks_workspace_id
   azure_client_id         = var.azure_client_id
   azure_client_secret     = var.azure_client_secret
-  databricks_workspace_id = var.databricks_workspace_id
   azure_tenant_id         = var.azure_tenant_id
 }
 
 module "developers_group" {
-  source = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
@@ -102,16 +100,14 @@ module "developers_group" {
 
   group_name            = "${local.prefix}-${var.group_2}"
   databricks_account_id = var.databricks_account_id
-  # databricks_account_username = var.databricks_account_username
-  # databricks_account_password = var.databricks_account_password
+  databricks_workspace_id = var.databricks_workspace_id
   azure_client_id         = var.azure_client_id
   azure_client_secret     = var.azure_client_secret
-  databricks_workspace_id = var.databricks_workspace_id
   azure_tenant_id         = var.azure_tenant_id
 }
 
 module "sandbox_users_group" {
-  source = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
@@ -119,11 +115,9 @@ module "sandbox_users_group" {
 
   group_name            = "${local.prefix}-${var.group_3}"
   databricks_account_id = var.databricks_account_id
-  # databricks_account_username = var.databricks_account_username
-  # databricks_account_password = var.databricks_account_password
+  databricks_workspace_id = var.databricks_workspace_id
   azure_client_id         = var.azure_client_id
   azure_client_secret     = var.azure_client_secret
-  databricks_workspace_id = var.databricks_workspace_id
   azure_tenant_id         = var.azure_tenant_id
 }
 
@@ -131,7 +125,7 @@ module "sandbox_users_group" {
 // Grant privileges
 
 module "grant_prod" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
   providers = {
     databricks = databricks.workspace
   }
@@ -144,7 +138,7 @@ module "grant_prod" {
 }
 
 module "grant_dev" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
   providers = {
     databricks = databricks.workspace
   }
@@ -157,7 +151,7 @@ module "grant_dev" {
 }
 
 module "grant_sandbox" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
   providers = {
     databricks = databricks.workspace
   }

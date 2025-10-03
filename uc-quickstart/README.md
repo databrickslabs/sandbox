@@ -1,13 +1,3 @@
----
-title: "Unity Catalog Quickstart"
-language: HCL
-author: "Louis Chen, Abhishek Pratap Singh, Renji Luke Harold, Rosalie Noel, Junchi Liu"
-date: 2025-08-15
-
-tags: 
-- Unity Catalog
-- Automation
-
 # Databricks Unity Catalog Quickstart 🌐🚀
 
 **Accelerate Your Unity Catalog Setup with Optimized Terraform Automation!**
@@ -38,6 +28,37 @@ The Terraform configurations can be customized by modifying the variables in you
 - **Reduced Boilerplate**: Minimal setup—focus more on your core data projects.
 - **Flexible & Customizable**: Easily adapt configurations to match your unique requirements.
 
+## 🏗️ What Gets Deployed
+
+This Terraform quickstart deploys a complete Unity Catalog environment with the following components:
+
+### **Core Infrastructure**
+- **3 Unity Catalog Environments**: Production, Development, and Sandbox catalogs
+- **Cloud Storage**: Dedicated storage accounts/buckets for each catalog with proper IAM/RBAC
+- **External Locations**: Secure storage credential and external location mappings
+- **System Schemas**: Access, billing, compute, and storage system tables (if permissions allow)
+
+### **Access Management**
+- **User Groups**: Production service principals, developers, and sandbox users
+- **Catalog Permissions**: Role-based access control with environment-specific privileges
+- **System Schema Grants**: Appropriate permissions for monitoring and governance
+
+### **Compute Resources**
+- **Cluster Policies**: Environment-specific policies with cost controls and security settings
+- **Clusters**: Pre-configured clusters for each environment with proper access controls
+
+### **Cloud-Specific Resources**
+
+**AWS Deployment:**
+- S3 buckets with versioning and encryption
+- IAM roles and policies for Unity Catalog access
+- Cross-account trust relationships
+
+**Azure Deployment:**
+- Storage accounts with containers
+- Managed identities and access connectors
+- RBAC assignments for Databricks integration
+
 ## 🚀 Quick Start
 
 Follow these steps to rapidly deploy Unity Catalog using Terraform:
@@ -64,36 +85,36 @@ Ensure you have:
    cd sandbox/uc-quickstart/
    ```
 
-2. **Configure the ```terraform.tfvars``` by referring to the ```template.tfvars.example```:**
-
-   Copy the example file and customize it with your specific values.
-
-3. **Configure for Your Cloud Provider:**
-
-- Navigate into the appropriate directory (`aws` or `azure`) based on your cloud provider.
-- Follow specific instructions detailed in the README within that folder.
-
-4. **Initialize Terraform:**
-
-   Run this command to fetch necessary Terraform providers and modules:
-
+2. **Choose Your Cloud Provider:**
+   
+   Navigate to the appropriate directory based on your cloud provider:
+   
+   **For AWS:**
    ```bash
-   terraform init
+   cd aws/
+   ```
+   
+   **For Azure:**
+   ```bash
+   cd azure/
    ```
 
-
-5. **Deploy Unity Catalog:**
-
-   Execute the following command to apply your Terraform configuration:
-
-   ```bash
-   terraform apply
-   ```
+3. **Follow Cloud-Specific Setup:**
+   
+   Each cloud provider has specific prerequisites and configuration steps detailed in their respective README files:
+   - [AWS Setup Instructions](aws/README.md)
+   - [Azure Setup Instructions](azure/README.md)
 
 ### ✅ Verify Deployment
 
 Once deployment is complete, verify the setup directly within your Databricks workspace to ensure all components are correctly configured.
 
+## 🔧 Need Help?
+
+For cloud-specific troubleshooting and detailed configuration help:
+- **AWS Issues:** See [AWS README](aws/README.md#troubleshooting)
+- **Azure Issues:** See [Azure README](azure/README.md#troubleshooting)
+- **General Questions:** Check the [main documentation](https://docs.databricks.com/en/data-governance/unity-catalog/index.html)
 
 ## 📄 License
 

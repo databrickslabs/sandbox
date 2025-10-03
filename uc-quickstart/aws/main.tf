@@ -63,32 +63,35 @@ module "sandbox_environment" {
 //Create the different groups and asssign them to the workspaces
 
 module "prod_sp_group" {
-  source                = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
   }
   group_name            = "${local.prefix}-${var.group_1}"
+  databricks_account_id = var.databricks_account_id
   databricks_workspace_id = var.databricks_workspace_id
 }
 
 module "developers_group" {
-  source                = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
   }
   group_name            = "${local.prefix}-${var.group_2}"
+  databricks_account_id = var.databricks_account_id
   databricks_workspace_id = var.databricks_workspace_id
 }
 
 module "sandbox_users_group" {
-  source                = "./modules/users"
+  source = "../utils/modules/users"
 
   providers = {
     databricks = databricks.account
   }
   group_name            = "${local.prefix}-${var.group_3}"
+  databricks_account_id = var.databricks_account_id
   databricks_workspace_id = var.databricks_workspace_id
 }
 
@@ -96,7 +99,7 @@ module "sandbox_users_group" {
 // Grant privileges
 
 module "grant_prod" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
 
   providers = {
     databricks = databricks.workspace
@@ -111,7 +114,7 @@ module "grant_prod" {
 }
 
 module "grant_dev" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
 
   providers = {
     databricks = databricks.workspace
@@ -127,7 +130,7 @@ module "grant_dev" {
 
 
 module "grant_sandbox" {
-  source       = "./modules/grants"
+  source = "../utils/modules/grants"
 
   providers = {
     databricks = databricks.workspace
@@ -184,14 +187,14 @@ module "sandbox_cluster" {
 }
 
 module "system_schema" {
-  source                = "./modules/system_schema"
+  source = "../utils/modules/system_schema"
   providers = {
     databricks = databricks.workspace
   }
 }
 
 module "grant_system_schema" {
-  source       = "./modules/grant_system_schema"
+  source = "../utils/modules/grant_system_schema"
   providers = {
     databricks = databricks.workspace
   }
