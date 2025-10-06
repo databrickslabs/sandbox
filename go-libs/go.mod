@@ -1,20 +1,20 @@
 module github.com/databrickslabs/sandbox/go-libs
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/briandowns/spinner v1.23.2
-	github.com/databricks/databricks-sdk-go v0.81.0
+	github.com/databricks/databricks-sdk-go v0.84.0
 	github.com/fatih/color v1.18.0
 	github.com/google/go-querystring v1.1.0
 	github.com/nwidger/jsoncolor v0.3.2
 	github.com/sourcegraph/go-diff v0.7.0
-	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/cobra v1.10.1
+	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 )
 
 require (
