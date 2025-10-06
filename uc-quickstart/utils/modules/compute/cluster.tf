@@ -9,41 +9,18 @@ data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-// Cluster Policy - Below values for a cluster policy can be configured per environment by parameterizing them
+// Local variables for cluster configuration
 locals {
-  default_policy = {
-    "dbus_per_hour" : {
-      "type" : "range",
-      "maxValue" : 10
-    },
-    "autotermination_minutes" : {
-      "type" : "fixed",
-      "value" : 60,
-      "hidden" : true
-    }
-  }
-}
-
-resource "databricks_cluster_policy" "uc_qs_policy" {
-  name       = "UC Quickstart Policy - ${var.environment}"
-  definition = jsonencode(local.default_policy)
-}
-
-resource "databricks_permissions" "policy_permission" {
-  cluster_policy_id = databricks_cluster_policy.uc_qs_policy.id
-  access_control {
-    group_name       = var.group_name
-    permission_level = "CAN_USE"
-  }
+  autotermination_minutes = 60
 }
 
 // Cluster Creation
 resource "databricks_cluster" "example" {
-  cluster_name       = "UC Quickstart Cluster - ${var.environment}"
-  data_security_mode = "USER_ISOLATION"
-  spark_version      = data.databricks_spark_version.latest_lts.id
-  node_type_id       = data.databricks_node_type.smallest.id
-  policy_id          = databricks_cluster_policy.uc_qs_policy.id
+  cluster_name            = "UC Quickstart Cluster - ${var.environment}"
+  data_security_mode      = "USER_ISOLATION"
+  spark_version           = data.databricks_spark_version.latest_lts.id
+  node_type_id            = data.databricks_node_type.smallest.id
+  autotermination_minutes = local.autotermination_minutes
 
   autoscale {
     min_workers = 1
