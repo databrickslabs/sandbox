@@ -8,8 +8,6 @@ command: [
 ]
 env:
   - name: "SPACE_ID"
-    value: "01f03de6df76113387ccc36242e6c804"
+    value: genie-space
   - name: "SERVING_ENDPOINT_NAME"
-    value: "databricks-gpt-oss-120b"
-  - name: "TAVILY_API_KEY"
-    value: "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"
+    value: serving-endpoint
