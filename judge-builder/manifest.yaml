@@ -1,0 +1,3 @@
+version: 1
+name: "judge-builder"
+description: "A comprehensive platform for building and aligning LLM judges with human feedback."
