@@ -1,0 +1,13 @@
+command: [
+  "uvicorn",
+  "app:app",
+  "--host",
+  "0.0.0.0",
+  "--port",
+  "8000"
+]
+env:
+  - name: "SPACE_ID"
+    valueFrom: genie-space
+  - name: "SERVING_ENDPOINT_NAME"
+    valueFrom: serving-endpoint

@@ -1,0 +1,19 @@
+version: 1
+name: "agent-genie"
+description: "A sample Databricks application demonstrating various resource types and permissions"
+
+resource_specs:
+  - name: "serving-endpoint"
+    description: "Machine learning model serving endpoint"
+    serving_endpoint_spec:
+      permission: "CAN_QUERY"
+
+  - name: "genie-space"
+    description: "Databricks Genie Space for multi-agent apps"
+    genie_space_spec:
+      permission: "CAN_RUN"  # use CAN_USE if your workspace doesn't support CAN_EDIT
+
+user_api_scopes:
+  - "sql"
+  - "serving.serving-endpoints"
+  - "dashboards.genie"

@@ -1,0 +1,20 @@
+mlflow
+langgraph==0.3.4 
+databricks-langchain 
+databricks-agents 
+uv
+fastapi
+uvicorn
+openai
+databricks-sdk>=0.18.0
+# databricks-vectorsearch
+jinja2
+langchain-tavily
+langchain_community 
+beautifulsoup4
+pandas
+python-dotenv
+openai
+backoff
+pypdf
+cryptography>=3.1
