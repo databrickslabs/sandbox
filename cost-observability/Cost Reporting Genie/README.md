@@ -1,3 +1,5 @@
+README: Cost Reporting Genie
+
 Gain visibility into your Databricks costs based on the **system.billing** tables. This Genie space focuses on **historical cost observability** - find out *what you spent, when, and on what*
 #### **Current Capabilities and Limitations**
 - ✅ Can answer historical cost and trend questions (by workspace, job, SKU, etc.)
