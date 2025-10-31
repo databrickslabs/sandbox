@@ -43,7 +43,6 @@ class TestLabelingService(TestCase):
         # Mock MLflow labeling session
         mock_session = Mock()
         mock_session.mlflow_run_id = 'run123'
-        mock_session.url = 'https://test.com/session'
         mock_session.url = 'https://databricks.com/labeling/session/123'
         mock_labeling.create_labeling_session.return_value = mock_session
 
@@ -90,7 +89,6 @@ class TestLabelingService(TestCase):
 
         mock_session = Mock()
         mock_session.mlflow_run_id = 'run123'
-        mock_session.url = 'https://test.com/session'
         mock_session.url = 'https://test.com/session'
         mock_labeling.create_labeling_session.return_value = mock_session
 
@@ -424,7 +422,6 @@ class TestLabelingService(TestCase):
 
         mock_session = Mock()
         mock_session.mlflow_run_id = 'run123'
-        mock_session.url = 'https://test.com/session'
         mock_session.url = 'https://databricks.com/labeling/123'
         mock_get_session.return_value = mock_session
 
@@ -548,7 +545,6 @@ class TestLabelingService(TestCase):
 
         mock_session = Mock()
         mock_session.mlflow_run_id = 'run123'
-        mock_session.url = 'https://test.com/session'
         mock_session.url = 'https://test.com/session'
         mock_labeling.create_labeling_session.return_value = mock_session
 
