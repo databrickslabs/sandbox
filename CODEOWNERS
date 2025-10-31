@@ -13,6 +13,7 @@ downstreams                @nfx @alexott
 feature-registry-app       @yang-chengg @mparkhe @mingyangge-db @stephanielu5
 go-libs                    @nfx @alexott
 ip_access_list_analyzer    @alexott
+judge-builder              @smoorjani @alkispoly-db
 ka-chat-bot                @taiga-db
 metascan                   @nfx @alexott
 runtime-packages           @nfx @alexott

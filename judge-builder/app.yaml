@@ -1,0 +1,6 @@
+command:
+  - "uvicorn"
+  - "server.app:app"
+env:
+  - name: "JUDGE_OPTIMIZER"
+    value: "simba"
