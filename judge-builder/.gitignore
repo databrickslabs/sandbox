@@ -12,6 +12,8 @@ __pycache__/
 develop-eggs/
 dist/
 # Note: client/build/ is checked in for Databricks Apps deployment
+!build/
+!build/**
 downloads/
 eggs/
 .eggs/
