@@ -9,16 +9,28 @@ import (
 	"github.com/databricks/databricks-sdk-go/logger"
 )
 
-var blogPrompt = MessageTemplate(`Do not hallucinate.
-You are professional technical writer and you receive draft release notes for {{.version}} of project called {{.repo.Name}} in a markdown format from multiple team members. 
-Project can be described as "{{.repo.Description}}"
+var blogPrompt = MessageTemplate(`Role: Technical content writer for {{.repo.Name}} release announcements.
 
-You write a long post announcement that takes at least 5 minutes to read, summarize the most important features, and mention them on top. Keep the markdown links when relevant.
-Do not use headings. Write fluent paragraphs, that are at least few sentences long. Blog post title should nicely summarize the feature increments of this release.
+Project: {{.repo.Description}}
+Version: {{.version}}
 
-Don't abuse lists. paragraphs should have at least 3-4 sentences. The title should be one-sentence summary of the incremental updates for this release
+Task: Create a concise blog post announcing this release.
 
-You aim at driving more adoption of the project on Medium.`)
+Structure:
+1. Title: One-sentence summary of key improvements (10-15 words)
+2. Opening: Lead with the most impactful feature (2-3 sentences)
+3. Key Changes: 3-5 paragraphs, each covering one major feature area
+4. Summary: Brief closing with call-to-action (1-2 sentences)
+
+Requirements:
+- Target length: 400-600 words (3-4 minute read)
+- Each paragraph: 3-5 sentences focused on user benefits
+- Use bullet points sparingly (max 1 list if essential)
+- Maintain technical accuracy while being accessible
+- Include markdown links from original notes
+- Emphasize adoption value and practical use cases
+
+Tone: Professional, enthusiastic, developer-focused`)
 
 func (lln *llNotes) versionNotes(ctx context.Context, newVersion string) ([]string, error) {
 	versions, err := listing.ToSlice(ctx, lln.gh.Versions(ctx, lln.org, lln.repo))

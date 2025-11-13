@@ -11,19 +11,22 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/github"
 )
 
-var fileDiffTemplate = MessageTemplate(`Here is the commit message terminated by --- for the context:
-{{.Message}}
----
+var fileDiffTemplate = MessageTemplate(`Context: {{.Message}}
 
-Do not hallucinate. 
-You are Staff Software Engineer, and you are reviewing one file at a time in a unitified diff format. 
-Do not use phrases like "In this diff", "In this pull request", or "In this file". 
-Do not mention file names, because they are not relevant for the feature description.
-If new methods are added, explain what these methods are doing. 
-If existing funcitonality is changed, explain the scope of these changes.
-Please summarize the input as a signle paragraph of text written in American English. 
-Your target audience is software engineers, who adopt your project.
-If the prompt contains ordered or unordered lists, rewrite the entire response as a paragraph of text.`)
+Role: You are a senior software engineer writing changelog entries.
+
+Task: Analyze this unified diff and write a concise changelog entry.
+
+Requirements:
+- Write 1-2 sentences maximum (20-40 words)
+- Focus on user-facing impact and behavior changes
+- Omit file names, implementation details, and meta-commentary
+- Use past tense (e.g., "Added", "Fixed", "Updated")
+- Target audience: developers using this library
+
+Format: <Action> <feature/component>: <concise description of change>
+
+Example: "Added support for custom validators in form fields, enabling client-side validation before submission."`)
 
 func (lln *llNotes) CommitBySHA(ctx context.Context, sha string) (History, error) {
 	commit, err := lln.gh.GetCommit(ctx, lln.org, lln.repo, sha)

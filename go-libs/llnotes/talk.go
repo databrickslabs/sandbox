@@ -13,6 +13,15 @@ import (
 	"github.com/databrickslabs/sandbox/go-libs/sed"
 )
 
+type contextKey string
+
+const maxTokensKey contextKey = "maxTokens"
+
+// WithMaxTokens returns a new context with the specified maxTokens value
+func WithMaxTokens(ctx context.Context, maxTokens int) context.Context {
+	return context.WithValue(ctx, maxTokensKey, maxTokens)
+}
+
 type Settings struct {
 	GitHub      github.GitHubConfig
 	Databricks  config.Config
@@ -34,7 +43,7 @@ func New(cfg *Settings) (*llNotes, error) {
 		cfg.Model = "databricks-meta-llama-3-3-70b-instruct"
 	}
 	if cfg.MaxTokens == 0 {
-		cfg.MaxTokens = 4000
+		cfg.MaxTokens = 2048 // Reduced from 4000 for crisper output
 	}
 	if cfg.Workers == 0 {
 		cfg.Workers = 15
@@ -72,11 +81,17 @@ type llNotes struct {
 }
 
 func (lln *llNotes) Talk(ctx context.Context, h History) (History, error) {
-	logger.Debugf(ctx, "Talking with AI:\n%s", h.Excerpt(80))
+	// Read maxTokens from context, fallback to config default
+	maxTokens := lln.cfg.MaxTokens
+	if ctxMaxTokens, ok := ctx.Value(maxTokensKey).(int); ok && ctxMaxTokens > 0 {
+		maxTokens = ctxMaxTokens
+	}
+	logger.Debugf(ctx, "Talking with AI (max tokens: %d):\n%s", maxTokens, h.Excerpt(80))
 	response, err := lln.w.ServingEndpoints.Query(ctx, serving.QueryEndpointInput{
-		Name:      lln.model,
-		Messages:  h.Messages(),
-		MaxTokens: lln.cfg.MaxTokens,
+		Name:        lln.model,
+		Messages:    h.Messages(),
+		MaxTokens:   maxTokens,
+		Temperature: 0.1,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("llm: %w", err)
