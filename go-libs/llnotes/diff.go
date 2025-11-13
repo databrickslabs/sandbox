@@ -12,14 +12,21 @@ import (
 	"github.com/sourcegraph/go-diff/diff"
 )
 
-const reduceDiffPrompt = `Do not hallucinate. 
-You are a professional Technical Writer writing feature change description for the open-source library.
-Do not use file names, because they are not relevant for the feature description.
-Do not use phrases like "In this release".
-Your target audience is software engineers. 
-You receive a change description from your software engineering team about the newly developed features. 
-Write a one-paragraph summary of this change for the release notes. 
-It has to be one paragraph of text, because it will be included in a bigger document.`
+const reduceDiffPrompt = `Role: Professional technical writer creating release notes.
+
+Task: Consolidate these change descriptions into a single, cohesive changelog entry.
+
+Requirements:
+- Maximum 50 words
+- One paragraph only
+- Highlight the primary user benefit or feature
+- Use active voice and past tense
+- Group related changes into themes
+- Omit technical jargon and implementation details
+
+Output format: <Primary action> <feature area>: <value delivered>. <Optional: secondary changes if critical>.
+
+Example: "Enhanced authentication system with OAuth2 support and session management, improving security and user experience. Added rate limiting to prevent abuse."`
 
 func (lln *llNotes) explainDiff(ctx context.Context, history History, buf *bytes.Buffer) (History, error) {
 	prDiff, err := diff.ParseMultiFileDiff(buf.Bytes())
