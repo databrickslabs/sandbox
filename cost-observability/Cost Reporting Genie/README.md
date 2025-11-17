@@ -16,7 +16,7 @@ Gain visibility into your Databricks costs based on the **system.billing** table
 
 ## Installation Instructions
 
-* Users can then easily import it into their workspace of choice using Genie Import/Export APIs (PrPr)
+* Users can then easily import it into their workspace of choice using Genie Import/Export APIs (Beta)
 * Please reach out to your account team for export API instructions
 * Note on prerequisites: User should have system table access to run the Genie space
 
