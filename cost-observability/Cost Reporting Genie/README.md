@@ -16,8 +16,8 @@ Gain visibility into your Databricks costs based on the **system.billing** table
 
 ## Installation Instructions
 
-* Users can then easily import it into their workspace of choice using Genie Import/Export APIs (Beta)
-* Please reach out to your account team for export API instructions
+* Users can import the JSON file (found in this folder) into their workspace of choice using Genie Import/Export APIs (Beta)
+* Genie Import/Export API instructions are here - https://docs.databricks.com/api/workspace/genie/createspace
 * Note on prerequisites: User should have system table access to run the Genie space
 
 ## Support
