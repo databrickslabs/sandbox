@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.databricks.oauth.rotator</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{PYTHON_PATH}}</string>
+        <string>-m</string>
+        <string>databricks_oauth_rotator.cli</string>
+        {{EXTRA_ARGS}}
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/.databricks_oauth_rotator_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/.databricks_oauth_rotator_stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        {{ENV_VARS}}
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>{{HOME}}</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>Nice</key>
+    <integer>1</integer>
+</dict>
+</plist>
