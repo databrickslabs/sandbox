@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/databrickslabs/sandbox/acceptance v0.4.3
-	github.com/databrickslabs/sandbox/go-libs v0.4.0
+	github.com/databrickslabs/sandbox/go-libs v0.4.1
 	github.com/sethvargo/go-githubactions v1.2.0
 )
 
