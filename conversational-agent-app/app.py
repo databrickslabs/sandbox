@@ -414,7 +414,17 @@ def get_model_response(trigger_data, current_messages, chat_history):
     try:
         headers = request.headers
         user_token = headers.get('X-Forwarded-Access-Token')
-        response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID)
+        
+        # Get conversation_id from chat history if continuing a conversation
+        conversation_id = None
+        if chat_history and len(chat_history) > 0:
+            conversation_id = chat_history[0].get("conversation_id")
+        
+        conversation_id, response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
+        
+        # Store the conversation_id in chat history
+        if chat_history and len(chat_history) > 0:
+            chat_history[0]["conversation_id"] = conversation_id
         
         if isinstance(response, str):
             # Escape square brackets to prevent markdown auto-linking

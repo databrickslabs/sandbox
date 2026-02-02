@@ -47,7 +47,7 @@ class GenieClient:
     
     def send_message(self, conversation_id: str, message: str) -> Dict[str, Any]:
         """Send a follow-up message to an existing conversation"""
-        response = self.client.genie.send_message(
+        response = self.client.genie.create_message(
             space_id=self.space_id,
             conversation_id=conversation_id,
             content=message
@@ -227,16 +227,22 @@ def process_genie_response(client, conversation_id, message_id, complete_message
     
     return "No response available", None
 
-def genie_query(question: str, token: str, space_id: str) -> Union[Tuple[str, Optional[str]], Tuple[pd.DataFrame, str]]:
+def genie_query(question: str, token: str, space_id: str, conversation_id: str | None = None) -> Tuple[str | None, Union[str, pd.DataFrame], str | None]:
     """
     Main entry point for querying Genie.
+    Returns: (conversation_id, result, query_text)
     """
     try:
-        # Start a new conversation for each query
-        conversation_id, result, query_text = start_new_conversation(question, token, space_id)
-        return result, query_text
+        if conversation_id:
+            # Continue existing conversation
+            result, query_text = continue_conversation(conversation_id, question, token, space_id)
+            return conversation_id, result, query_text
+        else:
+            # Start a new conversation
+            conversation_id, result, query_text = start_new_conversation(question, token, space_id)
+            return conversation_id, result, query_text
             
     except Exception as e:
         logger.error(f"Error in conversation: {str(e)}. Please try again.")
-        return f"Sorry, an error occurred: {str(e)}. Please try again.", None
+        return None, f"Sorry, an error occurred: {str(e)}. Please try again.", None
 
