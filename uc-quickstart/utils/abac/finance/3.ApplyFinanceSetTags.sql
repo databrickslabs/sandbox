@@ -249,7 +249,7 @@ SELECT
     tag_value,
     'Table-level' as tag_scope
 FROM system.information_schema.table_tags 
-WHERE table_schema = 'finance'
+WHERE schema_name = 'finance'
 ORDER BY table_name, tag_name;
 
 -- View all column-level tags
@@ -260,7 +260,7 @@ SELECT
     tag_value,
     'Column-level' as tag_scope
 FROM system.information_schema.column_tags 
-WHERE table_schema = 'finance'
+WHERE schema_name = 'finance'
 ORDER BY table_name, column_name, tag_name;
 
 -- Summary of tags by table
@@ -269,7 +269,7 @@ SELECT
     COUNT(DISTINCT tag_name) as unique_tags,
     COUNT(*) as total_tags
 FROM system.information_schema.table_tags 
-WHERE table_schema = 'finance'
+WHERE schema_name = 'finance'
 GROUP BY table_name
 ORDER BY table_name;
 
@@ -279,7 +279,7 @@ SELECT
     COUNT(DISTINCT column_name) as tagged_columns,
     COUNT(*) as total_column_tags
 FROM system.information_schema.column_tags 
-WHERE table_schema = 'finance'
+WHERE schema_name = 'finance'
 GROUP BY table_name
 ORDER BY table_name;
 

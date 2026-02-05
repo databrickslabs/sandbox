@@ -5,13 +5,7 @@
 -- Tables: Customers, Accounts, Transactions, CreditCards, TradingPositions, AMLAlerts, AuditLogs
 -- =============================================
 
--- Create catalog if it doesn't exist
-CREATE CATALOG IF NOT EXISTS fincat;
 USE CATALOG fincat;
-
--- Create finance schema
-CREATE SCHEMA IF NOT EXISTS finance
-COMMENT 'Financial services data for ABAC demonstrations - PCI-DSS, AML, GDPR compliance';
 
 USE SCHEMA finance;
 
@@ -92,10 +86,11 @@ INSERT INTO Accounts VALUES
     ('ACC1010', 'CUST00009', 'Checking', 2345.60, 'GBP', '2020-12-05', 'Frozen', 'EU', 0.0150, '2023-11-15', CURRENT_TIMESTAMP());
 
 -- =============================================
--- TABLE 3: TRANSACTIONS
--- Purpose: Transaction history for AML monitoring
+-- TABLE 3: TRANSACTIONS (RECREATED FOR FRAUD AI DEMO)
+-- Purpose: Transaction history for AML monitoring + AI reasoning
 -- Compliance: AML/KYC, FATF, FinCEN
 -- =============================================
+
 DROP TABLE IF EXISTS Transactions;
 
 CREATE TABLE Transactions (
@@ -109,22 +104,48 @@ CREATE TABLE Transactions (
     MerchantName STRING,
     TransactionStatus STRING COMMENT 'Completed, Pending, Flagged, Blocked',
     AMLFlagReason STRING COMMENT 'Large transaction, Cross-border, Suspicious pattern',
+
+    -- Added for AI-driven fraud explanation
+    IsInternational BOOLEAN COMMENT 'TRUE if transaction is cross-border',
+    ExceedsHighRiskThreshold BOOLEAN COMMENT 'TRUE if amount exceeds high-risk threshold (e.g. >= 10000)',
+
     CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
-COMMENT 'Transaction history for AML/KYC monitoring and fraud detection'
+COMMENT 'Transaction history for AML/KYC monitoring and fraud investigation with AI context'
 TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported');
 
 INSERT INTO Transactions VALUES
-    ('TXN000001', 'ACC1001', '2024-01-20 14:35:22', 234.50, 'USD', 'Payment', 'US', 'Amazon.com', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000002', 'ACC1001', '2024-01-19 09:12:45', 1500.00, 'USD', 'Deposit', 'US', 'Payroll Direct Deposit', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000003', 'ACC1003', '2024-01-22 16:20:10', 15000.00, 'USD', 'Withdrawal', 'US', 'Cash Withdrawal ATM', 'Flagged', 'Large transaction', CURRENT_TIMESTAMP()),
-    ('TXN000004', 'ACC1004', '2024-01-21 11:45:30', 8500.00, 'EUR', 'Transfer', 'DE', 'International Wire', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000005', 'ACC1007', '2024-01-23 08:30:15', 25000.00, 'CNY', 'Transfer', 'CN', 'Business Payment', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000006', 'ACC1009', '2024-01-16 19:55:40', 45000.00, 'BRL', 'Deposit', 'BR', 'Large Cash Deposit', 'Flagged', 'Large transaction', CURRENT_TIMESTAMP()),
-    ('TXN000007', 'ACC1010', '2023-11-15 14:22:18', 12000.00, 'GBP', 'Transfer', 'GB', 'Suspicious Transfer', 'Blocked', 'Suspicious pattern', CURRENT_TIMESTAMP()),
-    ('TXN000008', 'ACC1002', '2024-01-18 10:15:55', 500.00, 'USD', 'Payment', 'US', 'Utility Bill', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000009', 'ACC1005', '2024-01-19 15:40:25', 12500.00, 'EUR', 'Transfer', 'FR', 'Investment Purchase', 'Completed', NULL, CURRENT_TIMESTAMP()),
-    ('TXN000010', 'ACC1008', '2024-01-24 12:05:33', 78.90, 'USD', 'Payment', 'US', 'Coffee Shop', 'Completed', NULL, CURRENT_TIMESTAMP());
+-- Normal domestic payments
+('TXN000001', 'ACC1001', '2024-01-20 14:35:22', 234.50, 'USD', 'Payment', 'US', 'Amazon.com', 'Completed', NULL, FALSE, FALSE, CURRENT_TIMESTAMP()),
+('TXN000002', 'ACC1001', '2024-01-19 09:12:45', 1500.00, 'USD', 'Deposit', 'US', 'Payroll Direct Deposit', 'Completed', NULL, FALSE, FALSE, CURRENT_TIMESTAMP()),
+('TXN000008', 'ACC1002', '2024-01-18 10:15:55', 500.00, 'USD', 'Payment', 'US', 'Utility Bill', 'Completed', NULL, FALSE, FALSE, CURRENT_TIMESTAMP()),
+('TXN000010', 'ACC1008', '2024-01-24 12:05:33', 78.90, 'USD', 'Payment', 'US', 'Coffee Shop', 'Completed', NULL, FALSE, FALSE, CURRENT_TIMESTAMP()),
+
+-- Large but explainable withdrawals (kept)
+('TXN000003', 'ACC1003', '2024-01-22 16:20:10', 15000.00, 'USD', 'Withdrawal', 'US', 'Cash Withdrawal ATM', 'Flagged', 'Large transaction', FALSE, TRUE, CURRENT_TIMESTAMP()),
+
+-- Existing international transfers (kept)
+('TXN000004', 'ACC1004', '2024-01-21 11:45:30', 8500.00, 'EUR', 'Transfer', 'DE', 'International Wire', 'Completed', NULL, TRUE, FALSE, CURRENT_TIMESTAMP()),
+('TXN000005', 'ACC1007', '2024-01-23 08:30:15', 25000.00, 'CNY', 'Transfer', 'CN', 'Business Payment', 'Completed', NULL, TRUE, TRUE, CURRENT_TIMESTAMP()),
+
+-- High-risk cash activity (kept)
+('TXN000006', 'ACC1009', '2024-01-16 19:55:40', 45000.00, 'BRL', 'Deposit', 'BR', 'Large Cash Deposit', 'Flagged', 'Large transaction', FALSE, TRUE, CURRENT_TIMESTAMP()),
+
+-- Existing blocked transfer (kept)
+('TXN000007', 'ACC1010', '2023-11-15 14:22:18', 12000.00, 'GBP', 'Transfer', 'GB', 'Suspicious Transfer', 'Blocked', 'Suspicious pattern', TRUE, TRUE, CURRENT_TIMESTAMP()),
+
+-- Investment-related transfer (kept)
+('TXN000009', 'ACC1005', '2024-01-19 15:40:25', 12500.00, 'EUR', 'Transfer', 'FR', 'Investment Purchase', 'Completed', NULL, TRUE, TRUE, CURRENT_TIMESTAMP()),
+
+-- =============================================
+-- DEMO: TWO TOP URGENT ALERT TRANSACTIONS (NEW)
+-- =============================================
+
+-- ✅ DEMO #1 (Customer aware / reasonable): large first-time international transfer for CUST00001
+('TXN_DEMO_01', 'ACC1001', '2024-01-25 08:30:00', 18000.00, 'USD', 'Transfer', 'DE', 'International Wire - Property Settlement', 'Flagged', 'Cross-border', TRUE, TRUE, CURRENT_TIMESTAMP()),
+
+-- 🚨 DEMO #2 (Customer unreachable): large international transfer for CUST00009 (already Frozen account ACC1010)
+('TXN_DEMO_02', 'ACC1010', '2024-01-25 08:40:00', 22000.00, 'GBP', 'Transfer', 'GB', 'International Wire - Beneficiary Added Recently', 'Blocked', 'Suspicious pattern', TRUE, TRUE, CURRENT_TIMESTAMP());
 
 -- =============================================
 -- TABLE 4: CREDIT CARDS
@@ -218,11 +239,37 @@ COMMENT 'AML alerts and investigation tracking for compliance monitoring'
 TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported');
 
 INSERT INTO AMLAlerts VALUES
-    ('AML00001', 'CUST00007', 'TXN000006', '2024-01-16 20:00:00', 'Large Transaction', 75, 'Under Review', 'AML_INV_001', 'Large cash deposit requiring enhanced due diligence', NULL, FALSE, CURRENT_TIMESTAMP()),
-    ('AML00002', 'CUST00009', 'TXN000007', '2023-11-15 15:00:00', 'Suspicious Pattern', 95, 'SAR Filed', 'AML_INV_002', 'Multiple red flags - account frozen pending investigation', '2023-12-01 10:00:00', TRUE, CURRENT_TIMESTAMP()),
-    ('AML00003', 'CUST00001', 'TXN000003', '2024-01-22 17:00:00', 'Large Transaction', 65, 'Under Review', 'AML_INV_001', 'Unusual cash withdrawal - customer contacted', NULL, FALSE, CURRENT_TIMESTAMP()),
-    ('AML00004', 'CUST00010', NULL, '2024-01-10 09:00:00', 'High Risk Customer', 85, 'Escalated', 'AML_INV_003', 'High-risk jurisdiction customer flagged for enhanced monitoring', NULL, FALSE, CURRENT_TIMESTAMP());
+-- ✅ DEMO #1 (Customer aware) - still urgent but slightly lower than DEMO #2
+(
+  'AML_DEMO_01',
+  'CUST00001',
+  'TXN_DEMO_01',
+  '2024-01-25 09:00:00',
+  'Cross-Border',
+  88,
+  'Under Review',
+  'AML_INV_DEMO',
+  'First-time large international transfer flagged by threshold and cross-border controls',
+  NULL,
+  FALSE,
+  CURRENT_TIMESTAMP()
+),
 
+-- 🚨 DEMO #2 (Customer unreachable) - highest urgency
+(
+  'AML_DEMO_02',
+  'CUST00009',
+  'TXN_DEMO_02',
+  '2024-01-25 09:05:00',
+  'Cross-Border',
+  92,
+  'Under Review',
+  'AML_INV_DEMO',
+  'Large international transfer blocked; account is frozen and customer could not be reached',
+  NULL,
+  FALSE,
+  CURRENT_TIMESTAMP()
+);
 -- =============================================
 -- TABLE 7: AUDIT LOGS
 -- Purpose: Audit trail for SOX compliance
@@ -253,6 +300,43 @@ INSERT INTO AuditLogs VALUES
     ('LOG00003', 'analyst@company.com', 'AML_Investigator_Senior', '2024-01-17 09:15:00', 'Transactions', 'SELECT', 8932, NULL, '2026-12-31', '192.0.2.15', 'SESS_G7H8I9', CURRENT_TIMESTAMP()),
     ('LOG00004', 'support@company.com', 'Credit_Card_Support', '2024-01-18 11:45:00', 'CreditCards', 'SELECT', 23, NULL, '2026-12-31', '198.51.100.87', 'SESS_J1K2L3', CURRENT_TIMESTAMP());
 
+DROP TABLE IF EXISTS CustomerInteractions;
+
+CREATE TABLE CustomerInteractions (
+    InteractionID STRING NOT NULL,
+    CustomerID STRING NOT NULL,
+    InteractionTime TIMESTAMP,
+    Channel STRING COMMENT 'Call, Chat, Email',
+    AgentID STRING,
+    InteractionNotes STRING COMMENT 'Free-text customer interaction notes',
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+COMMENT 'Customer interaction history used for fraud investigation context'
+TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported');
+
+INSERT INTO CustomerInteractions VALUES
+-- ✅ Customer aware -> approve/monitor
+(
+  'INT_DEMO_01',
+  'CUST00001',
+  '2024-01-25 08:45:00',
+  'Call',
+  'AGENT_101',
+  'Customer confirmed the international transfer was intentional and related to an overseas property purchase. Customer acknowledged the amount and destination account.',
+  CURRENT_TIMESTAMP()
+),
+
+-- 🚨 Customer unreachable -> escalate
+(
+  'INT_DEMO_02',
+  'CUST00009',
+  '2024-01-25 08:50:00',
+  'Call',
+  'AGENT_102',
+  'Multiple attempts were made to contact the customer regarding the international transfer. No response was received and the customer could not be reached.',
+  CURRENT_TIMESTAMP()
+);
+
 -- =============================================
 -- VERIFICATION
 -- =============================================
@@ -279,3 +363,41 @@ ORDER BY table_name;
 SELECT '✅ Successfully created 7 finance tables with sample data' as status;
 SELECT '📊 Tables: Customers, Accounts, Transactions, CreditCards, TradingPositions, AMLAlerts, AuditLogs' as tables_created;
 SELECT '🔐 Ready for: PCI-DSS, AML/KYC, GDPR, SOX, GLBA compliance demonstrations' as compliance_ready;
+
+
+-- Show the two top urgent alerts
+SELECT
+  a.AlertID,
+  a.AlertDate,
+  a.RiskScore,
+  a.InvestigationStatus,
+  a.CustomerID,
+  a.TransactionID
+FROM AMLAlerts a
+ORDER BY a.RiskScore DESC, a.AlertDate DESC;
+
+-- Verify both demo transactions exist and are international + exceed threshold
+SELECT
+  TransactionID,
+  AccountID,
+  TransactionDate,
+  Amount,
+  Currency,
+  CountryCode,
+  TransactionStatus,
+  AMLFlagReason,
+  IsInternational,
+  ExceedsHighRiskThreshold
+FROM Transactions
+WHERE TransactionID IN ('TXN_DEMO_01', 'TXN_DEMO_02')
+ORDER BY TransactionDate;
+
+-- Verify interactions exist for both customers
+SELECT
+  CustomerID,
+  InteractionTime,
+  Channel,
+  AgentID,
+  InteractionNotes
+FROM CustomerInteractions
+ORDER BY InteractionTime DESC;

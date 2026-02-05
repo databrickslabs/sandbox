@@ -32,7 +32,7 @@ from typing import List, Dict, Any
 # COMMAND ----------
 
 # Configuration - Update these values for your environment
-workspace_url = "https://e2-demo-field-eng.cloud.databricks.com"  # Update with your workspace URL
+workspace_url = "https://adb-7405609634482318.18.azuredatabricks.net"  # Update with your workspace URL
 
 # Get token from Databricks secrets or environment
 # Option 1: From dbutils (if running in Databricks)
@@ -225,6 +225,8 @@ print(f"📊 Prepared {len(finance_tag_policies)} finance tag policies for creat
 
 # COMMAND ----------
 
+import time
+
 # Create all finance tag policies
 print("🚀 Starting finance tag policy creation...\n")
 
@@ -251,7 +253,7 @@ for tag_key, config in finance_tag_policies.items():
         failure_count += 1
     
     print("\n")
-
+    time.sleep(1.5)
 print(f"\n{'='*60}")
 print("📊 CREATION SUMMARY")
 print(f"{'='*60}")

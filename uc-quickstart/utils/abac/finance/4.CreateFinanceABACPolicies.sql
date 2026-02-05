@@ -85,7 +85,8 @@ CREATE OR REPLACE POLICY fincat_pci_cvv_mask
 ON CATALOG fincat
 COMMENT 'PCI-DSS: Mask CVV completely for all users except compliance officers'
 COLUMN MASK fincat.finance.mask_credit_card_full
-TO `Credit_Card_Support`, `Fraud_Analyst`, `Marketing_Team`
+TO `account users`
+EXCEPT `Compliance_Officer`
 FOR TABLES
 MATCH COLUMNS hasTagValue('pci_clearance', 'Administrative') AS cvv_cols
 ON COLUMN cvv_cols;
