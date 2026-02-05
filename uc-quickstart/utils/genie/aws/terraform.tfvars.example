@@ -1,0 +1,15 @@
+# ============================================================================
+# Example Terraform Variables for Finance ABAC Account Groups
+# ============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required: Databricks Account ID
+databricks_account_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Required: Service Principal credentials for authentication
+databricks_client_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+databricks_client_secret = "your-client-secret-here"
+
+# Required: Workspace configuration for group assignment and entitlements
+databricks_workspace_id   = "1234567890123456"
+databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
