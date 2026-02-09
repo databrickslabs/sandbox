@@ -32,7 +32,7 @@ from typing import List, Dict, Any
 # COMMAND ----------
 
 # Configuration - Update these values for your environment
-workspace_url = "https://adb-7405609634482318.18.azuredatabricks.net"  # Update with your workspace URL
+workspace_url = "https://dbc-0f56e540-7f65.cloud.databricks.com"  # Update with your workspace URL
 
 # Get token from Databricks secrets or environment
 # Option 1: From dbutils (if running in Databricks)
