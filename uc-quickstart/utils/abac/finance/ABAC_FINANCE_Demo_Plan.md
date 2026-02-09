@@ -12,6 +12,12 @@
 
 ---
 
+## Minimal 5-Group Demo (Quick Version)
+
+For a **short demo**, use only **5 groups** and **5 scenarios**: (1) **PII masking** – run the same `SELECT` on Customers as Junior_Analyst (masked) vs Senior_Analyst or Compliance_Officer (unmasked). (2) **Fraud/card** – run the same `SELECT` on CreditCards as Junior (last-4 only), Senior (full card), Compliance (full + CVV). (3) **Fraud/transactions** – run the same `SELECT` on Transactions as Junior (rounded Amount) vs Senior/Compliance (full Amount). (4) **US region** – run `SELECT` on Customers as US_Region_Staff (only US rows). (5) **EU region** – run the same as EU_Region_Staff (only EU rows). **Compliance_Officer** sees everything (all regions, unmasked). Setup: Terraform in `genie/aws` creates the 5 groups and tag policies; then run the SQL notebooks in order (functions → schema → tags → ABAC policies). Test with `5.TestFinanceABACPolicies.sql`.
+
+---
+
 ## 🧠 The Psychology of Financial Services Demos
 
 ### **The Financial Services Mindset**

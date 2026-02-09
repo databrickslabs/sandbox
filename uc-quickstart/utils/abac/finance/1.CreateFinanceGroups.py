@@ -5,22 +5,13 @@
 # MAGIC ## 📋 Overview
 # MAGIC This notebook creates all the required **account-level user groups** for finance ABAC scenarios using Databricks Account SCIM API.
 # MAGIC
-# MAGIC ### 🎯 Groups to Create (15 Total)
-# MAGIC 1. **Credit_Card_Support** - Customer service for card inquiries
-# MAGIC 2. **Fraud_Analyst** - Fraud detection and investigation
-# MAGIC 3. **AML_Investigator_Junior** - Junior AML analysts
-# MAGIC 4. **AML_Investigator_Senior** - Senior AML investigators
-# MAGIC 5. **Compliance_Officer** - Regulatory compliance oversight
-# MAGIC 6. **Equity_Trader** - Equity trading desk
-# MAGIC 7. **Fixed_Income_Trader** - Fixed income trading desk
-# MAGIC 8. **Research_Analyst** - Research and advisory team
-# MAGIC 9. **Risk_Manager** - Risk management and monitoring
-# MAGIC 10. **External_Auditor** - External audit firms
-# MAGIC 11. **Marketing_Team** - Marketing and analytics
-# MAGIC 12. **KYC_Specialist** - Know Your Customer verification
-# MAGIC 13. **Regional_EU_Staff** - European region staff
-# MAGIC 14. **Regional_US_Staff** - United States region staff
-# MAGIC 15. **Regional_APAC_Staff** - Asia-Pacific region staff
+# MAGIC ### 🎯 Groups to Create (5 Total – Minimal Demo)
+# MAGIC **Primary:** Use Terraform (genie/aws) to create groups. This script is optional/backup.
+# MAGIC 1. **Junior_Analyst** - Masked PII, last-4 card, rounded transaction amounts
+# MAGIC 2. **Senior_Analyst** - Unmasked PII, full card, full transaction details
+# MAGIC 3. **US_Region_Staff** - Row access limited to US customer data
+# MAGIC 4. **EU_Region_Staff** - Row access limited to EU customer data
+# MAGIC 5. **Compliance_Officer** - Full unmasked access (all regions, all columns)
 # MAGIC
 # MAGIC ## ⚠️ Prerequisites
 # MAGIC - **Must be run in Databricks workspace** (uses `dbutils` for token)
@@ -75,82 +66,32 @@ print("⚠️ Note: Creating account-level groups requires account admin permiss
 
 # COMMAND ----------
 
-# Define all finance user groups with descriptions
+# Define finance user groups (minimal 5-group demo; Terraform is primary)
 finance_groups = {
-    "Credit_Card_Support": {
-        "display_name": "Credit Card Support",
-        "description": "Customer service representatives handling credit card inquiries (PCI-DSS Basic access)",
-        "tags": ["pci_clearance:Basic", "payment_role:Customer_Service"]
+    "Junior_Analyst": {
+        "display_name": "Junior Analyst",
+        "description": "Junior analysts with masked PII, last-4 card only, rounded transaction amounts",
+        "tags": ["aml_clearance:Junior_Analyst", "pii_level:Limited_PII", "pci_clearance:Basic"]
     },
-    "Fraud_Analyst": {
-        "display_name": "Fraud Analyst",
-        "description": "Fraud detection analysts with full access to payment card data (PCI-DSS Full access)",
-        "tags": ["pci_clearance:Full", "payment_role:Fraud_Analyst"]
+    "Senior_Analyst": {
+        "display_name": "Senior Analyst",
+        "description": "Senior analysts with unmasked PII, full card number, full transaction details",
+        "tags": ["aml_clearance:Senior_Investigator", "pii_level:Full_PII", "pci_clearance:Full"]
     },
-    "AML_Investigator_Junior": {
-        "display_name": "AML Investigator Junior",
-        "description": "Junior AML analysts with limited access to transaction data",
-        "tags": ["aml_clearance:Junior_Analyst"]
+    "US_Region_Staff": {
+        "display_name": "US Region Staff",
+        "description": "Staff with row access limited to US customer data (GLBA, CCPA)",
+        "tags": ["data_residency:US", "customer_region:US"]
     },
-    "AML_Investigator_Senior": {
-        "display_name": "AML Investigator Senior",
-        "description": "Senior AML investigators with enhanced access to customer and transaction data",
-        "tags": ["aml_clearance:Senior_Investigator"]
+    "EU_Region_Staff": {
+        "display_name": "EU Region Staff",
+        "description": "Staff with row access limited to EU customer data (GDPR)",
+        "tags": ["data_residency:EU", "customer_region:EU"]
     },
     "Compliance_Officer": {
         "display_name": "Compliance Officer",
-        "description": "Regulatory compliance officers with comprehensive access to all compliance data",
-        "tags": ["aml_clearance:Compliance_Officer", "pci_clearance:Administrative", "sox_scope:In_Scope"]
-    },
-    "Equity_Trader": {
-        "display_name": "Equity Trader",
-        "description": "Equity trading desk staff with access to equity positions",
-        "tags": ["trading_desk:Equity", "information_barrier:Trading_Side"]
-    },
-    "Fixed_Income_Trader": {
-        "display_name": "Fixed Income Trader",
-        "description": "Fixed income trading desk staff with access to bond and treasury positions",
-        "tags": ["trading_desk:Fixed_Income", "information_barrier:Trading_Side"]
-    },
-    "Research_Analyst": {
-        "display_name": "Research Analyst",
-        "description": "Research and advisory team separated by Chinese wall from trading",
-        "tags": ["trading_desk:Research", "information_barrier:Advisory_Side"]
-    },
-    "Risk_Manager": {
-        "display_name": "Risk Manager",
-        "description": "Risk management team with neutral access across trading desks",
-        "tags": ["information_barrier:Neutral", "market_hours:After_Hours"]
-    },
-    "External_Auditor": {
-        "display_name": "External Auditor",
-        "description": "External auditors with temporary, time-limited access to financial records",
-        "tags": ["audit_project:Q1_SOX_Audit", "sox_scope:In_Scope"]
-    },
-    "Marketing_Team": {
-        "display_name": "Marketing Team",
-        "description": "Marketing team with de-identified customer data access",
-        "tags": ["pii_level:De_Identified", "data_purpose:Marketing"]
-    },
-    "KYC_Specialist": {
-        "display_name": "KYC Specialist",
-        "description": "Know Your Customer specialists with full PII access for verification",
-        "tags": ["pii_level:Full_PII", "data_purpose:Verification"]
-    },
-    "Regional_EU_Staff": {
-        "display_name": "Regional EU Staff",
-        "description": "Staff based in European Union with access to EU customer data only (GDPR)",
-        "tags": ["data_residency:EU", "customer_region:EU"]
-    },
-    "Regional_US_Staff": {
-        "display_name": "Regional US Staff",
-        "description": "Staff based in United States with access to US customer data (GLBA, CCPA)",
-        "tags": ["data_residency:US", "customer_region:US"]
-    },
-    "Regional_APAC_Staff": {
-        "display_name": "Regional APAC Staff",
-        "description": "Staff based in Asia-Pacific region with access to APAC customer data",
-        "tags": ["data_residency:APAC", "customer_region:APAC"]
+        "description": "Full unmasked access to all regions and columns for audit",
+        "tags": ["aml_clearance:Compliance_Officer", "pci_clearance:Administrative"]
     }
 }
 
@@ -318,20 +259,19 @@ except Exception as e:
 
 # COMMAND ----------
 
-# Display group mapping to compliance frameworks
-print("\n📋 Group to Compliance Framework Mapping:\n")
+# Display group mapping to minimal 5 scenarios
+print("\n📋 Group to Scenario Mapping (Minimal Demo):\n")
 
-compliance_mapping = {
-    "🔐 PCI-DSS (Payment Card Security)": ["Credit_Card_Support", "Fraud_Analyst"],
-    "💰 AML/KYC (Anti-Money Laundering)": ["AML_Investigator_Junior", "AML_Investigator_Senior", "Compliance_Officer"],
-    "🏛️ SEC/MiFID II (Trading Compliance)": ["Equity_Trader", "Fixed_Income_Trader", "Research_Analyst", "Risk_Manager"],
-    "🌍 GDPR/CCPA (Data Privacy)": ["Regional_EU_Staff", "Regional_US_Staff", "Regional_APAC_Staff", "Marketing_Team"],
-    "📊 SOX (Financial Audit)": ["External_Auditor", "Compliance_Officer"],
-    "👤 GLBA (Customer Privacy)": ["KYC_Specialist", "Credit_Card_Support"]
+scenario_mapping = {
+    "1. PII masking": ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"],
+    "2. Fraud/card": ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"],
+    "3. Fraud/transactions": ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"],
+    "4. US region": ["US_Region_Staff"],
+    "5. EU region": ["EU_Region_Staff"]
 }
 
-for framework, groups in compliance_mapping.items():
-    print(f"\n{framework}")
+for scenario, groups in scenario_mapping.items():
+    print(f"\n{scenario}")
     print(f"  Groups: {', '.join(groups)}")
     for group in groups:
         if group in finance_groups:
@@ -343,7 +283,7 @@ for framework, groups in compliance_mapping.items():
 # MAGIC ## 🎯 Next Steps After Account Group Creation
 # MAGIC
 # MAGIC ### ✅ **Account Groups Created Successfully**
-# MAGIC All 15 finance account groups are now available across all workspaces in your Databricks account:
+# MAGIC All 5 finance account groups (minimal demo) are now available across all workspaces in your Databricks account:
 # MAGIC
 # MAGIC ### 📋 **Ready for ABAC Implementation:**
 # MAGIC 1. **Apply Unity Catalog Tag Policies** - Run `2.CreateFinanceTagPolicies.py`

@@ -15,41 +15,17 @@ output "finance_group_names" {
 }
 
 # ----------------------------------------------------------------------------
-# Compliance Framework Mapping
+# Minimal Demo Scenario Mapping (5 groups, 5 scenarios)
 # ----------------------------------------------------------------------------
 
-output "compliance_framework_groups" {
-  description = "Groups organized by compliance framework"
+output "demo_scenario_groups" {
+  description = "Groups mapped to minimal ABAC demo scenarios"
   value = {
-    "PCI-DSS" = [
-      "Credit_Card_Support",
-      "Fraud_Analyst"
-    ]
-    "AML-KYC" = [
-      "AML_Investigator_Junior",
-      "AML_Investigator_Senior",
-      "Compliance_Officer"
-    ]
-    "SEC-MiFID-II" = [
-      "Equity_Trader",
-      "Fixed_Income_Trader",
-      "Research_Analyst",
-      "Risk_Manager"
-    ]
-    "GDPR-CCPA" = [
-      "Regional_EU_Staff",
-      "Regional_US_Staff",
-      "Regional_APAC_Staff",
-      "Marketing_Team"
-    ]
-    "SOX" = [
-      "External_Auditor",
-      "Compliance_Officer"
-    ]
-    "GLBA" = [
-      "KYC_Specialist",
-      "Credit_Card_Support"
-    ]
+    "1_PII_masking"       = ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"]
+    "2_Fraud_card"        = ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"]
+    "3_Fraud_transactions" = ["Junior_Analyst", "Senior_Analyst", "Compliance_Officer"]
+    "4_US_region"         = ["US_Region_Staff"]
+    "5_EU_region"         = ["EU_Region_Staff"]
   }
 }
 

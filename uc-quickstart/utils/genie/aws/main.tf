@@ -1,79 +1,38 @@
 # ============================================================================
-# Finance ABAC Account Groups - Terraform Configuration
+# Finance ABAC Account Groups - Terraform Configuration (Minimal 5-Group Demo)
 # ============================================================================
-# This module creates account-level user groups for finance ABAC scenarios
-# in Databricks Unity Catalog.
+# This module creates account-level user groups for the minimal finance ABAC
+# demo in Databricks Unity Catalog.
 #
-# Groups Created (15 Total):
-# - PCI-DSS: Credit_Card_Support, Fraud_Analyst
-# - AML/KYC: AML_Investigator_Junior, AML_Investigator_Senior, Compliance_Officer
-# - Trading: Equity_Trader, Fixed_Income_Trader, Research_Analyst, Risk_Manager
-# - Privacy: Regional_EU_Staff, Regional_US_Staff, Regional_APAC_Staff, Marketing_Team
-# - Audit: External_Auditor, KYC_Specialist
+# Groups Created (5 Total):
+# - Junior_Analyst: Masked PII, last-4 card only, rounded transaction amounts
+# - Senior_Analyst: Unmasked PII, full card number, full transaction details
+# - US_Region_Staff: Row access limited to CustomerRegion = 'US'
+# - EU_Region_Staff: Row access limited to CustomerRegion = 'EU'
+# - Compliance_Officer: Full unmasked access (all regions, all columns)
 # ============================================================================
 
 locals {
-  # Define all finance user groups with their metadata
   finance_groups = {
-    "Credit_Card_Support" = {
-      display_name = "Credit Card Support"
-      description  = "Customer service representatives handling credit card inquiries (PCI-DSS Basic access)"
+    "Junior_Analyst" = {
+      display_name = "Junior Analyst"
+      description  = "Junior analysts with masked PII, last-4 card only, rounded transaction amounts"
     }
-    "Fraud_Analyst" = {
-      display_name = "Fraud Analyst"
-      description  = "Fraud detection analysts with full access to payment card data (PCI-DSS Full access)"
+    "Senior_Analyst" = {
+      display_name = "Senior Analyst"
+      description  = "Senior analysts with unmasked PII, full card number, full transaction details"
     }
-    "AML_Investigator_Junior" = {
-      display_name = "AML Investigator Junior"
-      description  = "Junior AML analysts with limited access to transaction data"
+    "US_Region_Staff" = {
+      display_name = "US Region Staff"
+      description  = "Staff with row access limited to US customer data (GLBA, CCPA)"
     }
-    "AML_Investigator_Senior" = {
-      display_name = "AML Investigator Senior"
-      description  = "Senior AML investigators with enhanced access to customer and transaction data"
+    "EU_Region_Staff" = {
+      display_name = "EU Region Staff"
+      description  = "Staff with row access limited to EU customer data (GDPR)"
     }
     "Compliance_Officer" = {
       display_name = "Compliance Officer"
-      description  = "Regulatory compliance officers with comprehensive access to all compliance data"
-    }
-    "Equity_Trader" = {
-      display_name = "Equity Trader"
-      description  = "Equity trading desk staff with access to equity positions"
-    }
-    "Fixed_Income_Trader" = {
-      display_name = "Fixed Income Trader"
-      description  = "Fixed income trading desk staff with access to bond and treasury positions"
-    }
-    "Research_Analyst" = {
-      display_name = "Research Analyst"
-      description  = "Research and advisory team separated by Chinese wall from trading"
-    }
-    "Risk_Manager" = {
-      display_name = "Risk Manager"
-      description  = "Risk management team with neutral access across trading desks"
-    }
-    "External_Auditor" = {
-      display_name = "External Auditor"
-      description  = "External auditors with temporary, time-limited access to financial records"
-    }
-    "Marketing_Team" = {
-      display_name = "Marketing Team"
-      description  = "Marketing team with de-identified customer data access"
-    }
-    "KYC_Specialist" = {
-      display_name = "KYC Specialist"
-      description  = "Know Your Customer specialists with full PII access for verification"
-    }
-    "Regional_EU_Staff" = {
-      display_name = "Regional EU Staff"
-      description  = "Staff based in European Union with access to EU customer data only (GDPR)"
-    }
-    "Regional_US_Staff" = {
-      display_name = "Regional US Staff"
-      description  = "Staff based in United States with access to US customer data (GLBA, CCPA)"
-    }
-    "Regional_APAC_Staff" = {
-      display_name = "Regional APAC Staff"
-      description  = "Staff based in Asia-Pacific region with access to APAC customer data"
+      description  = "Full unmasked access to all regions and columns for audit"
     }
   }
 }
@@ -109,10 +68,12 @@ resource "databricks_mws_permission_assignment" "finance_group_assignments" {
 }
 
 # ----------------------------------------------------------------------------
-# Grant Consumer Entitlements to Groups
+# Grant Consumer Entitlements to Groups (Databricks One UI only)
 # ----------------------------------------------------------------------------
-# Grants minimal consumer entitlement following least privilege principle:
-# - workspace_consume: Minimal consumer access to workspace (can access but not create resources)
+# When workspace_consume is the ONLY entitlement, users get the Databricks One UI
+# experience (Genie spaces, dashboards, apps) and do NOT get the full workspace UI
+# (clusters, notebooks, etc.). Do not add other entitlements to these groups if
+# you want consumer-only / One UI only.
 #
 # Reference: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlements
 
@@ -122,7 +83,7 @@ resource "databricks_entitlements" "finance_group_entitlements" {
   provider = databricks.workspace
   group_id = each.value.id
 
-  # Minimal consumer entitlement
+  # Consumer access only -> Databricks One UI only (not workspace UI)
   workspace_consume = true
 
   depends_on = [databricks_mws_permission_assignment.finance_group_assignments]
