@@ -70,10 +70,9 @@ resource "databricks_mws_permission_assignment" "finance_group_assignments" {
 # ----------------------------------------------------------------------------
 # Grant Consumer Entitlements to Groups (Databricks One UI only)
 # ----------------------------------------------------------------------------
-# When workspace_consume is the ONLY entitlement, users get the Databricks One UI
-# experience (Genie spaces, dashboards, apps) and do NOT get the full workspace UI
-# (clusters, notebooks, etc.). Do not add other entitlements to these groups if
-# you want consumer-only / One UI only.
+# These groups get ONLY consumer access: Databricks One UI (Genie, dashboards,
+# apps). They do NOT get full workspace UI (clusters, notebooks, SQL workspace).
+# workspace_consume cannot be used with workspace_access or databricks_sql_access.
 #
 # Reference: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlements
 
@@ -83,7 +82,8 @@ resource "databricks_entitlements" "finance_group_entitlements" {
   provider = databricks.workspace
   group_id = each.value.id
 
-  # Consumer access only -> Databricks One UI only (not workspace UI)
+  # Consumer only: One UI (Genie, dashboards, apps). No full workspace or SQL UI.
+  # Do not add workspace_access, databricks_sql_access, or allow_cluster_create (conflicts with workspace_consume).
   workspace_consume = true
 
   depends_on = [databricks_mws_permission_assignment.finance_group_assignments]

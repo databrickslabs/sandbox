@@ -48,3 +48,12 @@ output "group_entitlements" {
     }
   }
 }
+
+# ----------------------------------------------------------------------------
+# Genie: warehouse for genie_space.sh create
+# ----------------------------------------------------------------------------
+
+output "genie_warehouse_id" {
+  description = "SQL warehouse ID for the Genie Space (created or existing). Pass to scripts/genie_space.sh create as GENIE_WAREHOUSE_ID."
+  value       = local.genie_warehouse_id
+}

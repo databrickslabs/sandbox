@@ -50,10 +50,22 @@ variable "demo_user_senior_eu_id" {
 # Genie Space: warehouse and data access
 # ----------------------------------------------------------------------------
 
+variable "genie_warehouse_name" {
+  type        = string
+  default     = "Genie Finance Warehouse"
+  description = "Name of the serverless SQL warehouse created for Genie (used only when genie_use_existing_warehouse_id is empty)."
+}
+
+variable "genie_use_existing_warehouse_id" {
+  type        = string
+  default     = ""
+  description = "When set, do not create a new warehouse; use this ID for permissions and for genie_space.sh create. When empty, Terraform creates a serverless warehouse."
+}
+
 variable "genie_default_warehouse_id" {
   type        = string
   default     = ""
-  description = "SQL warehouse ID designated for the Genie Space. When set, CAN_USE is granted to the five groups. Required for Genie if consumers run queries."
+  description = "Deprecated: use genie_use_existing_warehouse_id. SQL warehouse ID when not creating one in Terraform."
 }
 
 variable "uc_catalog_name" {

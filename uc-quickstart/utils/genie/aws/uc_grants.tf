@@ -10,6 +10,11 @@ resource "databricks_grants" "genie_catalog" {
   provider = databricks.workspace
   catalog  = var.uc_catalog_name
 
+  depends_on = [
+    databricks_group.finance_groups,
+    databricks_mws_permission_assignment.finance_group_assignments,
+  ]
+
   grant {
     principal  = "Junior_Analyst"
     privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]

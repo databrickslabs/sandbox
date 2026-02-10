@@ -28,6 +28,7 @@ resource "databricks_tag_policy" "aml_clearance" {
 # Tag policy: PII level (Scenario 1 - PII masking on Customers)
 resource "databricks_tag_policy" "pii_level" {
   provider    = databricks.workspace
+  depends_on  = [databricks_tag_policy.aml_clearance]
   tag_key     = "pii_level"
   description = "PII access level for minimal demo: Limited_PII (junior), Full_PII (senior/compliance)"
   values = [
@@ -43,6 +44,7 @@ resource "databricks_tag_policy" "pii_level" {
 # Tag policy: PCI clearance (Scenario 2 - Credit card masking)
 resource "databricks_tag_policy" "pci_clearance" {
   provider    = databricks.workspace
+  depends_on  = [databricks_tag_policy.pii_level]
   tag_key     = "pci_clearance"
   description = "PCI-DSS clearance for minimal demo: Basic (last4), Full (full card), Administrative (full+CVV)"
   values = [
@@ -59,6 +61,7 @@ resource "databricks_tag_policy" "pci_clearance" {
 # Tag policy: Customer region (Scenarios 4 & 5 - row filters)
 resource "databricks_tag_policy" "customer_region" {
   provider    = databricks.workspace
+  depends_on  = [databricks_tag_policy.pci_clearance]
   tag_key     = "customer_region"
   description = "Customer data region for minimal demo: Regional (table in scope), US, EU"
   values = [
@@ -75,6 +78,7 @@ resource "databricks_tag_policy" "customer_region" {
 # Tag policy: Data residency (Scenarios 4 & 5 - row filters)
 resource "databricks_tag_policy" "data_residency" {
   provider    = databricks.workspace
+  depends_on  = [databricks_tag_policy.customer_region]
   tag_key     = "data_residency"
   description = "Data residency for minimal demo: US, EU"
   values = [

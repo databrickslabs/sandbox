@@ -19,7 +19,9 @@ databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
 # demo_user_junior_us_id = "12345678"   # kavya.parashar@databricks.com -> Junior_Analyst, US_Region_Staff
 # demo_user_senior_eu_id = "87654321"   # louis.chen@databricks.com -> Senior_Analyst, EU_Region_Staff
 
-# Optional: Genie Space – SQL warehouse and UC names
-# genie_default_warehouse_id = "abc123..."   # Required for Genie if consumers must run queries; CAN USE is granted to the 5 groups
-# uc_catalog_name = "fincat"                  # Default; catalog for UC grants (USE_CATALOG, USE_SCHEMA, SELECT)
-# uc_schema_name = "finance"                 # Default; schema name (catalog-level grants apply to catalog)
+# Optional: Genie – serverless warehouse (leave empty to create one in Terraform)
+# genie_warehouse_name = "Genie Finance Warehouse"   # Name when creating warehouse
+# genie_use_existing_warehouse_id = ""               # When set, use this ID instead of creating (then run scripts/genie_space.sh create with it)
+# genie_default_warehouse_id = "abc123..."           # Deprecated; use genie_use_existing_warehouse_id
+# uc_catalog_name = "fincat"                         # Catalog for UC grants and genie_space.sh create
+# uc_schema_name = "finance"                         # Schema for genie_space.sh create (all tables included)

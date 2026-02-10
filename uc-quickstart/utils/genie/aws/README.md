@@ -54,6 +54,10 @@ terraform plan
 terraform apply
 ```
 
+**If resources already exist**, Terraform will fail with "already exists". To have Terraform **overwrite** them: copy `import_ids.env.example` to `import_ids.env`, fill in the warehouse and group IDs (see [IMPORT_EXISTING.md](IMPORT_EXISTING.md)), then run **`./scripts/import_existing.sh`**. After that, `terraform apply` will manage and update config to match the .tf files.
+
+If you see **"Principal does not exist"** or **"Could not find principal with name …"** on warehouse or catalog grants, the workspace may not have synced the new groups yet. Run **`terraform apply`** again. If you see **"Operation aborted due to concurrent modification"** on a tag policy, run **`terraform apply`** again (tag policies are created in sequence to reduce this).
+
 ### 3. After Terraform
 
 1. **SQL in workspace:** Run in order: `0.1finance_abac_functions.sql` → `0.2finance_database_schema.sql` → `3.ApplyFinanceSetTags.sql` → `4.CreateFinanceABACPolicies.sql` (see `abac/finance/`).
@@ -68,6 +72,7 @@ terraform apply
 | `demo_scenario_groups` | Groups mapped to the 5 ABAC scenarios |
 | `workspace_assignments` | Workspace assignment IDs per group |
 | `group_entitlements` | Entitlements per group (e.g. workspace_consume) |
+| `genie_warehouse_id` | SQL warehouse ID for Genie (created or existing); pass to `scripts/genie_space.sh create` |
 
 ## Genie Space – Permissions
 
@@ -77,17 +82,29 @@ See **[GENIE_SPACE_PERMISSIONS.md](GENIE_SPACE_PERMISSIONS.md)** for the full ch
 |-------------|-------------|
 | **Identity** (groups, workspace assignment) | Terraform: `main.tf` |
 | **Consumer (One UI only)** | Terraform: `main.tf` (entitlements) |
-| **Compute – CAN USE on warehouse** | Terraform: `warehouse_grants.tf` (set `genie_default_warehouse_id`) |
+| **Compute – CAN USE on warehouse** | Terraform: `genie_warehouse.tf` (serverless warehouse) + `warehouse_grants.tf` (five groups + **users** group) |
 | **Data – SELECT, USE CATALOG, USE SCHEMA** | Terraform: `uc_grants.tf`; ABAC is configured separately in SQL |
-| **Genie Space ACLs (CAN VIEW, CAN RUN)** | Script/API: `scripts/set_genie_space_acls.sh`; migrate to Terraform when the provider supports Genie Space ACLs |
+| **Genie Space** (create + ACLs) | Script: `scripts/genie_space.sh create` (creates space with all finance tables, then sets CAN_RUN for five groups) |
+
+### Genie flow (recommended)
+
+1. **Terraform apply** creates a **serverless SQL warehouse** (or use an existing one via `genie_use_existing_warehouse_id`) and grants **CAN_USE** to the five finance groups and the **users** group.
+2. After **terraform apply**, run **`scripts/genie_space.sh create`** with the warehouse ID to create the Genie Space with **all tables in the finance schema** and set ACLs for the five groups:
+   ```bash
+   export GENIE_WAREHOUSE_ID=$(terraform output -raw genie_warehouse_id)
+   ./scripts/genie_space.sh create
+   ```
+   Or pass workspace URL, token, title, and warehouse_id as arguments. To set ACLs on an existing space: `./scripts/genie_space.sh set-acls [workspace_url] [token] [space_id]`.
 
 ### Variables for Genie
 
-- **`genie_default_warehouse_id`** (optional, default `""`): SQL warehouse ID used by the Genie Space. When set, the five groups receive CAN USE via `warehouse_grants.tf`. Required for consumers to run queries in Genie.
+- **`genie_warehouse_name`** (optional, default `"Genie Finance Warehouse"`): Name of the serverless SQL warehouse created when not using an existing one.
+- **`genie_use_existing_warehouse_id`** (optional, default `""`): When set, do not create a warehouse; use this ID for permissions and for `genie_space.sh create`.
+- **`genie_default_warehouse_id`** (deprecated): Use `genie_use_existing_warehouse_id` instead. When set, used as the Genie warehouse ID.
 - **`uc_catalog_name`** (optional, default `"fincat"`): Unity Catalog catalog name for Genie data access grants.
 - **`uc_schema_name`** (optional, default `"finance"`): Schema name used with `uc_catalog_name` (for reference; catalog-level grants in `uc_grants.tf` cover the catalog).
 
-After creating the Genie Space, run `scripts/set_genie_space_acls.sh` (or follow the runbook in GENIE_SPACE_PERMISSIONS.md) to grant the five groups CAN VIEW and CAN RUN on the space.
+If the workspace does not have serverless SQL enabled, the warehouse create may fail; enable it in the workspace or use an existing warehouse ID.
 
 ## Tag Policies Note
 
