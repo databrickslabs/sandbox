@@ -34,16 +34,16 @@ variable "databricks_workspace_host" {
 # Account-level user IDs for adding users to groups. Leave empty to skip.
 # Get IDs from Account Console > Users or SCIM API.
 
-variable "demo_user_junior_us_id" {
-  type        = string
-  default     = ""
-  description = "Account-level user ID for kavya.parashar@databricks.com (added to Junior_Analyst and US_Region_Staff). Leave empty to skip."
+variable "demo_user_junior_us_ids" {
+  type        = list(string)
+  default     = []
+  description = "Account-level user IDs added to Junior_Analyst and US_Region_Staff. Leave empty to skip. Get IDs from Account Console > Users or SCIM API."
 }
 
-variable "demo_user_senior_eu_id" {
-  type        = string
-  default     = ""
-  description = "Account-level user ID for louis.chen@databricks.com (added to Senior_Analyst and EU_Region_Staff). Leave empty to skip."
+variable "demo_user_senior_eu_ids" {
+  type        = list(string)
+  default     = []
+  description = "Account-level user IDs added to Senior_Analyst and EU_Region_Staff. Leave empty to skip. Get IDs from Account Console > Users or SCIM API."
 }
 
 # ----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ variable "genie_warehouse_name" {
 variable "genie_use_existing_warehouse_id" {
   type        = string
   default     = ""
-  description = "When set, do not create a new warehouse; use this ID for permissions and for genie_space.sh create. When empty, Terraform creates a serverless warehouse."
+  description = "When set, do not create a new warehouse; use this ID for genie_space.sh create. When empty, Terraform creates a serverless warehouse."
 }
 
 variable "genie_default_warehouse_id" {

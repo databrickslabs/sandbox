@@ -14,10 +14,10 @@ databricks_client_secret = "your-client-secret-here"
 databricks_workspace_id   = "1234567890123456"
 databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
 
-# Optional: Demo user account IDs (add users to groups). Leave empty to skip.
+# Optional: Demo user account IDs (add users to groups). Use lists; leave empty to skip.
 # Get IDs from Account Console > Users or SCIM API.
-# demo_user_junior_us_id = "12345678"   # kavya.parashar@databricks.com -> Junior_Analyst, US_Region_Staff
-# demo_user_senior_eu_id = "87654321"   # louis.chen@databricks.com -> Senior_Analyst, EU_Region_Staff
+# demo_user_junior_us_ids = ["12345678", "11111111"]   # -> Junior_Analyst, US_Region_Staff
+# demo_user_senior_eu_ids = ["87654321", "22222222"]   # -> Senior_Analyst, EU_Region_Staff
 
 # Optional: Genie – serverless warehouse (leave empty to create one in Terraform)
 # genie_warehouse_name = "Genie Finance Warehouse"   # Name when creating warehouse

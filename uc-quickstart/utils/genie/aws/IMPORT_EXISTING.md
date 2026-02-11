@@ -32,4 +32,4 @@ To use an existing warehouse **without** importing it, set in **terraform.tfvars
 genie_use_existing_warehouse_id = "<WAREHOUSE_ID>"
 ```
 
-Then Terraform won’t create a warehouse and will use this ID for permissions and outputs.
+Then Terraform won’t create a warehouse and will use this ID for genie_space.sh create and outputs.

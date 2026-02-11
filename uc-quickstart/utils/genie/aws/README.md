@@ -42,8 +42,8 @@ databricks_workspace_id   = "1234567890123456"
 databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
 
 # Optional: add demo users to groups (use account-level user IDs from Account Console > Users)
-demo_user_junior_us_id = "12345678"   # kavya.parashar@databricks.com -> Junior_Analyst, US_Region_Staff
-demo_user_senior_eu_id = "87654321"   # louis.chen@databricks.com -> Senior_Analyst, EU_Region_Staff
+demo_user_junior_us_ids = ["12345678", "11111111"]   # -> Junior_Analyst, US_Region_Staff
+demo_user_senior_eu_ids = ["87654321", "22222222"]   # -> Senior_Analyst, EU_Region_Staff
 ```
 
 ### 2. Apply
@@ -84,13 +84,13 @@ See **[GENIE_SPACE_PERMISSIONS.md](GENIE_SPACE_PERMISSIONS.md)** for the full ch
 |-------------|-------------|
 | **Identity** (groups, workspace assignment) | Terraform: `main.tf` |
 | **Consumer (One UI only)** | Terraform: `main.tf` (entitlements) |
-| **Compute – CAN USE on warehouse** | Terraform: `genie_warehouse.tf` (serverless warehouse) + `warehouse_grants.tf` (five groups + **users** group) |
+| **Compute – warehouse for Genie** | Terraform: `genie_warehouse.tf` (serverless warehouse). Genie embeds on the warehouse; end users do not need explicit CAN_USE. |
 | **Data – SELECT, USE CATALOG, USE SCHEMA** | Terraform: `uc_grants.tf`; ABAC is configured separately in SQL |
 | **Genie Space** (create + ACLs) | Script: `scripts/genie_space.sh create` (creates space with all finance tables, then sets CAN_RUN for five groups) |
 
 ### Genie flow (recommended)
 
-1. **Terraform apply** creates a **serverless SQL warehouse** (or use an existing one via `genie_use_existing_warehouse_id`) and grants **CAN_USE** to the five finance groups and the **users** group.
+1. **Terraform apply** creates a **serverless SQL warehouse** (or use an existing one via `genie_use_existing_warehouse_id`). Genie embeds on this warehouse; no explicit warehouse grants for end users are needed.
 2. After **terraform apply**, run **`scripts/genie_space.sh create`** with the warehouse ID to create the Genie Space with **all tables in the finance schema** and set ACLs for the five groups:
    ```bash
    export GENIE_WAREHOUSE_ID=$(terraform output -raw genie_warehouse_id)
@@ -111,7 +111,7 @@ When set, Terraform runs `scripts/genie_space.sh set-acls` using the **same Serv
 ### Variables for Genie
 
 - **`genie_warehouse_name`** (optional, default `"Genie Finance Warehouse"`): Name of the serverless SQL warehouse created when not using an existing one.
-- **`genie_use_existing_warehouse_id`** (optional, default `""`): When set, do not create a warehouse; use this ID for permissions and for `genie_space.sh create`.
+- **`genie_use_existing_warehouse_id`** (optional, default `""`): When set, do not create a warehouse; use this ID for `genie_space.sh create`.
 - **`genie_default_warehouse_id`** (deprecated): Use `genie_use_existing_warehouse_id` instead. When set, used as the Genie warehouse ID.
 - **`uc_catalog_name`** (optional, default `"fincat"`): Unity Catalog catalog name for Genie data access grants.
 - **`uc_schema_name`** (optional, default `"finance"`): Schema name used with `uc_catalog_name` (for reference; catalog-level grants in `uc_grants.tf` cover the catalog).

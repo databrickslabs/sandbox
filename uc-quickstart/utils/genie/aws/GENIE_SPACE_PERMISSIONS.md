@@ -15,8 +15,8 @@ This document lists everything that must be in place for business users (the fiv
 
 ## 3. Compute
 
-- **SQL warehouse:** At least **CAN USE** on the SQL warehouse designated for the Genie Space.
-- **Terraform:** `genie_warehouse.tf` creates a **serverless SQL warehouse** (or use an existing one via `genie_use_existing_warehouse_id`). `warehouse_grants.tf` grants `CAN_USE` to the five finance groups and the **users** group. Required for consumers to run queries in Genie.
+- **SQL warehouse:** A SQL warehouse is designated for the Genie Space. Genie embeds on this warehouse; end users do **not** need explicit **CAN USE** on the warehouse.
+- **Terraform:** `genie_warehouse.tf` creates a **serverless SQL warehouse** (or use an existing one via `genie_use_existing_warehouse_id`). No warehouse grants for end users are required.
 
 ## 4. Data access
 
@@ -30,7 +30,7 @@ This document lists everything that must be in place for business users (the fiv
 
 ### Runbook: Create Genie Space and set ACLs
 
-1. Run **terraform apply** (creates serverless warehouse and grants CAN_USE to five groups + users).
+1. Run **terraform apply** (creates serverless warehouse; Genie embeds on it, no end-user warehouse grants needed).
 2. Run **`GENIE_WAREHOUSE_ID=$(terraform output -raw genie_warehouse_id) ./scripts/genie_space.sh create`** (creates the space with all finance tables and sets CAN_RUN for the five groups).
 
 ### Runbook: Set Genie Space ACLs only (existing space)
@@ -47,7 +47,6 @@ This document lists everything that must be in place for business users (the fiv
 | Groups                | Terraform: `main.tf`                     |
 | Workspace assignment  | Terraform: `main.tf`                     |
 | Consumer (One UI only)| Terraform: `main.tf` (entitlements)     |
-| Warehouse (create)    | Terraform: `genie_warehouse.tf` (serverless) |
-| Warehouse CAN USE     | Terraform: `warehouse_grants.tf` (five groups + users) |
+| Warehouse (create)    | Terraform: `genie_warehouse.tf` (serverless); Genie embeds on it (no end-user CAN_USE) |
 | UC data (SELECT, etc.)| Terraform: `uc_grants.tf`               |
 | Genie Space (create + ACLs) | Script: `scripts/genie_space.sh create` (all finance tables + ACLs) |
