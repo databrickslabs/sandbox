@@ -25,3 +25,7 @@ databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
 # genie_default_warehouse_id = "abc123..."           # Deprecated; use genie_use_existing_warehouse_id
 # uc_catalog_name = "fincat"                         # Catalog for UC grants and genie_space.sh create
 # uc_schema_name = "finance"                         # Schema for genie_space.sh create (all tables included)
+
+# Optional: Genie Space ACLs (set CAN_RUN for finance groups via Terraform)
+# When set, Terraform runs scripts/genie_space.sh set-acls using the same SP credentials.
+# genie_space_id = "01234567890abcdef"   # Genie Space ID (from genie_space.sh create output)

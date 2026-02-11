@@ -57,3 +57,17 @@ output "genie_warehouse_id" {
   description = "SQL warehouse ID for the Genie Space (created or existing). Pass to scripts/genie_space.sh create as GENIE_WAREHOUSE_ID."
   value       = local.genie_warehouse_id
 }
+
+# ----------------------------------------------------------------------------
+# Genie Space ACLs
+# ----------------------------------------------------------------------------
+
+output "genie_space_acls_applied" {
+  description = "Whether Genie Space ACLs were applied via Terraform"
+  value       = length(null_resource.genie_space_acls) > 0
+}
+
+output "genie_space_acls_groups" {
+  description = "Groups that were granted CAN_RUN on the Genie Space"
+  value       = length(null_resource.genie_space_acls) > 0 ? ["Junior_Analyst", "Senior_Analyst", "US_Region_Staff", "EU_Region_Staff", "Compliance_Officer"] : []
+}

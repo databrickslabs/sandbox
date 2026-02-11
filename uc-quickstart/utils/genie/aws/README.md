@@ -73,6 +73,8 @@ If you see **"Principal does not exist"** or **"Could not find principal with na
 | `workspace_assignments` | Workspace assignment IDs per group |
 | `group_entitlements` | Entitlements per group (e.g. workspace_consume) |
 | `genie_warehouse_id` | SQL warehouse ID for Genie (created or existing); pass to `scripts/genie_space.sh create` |
+| `genie_space_acls_applied` | Whether Genie Space ACLs were applied via Terraform |
+| `genie_space_acls_groups` | Groups granted CAN_RUN on the Genie Space (when ACLs applied) |
 
 ## Genie Space – Permissions
 
@@ -96,6 +98,16 @@ See **[GENIE_SPACE_PERMISSIONS.md](GENIE_SPACE_PERMISSIONS.md)** for the full ch
    ```
    Or pass workspace URL, token, title, and warehouse_id as arguments. To set ACLs on an existing space: `./scripts/genie_space.sh set-acls [workspace_url] [token] [space_id]`.
 
+### Genie Space ACLs via Terraform (optional)
+
+You can also set Genie Space ACLs automatically via Terraform by setting:
+
+```hcl
+genie_space_id = "01234567890abcdef"   # From genie_space.sh create output
+```
+
+When set, Terraform runs `scripts/genie_space.sh set-acls` using the **same Service Principal OAuth credentials** (`databricks_client_id`/`databricks_client_secret`) to grant CAN_RUN to the five finance groups. No separate PAT is required.
+
 ### Variables for Genie
 
 - **`genie_warehouse_name`** (optional, default `"Genie Finance Warehouse"`): Name of the serverless SQL warehouse created when not using an existing one.
@@ -103,6 +115,7 @@ See **[GENIE_SPACE_PERMISSIONS.md](GENIE_SPACE_PERMISSIONS.md)** for the full ch
 - **`genie_default_warehouse_id`** (deprecated): Use `genie_use_existing_warehouse_id` instead. When set, used as the Genie warehouse ID.
 - **`uc_catalog_name`** (optional, default `"fincat"`): Unity Catalog catalog name for Genie data access grants.
 - **`uc_schema_name`** (optional, default `"finance"`): Schema name used with `uc_catalog_name` (for reference; catalog-level grants in `uc_grants.tf` cover the catalog).
+- **`genie_space_id`** (optional, default `""`): Genie Space ID for setting ACLs via Terraform. When set, Terraform runs `set-acls` using the same SP credentials.
 
 If the workspace does not have serverless SQL enabled, the warehouse create may fail; enable it in the workspace or use an existing warehouse ID.
 

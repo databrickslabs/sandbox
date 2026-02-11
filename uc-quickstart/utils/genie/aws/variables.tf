@@ -79,3 +79,13 @@ variable "uc_schema_name" {
   default     = "finance"
   description = "Unity Catalog schema name used by the Genie Space (for USE_SCHEMA, SELECT grants)."
 }
+
+# ----------------------------------------------------------------------------
+# Genie Space ACLs
+# ----------------------------------------------------------------------------
+
+variable "genie_space_id" {
+  type        = string
+  default     = ""
+  description = "Genie Space ID for setting ACLs. When set, Terraform runs set-acls using the same SP credentials to grant CAN_RUN to finance groups."
+}
