@@ -7,7 +7,7 @@ require (
 	github.com/databrickslabs/sandbox/go-libs v0.4.1
 	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.10.1
-	golang.org/x/mod v0.28.0
+	golang.org/x/mod v0.33.0
 )
 
 require (
