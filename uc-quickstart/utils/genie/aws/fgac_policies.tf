@@ -35,6 +35,9 @@ resource "databricks_policy_info" "pii_junior_mask" {
     databricks_tag_policy.customer_region,
     databricks_tag_policy.data_residency,
     databricks_entity_tag_assignment.finance_abac,
+    databricks_mws_permission_assignment.finance_group_assignments,
+    databricks_grant.finance_catalog_access,
+    databricks_grant.terraform_sp_manage_catalog,
   ]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
@@ -57,6 +60,7 @@ resource "databricks_policy_info" "pii_junior_ssn" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_pii_junior_ssn"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_COLUMN_MASK"
@@ -83,6 +87,7 @@ resource "databricks_policy_info" "pci_junior_last4" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_pci_junior_last4"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_COLUMN_MASK"
@@ -104,6 +109,7 @@ resource "databricks_policy_info" "pci_cvv_mask_except_compliance" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_pci_cvv_mask_except_compliance"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_COLUMN_MASK"
@@ -131,6 +137,7 @@ resource "databricks_policy_info" "aml_junior_round" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_aml_junior_round"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_COLUMN_MASK"
@@ -157,6 +164,7 @@ resource "databricks_policy_info" "region_us" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_region_us"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_ROW_FILTER"
@@ -180,6 +188,7 @@ resource "databricks_policy_info" "region_eu" {
   provider = databricks.workspace
 
   name                  = "${local._cat}_region_eu"
+  depends_on            = [databricks_mws_permission_assignment.finance_group_assignments, databricks_grant.finance_catalog_access, databricks_grant.terraform_sp_manage_catalog]
   on_securable_type     = "CATALOG"
   on_securable_fullname = local._cat
   policy_type           = "POLICY_TYPE_ROW_FILTER"

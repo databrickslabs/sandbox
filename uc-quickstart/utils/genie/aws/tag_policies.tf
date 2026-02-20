@@ -80,8 +80,9 @@ resource "databricks_tag_policy" "data_residency" {
   provider    = databricks.workspace
   depends_on  = [databricks_tag_policy.customer_region]
   tag_key     = "data_residency"
-  description = "Data residency for minimal demo: US, EU"
+  description = "Data residency for minimal demo: Global, US, EU"
   values = [
+    { name = "Global" },
     { name = "US" },
     { name = "EU" }
   ]
