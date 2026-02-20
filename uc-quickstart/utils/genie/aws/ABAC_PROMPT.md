@@ -122,6 +122,17 @@ fgac_policies = [
 group_members = {}
 ```
 
+### Validation
+
+After generating both files, the user should validate them before running `terraform apply`:
+
+```bash
+pip install python-hcl2
+python validate_abac.py terraform.tfvars masking_functions.sql
+```
+
+This checks cross-references (groups, tags, functions), naming conventions, and structure. Fix any `[FAIL]` errors before proceeding.
+
 ### Instructions
 
 1. Analyze each column in the user's tables for sensitivity:

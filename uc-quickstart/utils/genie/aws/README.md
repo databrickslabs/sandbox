@@ -59,7 +59,12 @@ terraform init && terraform apply
 1. Open `ABAC_PROMPT.md` and copy the prompt into ChatGPT, Claude, or Cursor
 2. Paste your `DESCRIBE TABLE` output where indicated
 3. The AI generates `masking_functions.sql` and `terraform.tfvars`
-4. Run the SQL, then `terraform apply`
+4. **Validate** before applying:
+   ```bash
+   pip install python-hcl2     # one-time
+   python validate_abac.py terraform.tfvars masking_functions.sql
+   ```
+5. Fix any `[FAIL]` errors reported, then run the SQL and `terraform apply`
 
 ## What This Module Creates
 
@@ -138,12 +143,30 @@ aws/
   genie_space_acls.tf            # Optional Genie Space ACLs
   masking_functions_library.sql  # Reusable masking UDF library
   ABAC_PROMPT.md                 # AI prompt template for Tier 3
+  validate_abac.py               # Validation tool for AI-generated configs
   terraform.tfvars.example       # Annotated variable skeleton
   examples/
     finance.tfvars                       # Complete finance demo config (Tier 1)
     0.1finance_abac_functions.sql        # Finance masking & filter UDFs
     0.2finance_database_schema.sql       # Finance demo tables + sample data
 ```
+
+## Validation
+
+Run `validate_abac.py` to catch configuration errors **before** `terraform apply`:
+
+```bash
+pip install python-hcl2                                     # one-time dependency
+python validate_abac.py terraform.tfvars                    # tfvars only
+python validate_abac.py terraform.tfvars masking_funcs.sql  # tfvars + SQL cross-check
+```
+
+The validator checks:
+- **Structure**: required variables, correct types, valid `entity_type` / `policy_type` values
+- **Cross-references**: groups in `fgac_policies` exist in `groups`, tag keys/values match `tag_policies`, `group_members` keys match `groups`
+- **Naming**: `entity_name` / `function_name` are relative (no catalog.schema prefix)
+- **SQL functions**: every `function_name` in `fgac_policies` has a matching `CREATE FUNCTION` in the SQL file
+- **Completeness**: warns about unused SQL functions and empty auth fields
 
 ## Prerequisites
 
