@@ -1,44 +1,35 @@
 # ============================================================================
-# Demo User Group Memberships (Minimal Finance ABAC Demo)
+# Group Memberships (data-driven)
 # ============================================================================
-# Adds demo users to the 5 finance groups. Uses account-level group membership.
-# Set demo_user_junior_us_ids and demo_user_senior_eu_ids in tfvars to enable.
+# Adds users to groups based on var.group_members.
+# Map of group name -> list of account-level user IDs.
 # ============================================================================
 
-# Each ID in demo_user_junior_us_ids -> Junior_Analyst and US_Region_Staff
-resource "databricks_group_member" "junior_analyst_demo" {
-  for_each = toset(var.demo_user_junior_us_ids)
+locals {
+  group_member_pairs = flatten([
+    for group, members in var.group_members : [
+      for member_id in members : {
+        group     = group
+        member_id = member_id
+      }
+    ]
+  ])
 
-  provider   = databricks.account
-  group_id   = databricks_group.finance_groups["Junior_Analyst"].id
-  member_id  = each.value
-  depends_on = [databricks_group.finance_groups, databricks_mws_permission_assignment.finance_group_assignments]
+  group_member_map = {
+    for pair in local.group_member_pairs :
+    "${pair.group}|${pair.member_id}" => pair
+  }
 }
 
-resource "databricks_group_member" "us_region_staff_demo" {
-  for_each = toset(var.demo_user_junior_us_ids)
+resource "databricks_group_member" "members" {
+  for_each = local.group_member_map
 
-  provider   = databricks.account
-  group_id   = databricks_group.finance_groups["US_Region_Staff"].id
-  member_id  = each.value
-  depends_on = [databricks_group.finance_groups, databricks_mws_permission_assignment.finance_group_assignments]
-}
+  provider  = databricks.account
+  group_id  = databricks_group.groups[each.value.group].id
+  member_id = each.value.member_id
 
-# Each ID in demo_user_senior_eu_ids -> Senior_Analyst and EU_Region_Staff
-resource "databricks_group_member" "senior_analyst_demo" {
-  for_each = toset(var.demo_user_senior_eu_ids)
-
-  provider   = databricks.account
-  group_id   = databricks_group.finance_groups["Senior_Analyst"].id
-  member_id  = each.value
-  depends_on = [databricks_group.finance_groups, databricks_mws_permission_assignment.finance_group_assignments]
-}
-
-resource "databricks_group_member" "eu_region_staff_demo" {
-  for_each = toset(var.demo_user_senior_eu_ids)
-
-  provider   = databricks.account
-  group_id   = databricks_group.finance_groups["EU_Region_Staff"].id
-  member_id  = each.value
-  depends_on = [databricks_group.finance_groups, databricks_mws_permission_assignment.finance_group_assignments]
+  depends_on = [
+    databricks_group.groups,
+    databricks_mws_permission_assignment.group_assignments,
+  ]
 }

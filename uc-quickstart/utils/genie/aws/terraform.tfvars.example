@@ -1,31 +1,74 @@
 # ============================================================================
-# Example Terraform Variables for Finance ABAC Account Groups
+# ABAC Terraform Module — Variable Skeleton
 # ============================================================================
-# Copy this file to terraform.tfvars and fill in your values
+# Fill in this file and rename to terraform.tfvars, then run terraform apply.
+# For a complete working example see examples/finance.tfvars.
+# ============================================================================
 
-# Required: Databricks Account ID
-databricks_account_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# === REQUIRED: Authentication ===
+databricks_account_id    = ""
+databricks_client_id     = ""   # Service principal client ID
+databricks_client_secret = ""   # Service principal client secret
+databricks_workspace_id  = ""
+databricks_workspace_host = ""  # e.g. https://myworkspace.cloud.databricks.com/
 
-# Required: Service Principal credentials for authentication
-databricks_client_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-databricks_client_secret = "your-client-secret-here"
+# === REQUIRED: Unity Catalog target ===
+uc_catalog_name = ""   # Catalog where FGAC policies and UDFs live
+uc_schema_name  = ""   # Schema where masking UDFs are deployed
 
-# Required: Workspace configuration for group assignment and entitlements
-databricks_workspace_id   = "1234567890123456"
-databricks_workspace_host = "https://your-workspace.cloud.databricks.com"
+# === Groups: one entry per access tier ===
+# Each key becomes a Databricks account-level group with consumer entitlements.
+groups = {
+  # "GroupName" = { description = "What this group can see" }
+}
 
-# Optional: Demo user account IDs (add users to groups). Use lists; leave empty to skip.
+# === Tag policies: governance tags for ABAC matching ===
+# Each entry creates a databricks_tag_policy with the specified allowed values.
+tag_policies = [
+  # { key = "sensitivity", description = "Data sensitivity level", values = ["public", "confidential", "restricted"] }
+]
+
+# === Tag assignments: bind tags to your tables/columns ===
+# entity_type: "tables" or "columns"
+# entity_name is RELATIVE to uc_catalog_name.uc_schema_name:
+#   Tables:  "TableName"
+#   Columns: "TableName.ColumnName"
+tag_assignments = [
+  # { entity_type = "columns", entity_name = "Table.Column", tag_key = "sensitivity", tag_value = "confidential" }
+]
+
+# === FGAC policies: the access rules ===
+# policy_type: POLICY_TYPE_COLUMN_MASK or POLICY_TYPE_ROW_FILTER
+# function_name is RELATIVE to uc_catalog_name.uc_schema_name (just the function name).
+fgac_policies = [
+  # Column mask example:
+  # {
+  #   name            = "mask_confidential"
+  #   policy_type     = "POLICY_TYPE_COLUMN_MASK"
+  #   to_principals   = ["Restricted_Users"]
+  #   comment         = "Mask confidential columns"
+  #   match_condition = "hasTagValue('sensitivity', 'confidential')"
+  #   match_alias     = "cols"
+  #   function_name   = "mask_redact"
+  # }
+  #
+  # Row filter example:
+  # {
+  #   name           = "region_filter"
+  #   policy_type    = "POLICY_TYPE_ROW_FILTER"
+  #   to_principals  = ["EU_Staff"]
+  #   comment        = "EU staff see EU data only"
+  #   when_condition = "hasTagValue('data_region', 'scoped')"
+  #   function_name  = "filter_by_region_eu"
+  # }
+]
+
+# === Group members (optional): account-level user IDs to add to groups ===
 # Get IDs from Account Console > Users or SCIM API.
-# demo_user_junior_us_ids = ["12345678", "11111111"]   # -> Junior_Analyst, US_Region_Staff
-# demo_user_senior_eu_ids = ["87654321", "22222222"]   # -> Senior_Analyst, EU_Region_Staff
+group_members = {
+  # "GroupName" = ["user_id_1", "user_id_2"]
+}
 
-# Optional: Genie – serverless warehouse (leave empty to create one in Terraform)
-# genie_warehouse_name = "Genie Finance Warehouse"   # Name when creating warehouse
-# genie_use_existing_warehouse_id = ""               # When set, use this ID instead of creating (then run scripts/genie_space.sh create with it)
-# genie_default_warehouse_id = "abc123..."           # Deprecated; use genie_use_existing_warehouse_id
-# uc_catalog_name = "fincat"                         # Catalog for UC grants and genie_space.sh create
-# uc_schema_name = "finance"                         # Schema for genie_space.sh create (all tables included)
-
-# Optional: Genie Space ACLs (set CAN_RUN for finance groups via Terraform)
-# When set, Terraform runs scripts/genie_space.sh set-acls using the same SP credentials.
-# genie_space_id = "01234567890abcdef"   # Genie Space ID (from genie_space.sh create output)
+# === Genie Space (optional) ===
+# genie_use_existing_warehouse_id = ""  # Use existing warehouse; leave empty to create one
+# genie_space_id = ""                   # Set to apply CAN_RUN ACLs to the Genie Space

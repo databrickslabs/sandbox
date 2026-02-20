@@ -1,27 +1,17 @@
 # ============================================================================
-# Genie Space ACLs - Set CAN_RUN permissions for finance groups
+# Genie Space ACLs - Set CAN_RUN permissions for configured groups
 # ============================================================================
-# This resource runs the genie_space.sh script to set ACLs on a Genie Space.
+# Runs the genie_space.sh script to set ACLs on a Genie Space.
 # Requires: genie_space_id variable.
-#
-# Authentication: Uses the same Service Principal OAuth M2M credentials
-# as the workspace provider (databricks_client_id/databricks_client_secret).
-#
-# The script grants CAN_RUN permission to these groups:
-#   - Junior_Analyst
-#   - Senior_Analyst
-#   - US_Region_Staff
-#   - EU_Region_Staff
-#   - Compliance_Officer
+# Grants CAN_RUN permission to all groups defined in var.groups.
 # ============================================================================
 
 resource "null_resource" "genie_space_acls" {
   count = var.genie_space_id != "" ? 1 : 0
 
   triggers = {
-    # Re-run when space ID or groups change
     space_id = var.genie_space_id
-    groups   = join(",", ["Junior_Analyst", "Senior_Analyst", "US_Region_Staff", "EU_Region_Staff", "Compliance_Officer"])
+    groups   = join(",", keys(var.groups))
   }
 
   provisioner "local-exec" {
@@ -36,7 +26,7 @@ resource "null_resource" "genie_space_acls" {
   }
 
   depends_on = [
-    databricks_group.finance_groups,
-    databricks_mws_permission_assignment.finance_group_assignments
+    databricks_group.groups,
+    databricks_mws_permission_assignment.group_assignments,
   ]
 }

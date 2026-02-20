@@ -1,5 +1,5 @@
 # ============================================================================
-# Genie Space: Unity Catalog data access
+# Unity Catalog Data Access Grants
 # ============================================================================
 # Uses databricks_grant (singular) which is ADDITIVE — it only manages the
 # grants for each specified principal without removing existing permissions
@@ -15,8 +15,8 @@ resource "databricks_grant" "terraform_sp_manage_catalog" {
   privileges = ["USE_CATALOG", "USE_SCHEMA", "EXECUTE", "MANAGE"]
 }
 
-resource "databricks_grant" "finance_catalog_access" {
-  for_each = toset(keys(local.finance_groups))
+resource "databricks_grant" "catalog_access" {
+  for_each = toset(keys(var.groups))
 
   provider   = databricks.workspace
   catalog    = var.uc_catalog_name
@@ -24,7 +24,7 @@ resource "databricks_grant" "finance_catalog_access" {
   privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
 
   depends_on = [
-    databricks_group.finance_groups,
-    databricks_mws_permission_assignment.finance_group_assignments,
+    databricks_group.groups,
+    databricks_mws_permission_assignment.group_assignments,
   ]
 }
