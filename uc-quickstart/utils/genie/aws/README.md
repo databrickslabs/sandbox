@@ -6,9 +6,9 @@ A data-driven Terraform module for **Attribute-Based Access Control (ABAC)** on 
 
 | Tier | Who | Workflow |
 |------|-----|----------|
-| **1. Quick Start** | New users wanting a working demo | Copy `examples/finance.tfvars`, run the finance SQL scripts, `terraform apply` |
+| **1. Quick Start** | New users wanting a working demo | Copy `examples/finance/finance.tfvars`, run the finance SQL scripts, `terraform apply` |
 | **2. Pick and Mix** | Users with their own tables | Pick masking UDFs from `masking_functions_library.sql`, fill in `terraform.tfvars.example` |
-| **3. AI-Assisted** | Users who need help designing ABAC | Paste table DDL into `ABAC_PROMPT.md`, let AI generate the masking SQL + tfvars |
+| **3. AI-Assisted** | Users who need help designing ABAC | Paste table DDL into `ABAC_PROMPT.md`, let AI generate the masking SQL + tfvars. See [`examples/healthcare/`](examples/healthcare/) for a full worked example |
 
 ## Quick Start (Tier 1 — Finance Demo)
 
@@ -16,18 +16,18 @@ New users wanting a working demo should use the included finance SQL scripts to 
 
 ```bash
 # 1. Copy the finance example
-cp examples/finance.tfvars terraform.tfvars
+cp examples/finance/finance.tfvars terraform.tfvars
 
 # 2. Edit terraform.tfvars — fill in authentication + replace MY_CATALOG with your catalog
 
 # 3. Create the demo tables and masking UDFs in your workspace SQL editor.
-#    Both files are included in the examples/ folder for convenience:
+#    Both files are included in the examples/finance/ folder for convenience:
 #
 #    a) Create masking & filter functions (run first):
-#       examples/0.1finance_abac_functions.sql
+#       examples/finance/0.1finance_abac_functions.sql
 #
 #    b) Create finance demo tables with sample data:
-#       examples/0.2finance_database_schema.sql
+#       examples/finance/0.2finance_database_schema.sql
 #
 #    IMPORTANT: Edit the USE CATALOG / USE SCHEMA lines at the top of each
 #    file to match your uc_catalog_name and uc_schema_name before running.
@@ -66,7 +66,7 @@ terraform init && terraform apply
    ```
 5. Fix any `[FAIL]` errors reported, then run the SQL and `terraform apply`
 
-> **Full worked example:** See [`examples/healthcare_walkthrough.md`](examples/healthcare_walkthrough.md) for an end-to-end healthcare scenario — from DDL input through AI output to validation and deployment.
+> **Full worked example:** See [`examples/healthcare/`](examples/healthcare/) for an end-to-end healthcare scenario — includes a walkthrough, example masking functions SQL, and a ready-to-use tfvars file.
 
 ## What This Module Creates
 
@@ -148,10 +148,14 @@ aws/
   validate_abac.py               # Validation tool for AI-generated configs
   terraform.tfvars.example       # Annotated variable skeleton
   examples/
-    finance.tfvars                       # Complete finance demo config (Tier 1)
-    0.1finance_abac_functions.sql        # Finance masking & filter UDFs
-    0.2finance_database_schema.sql       # Finance demo tables + sample data
-    healthcare_walkthrough.md            # End-to-end AI-Assisted example (Tier 3)
+    finance/
+      finance.tfvars                     # Complete finance demo config (Tier 1)
+      0.1finance_abac_functions.sql      # Finance masking & filter UDFs
+      0.2finance_database_schema.sql     # Finance demo tables + sample data
+    healthcare/
+      healthcare_walkthrough.md          # End-to-end AI-Assisted walkthrough (Tier 3)
+      masking_functions.sql              # Healthcare masking UDFs (example AI output)
+      healthcare.tfvars                  # Healthcare tfvars (example AI output)
 ```
 
 ## Validation

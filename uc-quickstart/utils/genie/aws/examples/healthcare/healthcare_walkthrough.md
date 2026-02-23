@@ -16,7 +16,7 @@ USE CATALOG <YOUR_CATALOG>;
 USE SCHEMA clinical;
 
 -- Patients: demographics and contact info
-CREATE TABLE <YOUR_CATALOG>.clinical.Patients (
+CREATE TABLE Patients (
   PatientID       BIGINT        COMMENT 'Unique patient identifier',
   MRN             STRING        COMMENT 'Medical Record Number',
   FirstName       STRING        COMMENT 'Patient first name',
@@ -32,7 +32,7 @@ CREATE TABLE <YOUR_CATALOG>.clinical.Patients (
 );
 
 -- Encounters: visits, admissions, ER trips
-CREATE TABLE <YOUR_CATALOG>.clinical.Encounters (
+CREATE TABLE Encounters (
   EncounterID     BIGINT        COMMENT 'Unique encounter identifier',
   PatientID       BIGINT        COMMENT 'FK to Patients',
   EncounterDate   TIMESTAMP     COMMENT 'Date/time of encounter',
@@ -45,7 +45,7 @@ CREATE TABLE <YOUR_CATALOG>.clinical.Encounters (
 );
 
 -- Prescriptions: medications
-CREATE TABLE <YOUR_CATALOG>.clinical.Prescriptions (
+CREATE TABLE Prescriptions (
   PrescriptionID  BIGINT        COMMENT 'Unique prescription identifier',
   PatientID       BIGINT        COMMENT 'FK to Patients',
   EncounterID     BIGINT        COMMENT 'FK to Encounters',
@@ -57,7 +57,7 @@ CREATE TABLE <YOUR_CATALOG>.clinical.Prescriptions (
 );
 
 -- Billing: financial records
-CREATE TABLE <YOUR_CATALOG>.clinical.Billing (
+CREATE TABLE Billing (
   BillingID       BIGINT        COMMENT 'Unique billing identifier',
   PatientID       BIGINT        COMMENT 'FK to Patients',
   EncounterID     BIGINT        COMMENT 'FK to Encounters',
@@ -71,7 +71,7 @@ CREATE TABLE <YOUR_CATALOG>.clinical.Billing (
 
 ## Step 2 — Paste into the AI prompt
 
-Open `ABAC_PROMPT.md`, copy the entire prompt section, and paste it into ChatGPT / Claude / Cursor. Then paste the DDL above where it says `-- Paste your DESCRIBE TABLE output or CREATE TABLE DDL here.`
+Open `ABAC_PROMPT.md`, copy the entire prompt section, and paste it into ChatGPT / Claude / Cursor. Then paste the DDL above where it says `-- Paste your SHOW CREATE TABLE output or CREATE TABLE DDL here.`
 
 ## Step 3 — AI generates two files
 

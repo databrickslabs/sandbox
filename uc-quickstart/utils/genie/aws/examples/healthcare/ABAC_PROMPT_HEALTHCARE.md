@@ -1,14 +1,3 @@
-# ABAC Configuration Generator — AI Prompt Template
-
-Copy everything below the line into ChatGPT, Claude, or Cursor. Paste your table DDL / `DESCRIBE TABLE` output where indicated. The AI will generate:
-
-1. **`masking_functions.sql`** — SQL UDFs for your masking and row-filter requirements
-2. **`terraform.tfvars`** — A complete variable file ready for `terraform apply`
-
----
-
-## Prompt (copy from here)
-
 You are an expert in Databricks Unity Catalog Attribute-Based Access Control (ABAC). I will give you my table schemas. You will analyze the columns for sensitivity (PII, financial, health, etc.), then generate two files:
 
 ### What is ABAC?
@@ -152,16 +141,62 @@ This checks cross-references (groups, tags, functions), naming conventions, and 
 ### MY CATALOG AND SCHEMA
 
 ```
-Catalog: ___________    (e.g. prod_healthcare, my_dev_catalog)
-Schema:  ___________    (e.g. clinical, finance, public)
+Catalog: MY_CATALOG    (e.g. prod_healthcare, my_dev_catalog)
+Schema:  clinical    (e.g. clinical, finance, public)
 ```
 
 ### MY TABLES (paste below)
 
 ```
--- Paste your DESCRIBE TABLE output or CREATE TABLE DDL here.
--- Include all tables you want ABAC policies for.
--- Example:
---   SHOW CREATE TABLE my_catalog.my_schema.customers;
---   SHOW CREATE TABLE my_catalog.my_schema.orders;
+CREATE TABLE clinical.billing (
+  BillingID BIGINT COMMENT 'Unique billing identifier',
+  PatientID BIGINT COMMENT 'FK to Patients',
+  EncounterID BIGINT COMMENT 'FK to Encounters',
+  TotalAmount DECIMAL(18,2) COMMENT 'Total billed amount',
+  InsurancePaid DECIMAL(18,2) COMMENT 'Amount covered by insurance',
+  PatientOwed DECIMAL(18,2) COMMENT 'Patient responsibility',
+  BillingCode STRING COMMENT 'CPT/HCPCS billing code',
+  InsuranceID STRING COMMENT 'Insurance policy used')
+USING delta
+TBLPROPERTIES (
+  'delta.enableDeletionVectors' = 'true',
+  'delta.enableRowTracking' = 'true',
+  'delta.feature.appendOnly' = 'supported',
+  'delta.feature.deletionVectors' = 'supported',
+  'delta.feature.domainMetadata' = 'supported',
+  'delta.feature.invariants' = 'supported',
+  'delta.feature.rowTracking' = 'supported',
+  'delta.minReaderVersion' = '3',
+  'delta.minWriterVersion' = '7',
+  'delta.parquet.compression.codec' = 'zstd')
+
+CREATE TABLE encounters ( EncounterID BIGINT COMMENT 'Unique encounter identifier', PatientID BIGINT COMMENT 'FK to Patients', EncounterDate TIMESTAMP COMMENT 'Date/time of encounter', EncounterType STRING COMMENT 'INPATIENT, OUTPATIENT, EMERGENCY', DiagnosisCode STRING COMMENT 'ICD-10 diagnosis code', DiagnosisDesc STRING COMMENT 'Full diagnosis description', TreatmentNotes STRING COMMENT 'Free-text clinical notes', AttendingDoc STRING COMMENT 'Attending physician name', FacilityRegion STRING COMMENT 'Hospital region: US_EAST, US_WEST, EU') USING delta TBLPROPERTIES ( 'delta.enableDeletionVectors' = 'true', 'delta.enableRowTracking' = 'true', 'delta.feature.appendOnly' = 'supported', 'delta.feature.deletionVectors' = 'supported', 'delta.feature.domainMetadata' = 'supported', 'delta.feature.invariants' = 'supported', 'delta.feature.rowTracking' = 'supported', 'delta.minReaderVersion' = '3', 'delta.minWriterVersion' = '7', 'delta.parquet.compression.codec' = 'zstd')
+
+CREATE TABLE patients (
+  PatientID BIGINT COMMENT 'Unique patient identifier',
+  MRN STRING COMMENT 'Medical Record Number',
+  FirstName STRING COMMENT 'Patient first name',
+  LastName STRING COMMENT 'Patient last name',
+  DateOfBirth DATE COMMENT 'Date of birth',
+  SSN STRING COMMENT 'Social Security Number',
+  Email STRING COMMENT 'Contact email',
+  Phone STRING COMMENT 'Contact phone number',
+  Address STRING COMMENT 'Home address',
+  InsuranceID STRING COMMENT 'Insurance policy number',
+  PrimaryCareDoc STRING COMMENT 'Assigned physician name',
+  FacilityRegion STRING COMMENT 'Hospital region: US_EAST, US_WEST, EU')
+USING delta
+TBLPROPERTIES (
+  'delta.enableDeletionVectors' = 'true',
+  'delta.enableRowTracking' = 'true',
+  'delta.feature.appendOnly' = 'supported',
+  'delta.feature.deletionVectors' = 'supported',
+  'delta.feature.domainMetadata' = 'supported',
+  'delta.feature.invariants' = 'supported',
+  'delta.feature.rowTracking' = 'supported',
+  'delta.minReaderVersion' = '3',
+  'delta.minWriterVersion' = '7',
+  'delta.parquet.compression.codec' = 'zstd')
+
+CREATE TABLE prescriptions ( PrescriptionID BIGINT COMMENT 'Unique prescription identifier', PatientID BIGINT COMMENT 'FK to Patients', EncounterID BIGINT COMMENT 'FK to Encounters', DrugName STRING COMMENT 'Medication name', Dosage STRING COMMENT 'Dosage instructions', Quantity INT COMMENT 'Number of units prescribed', PrescribingDoc STRING COMMENT 'Prescribing physician', PrescribedDate DATE COMMENT 'Date prescribed') USING delta TBLPROPERTIES ( 'delta.enableDeletionVectors' = 'true', 'delta.enableRowTracking' = 'true', 'delta.feature.appendOnly' = 'supported', 'delta.feature.deletionVectors' = 'supported', 'delta.feature.domainMetadata' = 'supported', 'delta.feature.invariants' = 'supported', 'delta.feature.rowTracking' = 'supported', 'delta.minReaderVersion' = '3', 'delta.minWriterVersion' = '7', 'delta.parquet.compression.codec' = 'zstd')
 ```
