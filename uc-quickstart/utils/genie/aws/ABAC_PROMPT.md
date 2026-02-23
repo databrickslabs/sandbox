@@ -133,6 +133,22 @@ python validate_abac.py terraform.tfvars masking_functions.sql
 
 This checks cross-references (groups, tags, functions), naming conventions, and structure. Fix any `[FAIL]` errors before proceeding.
 
+### CRITICAL — Valid Condition Syntax
+
+The `match_condition` and `when_condition` fields ONLY support these functions:
+
+- `hasTagValue('tag_key', 'tag_value')` — matches entities with a specific tag value
+- `hasTag('tag_key')` — matches entities that have the tag (any value)
+- Combine with `AND` / `OR`
+
+**FORBIDDEN** — the following will cause compilation errors:
+- `columnName() = '...'` — NOT supported
+- `columnName() IN (...)` — NOT supported
+- `tableName() = '...'` — NOT supported
+- Any comparison operators (`=`, `!=`, `<`, `>`, `IN`)
+
+To target specific columns, use **distinct tag values** assigned to those columns, not `columnName()`. For example, instead of `hasTagValue('phi_level', 'full_phi') AND columnName() = 'MRN'`, create a separate tag value like `phi_level = 'mrn_restricted'` and assign it only to the MRN column.
+
 ### Instructions
 
 1. Use the user's **catalog** and **schema** from the "MY CATALOG AND SCHEMA" section for `USE CATALOG` / `USE SCHEMA` in SQL and `uc_catalog_name` / `uc_schema_name` in tfvars
@@ -143,9 +159,10 @@ This checks cross-references (groups, tags, functions), naming conventions, and 
    - Regional/residency (region columns that need row filtering)
 3. Propose groups — typically 2-5 access tiers (e.g., restricted, standard, privileged, admin)
 4. Design tag policies — one per sensitivity dimension (e.g., `pii_level`, `pci_clearance`)
-5. Map tags to the user's specific tables and columns
+5. Map tags to the user's specific tables and columns. **Use distinct tag values to differentiate columns that need different masking** — do NOT use `columnName()` in conditions
 6. Select masking functions from the library above (or create new ones)
 7. Generate both output files using **relative** names (Terraform prepends `uc_catalog_name.uc_schema_name` automatically)
+8. Every `match_condition` and `when_condition` MUST only use `hasTagValue()` and/or `hasTag()` — no other functions or operators
 
 ---
 

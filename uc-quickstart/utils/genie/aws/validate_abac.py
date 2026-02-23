@@ -241,8 +241,14 @@ def validate_fgac_policies(
                     f"{prefix}: except_principals group '{principal}' not defined in 'groups'"
                 )
 
-        # Validate tag references inside match_condition / when_condition
+        # Validate condition syntax — only hasTagValue() and hasTag() are allowed
         condition = p.get("match_condition") or p.get("when_condition") or ""
+        for forbidden in ["columnName()", "tableName()", " IN (", " IN("]:
+            if forbidden in condition:
+                result.error(
+                    f"{prefix}: condition contains '{forbidden}' which is NOT supported "
+                    f"by Databricks ABAC. Only hasTagValue() and hasTag() are allowed."
+                )
         for tag_ref in re.findall(r"hasTagValue\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\)", condition):
             ref_key, ref_val = tag_ref
             if ref_key not in tag_map:

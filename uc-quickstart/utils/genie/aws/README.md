@@ -2,6 +2,92 @@
 
 A data-driven Terraform module for **Attribute-Based Access Control (ABAC)** on Databricks Unity Catalog. All groups, tag policies, tag assignments, and FGAC policies are defined in `terraform.tfvars` — no `.tf` files need editing.
 
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     YOU PROVIDE (one-time setup)                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────────────────────────────┐    ┌──────────────────────┐  │
+│  │  auth.auto.tfvars                    │    │  ddl/*.sql           │  │
+│  │  (credentials — write once)          │    │  (your table DDLs)   │  │
+│  │                                      │    │                      │  │
+│  │  databricks_account_id    = "..."    │    │  CREATE TABLE ...    │  │
+│  │  databricks_client_id     = "..."    │    │  CREATE TABLE ...    │  │
+│  │  databricks_client_secret = "..."    │    │                      │  │
+│  │  databricks_workspace_host = "..."   │    │                      │  │
+│  │  uc_catalog_name = "my_catalog"      │    │                      │  │
+│  │  uc_schema_name  = "my_schema"       │    │                      │  │
+│  └──────────────────┬───────────────────┘    └──────────┬───────────┘  │
+│                     │                                   │              │
+└─────────────────────┼───────────────────────────────────┼──────────────┘
+                      │                                   │
+                      │  ┌────────────────────────────────┘
+                      │  │
+                      ▼  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      generate_abac.py                                  │
+│            (or manually via ABAC_PROMPT.md + AI chat)                   │
+│                                                                         │
+│  Reads auth.auto.tfvars for SDK auth + catalog/schema                  │
+│  Reads ddl/*.sql  +  ABAC_PROMPT.md  ──▶  LLM (Claude Sonnet)         │
+│                                                                         │
+│  Providers: Databricks FMAPI (default) | Anthropic | OpenAI            │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                     ┌──────────────┼──────────────┐
+                     ▼                             ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      generated/  (output folder)                       │
+│                                                                         │
+│  ┌──────────────────────────┐  ┌─────────────────────────────────────┐ │
+│  │  masking_functions.sql   │  │  terraform.tfvars                   │ │
+│  │                          │  │  (ABAC config only — no credentials)│ │
+│  │  SQL UDFs:               │  │                                     │ │
+│  │  • mask_pii_partial()    │  │  groups          ─ access tiers    │ │
+│  │  • mask_ssn()            │  │  tag_policies    ─ sensitivity tags│ │
+│  │  • mask_email()          │  │  tag_assignments ─ tags on columns │ │
+│  │  • filter_by_region()    │  │  fgac_policies   ─ masks & filters │ │
+│  │  • ...                   │  │  group_members   ─ user mappings   │ │
+│  └────────────┬─────────────┘  └──────────────────┬──────────────────┘ │
+└───────────────┼───────────────────────────────────┼─────────────────────┘
+               │                                    │
+               ▼                                    ▼
+┌──────────────────────────┐   ┌──────────────────────────────────────┐
+│  Run in Databricks SQL   │   │  validate_abac.py (auto)             │
+│  editor to create UDFs   │   │  ✓ structure  ✓ cross-refs  ✓ names │
+│  in your catalog.schema  │   └──────────────────┬───────────────────┘
+└──────────────────────────┘                      │
+                                                  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              terraform apply                                           │
+│  Loads: auth.auto.tfvars (credentials) + terraform.tfvars (ABAC)       │
+│                                                                         │
+│  Creates in Databricks:                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────────────┐ │
+│  │  Account Groups  │  │  Tag Policies   │  │  Tag Assignments       │ │
+│  │  Nurse           │  │  pii_level      │  │  Patients.SSN          │ │
+│  │  Physician       │  │  phi_level      │  │    → pii_level=Full    │ │
+│  │  Billing_Clerk   │  │  fin_access     │  │  Billing.TotalAmount   │ │
+│  │  Admin           │  │  region         │  │    → fin_access=Full   │ │
+│  └─────────────────┘  └─────────────────┘  └────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  FGAC Policies (Column Masks + Row Filters)                    │   │
+│  │                                                                 │   │
+│  │  "Nurse sees SSN as ***-**-1234"     ──▶ mask_ssn()            │   │
+│  │  "Billing_Clerk sees notes as [REDACTED]" ──▶ mask_redact()    │   │
+│  │  "US_East_Staff sees only US_EAST rows"   ──▶ filter_region()  │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────┐  ┌──────────────────────────────────────┐   │
+│  │  UC Grants           │  │  Workspace Assignments + Entitlements│   │
+│  │  USE_CATALOG          │  │  Groups added to workspace          │   │
+│  │  USE_SCHEMA           │  │  Consumer access enabled            │   │
+│  │  SELECT               │  │                                     │   │
+│  └──────────────────────┘  └──────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Three-Tier Workflow
 
 | Tier | Who | Workflow |
@@ -10,18 +96,23 @@ A data-driven Terraform module for **Attribute-Based Access Control (ABAC)** on 
 | **2. Pick and Mix** | Users with their own tables | Pick masking UDFs from `masking_functions_library.sql`, fill in `terraform.tfvars.example` |
 | **3. AI-Assisted** | Users who need help designing ABAC | Paste table DDL into `ABAC_PROMPT.md`, let AI generate the masking SQL + tfvars. See [`examples/healthcare/`](examples/healthcare/) for a full worked example |
 
-## Quick Start (Tier 1 — Finance Demo)
-
-New users wanting a working demo should use the included finance SQL scripts to create sample tables and masking functions, then apply the pre-built finance tfvars.
+## First-Time Setup (all tiers)
 
 ```bash
-# 1. Copy the finance example
+# One-time: set up your credentials and catalog/schema
+cp auth.auto.tfvars.example auth.auto.tfvars
+# Edit auth.auto.tfvars — fill in all fields
+# Terraform auto-loads *.auto.tfvars so these are always available.
+```
+
+## Quick Start (Tier 1 — Finance Demo)
+
+```bash
+# 1. Copy the finance ABAC config
 cp examples/finance/finance.tfvars.example terraform.tfvars
 
-# 2. Edit terraform.tfvars — fill in authentication + replace MY_CATALOG with your catalog
-
-# 3. Create the demo tables and masking UDFs in your workspace SQL editor.
-#    Both files are included in the examples/finance/ folder for convenience:
+# 2. Create the demo tables and masking UDFs in your workspace SQL editor.
+#    Both files are in the examples/finance/ folder:
 #
 #    a) Create masking & filter functions (run first):
 #       examples/finance/0.1finance_abac_functions.sql
@@ -32,7 +123,7 @@ cp examples/finance/finance.tfvars.example terraform.tfvars
 #    IMPORTANT: Edit the USE CATALOG / USE SCHEMA lines at the top of each
 #    file to match your uc_catalog_name and uc_schema_name before running.
 
-# 4. Apply
+# 3. Apply (loads auth.auto.tfvars + terraform.tfvars automatically)
 terraform init
 terraform plan
 terraform apply
@@ -56,12 +147,61 @@ terraform init && terraform apply
 
 ## AI-Assisted (Tier 3)
 
+### Option A — Automated (recommended)
+
+```bash
+# 1. Add your DDL files to the ddl/ folder
+#    Single file with all tables, or one file per table — both work
+cp my_tables.sql ddl/
+#    Or use the healthcare example: cp examples/healthcare/ddl/*.sql ddl/
+
+# 2. Install dependencies (one-time)
+pip install databricks-sdk python-hcl2
+
+# 3. Generate — reads catalog/schema from auth.auto.tfvars automatically
+python generate_abac.py
+
+# 4. Review, copy generated config to module root
+cp generated/terraform.tfvars terraform.tfvars
+# Run generated/masking_functions.sql in your Databricks SQL editor
+
+# 5. Apply
+terraform init && terraform plan && terraform apply
+```
+
+You can also override catalog/schema or use different providers:
+
+```bash
+# Override catalog/schema
+python generate_abac.py --catalog other_catalog --schema other_schema
+
+# Anthropic (direct API)
+pip install anthropic
+export ANTHROPIC_API_KEY='sk-ant-...'
+python generate_abac.py --provider anthropic
+
+# OpenAI
+pip install openai
+export OPENAI_API_KEY='sk-...'
+python generate_abac.py --provider openai
+
+# Custom model
+python generate_abac.py --provider databricks --model databricks-meta-llama-3-3-70b-instruct
+
+# Dry run — print the prompt without calling the LLM
+python generate_abac.py --dry-run
+```
+
+The generator automatically runs `validate_abac.py` on the output. If validation fails, fix the errors and re-run.
+
+### Option B — Manual
+
 1. Open `ABAC_PROMPT.md` and copy the prompt into ChatGPT, Claude, or Cursor
 2. Paste your `DESCRIBE TABLE` output where indicated
 3. The AI generates `masking_functions.sql` and `terraform.tfvars`
 4. **Validate** before applying:
    ```bash
-   pip install python-hcl2     # one-time
+   pip install python-hcl2
    python validate_abac.py terraform.tfvars masking_functions.sql
    ```
 5. Fix any `[FAIL]` errors reported, then run the SQL and `terraform apply`
@@ -86,7 +226,7 @@ terraform init && terraform apply
 
 ## Variables Reference
 
-### Required
+### Authentication (in `auth.auto.tfvars`)
 
 | Variable | Description |
 |----------|-------------|
@@ -97,6 +237,11 @@ terraform init && terraform apply
 | `databricks_workspace_host` | Workspace URL |
 | `uc_catalog_name` | Catalog for FGAC policies and UDFs |
 | `uc_schema_name` | Schema where masking UDFs are deployed |
+
+### ABAC Config (in `terraform.tfvars`)
+
+| Variable | Description |
+|----------|-------------|
 | `groups` | Map of group name to config |
 
 ### Data-Driven ABAC
@@ -143,10 +288,14 @@ aws/
   provider.tf                    # Databricks provider config
   genie_warehouse.tf             # Optional serverless warehouse
   genie_space_acls.tf            # Optional Genie Space ACLs
+  auth.auto.tfvars.example       # Credentials + catalog/schema (copy to auth.auto.tfvars)
+  terraform.tfvars.example       # ABAC config skeleton (groups, tags, policies)
   masking_functions_library.sql  # Reusable masking UDF library
   ABAC_PROMPT.md                 # AI prompt template for Tier 3
+  generate_abac.py               # Automated Tier 3 generator (multi-provider LLM)
   validate_abac.py               # Validation tool for AI-generated configs
-  terraform.tfvars.example       # Annotated variable skeleton
+  ddl/                           # INPUT:  Place your table DDL .sql files here
+  generated/                     # OUTPUT: AI-generated masking SQL + tfvars go here
   examples/
     finance/
       finance.tfvars.example              # Complete finance demo config (Tier 1)
@@ -155,7 +304,12 @@ aws/
     healthcare/
       healthcare_walkthrough.md          # End-to-end AI-Assisted walkthrough (Tier 3)
       masking_functions.sql              # Healthcare masking UDFs (example AI output)
-      healthcare.tfvars.example           # Healthcare tfvars (example AI output)
+      healthcare.tfvars.example          # Healthcare tfvars (example AI output)
+      ddl/                               # Healthcare DDL files (copy to ddl/ to use)
+        patients.sql                     # Patients table DDL
+        encounters.sql                   # Encounters table DDL
+        prescriptions.sql                # Prescriptions table DDL
+        billing.sql                      # Billing table DDL
 ```
 
 ## Validation

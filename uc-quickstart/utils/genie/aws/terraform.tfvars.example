@@ -1,20 +1,16 @@
 # ============================================================================
-# ABAC Terraform Module — Variable Skeleton
+# ABAC Terraform Module — Variable Skeleton (ABAC config only)
 # ============================================================================
-# Fill in this file and rename to terraform.tfvars, then run terraform apply.
-# For a complete working example see examples/finance.tfvars.
+# This file contains ONLY the ABAC configuration (groups, tags, policies).
+# Authentication and catalog/schema settings go in auth.auto.tfvars.
+#
+# Setup:
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (fill in credentials once)
+#   2. cp terraform.tfvars.example terraform.tfvars    (fill in ABAC config)
+#   3. terraform apply   (loads both files automatically)
+#
+# For a complete working example see examples/finance/finance.tfvars.example.
 # ============================================================================
-
-# === REQUIRED: Authentication ===
-databricks_account_id    = ""
-databricks_client_id     = ""   # Service principal client ID
-databricks_client_secret = ""   # Service principal client secret
-databricks_workspace_id  = ""
-databricks_workspace_host = ""  # e.g. https://myworkspace.cloud.databricks.com/
-
-# === REQUIRED: Unity Catalog target ===
-uc_catalog_name = ""   # Catalog where FGAC policies and UDFs live
-uc_schema_name  = ""   # Schema where masking UDFs are deployed
 
 # === Groups: one entry per access tier ===
 # Each key becomes a Databricks account-level group with consumer entitlements.

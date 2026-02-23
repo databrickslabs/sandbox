@@ -1,0 +1,16 @@
+# Databricks Authentication & Catalog Config
+# Copy this file to auth.auto.tfvars and fill in your values.
+# Terraform auto-loads *.auto.tfvars — no need to pass -var-file.
+#
+#   cp auth.auto.tfvars.example auth.auto.tfvars
+#
+# This file is NEVER overwritten by generate_abac.py.
+
+databricks_account_id    = ""
+databricks_client_id     = ""
+databricks_client_secret = ""
+databricks_workspace_id  = ""
+databricks_workspace_host = ""
+
+uc_catalog_name = ""
+uc_schema_name  = ""

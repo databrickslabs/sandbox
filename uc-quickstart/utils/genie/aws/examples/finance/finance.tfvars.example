@@ -1,25 +1,19 @@
 # ============================================================================
-# Finance ABAC Example — Complete tfvars
+# Finance ABAC Example — Complete tfvars (ABAC config only)
 # ============================================================================
-# This reproduces the original 5-group finance demo. Copy this file to
-# terraform.tfvars, fill in the authentication block, run the finance SQL
-# scripts (examples/0.1finance_abac_functions.sql, examples/0.2finance_database_schema.sql),
-# then `terraform apply`.
+# This reproduces the original 5-group finance demo.
+# Authentication and catalog/schema go in auth.auto.tfvars (see auth.auto.tfvars.example).
+#
+# Setup:
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (fill in credentials + catalog/schema)
+#   2. cp examples/finance/finance.tfvars.example terraform.tfvars
+#   3. Run examples/finance/0.1finance_abac_functions.sql in SQL editor
+#   4. Run examples/finance/0.2finance_database_schema.sql in SQL editor
+#   5. terraform apply
 #
 # entity_name and function_name are relative — Terraform automatically
-# prepends uc_catalog_name.uc_schema_name, so you only set the catalog
-# and schema once below.
+# prepends uc_catalog_name.uc_schema_name from auth.auto.tfvars.
 # ============================================================================
-
-# === REQUIRED: Authentication ===
-databricks_account_id    = ""
-databricks_client_id     = ""
-databricks_client_secret = ""
-databricks_workspace_id  = ""
-databricks_workspace_host = ""
-
-uc_catalog_name = ""   # <-- set your catalog here (used everywhere)
-uc_schema_name  = "finance"
 
 # === Groups ===
 groups = {

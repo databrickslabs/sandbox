@@ -8,70 +8,33 @@ This is a step-by-step example of the **Tier 3 (AI-Assisted)** workflow applied 
 
 Run `DESCRIBE TABLE` or `SHOW CREATE TABLE` in a Databricks SQL editor for every table you want ABAC policies on. For this walkthrough we'll use four tables from a hospital data platform.
 
-> **Replace `<YOUR_CATALOG>`** below with your Unity Catalog name (e.g. `my_hospital`, `prod_data`). The schema `clinical` is used as an example — change it to match your schema.
+The DDL files are in the [`ddl/`](ddl/) subfolder — one file per table:
 
-```sql
--- Set your catalog and schema
-USE CATALOG <YOUR_CATALOG>;
-USE SCHEMA clinical;
+| File | Table | Description |
+|------|-------|-------------|
+| [`ddl/patients.sql`](ddl/patients.sql) | `Patients` | Demographics, contact info, insurance |
+| [`ddl/encounters.sql`](ddl/encounters.sql) | `Encounters` | Visits, admissions, diagnoses, clinical notes |
+| [`ddl/prescriptions.sql`](ddl/prescriptions.sql) | `Prescriptions` | Medications and dosages |
+| [`ddl/billing.sql`](ddl/billing.sql) | `Billing` | Financial records, insurance claims |
 
--- Patients: demographics and contact info
-CREATE TABLE Patients (
-  PatientID       BIGINT        COMMENT 'Unique patient identifier',
-  MRN             STRING        COMMENT 'Medical Record Number',
-  FirstName       STRING        COMMENT 'Patient first name',
-  LastName        STRING        COMMENT 'Patient last name',
-  DateOfBirth     DATE          COMMENT 'Date of birth',
-  SSN             STRING        COMMENT 'Social Security Number',
-  Email           STRING        COMMENT 'Contact email',
-  Phone           STRING        COMMENT 'Contact phone number',
-  Address         STRING        COMMENT 'Home address',
-  InsuranceID     STRING        COMMENT 'Insurance policy number',
-  PrimaryCareDoc  STRING        COMMENT 'Assigned physician name',
-  FacilityRegion  STRING        COMMENT 'Hospital region: US_EAST, US_WEST, EU'
-);
+To use these with the automated generator:
 
--- Encounters: visits, admissions, ER trips
-CREATE TABLE Encounters (
-  EncounterID     BIGINT        COMMENT 'Unique encounter identifier',
-  PatientID       BIGINT        COMMENT 'FK to Patients',
-  EncounterDate   TIMESTAMP     COMMENT 'Date/time of encounter',
-  EncounterType   STRING        COMMENT 'INPATIENT, OUTPATIENT, EMERGENCY',
-  DiagnosisCode   STRING        COMMENT 'ICD-10 diagnosis code',
-  DiagnosisDesc   STRING        COMMENT 'Full diagnosis description',
-  TreatmentNotes  STRING        COMMENT 'Free-text clinical notes',
-  AttendingDoc    STRING        COMMENT 'Attending physician name',
-  FacilityRegion  STRING        COMMENT 'Hospital region: US_EAST, US_WEST, EU'
-);
+```bash
+# 1. Set up auth (one-time) — fill in credentials + set catalog/schema
+cp auth.auto.tfvars.example auth.auto.tfvars
 
--- Prescriptions: medications
-CREATE TABLE Prescriptions (
-  PrescriptionID  BIGINT        COMMENT 'Unique prescription identifier',
-  PatientID       BIGINT        COMMENT 'FK to Patients',
-  EncounterID     BIGINT        COMMENT 'FK to Encounters',
-  DrugName        STRING        COMMENT 'Medication name',
-  Dosage          STRING        COMMENT 'Dosage instructions',
-  Quantity        INT           COMMENT 'Number of units prescribed',
-  PrescribingDoc  STRING        COMMENT 'Prescribing physician',
-  PrescribedDate  DATE          COMMENT 'Date prescribed'
-);
+# 2. Copy the healthcare DDL files into the ddl/ folder
+cp examples/healthcare/ddl/*.sql ddl/
 
--- Billing: financial records
-CREATE TABLE Billing (
-  BillingID       BIGINT        COMMENT 'Unique billing identifier',
-  PatientID       BIGINT        COMMENT 'FK to Patients',
-  EncounterID     BIGINT        COMMENT 'FK to Encounters',
-  TotalAmount     DECIMAL(18,2) COMMENT 'Total billed amount',
-  InsurancePaid   DECIMAL(18,2) COMMENT 'Amount covered by insurance',
-  PatientOwed     DECIMAL(18,2) COMMENT 'Patient responsibility',
-  BillingCode     STRING        COMMENT 'CPT/HCPCS billing code',
-  InsuranceID     STRING        COMMENT 'Insurance policy used'
-);
+# 3. Generate (reads catalog/schema from auth.auto.tfvars)
+python generate_abac.py
 ```
 
-## Step 2 — Paste into the AI prompt
+## Step 2 — Generate ABAC configuration
 
-Open `ABAC_PROMPT.md`, copy the entire prompt section, and paste it into ChatGPT / Claude / Cursor. Then paste the DDL above where it says `-- Paste your SHOW CREATE TABLE output or CREATE TABLE DDL here.`
+**Option A — Automated** (recommended): Run the commands above and skip to Step 4.
+
+**Option B — Manual**: Open `ABAC_PROMPT.md`, copy the entire prompt section, and paste it into ChatGPT / Claude / Cursor. Then paste the DDL from the files above where it says `-- Paste your SHOW CREATE TABLE output or CREATE TABLE DDL here.`
 
 ## Step 3 — AI generates two files
 
@@ -182,19 +145,9 @@ RETURN
   OR is_account_group_member('Chief_Medical_Officer');
 ```
 
-### File 2: `terraform.tfvars`
+### File 2: `terraform.tfvars` (ABAC config only — auth is in `auth.auto.tfvars`)
 
 ```hcl
-# === Authentication (fill in) ===
-databricks_account_id    = ""
-databricks_client_id     = ""
-databricks_client_secret = ""
-databricks_workspace_id  = ""
-databricks_workspace_host = ""
-
-uc_catalog_name = "<YOUR_CATALOG>"   # <-- replace with your catalog name
-uc_schema_name  = "clinical"
-
 # === Groups ===
 groups = {
   "Nurse"                 = { description = "Bedside care — partial PII, limited clinical notes" }
@@ -370,11 +323,11 @@ group_members = {}
 
 ## Step 4 — Validate
 
-Save the AI output as `masking_functions.sql` and `terraform.tfvars`, then run the validator:
+If you used the automated generator, validation runs automatically. For manual flow, save the AI output and run:
 
 ```bash
 pip install python-hcl2
-python validate_abac.py terraform.tfvars masking_functions.sql
+python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql
 ```
 
 Expected output:
@@ -384,17 +337,12 @@ Expected output:
   ABAC Configuration Validation Report
 ============================================================
   [PASS] SQL file: 11 function(s) found
-  [PASS] uc_catalog_name: set
-  [PASS] uc_schema_name: set
   [PASS] groups: 6 group(s) defined
   [PASS] tag_policies: 4 policy/ies, 9 total values
   [PASS] tag_assignments: 23 assignment(s)
   [PASS] fgac_policies: 11 policy/ies, 9 unique function(s)
-
-  [WARN] 'databricks_account_id' is empty — fill in before running terraform apply
-  ...
 ------------------------------------------------------------
-  RESULT: PASS  (7 passed, 5 warnings, 0 errors)
+  RESULT: PASS  (5 passed, 0 warnings, 0 errors)
 ============================================================
 ```
 
@@ -403,12 +351,13 @@ All `[PASS]` — safe to proceed.
 ## Step 5 — Deploy
 
 ```bash
-# 1. Run masking_functions.sql in a Databricks SQL editor
-#    (make sure USE CATALOG / USE SCHEMA match your tfvars)
+# 1. Run generated/masking_functions.sql in a Databricks SQL editor
+#    (make sure USE CATALOG / USE SCHEMA match your auth.auto.tfvars)
 
-# 2. Fill in the authentication fields in terraform.tfvars
+# 2. Copy the generated ABAC config to the module root
+cp generated/terraform.tfvars terraform.tfvars
 
-# 3. Apply
+# 3. Apply (auth.auto.tfvars is loaded automatically)
 terraform init
 terraform plan    # review the plan
 terraform apply

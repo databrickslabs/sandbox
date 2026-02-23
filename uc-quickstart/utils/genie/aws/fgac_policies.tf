@@ -16,7 +16,7 @@ locals {
 
 resource "time_sleep" "wait_for_tag_propagation" {
   depends_on      = [databricks_tag_policy.policies, databricks_entity_tag_assignment.assignments]
-  create_duration = "10s"
+  create_duration = "30s"
 }
 
 resource "databricks_policy_info" "policies" {
