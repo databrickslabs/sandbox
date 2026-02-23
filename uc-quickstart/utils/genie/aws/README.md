@@ -66,6 +66,8 @@ terraform init && terraform apply
    ```
 5. Fix any `[FAIL]` errors reported, then run the SQL and `terraform apply`
 
+> **Full worked example:** See [`examples/healthcare_walkthrough.md`](examples/healthcare_walkthrough.md) for an end-to-end healthcare scenario — from DDL input through AI output to validation and deployment.
+
 ## What This Module Creates
 
 | Resource | Terraform File | Description |
@@ -149,6 +151,7 @@ aws/
     finance.tfvars                       # Complete finance demo config (Tier 1)
     0.1finance_abac_functions.sql        # Finance masking & filter UDFs
     0.2finance_database_schema.sql       # Finance demo tables + sample data
+    healthcare_walkthrough.md            # End-to-end AI-Assisted example (Tier 3)
 ```
 
 ## Validation

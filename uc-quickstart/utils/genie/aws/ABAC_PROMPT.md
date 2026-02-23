@@ -135,18 +135,26 @@ This checks cross-references (groups, tags, functions), naming conventions, and 
 
 ### Instructions
 
-1. Analyze each column in the user's tables for sensitivity:
+1. Use the user's **catalog** and **schema** from the "MY CATALOG AND SCHEMA" section for `USE CATALOG` / `USE SCHEMA` in SQL and `uc_catalog_name` / `uc_schema_name` in tfvars
+2. Analyze each column in the user's tables for sensitivity:
    - PII (names, emails, SSN, phone, address)
    - Financial (credit cards, account numbers, amounts, IBAN)
    - Health (MRN, diagnosis codes)
    - Regional/residency (region columns that need row filtering)
-2. Propose groups — typically 2-5 access tiers (e.g., restricted, standard, privileged, admin)
-3. Design tag policies — one per sensitivity dimension (e.g., `pii_level`, `pci_clearance`)
-4. Map tags to the user's specific tables and columns
-5. Select masking functions from the library above (or create new ones)
-6. Generate both output files using **relative** names (Terraform prepends `uc_catalog_name.uc_schema_name` automatically)
+3. Propose groups — typically 2-5 access tiers (e.g., restricted, standard, privileged, admin)
+4. Design tag policies — one per sensitivity dimension (e.g., `pii_level`, `pci_clearance`)
+5. Map tags to the user's specific tables and columns
+6. Select masking functions from the library above (or create new ones)
+7. Generate both output files using **relative** names (Terraform prepends `uc_catalog_name.uc_schema_name` automatically)
 
 ---
+
+### MY CATALOG AND SCHEMA
+
+```
+Catalog: ___________    (e.g. prod_healthcare, my_dev_catalog)
+Schema:  ___________    (e.g. clinical, finance, public)
+```
 
 ### MY TABLES (paste below)
 
