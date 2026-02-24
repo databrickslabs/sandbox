@@ -1,4 +1,4 @@
-.PHONY: setup generate validate plan apply destroy clean help
+.PHONY: setup generate validate validate-generated plan apply destroy clean help
 
 SHELL := /bin/bash
 
@@ -28,7 +28,15 @@ generate: ## Run generate_abac.py to produce masking SQL + tfvars
 	@echo "=== Generate ABAC Config ==="
 	python generate_abac.py
 
-validate: ## Run validate_abac.py on terraform.tfvars (+ masking SQL if present)
+validate-generated: ## Validate generated/ files before copying to root
+	@echo "=== Validate (generated/) ==="
+	@if [ -f generated/masking_functions.sql ]; then \
+		python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql; \
+	else \
+		python validate_abac.py generated/terraform.tfvars; \
+	fi
+
+validate: ## Validate root terraform.tfvars (after copying from generated/)
 	@echo "=== Validate ==="
 	@if [ -f generated/masking_functions.sql ]; then \
 		python validate_abac.py terraform.tfvars generated/masking_functions.sql; \
@@ -41,10 +49,10 @@ plan: ## Run terraform init + plan
 	terraform init -input=false
 	terraform plan
 
-apply: ## Run terraform init + apply
+apply: ## Run terraform init + apply (parallelism=1 to avoid tag policy race conditions)
 	@echo "=== Terraform Apply ==="
 	terraform init -input=false
-	terraform apply
+	terraform apply -parallelism=1
 
 destroy: ## Run terraform destroy
 	@echo "=== Terraform Destroy ==="

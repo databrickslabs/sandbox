@@ -62,7 +62,7 @@ This quickstart is designed to help data teams onboard business stakeholders to 
 │  │  • mask_email()          │  │  tag_assignments ─ tags on columns │   │
 │  │  • filter_by_region()    │  │  fgac_policies   ─ masks & filters │   │
 │  │  • ...                   │  │  group_members   ─ user mappings   │   │
-│  └────────────┬─────────────┘  └──────────────────┬─────────────────┘   │
+│  └────────────┬─────────────┘  └───────────────────┬────────────────┘   │
 └───────────────┼────────────────────────────────────┼────────────────────┘
                 │                                    │
                 ▼                                    ▼
@@ -100,88 +100,45 @@ This quickstart is designed to help data teams onboard business stakeholders to 
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Three-Tier Workflow
+## Recommended Workflow (AI‑Assisted)
 
-| Tier | Who | Workflow |
-|------|-----|----------|
-| **1. Quick Start** | New users wanting a working demo | Copy `examples/finance/finance.tfvars.example`, run the finance SQL scripts, `terraform apply` |
-| **2. Pick and Mix** | Users with their own tables | Pick masking UDFs from `masking_functions_library.sql`, fill in `terraform.tfvars.example` |
-| **3. AI-Assisted** | Users who need help designing ABAC | Paste table DDL into `ABAC_PROMPT.md`, let AI generate the masking SQL + tfvars. See [`examples/healthcare/`](examples/healthcare/) for a full worked example |
+Use the AI‑Assisted workflow to generate a strong first draft of masking functions and ABAC policies, then iterate quickly before applying.
 
-## First-Time Setup (all tiers)
+**Generate → Review → Tune → Validate → Apply**
+
+## First-Time Setup
 
 ```bash
-# Option A: use make (copies example files, creates directories)
-make setup
-
-# Option B: manual
+# One-time: set up your credentials and catalog/schema
 cp auth.auto.tfvars.example auth.auto.tfvars
 # Edit auth.auto.tfvars — fill in all fields
-# Terraform auto-loads *.auto.tfvars so these are always available.
 ```
 
-## Quick Start (Tier 1 — Finance Demo)
+## AI‑Assisted (Recommended)
 
 ```bash
-# 1. Copy the finance ABAC config
-cp examples/finance/finance.tfvars.example terraform.tfvars
-
-# 2. Create the demo tables and masking UDFs in your workspace SQL editor.
-#    Both files are in the examples/finance/ folder:
-#
-#    a) Create masking & filter functions (run first):
-#       examples/finance/0.1finance_abac_functions.sql
-#
-#    b) Create finance demo tables with sample data:
-#       examples/finance/0.2finance_database_schema.sql
-#
-#    IMPORTANT: Edit the USE CATALOG / USE SCHEMA lines at the top of each
-#    file to match your uc_catalog_name and uc_schema_name before running.
-
-# 3. Apply (loads auth.auto.tfvars + terraform.tfvars automatically)
-terraform init
-terraform plan
-terraform apply
-```
-
-## Bring Your Own Tables (Tier 2)
-
-```bash
-# 1. Start from the skeleton
-cp terraform.tfvars.example terraform.tfvars
-
-# 2. Pick masking functions from masking_functions_library.sql
-#    Find-replace {catalog}.{schema} with your catalog and schema
-#    Run only the functions you need in your workspace
-
-# 3. Fill in terraform.tfvars with your groups, tags, and policies
-
-# 4. Apply
-terraform init && terraform apply
-```
-
-## AI-Assisted (Tier 3)
-
-### Option A — Automated (recommended)
-
-```bash
-# 1. Add your DDL files to the ddl/ folder
-#    Single file with all tables, or one file per table — both work
+# 1. Put your CREATE TABLE DDL(s) in ddl/
 cp my_tables.sql ddl/
-#    Or use the healthcare example: cp examples/healthcare/ddl/*.sql ddl/
+# Or use the healthcare sample: cp examples/healthcare/ddl/*.sql ddl/
 
 # 2. Install dependencies (one-time)
 pip install databricks-sdk python-hcl2
 
-# 3. Generate — reads catalog/schema from auth.auto.tfvars automatically
+# 3. Generate a first draft (reads catalog/schema from auth.auto.tfvars)
 python generate_abac.py
 
-# 4. Review, copy generated config to module root
-cp generated/terraform.tfvars terraform.tfvars
-# Run generated/masking_functions.sql in your Databricks SQL editor
+# 4. Review + tune (see generated/TUNING.md)
+#    - Run generated/masking_functions.sql in your Databricks SQL editor
+#    - Edit generated/terraform.tfvars as needed
 
-# 5. Apply
-terraform init && terraform plan && terraform apply
+# 5. Validate before copying to root
+python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql
+
+# 6. Copy to root
+cp generated/terraform.tfvars terraform.tfvars
+
+# 7. Apply (parallelism=1 avoids tag policy race conditions)
+terraform init && terraform plan && terraform apply -parallelism=1
 ```
 
 You can also override catalog/schema or use different providers:
@@ -190,41 +147,33 @@ You can also override catalog/schema or use different providers:
 # Override catalog/schema
 python generate_abac.py --catalog other_catalog --schema other_schema
 
-# Anthropic (direct API)
-pip install anthropic
-export ANTHROPIC_API_KEY='sk-ant-...'
-python generate_abac.py --provider anthropic
-
-# OpenAI
-pip install openai
-export OPENAI_API_KEY='sk-...'
-python generate_abac.py --provider openai
-
-# Custom model
-python generate_abac.py --provider databricks --model databricks-meta-llama-3-3-70b-instruct
-
 # Dry run — print the prompt without calling the LLM
 python generate_abac.py --dry-run
 
-# Retry up to 5 times on transient LLM failures (default: 3)
+# Retry on transient LLM failures (default: 3)
 python generate_abac.py --max-retries 5
 ```
 
-The generator automatically runs `validate_abac.py` on the output and substitutes `{catalog}` / `{schema}` placeholders in the generated SQL with values from `auth.auto.tfvars`. If validation fails, fix the errors and re-run.
+### Review & Tune (Before Apply)
 
-### Option B — Manual
+Tuning is expected. Start with the checklist in `generated/TUNING.md`, then iterate until validation passes and stakeholders are comfortable with the policy outcomes.
 
-1. Open `ABAC_PROMPT.md` and copy the prompt into ChatGPT, Claude, or Cursor
-2. Paste your `DESCRIBE TABLE` output where indicated
-3. The AI generates `masking_functions.sql` and `terraform.tfvars`
-4. **Validate** before applying:
-   ```bash
-   pip install python-hcl2
-   python validate_abac.py terraform.tfvars masking_functions.sql
-   ```
-5. Fix any `[FAIL]` errors reported, then run the SQL and `terraform apply`
+Quick checklist:
+- **Groups and personas**: Do the group names represent the real business roles you need?
+- **Sensitive columns**: Are the right columns tagged (PII/PHI/financial/etc.)?
+- **Masking behavior**: Are you using the right mask type (partial, redact, hash) per sensitivity and use case?
+- **Row filters and exceptions**: Are filters too broad/strict? Are “break-glass” or admin exceptions intentional and minimal?
+- **Validate before apply**: Run `validate_abac.py` before `terraform apply` to catch mismatches early.
 
-> **Full worked example:** See [`examples/healthcare/`](examples/healthcare/) for an end-to-end healthcare scenario — includes a walkthrough, example masking functions SQL, and a ready-to-use tfvars file.
+## Appendix: Alternatives & Tuning Toolkit
+
+If you want a faster demo or prefer manual control, use these as building blocks:
+
+- **Tier 1 (Demo / confidence builder)**: Finance example config + SQL in [`examples/finance/`](examples/finance/).  
+  Start with `examples/finance/finance.tfvars.example` and the `0.1*` / `0.2*` SQL scripts.
+- **Tier 2 (Manual tuning)**: Use `terraform.tfvars.example` + pick masking functions from `masking_functions_library.sql`.
+- **Manual prompt**: If you prefer chatting with an AI directly, use `ABAC_PROMPT.md` and validate the result with `validate_abac.py`.
+- **Worked example**: See [`examples/healthcare/`](examples/healthcare/) for an end-to-end AI‑Assisted walkthrough.
 
 ## What This Module Creates
 
@@ -366,9 +315,10 @@ A `Makefile` provides shortcuts for common workflows:
 |--------|-------------|
 | `make setup` | Copy example files, create `ddl/` and `generated/` directories |
 | `make generate` | Run `generate_abac.py` to produce masking SQL + tfvars |
-| `make validate` | Run `validate_abac.py` on `terraform.tfvars` |
+| `make validate-generated` | Validate `generated/` files before copying to root |
+| `make validate` | Validate root `terraform.tfvars` (after copying from `generated/`) |
 | `make plan` | Run `terraform init` + `terraform plan` |
-| `make apply` | Run `terraform init` + `terraform apply` |
+| `make apply` | Run `terraform init` + `terraform apply -parallelism=1` |
 | `make destroy` | Run `terraform destroy` |
 | `make clean` | Remove generated files, Terraform state, and `.terraform/` |
 

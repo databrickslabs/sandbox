@@ -16,3 +16,4 @@ terraform.tfvars
 generated/terraform.tfvars
 generated/masking_functions.sql
 generated/generated_response.md
+generated/TUNING.md

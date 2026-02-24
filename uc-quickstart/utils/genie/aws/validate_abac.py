@@ -303,7 +303,19 @@ def validate_group_members(cfg: dict, group_names: set[str], result: ValidationR
         result.ok(f"group_members: {len(members)} group(s) with member assignments")
 
 
-def validate_auth(cfg: dict, result: ValidationResult):
+def _find_auth_file(tfvars_path: Path) -> Path | None:
+    """Locate auth.auto.tfvars relative to the given tfvars file."""
+    candidates = [
+        tfvars_path.parent / "auth.auto.tfvars",
+        tfvars_path.parent.parent / "auth.auto.tfvars",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return None
+
+
+def validate_auth(cfg: dict, result: ValidationResult, tfvars_path: Path):
     required = [
         "databricks_account_id",
         "databricks_client_id",
@@ -313,10 +325,29 @@ def validate_auth(cfg: dict, result: ValidationResult):
         "uc_catalog_name",
         "uc_schema_name",
     ]
+
+    auth_cfg = cfg
+    if not any(k in cfg for k in required):
+        auth_file = _find_auth_file(tfvars_path)
+        if auth_file:
+            try:
+                auth_cfg = parse_tfvars(auth_file)
+                result.ok(
+                    f"Auth vars loaded from {auth_file.name}"
+                )
+            except Exception as e:
+                result.warn(f"Could not parse {auth_file}: {e}")
+                return
+        else:
+            result.warn(
+                "Auth vars not in tfvars and auth.auto.tfvars not found."
+            )
+            return
+
     for key in required:
-        val = cfg.get(key, "")
+        val = auth_cfg.get(key, "")
         if not val:
-            result.warn(f"'{key}' is empty — fill in before running terraform apply")
+            result.warn(f"'{key}' is empty — fill in before terraform apply")
         else:
             result.ok(f"{key}: set")
 
@@ -363,7 +394,7 @@ def main():
                 result.ok(f"SQL file: {len(sql_functions)} function(s) found — {sorted(sql_functions)}")
 
     # --- Run validations ---
-    validate_auth(cfg, result)
+    validate_auth(cfg, result, tfvars_path)
     group_names = validate_groups(cfg, result)
     tag_map = validate_tag_policies(cfg, result)
     validate_tag_assignments(cfg, tag_map, result)
