@@ -1,28 +1,34 @@
 # Import Existing Resources (Overwrite / Adopt)
 
-If the warehouse, groups, or tag policies **already exist**, Terraform will fail with "already exists". Use the **one script** below so Terraform can adopt and overwrite them.
+If the warehouse, groups, or tag policies **already exist**, Terraform will fail with "already exists". Use the import script below so Terraform can adopt and overwrite them.
 
-## One-time setup
+## Prerequisites
 
-1. Copy the example file and add your IDs:
-   ```bash
-   cp import_ids.env.example import_ids.env
-   ```
-2. Fill in **import_ids.env**:
-   - **WAREHOUSE_ID** – From workspace: **SQL → Warehouses** → open "Genie Finance Warehouse" → ID from URL or details.
-   - **GROUP_ID_Junior_Analyst**, **GROUP_ID_Senior_Analyst**, **GROUP_ID_US_Region_Staff**, **GROUP_ID_EU_Region_Staff**, **GROUP_ID_Compliance_Officer** – From **Account Console → Identity and access → Groups** → open each group → copy ID.
+Before running the import script, ensure:
 
-Leave a line commented (with `#`) if you don’t have that ID; that resource will be skipped.
+1. `auth.auto.tfvars` is configured with valid credentials.
+2. `terraform.tfvars` is configured with the groups and tag policies you want to import.
+3. `terraform init` has been run.
 
-## Run the import script
+## Usage
 
 From **genie/aws**:
 
 ```bash
+# Import all existing resources (groups, tag policies, FGAC policies)
 ./scripts/import_existing.sh
+
+# Import only groups
+./scripts/import_existing.sh --groups-only
+
+# Import only tag policies
+./scripts/import_existing.sh --tags-only
+
+# Dry run — show what would be imported without running terraform import
+./scripts/import_existing.sh --dry-run
 ```
 
-The script imports the warehouse (if `WAREHOUSE_ID` is set), the five groups (if each `GROUP_ID_*` is set), and all five tag policies. After that, **terraform apply** will manage and overwrite config to match the .tf files.
+The script reads group names from `terraform.tfvars` and tag policy keys from the same file. For each resource, it checks whether an import is needed and runs `terraform import` if the resource exists in Databricks but not in Terraform state.
 
 ## Optional: warehouse only (no Terraform management)
 
@@ -32,4 +38,4 @@ To use an existing warehouse **without** importing it, set in **terraform.tfvars
 genie_use_existing_warehouse_id = "<WAREHOUSE_ID>"
 ```
 
-Then Terraform won’t create a warehouse and will use this ID for genie_space.sh create and outputs.
+Then Terraform won't create a warehouse and will use this ID for genie_space.sh create and outputs.

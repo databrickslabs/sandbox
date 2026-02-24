@@ -1,2 +1,18 @@
 # Local import IDs (copy from import_ids.env.example)
 import_ids.env
+
+# Terraform state (may contain secrets)
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# User-specific credentials (only track the .example)
+auth.auto.tfvars
+
+# User-specific ABAC config
+terraform.tfvars
+
+# AI-generated output (user-specific)
+generated/terraform.tfvars
+generated/masking_functions.sql
+generated/generated_response.md

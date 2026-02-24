@@ -22,6 +22,7 @@ resource "null_resource" "genie_space_acls" {
       DATABRICKS_CLIENT_ID     = var.databricks_client_id
       DATABRICKS_CLIENT_SECRET = var.databricks_client_secret
       GENIE_SPACE_OBJECT_ID    = var.genie_space_id
+      GENIE_GROUPS_CSV         = join(",", keys(var.groups))
     }
   }
 

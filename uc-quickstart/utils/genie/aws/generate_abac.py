@@ -42,6 +42,8 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -248,6 +250,61 @@ PROVIDERS = {
 }
 
 
+class Spinner:
+    """Simple terminal spinner for long-running operations."""
+
+    FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+    def __init__(self, message: str = "Working"):
+        self._message = message
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._start_time = 0.0
+
+    def __enter__(self):
+        self._start_time = time.time()
+        self._thread = threading.Thread(target=self._spin, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, *_):
+        self._stop.set()
+        if self._thread:
+            self._thread.join()
+        elapsed = time.time() - self._start_time
+        sys.stderr.write(f"\r  {self._message} — done ({elapsed:.1f}s)\n")
+        sys.stderr.flush()
+
+    def _spin(self):
+        i = 0
+        while not self._stop.is_set():
+            elapsed = time.time() - self._start_time
+            frame = self.FRAMES[i % len(self.FRAMES)]
+            sys.stderr.write(f"\r  {frame} {self._message} ({elapsed:.0f}s)")
+            sys.stderr.flush()
+            i += 1
+            self._stop.wait(0.1)
+
+
+def call_with_retries(call_fn, prompt: str, model: str, max_retries: int) -> str:
+    """Call an LLM provider with exponential backoff retries."""
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            with Spinner(f"Calling LLM (attempt {attempt}/{max_retries})"):
+                return call_fn(prompt, model)
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                wait = min(2 ** attempt, 60)
+                print(f"\n  Attempt {attempt} failed: {e}")
+                print(f"  Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"\n  Attempt {attempt} failed: {e}")
+    raise RuntimeError(f"All {max_retries} attempts failed. Last error: {last_error}")
+
+
 def run_validation(out_dir: Path) -> bool:
     """Run validate_abac.py on the generated files. Returns True if passed."""
     validator = SCRIPT_DIR / "validate_abac.py"
@@ -296,6 +353,7 @@ def main():
         default=str(SCRIPT_DIR / "generated"),
         help="Output directory for generated files (default: ./generated/)",
     )
+    parser.add_argument("--max-retries", type=int, default=3, help="Max LLM call attempts with exponential backoff (default: 3)")
     parser.add_argument("--skip-validation", action="store_true", help="Skip running validate_abac.py")
     parser.add_argument("--dry-run", action="store_true", help="Build the prompt and print it without calling the LLM")
 
@@ -353,7 +411,7 @@ def main():
     model = args.model or provider_cfg["default_model"]
     call_fn = provider_cfg["call"]
 
-    response_text = call_fn(prompt, model)
+    response_text = call_with_retries(call_fn, prompt, model, args.max_retries)
 
     sql_block, hcl_block = extract_code_blocks(response_text)
 
@@ -371,9 +429,11 @@ def main():
     print(f"\n  Full LLM response saved to: {response_path}")
 
     if sql_block:
+        sql_block = sql_block.replace("{catalog}", catalog).replace("{schema}", schema)
         sql_path = out_dir / "masking_functions.sql"
         sql_path.write_text(sql_block + "\n")
         print(f"  masking_functions.sql written to: {sql_path}")
+        print(f"    (placeholders replaced: {{catalog}} → {catalog}, {{schema}} → {schema})")
 
     if hcl_block:
         tfvars_path = out_dir / "terraform.tfvars"

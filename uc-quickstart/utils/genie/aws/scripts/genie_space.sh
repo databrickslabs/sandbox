@@ -3,9 +3,9 @@
 # Genie Space: create space with finance tables and/or set ACLs (single script)
 # =============================================================================
 # Commands:
-#   create    Create a Genie Space with all finance schema tables and set ACLs
-#             (POST /api/2.0/genie/spaces, then PUT permissions for five groups).
-#   set-acls  Set CAN_RUN on an existing Genie Space for the five finance groups.
+#   create    Create a Genie Space with configured tables and set ACLs
+#             (POST /api/2.0/genie/spaces, then PUT permissions for groups).
+#   set-acls  Set CAN_RUN on an existing Genie Space for the configured groups.
 #
 # Authentication (in order of precedence):
 #   1. DATABRICKS_TOKEN (PAT) - if set, used directly
@@ -25,7 +25,13 @@
 
 set -e
 
-GENIE_GROUPS=("Junior_Analyst" "Senior_Analyst" "US_Region_Staff" "EU_Region_Staff" "Compliance_Officer")
+# Accept groups via GENIE_GROUPS env var (comma-separated) or fall back to defaults
+if [[ -n "${GENIE_GROUPS_CSV:-}" ]]; then
+  IFS=',' read -ra GENIE_GROUPS <<< "$GENIE_GROUPS_CSV"
+else
+  GENIE_GROUPS=("Junior_Analyst" "Senior_Analyst" "US_Region_Staff" "EU_Region_Staff" "Compliance_Officer")
+  echo "WARNING: GENIE_GROUPS_CSV not set — using default finance groups." >&2
+fi
 
 usage() {
   echo "Usage: $0 create [workspace_url] [token] [title] [warehouse_id]"
@@ -104,7 +110,7 @@ resolve_token() {
   return 1
 }
 
-# ---------- Set ACLs on a Genie Space (CAN_RUN for five groups) ----------
+# ---------- Set ACLs on a Genie Space (CAN_RUN for configured groups) ----------
 set_genie_acls() {
   local workspace_url="$1"
   local token="$2"
@@ -141,7 +147,7 @@ set_genie_acls() {
   echo "Genie Space ACLs updated successfully."
 }
 
-# ---------- Create Genie Space with finance tables then set ACLs ----------
+# ---------- Create Genie Space with configured tables then set ACLs ----------
 create_genie_space() {
   local workspace_url="$1"
   local token="$2"
@@ -202,7 +208,7 @@ create_genie_space() {
   fi
 
   echo "Genie Space created: ${space_id}"
-  echo "Setting ACLs for the five finance groups..."
+  echo "Setting ACLs for groups: ${GENIE_GROUPS[*]}"
   set_genie_acls "$workspace_url" "$token" "$space_id"
   echo "Done. Genie Space ID: ${space_id}"
 }
