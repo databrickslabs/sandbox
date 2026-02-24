@@ -1,6 +1,6 @@
-# Unity Catalog ABAC — Generic Terraform Module
+# OneReady — Genie Onboarding Quickstart
 
-A data-driven Terraform module for **Attribute-Based Access Control (ABAC)** on Databricks Unity Catalog. All groups, tag policies, tag assignments, and FGAC policies are defined in `terraform.tfvars` — no `.tf` files need editing.
+Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terraform quickstart that automates business-user onboarding — groups, entitlements, data access, ABAC governance, and Genie Space ACLs — all defined in `terraform.tfvars`, no `.tf` files need editing.
 
 ## What This Quickstart Automates
 
