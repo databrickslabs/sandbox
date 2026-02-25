@@ -94,11 +94,13 @@ tag_policies = [
 # entity_name and function_name are RELATIVE to uc_catalog_name.uc_schema_name.
 # Terraform automatically prepends the catalog.schema prefix.
 tag_assignments = [
+  # Table-level tags (optional — scope column masks or row filters to specific tables, or for governance):
+  # { entity_type = "tables",  entity_name = "Table",        tag_key = "tag_name", tag_value = "val1" },
   { entity_type = "columns", entity_name = "Table.Column", tag_key = "tag_name", tag_value = "val1" },
 ]
 
 fgac_policies = [
-  # Column mask:
+  # Column mask (when_condition is optional — omit to apply to all tables):
   {
     name            = "policy_name"
     policy_type     = "POLICY_TYPE_COLUMN_MASK"
@@ -108,7 +110,7 @@ fgac_policies = [
     match_alias     = "alias"
     function_name   = "function_name"
   },
-  # Row filter:
+  # Row filter (when_condition is optional — omit to apply to all tables):
   {
     name           = "filter_name"
     policy_type    = "POLICY_TYPE_ROW_FILTER"
@@ -118,6 +120,15 @@ fgac_policies = [
     function_name  = "filter_function"
   },
 ]
+
+# when_condition is OPTIONAL for both column masks and row filters:
+# - Column masks: omit when_condition to let match_condition (in match_columns) select
+#   columns across ALL tables. Or set when_condition (e.g. "hasTag('tag_name')") to
+#   scope the mask to specific tagged tables only.
+# - Row filters: omit when_condition to apply to all tables, or provide it to scope
+#   to specific tagged tables.
+# - If you use when_condition, the referenced tags must be assigned at the TABLE level
+#   (entity_type = "tables" in tag_assignments).
 
 group_members = {}
 ```
@@ -149,6 +160,17 @@ The `match_condition` and `when_condition` fields ONLY support these functions:
 
 To target specific columns, use **distinct tag values** assigned to those columns, not `columnName()`. For example, instead of `hasTagValue('phi_level', 'full_phi') AND columnName() = 'MRN'`, create a separate tag value like `phi_level = 'mrn_restricted'` and assign it only to the MRN column.
 
+### CRITICAL — Internal Consistency
+
+Every tag value used in `tag_assignments` and in `match_condition` / `when_condition` MUST be defined in `tag_policies`. Before generating, cross-check:
+
+1. Every `tag_value` in `tag_assignments` must appear in the `values` list of the corresponding `tag_key` in `tag_policies`
+2. Every `hasTagValue('key', 'value')` in `match_condition` or `when_condition` must reference a `key` and `value` that exist in `tag_policies`
+3. Every `function_name` in `fgac_policies` must have a corresponding `CREATE OR REPLACE FUNCTION` in `masking_functions.sql`
+4. Every group in `to_principals` / `except_principals` must be defined in `groups`
+
+Violating any of these causes validation failures. Double-check consistency across all three sections (`tag_policies`, `tag_assignments`, `fgac_policies`) before outputting.
+
 ### Instructions
 
 1. Use the user's **catalog** and **schema** from the "MY CATALOG AND SCHEMA" section for `USE CATALOG` / `USE SCHEMA` in SQL and `uc_catalog_name` / `uc_schema_name` in tfvars
@@ -159,7 +181,7 @@ To target specific columns, use **distinct tag values** assigned to those column
    - Regional/residency (region columns that need row filtering)
 3. Propose groups — typically 2-5 access tiers (e.g., restricted, standard, privileged, admin)
 4. Design tag policies — one per sensitivity dimension (e.g., `pii_level`, `pci_clearance`)
-5. Map tags to the user's specific tables and columns. **Use distinct tag values to differentiate columns that need different masking** — do NOT use `columnName()` in conditions
+5. Map tags to the user's specific columns. **Use distinct tag values to differentiate columns that need different masking** — do NOT use `columnName()` in conditions. Table-level tags (entity_type = "tables") are optional — use them to scope column masks or row filters to specific tables, or for governance
 6. Select masking functions from the library above (or create new ones)
 7. Generate both output files using **relative** names (Terraform prepends `uc_catalog_name.uc_schema_name` automatically)
 8. Every `match_condition` and `when_condition` MUST only use `hasTagValue()` and/or `hasTag()` — no other functions or operators

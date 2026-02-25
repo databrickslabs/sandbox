@@ -30,7 +30,7 @@ VALID_POLICY_TYPES = {"POLICY_TYPE_COLUMN_MASK", "POLICY_TYPE_ROW_FILTER"}
 BUILTIN_PRINCIPALS = {"account users"}
 
 COLUMN_MASK_REQUIRED = {"name", "policy_type", "to_principals", "match_condition", "match_alias", "function_name"}
-ROW_FILTER_REQUIRED = {"name", "policy_type", "to_principals", "when_condition", "function_name"}
+ROW_FILTER_REQUIRED = {"name", "policy_type", "to_principals", "function_name"}
 
 
 class ValidationResult:

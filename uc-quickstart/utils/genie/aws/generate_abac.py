@@ -240,6 +240,8 @@ def sanitize_tfvars_hcl(hcl_block: str) -> str:
         "# - entity_name: relative to uc_catalog_name.uc_schema_name\n"
         "#   - table:  \"Customers\"\n"
         "#   - column: \"Customers.SSN\"   (format: Table.Column)\n"
+        "# - Table-level tags are optional; use them to scope column masks or row filters\n"
+        "#   to specific tables, or for governance.\n"
         "#\n"
         + docs
     )
@@ -261,9 +263,10 @@ def sanitize_tfvars_hcl(hcl_block: str) -> str:
         "# - match_condition: ABAC condition, e.g. hasTagValue('phi_level','full_phi')\n"
         "# - match_alias: the column alias used by the ABAC engine\n"
         "# - function_name: masking UDF name (relative; Terraform prefixes catalog.schema)\n"
+        "# - when_condition: (optional) scope to specific tagged tables\n"
         "#\n"
         "# For ROW FILTER:\n"
-        "# - when_condition: ABAC condition controlling where the row filter applies\n"
+        "# - when_condition: (optional) scope to specific tagged tables\n"
         "# - function_name: row filter UDF name (relative; must be zero-argument)\n"
         "#\n"
         "# Example \u2014 column mask (mask SSN for analysts, exempt compliance):\n"

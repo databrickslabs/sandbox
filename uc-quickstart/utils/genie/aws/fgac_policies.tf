@@ -33,11 +33,7 @@ resource "databricks_policy_info" "policies" {
   except_principals     = length(each.value.except_principals) > 0 ? each.value.except_principals : null
   comment               = each.value.comment
 
-  when_condition = (
-    each.value.policy_type == "POLICY_TYPE_COLUMN_MASK"
-    ? each.value.match_condition
-    : each.value.when_condition
-  )
+  when_condition = each.value.when_condition
 
   match_columns = each.value.policy_type == "POLICY_TYPE_COLUMN_MASK" ? [{
     condition = each.value.match_condition
