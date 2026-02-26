@@ -13,8 +13,4 @@ resource "databricks_tag_policy" "policies" {
   tag_key     = each.value.key
   description = each.value.description
   values      = [for v in each.value.values : { name = v }]
-
-  lifecycle {
-    ignore_changes = [values]
-  }
 }

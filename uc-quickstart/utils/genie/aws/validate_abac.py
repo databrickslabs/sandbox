@@ -29,8 +29,8 @@ VALID_ENTITY_TYPES = {"tables", "columns"}
 VALID_POLICY_TYPES = {"POLICY_TYPE_COLUMN_MASK", "POLICY_TYPE_ROW_FILTER"}
 BUILTIN_PRINCIPALS = {"account users"}
 
-COLUMN_MASK_REQUIRED = {"name", "policy_type", "to_principals", "match_condition", "match_alias", "function_name"}
-ROW_FILTER_REQUIRED = {"name", "policy_type", "to_principals", "function_name"}
+COLUMN_MASK_REQUIRED = {"name", "policy_type", "catalog", "to_principals", "match_condition", "match_alias", "function_name", "function_catalog", "function_schema"}
+ROW_FILTER_REQUIRED = {"name", "policy_type", "catalog", "to_principals", "function_name", "function_catalog", "function_schema"}
 
 
 class ValidationResult:
@@ -157,20 +157,16 @@ def validate_tag_assignments(cfg: dict, tag_map: dict[str, set[str]], result: Va
         if etype not in VALID_ENTITY_TYPES:
             result.error(f"{prefix}: entity_type '{etype}' invalid — must be 'tables' or 'columns'")
 
-        if etype == "tables" and "." in ename:
+        dot_count = ename.count(".")
+        if etype == "tables" and dot_count != 2:
             result.error(
-                f"{prefix}: entity_name '{ename}' looks like a column "
-                f"(contains '.') but entity_type is 'tables' — use 'columns' or remove the dot"
+                f"{prefix}: entity_name '{ename}' must be fully qualified "
+                f"as 'catalog.schema.table' (expected 2 dots, got {dot_count})"
             )
-        if etype == "columns" and "." not in ename:
+        if etype == "columns" and dot_count != 3:
             result.error(
-                f"{prefix}: entity_name '{ename}' has no '.' but entity_type is 'columns' "
-                f"— expected 'Table.Column'"
-            )
-        if etype == "columns" and ename.count(".") > 1:
-            result.error(
-                f"{prefix}: entity_name '{ename}' has too many dots — "
-                f"use relative name 'Table.Column' (catalog.schema is added by Terraform)"
+                f"{prefix}: entity_name '{ename}' must be fully qualified "
+                f"as 'catalog.schema.table.column' (expected 3 dots, got {dot_count})"
             )
 
         if tkey and tkey not in tag_map:
@@ -322,27 +318,19 @@ def validate_auth(cfg: dict, result: ValidationResult, tfvars_path: Path):
         "databricks_client_secret",
         "databricks_workspace_id",
         "databricks_workspace_host",
-        "uc_catalog_name",
-        "uc_schema_name",
     ]
 
-    auth_cfg = cfg
-    if not any(k in cfg for k in required):
-        auth_file = _find_auth_file(tfvars_path)
-        if auth_file:
-            try:
-                auth_cfg = parse_tfvars(auth_file)
-                result.ok(
-                    f"Auth vars loaded from {auth_file.name}"
-                )
-            except Exception as e:
-                result.warn(f"Could not parse {auth_file}: {e}")
-                return
-        else:
-            result.warn(
-                "Auth vars not in tfvars and auth.auto.tfvars not found."
-            )
-            return
+    auth_cfg = dict(cfg)
+    auth_file = _find_auth_file(tfvars_path)
+    if auth_file:
+        try:
+            file_cfg = parse_tfvars(auth_file)
+            for k, v in file_cfg.items():
+                if v and not auth_cfg.get(k):
+                    auth_cfg[k] = v
+            result.ok(f"Auth vars loaded from {auth_file.name}")
+        except Exception as e:
+            result.warn(f"Could not parse {auth_file}: {e}")
 
     for key in required:
         val = auth_cfg.get(key, "")

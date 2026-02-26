@@ -105,13 +105,10 @@ extract_fgac_names() {
 import hcl2, sys
 with open('terraform.tfvars') as f:
     cfg = hcl2.load(f)
-catalog = ''
-with open('auth.auto.tfvars') as f2:
-    auth = hcl2.load(f2)
-    catalog = auth.get('uc_catalog_name', '')
 for p in cfg.get('fgac_policies', []):
     name = p.get('name', '')
-    if name:
+    catalog = p.get('catalog', '')
+    if name and catalog:
         print(name + '|' + catalog + '_' + name)
 " 2>/dev/null || {
     echo "WARNING: Could not parse tfvars files with python-hcl2." >&2

@@ -1,15 +1,55 @@
-Based on your clinical data schema, I'll generate comprehensive ABAC configuration files. Your tables contain highly sensitive healthcare data requiring multiple protection layers.
+I'll analyze your tables and generate comprehensive ABAC configuration for your healthcare and financial data. Let me break down the sensitivity analysis and create the appropriate masking functions and policies.
 
 ## File 1: `masking_functions.sql`
 
 ```sql
+-- === louis_sydney.clinical functions ===
 USE CATALOG louis_sydney;
 USE SCHEMA clinical;
 
--- PII Masking Functions
 CREATE OR REPLACE FUNCTION mask_pii_partial(input STRING)
 RETURNS STRING
-COMMENT 'Masks middle characters, shows first and last character only'
+COMMENT 'Masks middle characters, shows first and last character for names/identifiers'
+RETURN CASE 
+  WHEN input IS NULL OR LENGTH(input) <= 2 THEN input
+  WHEN LENGTH(input) = 3 THEN CONCAT(SUBSTRING(input, 1, 1), '*', SUBSTRING(input, -1, 1))
+  ELSE CONCAT(SUBSTRING(input, 1, 1), REPEAT('*', LENGTH(input) - 2), SUBSTRING(input, -1, 1))
+END;
+
+CREATE OR REPLACE FUNCTION mask_diagnosis_code(code STRING)
+RETURNS STRING
+COMMENT 'Masks ICD-10 code specifics, shows only category (first 3 characters)'
+RETURN CASE 
+  WHEN code IS NULL THEN NULL
+  WHEN LENGTH(code) <= 3 THEN code
+  ELSE CONCAT(SUBSTRING(code, 1, 3), '***')
+END;
+
+CREATE OR REPLACE FUNCTION mask_redact(input STRING)
+RETURNS STRING
+COMMENT 'Replaces sensitive content with [REDACTED] placeholder'
+RETURN CASE 
+  WHEN input IS NULL THEN NULL
+  ELSE '[REDACTED]'
+END;
+
+CREATE OR REPLACE FUNCTION filter_by_region_us() 
+RETURNS BOOLEAN
+COMMENT 'Row filter for US regional data access only'
+RETURN current_user() LIKE '%_us@%' OR is_member('US_Regional_Access');
+
+CREATE OR REPLACE FUNCTION filter_by_region_eu() 
+RETURNS BOOLEAN
+COMMENT 'Row filter for EU regional data access only'
+RETURN current_user() LIKE '%_eu@%' OR is_member('EU_Regional_Access');
+
+-- === louis_sydney.finance functions ===
+USE CATALOG louis_sydney;
+USE SCHEMA finance;
+
+CREATE OR REPLACE FUNCTION mask_pii_partial(input STRING)
+RETURNS STRING
+COMMENT 'Masks middle characters, shows first and last character for names/identifiers'
 RETURN CASE 
   WHEN input IS NULL OR LENGTH(input) <= 2 THEN input
   WHEN LENGTH(input) = 3 THEN CONCAT(SUBSTRING(input, 1, 1), '*', SUBSTRING(input, -1, 1))
@@ -18,7 +58,7 @@ END;
 
 CREATE OR REPLACE FUNCTION mask_ssn(ssn STRING)
 RETURNS STRING
-COMMENT 'Masks SSN showing only last 4 digits: XXX-XX-1234'
+COMMENT 'Masks SSN showing only last 4 digits (XXX-XX-1234)'
 RETURN CASE 
   WHEN ssn IS NULL THEN NULL
   WHEN LENGTH(REGEXP_REPLACE(ssn, '[^0-9]', '')) >= 4 THEN 
@@ -28,338 +68,385 @@ END;
 
 CREATE OR REPLACE FUNCTION mask_email(email STRING)
 RETURNS STRING
-COMMENT 'Masks email local part, preserves domain: j***@domain.com'
+COMMENT 'Masks email local part, preserves domain (@example.com)'
 RETURN CASE 
-  WHEN email IS NULL OR NOT email RLIKE '^[^@]+@[^@]+$' THEN email
-  ELSE CONCAT(
-    SUBSTRING(SPLIT(email, '@')[0], 1, 1),
-    REPEAT('*', GREATEST(LENGTH(SPLIT(email, '@')[0]) - 1, 3)),
-    '@',
-    SPLIT(email, '@')[1]
-  )
+  WHEN email IS NULL OR email NOT LIKE '%@%' THEN email
+  ELSE CONCAT('****', SUBSTRING(email, INSTR(email, '@')))
 END;
 
-CREATE OR REPLACE FUNCTION mask_phone(phone STRING)
+CREATE OR REPLACE FUNCTION mask_credit_card_full(card_number STRING)
 RETURNS STRING
-COMMENT 'Masks phone number showing only last 4 digits: XXX-XXX-1234'
+COMMENT 'Completely masks credit card number'
 RETURN CASE 
-  WHEN phone IS NULL THEN NULL
-  WHEN LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '')) >= 4 THEN 
-    CONCAT('XXX-XXX-', RIGHT(REGEXP_REPLACE(phone, '[^0-9]', ''), 4))
-  ELSE 'XXX-XXX-XXXX'
+  WHEN card_number IS NULL THEN NULL
+  ELSE 'XXXX-XXXX-XXXX-XXXX'
 END;
 
-CREATE OR REPLACE FUNCTION mask_full_name(name STRING)
+CREATE OR REPLACE FUNCTION mask_credit_card_last4(card_number STRING)
 RETURNS STRING
-COMMENT 'Reduces full name to initials: John Smith -> J.S.'
+COMMENT 'Masks credit card showing only last 4 digits'
 RETURN CASE 
-  WHEN name IS NULL THEN NULL
-  ELSE CONCAT_WS('.', 
-    ARRAY_JOIN(
-      TRANSFORM(
-        SPLIT(TRIM(name), ' '), 
-        x -> SUBSTRING(x, 1, 1)
-      ), 
-      '.'
-    ),
-    '.'
-  )
+  WHEN card_number IS NULL THEN NULL
+  WHEN LENGTH(REGEXP_REPLACE(card_number, '[^0-9]', '')) >= 4 THEN 
+    CONCAT('XXXX-XXXX-XXXX-', RIGHT(REGEXP_REPLACE(card_number, '[^0-9]', ''), 4))
+  ELSE 'XXXX-XXXX-XXXX-XXXX'
 END;
 
--- Health-Specific Masking Functions
-CREATE OR REPLACE FUNCTION mask_mrn(mrn STRING)
+CREATE OR REPLACE FUNCTION mask_account_number(account_id STRING)
 RETURNS STRING
-COMMENT 'Masks MRN showing only last 4 characters: ****1234'
+COMMENT 'Deterministic hash for account numbers to maintain referential integrity'
 RETURN CASE 
-  WHEN mrn IS NULL THEN NULL
-  WHEN LENGTH(mrn) >= 4 THEN CONCAT(REPEAT('*', LENGTH(mrn) - 4), RIGHT(mrn, 4))
-  ELSE REPEAT('*', LENGTH(mrn))
+  WHEN account_id IS NULL THEN NULL
+  ELSE CONCAT('ACC_', SUBSTRING(SHA2(account_id, 256), 1, 8))
 END;
 
-CREATE OR REPLACE FUNCTION mask_diagnosis_code(code STRING)
-RETURNS STRING
-COMMENT 'Masks ICD-10 specifics, shows category: I25.10 -> I25.XX'
-RETURN CASE 
-  WHEN code IS NULL THEN NULL
-  WHEN code RLIKE '^[A-Z][0-9]{2}\\.' THEN CONCAT(SUBSTRING(code, 1, 4), 'XX')
-  WHEN code RLIKE '^[A-Z][0-9]{2}' THEN CONCAT(SUBSTRING(code, 1, 3), '.XX')
-  ELSE 'XXX.XX'
-END;
-
-CREATE OR REPLACE FUNCTION mask_diagnosis_desc(description STRING)
-RETURNS STRING
-COMMENT 'Masks diagnosis description to general category'
-RETURN CASE 
-  WHEN description IS NULL THEN NULL
-  ELSE '[DIAGNOSIS CATEGORY REDACTED]'
-END;
-
-CREATE OR REPLACE FUNCTION mask_treatment_notes(notes STRING)
-RETURNS STRING
-COMMENT 'Redacts clinical notes completely'
-RETURN CASE 
-  WHEN notes IS NULL THEN NULL
-  ELSE '[CLINICAL NOTES REDACTED]'
-END;
-
--- Financial Masking Functions
 CREATE OR REPLACE FUNCTION mask_amount_rounded(amount DECIMAL(18,2))
 RETURNS DECIMAL(18,2)
-COMMENT 'Rounds financial amounts to nearest $100 for privacy'
+COMMENT 'Rounds financial amounts to nearest 100 for privacy'
 RETURN CASE 
   WHEN amount IS NULL THEN NULL
-  ELSE ROUND(amount / 100.0, 0) * 100.0
+  ELSE ROUND(amount, -2)
 END;
 
-CREATE OR REPLACE FUNCTION mask_insurance_id(insurance_id STRING)
-RETURNS STRING
-COMMENT 'Masks insurance ID showing only last 4 characters'
-RETURN CASE 
-  WHEN insurance_id IS NULL THEN NULL
-  WHEN LENGTH(insurance_id) >= 4 THEN CONCAT(REPEAT('*', LENGTH(insurance_id) - 4), RIGHT(insurance_id, 4))
-  ELSE REPEAT('*', LENGTH(insurance_id))
-END;
-
--- General Masking Functions
 CREATE OR REPLACE FUNCTION mask_redact(input STRING)
 RETURNS STRING
-COMMENT 'Completely redacts sensitive content'
+COMMENT 'Replaces sensitive content with [REDACTED] placeholder'
 RETURN CASE 
   WHEN input IS NULL THEN NULL
   ELSE '[REDACTED]'
 END;
 
-CREATE OR REPLACE FUNCTION mask_hash(input STRING)
+CREATE OR REPLACE FUNCTION mask_nullify(input STRING)
 RETURNS STRING
-COMMENT 'Returns SHA-256 hash for deterministic anonymization'
-RETURN CASE 
-  WHEN input IS NULL THEN NULL
-  ELSE SHA2(input, 256)
-END;
+COMMENT 'Returns NULL for highly sensitive data'
+RETURN NULL;
 
--- Row Filter Functions
-CREATE OR REPLACE FUNCTION filter_by_region_us()
+CREATE OR REPLACE FUNCTION filter_by_region_us() 
 RETURNS BOOLEAN
-COMMENT 'Row filter for US-only data access'
-RETURN TRUE; -- Implement based on user context or session variables
+COMMENT 'Row filter for US regional data access only'
+RETURN current_user() LIKE '%_us@%' OR is_member('US_Regional_Access');
 
-CREATE OR REPLACE FUNCTION filter_by_region_eu()
+CREATE OR REPLACE FUNCTION filter_by_region_eu() 
 RETURNS BOOLEAN
-COMMENT 'Row filter for EU-only data access'
-RETURN TRUE; -- Implement based on user context or session variables
+COMMENT 'Row filter for EU regional data access only'
+RETURN current_user() LIKE '%_eu@%' OR is_member('EU_Regional_Access');
 
-CREATE OR REPLACE FUNCTION filter_audit_expiry()
+CREATE OR REPLACE FUNCTION filter_trading_hours() 
 RETURNS BOOLEAN
-COMMENT 'Temporary auditor access with expiration logic'
-RETURN CURRENT_DATE() <= DATE('2024-12-31'); -- Example expiry date
+COMMENT 'Restricts access to trading data outside market hours'
+RETURN HOUR(NOW()) < 9 OR HOUR(NOW()) > 16 OR DAYOFWEEK(NOW()) IN (1, 7);
+
+CREATE OR REPLACE FUNCTION filter_audit_expiry() 
+RETURNS BOOLEAN
+COMMENT 'Temporary auditor access with expiration check'
+RETURN current_date() <= '2024-12-31' AND is_member('External_Auditors');
 ```
 
 ## File 2: `terraform.tfvars`
 
 ```hcl
-# Authentication (user fills in)
-databricks_account_id    = ""
-databricks_client_id     = ""
-databricks_client_secret = ""
-databricks_workspace_id  = ""
-databricks_workspace_host = ""
-
-uc_catalog_name = "louis_sydney"
-uc_schema_name  = "clinical"
-
 groups = {
-  "Clinical_Restricted" = { description = "Limited access analysts - heavily masked PII/PHI" }
-  "Clinical_Standard"   = { description = "Standard clinical staff - partial PII masking" }
-  "Clinical_Privileged" = { description = "Senior clinicians - minimal masking, full diagnosis access" }
-  "Clinical_Admin"      = { description = "System administrators - full access to all data" }
-  "Billing_Staff"       = { description = "Billing department - financial data access with patient privacy" }
-  "Auditors_Temp"       = { description = "External auditors - time-limited comprehensive access" }
+  "Clinical_Restricted"     = { description = "Limited clinical staff - basic patient data access" }
+  "Clinical_Standard"       = { description = "Standard clinical staff - full patient data access" }
+  "Clinical_Admin"          = { description = "Clinical administrators - full access including sensitive notes" }
+  "Finance_Analyst"         = { description = "Junior financial analysts - limited PII and transaction access" }
+  "Finance_Manager"         = { description = "Financial managers - full transaction access, masked PII" }
+  "Finance_Compliance"      = { description = "Compliance officers - full AML and audit access" }
+  "Finance_Admin"           = { description = "Financial administrators - complete data access" }
+  "External_Auditors"       = { description = "Temporary external auditors - time-limited access" }
+  "Regional_US"             = { description = "US-based staff with regional data access" }
+  "Regional_EU"             = { description = "EU-based staff with regional data access" }
 }
 
 tag_policies = [
-  { 
-    key = "pii_level", 
-    description = "Personal Identifiable Information sensitivity level",
-    values = ["public", "partial", "sensitive", "restricted"] 
-  },
-  { 
-    key = "phi_level", 
-    description = "Protected Health Information sensitivity level",
-    values = ["general", "clinical", "diagnosis", "treatment_notes"] 
-  },
-  { 
-    key = "financial_level", 
-    description = "Financial data sensitivity level",
-    values = ["summary", "detailed", "insurance"] 
-  },
-  { 
-    key = "regional_scope", 
-    description = "Geographic data access restrictions",
-    values = ["us_only", "eu_only", "global"] 
-  }
+  { key = "pii_level", description = "Personal Identifiable Information sensitivity", values = ["public", "standard_pii", "sensitive_pii", "restricted_pii"] },
+  { key = "pci_level", description = "PCI-DSS compliance level for payment data", values = ["non_pci", "pci_restricted", "pci_prohibited"] },
+  { key = "phi_level", description = "Protected Health Information under HIPAA", values = ["non_phi", "limited_phi", "full_phi"] },
+  { key = "financial_sensitivity", description = "Financial data sensitivity for SOX compliance", values = ["public", "internal", "confidential", "restricted"] },
+  { key = "aml_sensitivity", description = "Anti-Money Laundering investigation sensitivity", values = ["standard", "investigation", "sar_related"] },
+  { key = "regional_scope", description = "Data residency and regional access control", values = ["global", "us_only", "eu_only", "apac_only"] },
+  { key = "audit_scope", description = "Audit and compliance data classification", values = ["standard", "sox_audit", "regulatory_audit"] }
 ]
 
 tag_assignments = [
-  # Table-level regional tags for row filtering
-  { entity_type = "tables", entity_name = "Patients",      tag_key = "regional_scope", tag_value = "global" },
-  { entity_type = "tables", entity_name = "Encounters",    tag_key = "regional_scope", tag_value = "global" },
-  { entity_type = "tables", entity_name = "Billing",       tag_key = "regional_scope", tag_value = "global" },
-  { entity_type = "tables", entity_name = "Prescriptions", tag_key = "regional_scope", tag_value = "global" },
+  # Clinical table tags
+  { entity_type = "tables", entity_name = "louis_sydney.clinical.encounters", tag_key = "regional_scope", tag_value = "global" },
+  
+  # Clinical column tags - PHI
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.PatientID", tag_key = "phi_level", tag_value = "limited_phi" },
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.DiagnosisCode", tag_key = "phi_level", tag_value = "limited_phi" },
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.DiagnosisDesc", tag_key = "phi_level", tag_value = "full_phi" },
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.TreatmentNotes", tag_key = "phi_level", tag_value = "full_phi" },
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.AttendingDoc", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.clinical.encounters.FacilityRegion", tag_key = "regional_scope", tag_value = "global" },
 
-  # Patients table - PII tagging
-  { entity_type = "columns", entity_name = "Patients.PatientID",      tag_key = "pii_level", tag_value = "public" },
-  { entity_type = "columns", entity_name = "Patients.MRN",            tag_key = "phi_level", tag_value = "clinical" },
-  { entity_type = "columns", entity_name = "Patients.FirstName",      tag_key = "pii_level", tag_value = "sensitive" },
-  { entity_type = "columns", entity_name = "Patients.LastName",       tag_key = "pii_level", tag_value = "sensitive" },
-  { entity_type = "columns", entity_name = "Patients.DateOfBirth",    tag_key = "phi_level", tag_value = "clinical" },
-  { entity_type = "columns", entity_name = "Patients.SSN",            tag_key = "pii_level", tag_value = "restricted" },
-  { entity_type = "columns", entity_name = "Patients.Email",          tag_key = "pii_level", tag_value = "partial" },
-  { entity_type = "columns", entity_name = "Patients.Phone",          tag_key = "pii_level", tag_value = "partial" },
-  { entity_type = "columns", entity_name = "Patients.Address",        tag_key = "pii_level", tag_value = "sensitive" },
-  { entity_type = "columns", entity_name = "Patients.InsuranceID",    tag_key = "financial_level", tag_value = "insurance" },
-  { entity_type = "columns", entity_name = "Patients.PrimaryCareDoc", tag_key = "phi_level", tag_value = "general" },
+  # Finance table tags
+  { entity_type = "tables", entity_name = "louis_sydney.finance.customers", tag_key = "regional_scope", tag_value = "global" },
+  { entity_type = "tables", entity_name = "louis_sydney.finance.transactions", tag_key = "regional_scope", tag_value = "global" },
+  { entity_type = "tables", entity_name = "louis_sydney.finance.auditlogs", tag_key = "audit_scope", tag_value = "sox_audit" },
+  { entity_type = "tables", entity_name = "louis_sydney.finance.amlalerts", tag_key = "aml_sensitivity", tag_value = "investigation" },
+  { entity_type = "tables", entity_name = "louis_sydney.finance.tradingpositions", tag_key = "financial_sensitivity", tag_value = "restricted" },
 
-  # Encounters table - Clinical data tagging
-  { entity_type = "columns", entity_name = "Encounters.EncounterID",    tag_key = "phi_level", tag_value = "general" },
-  { entity_type = "columns", entity_name = "Encounters.PatientID",      tag_key = "pii_level", tag_value = "public" },
-  { entity_type = "columns", entity_name = "Encounters.DiagnosisCode",  tag_key = "phi_level", tag_value = "diagnosis" },
-  { entity_type = "columns", entity_name = "Encounters.DiagnosisDesc",  tag_key = "phi_level", tag_value = "diagnosis" },
-  { entity_type = "columns", entity_name = "Encounters.TreatmentNotes", tag_key = "phi_level", tag_value = "treatment_notes" },
-  { entity_type = "columns", entity_name = "Encounters.AttendingDoc",   tag_key = "phi_level", tag_value = "general" },
+  # Customer PII
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.FirstName", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.LastName", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.Email", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.SSN", tag_key = "pii_level", tag_value = "restricted_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.Address", tag_key = "pii_level", tag_value = "sensitive_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customers.CustomerRegion", tag_key = "regional_scope", tag_value = "global" },
 
-  # Billing table - Financial data tagging
-  { entity_type = "columns", entity_name = "Billing.BillingID",     tag_key = "financial_level", tag_value = "summary" },
-  { entity_type = "columns", entity_name = "Billing.PatientID",     tag_key = "pii_level", tag_value = "public" },
-  { entity_type = "columns", entity_name = "Billing.TotalAmount",   tag_key = "financial_level", tag_value = "detailed" },
-  { entity_type = "columns", entity_name = "Billing.InsurancePaid", tag_key = "financial_level", tag_value = "detailed" },
-  { entity_type = "columns", entity_name = "Billing.PatientOwed",   tag_key = "financial_level", tag_value = "detailed" },
-  { entity_type = "columns", entity_name = "Billing.InsuranceID",   tag_key = "financial_level", tag_value = "insurance" },
+  # Credit card PCI data
+  { entity_type = "columns", entity_name = "louis_sydney.finance.creditcards.CardNumber", tag_key = "pci_level", tag_value = "pci_prohibited" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.creditcards.CVV", tag_key = "pci_level", tag_value = "pci_prohibited" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.creditcards.CustomerID", tag_key = "pii_level", tag_value = "standard_pii" },
 
-  # Prescriptions table - Clinical data tagging
-  { entity_type = "columns", entity_name = "Prescriptions.PrescriptionID", tag_key = "phi_level", tag_value = "general" },
-  { entity_type = "columns", entity_name = "Prescriptions.PatientID",      tag_key = "pii_level", tag_value = "public" },
-  { entity_type = "columns", entity_name = "Prescriptions.DrugName",       tag_key = "phi_level", tag_value = "clinical" },
-  { entity_type = "columns", entity_name = "Prescriptions.Dosage",         tag_key = "phi_level", tag_value = "clinical" },
-  { entity_type = "columns", entity_name = "Prescriptions.PrescribingDoc", tag_key = "phi_level", tag_value = "general" },
+  # Financial sensitive data
+  { entity_type = "columns", entity_name = "louis_sydney.finance.accounts.AccountID", tag_key = "pii_level", tag_value = "sensitive_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.accounts.Balance", tag_key = "financial_sensitivity", tag_value = "confidential" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.transactions.Amount", tag_key = "financial_sensitivity", tag_value = "confidential" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.transactions.AMLFlagReason", tag_key = "aml_sensitivity", tag_value = "investigation" },
+
+  # AML investigation data
+  { entity_type = "columns", entity_name = "louis_sydney.finance.amlalerts.InvestigationNotes", tag_key = "aml_sensitivity", tag_value = "sar_related" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.amlalerts.AssignedInvestigator", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.amlalerts.RiskScore", tag_key = "aml_sensitivity", tag_value = "investigation" },
+
+  # Trading sensitive data
+  { entity_type = "columns", entity_name = "louis_sydney.finance.tradingpositions.PnL", tag_key = "financial_sensitivity", tag_value = "restricted" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.tradingpositions.TraderID", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.tradingpositions.InformationBarrier", tag_key = "financial_sensitivity", tag_value = "restricted" },
+
+  # Audit data
+  { entity_type = "columns", entity_name = "louis_sydney.finance.auditlogs.UserID", tag_key = "pii_level", tag_value = "standard_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.auditlogs.IPAddress", tag_key = "pii_level", tag_value = "sensitive_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.auditlogs.AuditProject", tag_key = "audit_scope", tag_value = "sox_audit" },
+
+  # Customer interaction notes
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customerinteractions.InteractionNotes", tag_key = "pii_level", tag_value = "sensitive_pii" },
+  { entity_type = "columns", entity_name = "louis_sydney.finance.customerinteractions.AgentID", tag_key = "pii_level", tag_value = "standard_pii" }
 ]
 
 fgac_policies = [
-  # PII Masking Policies
+  # Clinical PHI masking policies
   {
-    name            = "mask_pii_restricted_for_limited_users"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted", "Billing_Staff"]
-    comment         = "Full masking of highly sensitive PII (SSN) for restricted users"
-    match_condition = "hasTagValue('pii_level', 'restricted')"
-    match_alias     = "restricted_pii"
-    function_name   = "mask_redact"
+    name             = "mask_limited_phi_for_restricted"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Clinical_Restricted"]
+    comment          = "Mask limited PHI for restricted clinical staff"
+    match_condition  = "hasTagValue('phi_level', 'limited_phi')"
+    match_alias      = "phi_data"
+    function_name    = "mask_pii_partial"
+    function_catalog = "louis_sydney"
+    function_schema  = "clinical"
   },
   {
-    name            = "mask_pii_sensitive_for_standard_users"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted", "Clinical_Standard", "Billing_Staff"]
-    comment         = "Partial masking of sensitive PII (names, address) for standard users"
-    match_condition = "hasTagValue('pii_level', 'sensitive')"
-    match_alias     = "sensitive_pii"
-    function_name   = "mask_pii_partial"
+    name             = "mask_full_phi_for_standard"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Clinical_Restricted", "Clinical_Standard"]
+    comment          = "Redact full PHI for non-admin clinical staff"
+    match_condition  = "hasTagValue('phi_level', 'full_phi')"
+    match_alias      = "sensitive_phi"
+    function_name    = "mask_redact"
+    function_catalog = "louis_sydney"
+    function_schema  = "clinical"
   },
   {
-    name            = "mask_pii_partial_for_restricted_users"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted"]
-    comment         = "Mask email and phone for restricted access users"
-    match_condition = "hasTagValue('pii_level', 'partial')"
-    match_alias     = "partial_pii"
-    function_name   = "mask_email"
-  },
-
-  # PHI Masking Policies
-  {
-    name            = "mask_mrn_for_restricted_users"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted"]
-    comment         = "Mask MRN and clinical identifiers for restricted users"
-    match_condition = "hasTagValue('phi_level', 'clinical')"
-    match_alias     = "clinical_phi"
-    function_name   = "mask_mrn"
-  },
-  {
-    name            = "mask_diagnosis_for_non_clinical"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted", "Billing_Staff"]
-    comment         = "Mask detailed diagnosis information for non-clinical staff"
-    match_condition = "hasTagValue('phi_level', 'diagnosis')"
-    match_alias     = "diagnosis_phi"
-    function_name   = "mask_diagnosis_code"
-  },
-  {
-    name            = "mask_treatment_notes_for_non_privileged"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted", "Clinical_Standard", "Billing_Staff"]
-    comment         = "Completely redact treatment notes for non-privileged users"
-    match_condition = "hasTagValue('phi_level', 'treatment_notes')"
-    match_alias     = "treatment_phi"
-    function_name   = "mask_treatment_notes"
+    name             = "mask_diagnosis_codes"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Clinical_Restricted"]
+    comment          = "Mask specific diagnosis details for restricted staff"
+    match_condition  = "hasTagValue('phi_level', 'limited_phi')"
+    match_alias      = "diagnosis"
+    function_name    = "mask_diagnosis_code"
+    function_catalog = "louis_sydney"
+    function_schema  = "clinical"
   },
 
-  # Financial Masking Policies
+  # Finance PII masking policies
   {
-    name            = "mask_financial_amounts_for_clinical"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted", "Clinical_Standard"]
-    comment         = "Round financial amounts for clinical staff privacy"
-    match_condition = "hasTagValue('financial_level', 'detailed')"
-    match_alias     = "financial_details"
-    function_name   = "mask_amount_rounded"
+    name             = "mask_standard_pii_analysts"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst"]
+    comment          = "Partial masking of standard PII for analysts"
+    match_condition  = "hasTagValue('pii_level', 'standard_pii')"
+    match_alias      = "basic_pii"
+    function_name    = "mask_pii_partial"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
   },
   {
-    name            = "mask_insurance_for_restricted"
-    policy_type     = "POLICY_TYPE_COLUMN_MASK"
-    to_principals   = ["Clinical_Restricted"]
-    comment         = "Mask insurance identifiers for restricted users"
-    match_condition = "hasTagValue('financial_level', 'insurance')"
-    match_alias     = "insurance_data"
-    function_name   = "mask_insurance_id"
+    name             = "mask_sensitive_pii_analysts"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager"]
+    comment          = "Redact sensitive PII for non-compliance staff"
+    match_condition  = "hasTagValue('pii_level', 'sensitive_pii')"
+    match_alias      = "sensitive_pii"
+    function_name    = "mask_redact"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+  {
+    name             = "mask_restricted_pii"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager"]
+    comment          = "Mask SSN and other restricted PII"
+    match_condition  = "hasTagValue('pii_level', 'restricted_pii')"
+    match_alias      = "restricted_pii"
+    function_name    = "mask_ssn"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+  {
+    name             = "mask_email_addresses"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst"]
+    comment          = "Mask email local parts for analysts"
+    match_condition  = "hasTagValue('pii_level', 'standard_pii')"
+    match_alias      = "email_pii"
+    function_name    = "mask_email"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
   },
 
-  # Row Filter Policies (optional - implement if regional restrictions needed)
+  # PCI-DSS masking policies
   {
-    name           = "audit_expiry_filter"
-    policy_type    = "POLICY_TYPE_ROW_FILTER"
-    to_principals  = ["Auditors_Temp"]
-    comment        = "Time-limited access for external auditors"
-    when_condition = "hasTagValue('regional_scope', 'global')"
-    function_name  = "filter_audit_expiry"
+    name             = "mask_pci_prohibited_full"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager", "Finance_Compliance"]
+    comment          = "Complete masking of PCI prohibited data"
+    match_condition  = "hasTagValue('pci_level', 'pci_prohibited')"
+    match_alias      = "pci_data"
+    function_name    = "mask_credit_card_full"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
   },
+
+  # Financial data masking
+  {
+    name             = "mask_confidential_amounts"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst"]
+    comment          = "Round financial amounts for analysts"
+    match_condition  = "hasTagValue('financial_sensitivity', 'confidential')"
+    match_alias      = "financial_data"
+    function_name    = "mask_amount_rounded"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+  {
+    name             = "mask_restricted_financial"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager"]
+    comment          = "Redact restricted financial data"
+    match_condition  = "hasTagValue('financial_sensitivity', 'restricted')"
+    match_alias      = "restricted_financial"
+    function_name    = "mask_redact"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+
+  # AML investigation masking
+  {
+    name             = "mask_aml_investigation"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager"]
+    comment          = "Mask AML investigation details for non-compliance staff"
+    match_condition  = "hasTagValue('aml_sensitivity', 'investigation')"
+    match_alias      = "aml_data"
+    function_name    = "mask_redact"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+  {
+    name             = "mask_sar_related"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst", "Finance_Manager"]
+    comment          = "Nullify SAR-related investigation notes"
+    match_condition  = "hasTagValue('aml_sensitivity', 'sar_related')"
+    match_alias      = "sar_data"
+    function_name    = "mask_nullify"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+
+  # Account number masking
+  {
+    name             = "mask_account_numbers"
+    policy_type      = "POLICY_TYPE_COLUMN_MASK"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst"]
+    comment          = "Hash account numbers for analysts while preserving referential integrity"
+    match_condition  = "hasTagValue('pii_level', 'sensitive_pii')"
+    match_alias      = "account_pii"
+    function_name    = "mask_account_number"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+
+  # Row filter policies
+  {
+    name             = "filter_trading_non_market_hours"
+    policy_type      = "POLICY_TYPE_ROW_FILTER"
+    catalog          = "louis_sydney"
+    to_principals    = ["Finance_Analyst"]
+    comment          = "Restrict trading data access to non-market hours for analysts"
+    when_condition   = "hasTagValue('financial_sensitivity', 'restricted')"
+    function_name    = "filter_trading_hours"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  },
+  {
+    name             = "filter_audit_temporary_access"
+    policy_type      = "POLICY_TYPE_ROW_FILTER"
+    catalog          = "louis_sydney"
+    to_principals    = ["External_Auditors"]
+    comment          = "Time-limited access for external auditors"
+    when_condition   = "hasTagValue('audit_scope', 'sox_audit')"
+    function_name    = "filter_audit_expiry"
+    function_catalog = "louis_sydney"
+    function_schema  = "finance"
+  }
 ]
 
 group_members = {}
 ```
 
-## Validation Instructions
+This ABAC configuration provides:
 
-Before applying this configuration:
+**Clinical Data Protection:**
+- PHI masking based on staff clearance levels
+- Diagnosis code category-only access for restricted staff
+- Complete redaction of treatment notes for non-admin users
 
-1. **Install validation tools:**
-   ```bash
-   pip install python-hcl2
-   ```
+**Financial Data Protection:**
+- PCI-DSS compliant credit card masking
+- PII protection with graduated access levels
+- AML investigation data restricted to compliance officers
+- Trading data with Chinese wall enforcement
+- Account number hashing for referential integrity
 
-2. **Validate the configuration:**
-   ```bash
-   python validate_abac.py terraform.tfvars masking_functions.sql
-   ```
+**Compliance Features:**
+- SOX audit data access controls
+- Time-limited external auditor access
+- Regional data residency controls
+- Anti-money laundering investigation protection
 
-3. **Key validation points:**
-   - All tag values in `tag_assignments` exist in `tag_policies`
-   - All functions referenced in `fgac_policies` are defined in `masking_functions.sql`
-   - All groups in `to_principals` are defined in `groups`
-   - All `match_condition` and `when_condition` use only `hasTagValue()` syntax
+**Access Tiers:**
+- Graduated access from restricted → standard → admin levels
+- Role-based masking (analysts see rounded amounts, hashed accounts)
+- Compliance officers get full AML access
+- External auditors get temporary, scoped access
 
-4. **Customize for your needs:**
-   - Add actual group members to `group_members`
-   - Adjust masking functions for your specific requirements
-   - Modify row filters based on your regional compliance needs
-   - Fill in authentication details in the tfvars file
-
-This configuration provides comprehensive protection for your clinical data with appropriate access levels for different user roles while maintaining HIPAA compliance and data utility.
+The configuration ensures sensitive data is appropriately masked while maintaining analytical utility and regulatory compliance across both healthcare and financial domains.

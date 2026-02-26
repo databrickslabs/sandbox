@@ -3,6 +3,7 @@
 # ============================================================================
 # Creates catalog-level ABAC policies from var.fgac_policies.
 # Supports both POLICY_TYPE_COLUMN_MASK and POLICY_TYPE_ROW_FILTER.
+# Each policy specifies its own catalog, function_catalog, and function_schema.
 #
 # Prerequisites:
 # - Tag policies and entity tag assignments applied
@@ -24,9 +25,9 @@ resource "databricks_policy_info" "policies" {
 
   provider = databricks.workspace
 
-  name                  = "${var.uc_catalog_name}_${each.key}"
+  name                  = "${each.value.catalog}_${each.key}"
   on_securable_type     = "CATALOG"
-  on_securable_fullname = var.uc_catalog_name
+  on_securable_fullname = each.value.catalog
   policy_type           = each.value.policy_type
   for_securable_type    = "TABLE"
   to_principals         = each.value.to_principals
@@ -41,13 +42,13 @@ resource "databricks_policy_info" "policies" {
   }] : null
 
   column_mask = each.value.policy_type == "POLICY_TYPE_COLUMN_MASK" ? {
-    function_name = "${var.uc_catalog_name}.${var.uc_schema_name}.${each.value.function_name}"
+    function_name = "${each.value.function_catalog}.${each.value.function_schema}.${each.value.function_name}"
     on_column     = each.value.match_alias
     using         = []
   } : null
 
   row_filter = each.value.policy_type == "POLICY_TYPE_ROW_FILTER" ? {
-    function_name = "${var.uc_catalog_name}.${var.uc_schema_name}.${each.value.function_name}"
+    function_name = "${each.value.function_catalog}.${each.value.function_schema}.${each.value.function_name}"
     using         = []
   } : null
 
@@ -56,5 +57,6 @@ resource "databricks_policy_info" "policies" {
     databricks_mws_permission_assignment.group_assignments,
     databricks_grant.catalog_access,
     databricks_grant.terraform_sp_manage_catalog,
+    null_resource.deploy_masking_functions,
   ]
 }

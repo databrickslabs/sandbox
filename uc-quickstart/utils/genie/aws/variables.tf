@@ -33,17 +33,23 @@ variable "databricks_workspace_host" {
 }
 
 # ----------------------------------------------------------------------------
-# Unity Catalog target
+# Unity Catalog tables (used by generate_abac.py only)
 # ----------------------------------------------------------------------------
 
-variable "uc_catalog_name" {
-  type        = string
-  description = "Unity Catalog catalog name. FGAC policies are scoped to this catalog."
+variable "uc_tables" {
+  type        = list(string)
+  default     = []
+  description = "Tables to generate ABAC policies for. Used by generate_abac.py only; ignored by Terraform."
 }
 
-variable "uc_schema_name" {
+# ----------------------------------------------------------------------------
+# SQL warehouse for deploying masking functions
+# ----------------------------------------------------------------------------
+
+variable "sql_warehouse_id" {
   type        = string
-  description = "Unity Catalog schema name where masking UDFs are deployed."
+  default     = ""
+  description = "SQL warehouse ID for deploying masking functions. When set, masking_functions.sql is executed automatically during terraform apply. When empty, masking functions must be deployed manually."
 }
 
 # ----------------------------------------------------------------------------
@@ -93,7 +99,7 @@ variable "tag_assignments" {
     tag_value   = string
   }))
   default     = []
-  description = "Tag-to-entity mappings. entity_type is 'tables' or 'columns'. entity_name is relative to uc_catalog_name.uc_schema_name (e.g. 'Customers' for a table, 'Customers.SSN' for a column)."
+  description = "Tag-to-entity mappings. entity_type is 'tables' or 'columns'. entity_name must be fully qualified (catalog.schema.table for tables, catalog.schema.table.column for columns)."
 }
 
 # ----------------------------------------------------------------------------
@@ -104,16 +110,19 @@ variable "fgac_policies" {
   type = list(object({
     name              = string
     policy_type       = string
+    catalog           = string
     to_principals     = list(string)
     except_principals = optional(list(string), [])
     comment           = optional(string, "")
     match_condition   = optional(string)
     match_alias       = optional(string)
     function_name     = string
+    function_catalog  = string
+    function_schema   = string
     when_condition    = optional(string)
   }))
   default     = []
-  description = "FGAC policies to create. policy_type is POLICY_TYPE_COLUMN_MASK or POLICY_TYPE_ROW_FILTER. function_name is relative to uc_catalog_name.uc_schema_name (e.g. 'mask_pii_partial')."
+  description = "FGAC policies. catalog: which catalog the policy is scoped to. function_catalog/function_schema: where the masking UDF lives. function_name: relative UDF name (e.g. 'mask_pii_partial')."
 }
 
 # ----------------------------------------------------------------------------

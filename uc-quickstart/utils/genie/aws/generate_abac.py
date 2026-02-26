@@ -2,14 +2,15 @@
 """
 Generate ABAC masking_functions.sql and terraform.tfvars from table DDL files.
 
-Reads DDL files from a folder, combines them with the ABAC prompt template,
-sends to an LLM, and writes the generated output files.  Optionally runs
-validate_abac.py on the result.
+Reads DDL files from a folder (or fetches them live from Databricks),
+combines them with the ABAC prompt template, sends to an LLM, and writes
+the generated output files.  Optionally runs validate_abac.py on the result.
 
 Authentication:
   The script reads auth.auto.tfvars (or --auth-file) to get Databricks
-  credentials and catalog/schema.  This means --catalog and --schema are
-  optional when auth.auto.tfvars is populated.
+  credentials and uc_tables.  Catalog/schema for UDF deployment are
+  auto-derived from the first table in uc_tables (override with
+  --catalog / --schema).
 
 Supported LLM providers:
   - databricks (default) — Claude Sonnet via Databricks Foundation Model API
@@ -18,28 +19,28 @@ Supported LLM providers:
 
 Usage:
   # One-time setup
-  cp auth.auto.tfvars.example auth.auto.tfvars   # fill in credentials
+  cp auth.auto.tfvars.example auth.auto.tfvars
+  # Fill in credentials and uc_tables:
+  #   uc_tables = ["prod.sales.customers", "prod.sales.orders", "prod.finance.*"]
 
-  # Put DDL files (one or many) in the ddl/ folder
-  mkdir -p ddl/
-  cp my_tables.sql ddl/
-
-  # Generate (reads catalog/schema from auth.auto.tfvars)
+  # Generate (reads tables from uc_tables; catalog/schema auto-derived)
   python generate_abac.py
 
-  # Or override catalog/schema explicitly
-  python generate_abac.py --catalog my_catalog --schema my_schema
+  # Or override tables via CLI
+  python generate_abac.py --tables prod.sales.customers prod.sales.orders
 
   # Use a specific provider / model
   python generate_abac.py --provider anthropic --model claude-sonnet-4-20250514
 
-  # Custom DDL folder and output directory
-  python generate_abac.py --ddl-dir ./my_ddls --out-dir ./my_output
+  # Fall back to local DDL files (legacy — requires --catalog / --schema)
+  cp my_tables.sql ddl/
+  python generate_abac.py --catalog my_catalog --schema my_schema
 """
 
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -50,27 +51,44 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPT_TEMPLATE_PATH = SCRIPT_DIR / "ABAC_PROMPT.md"
 DEFAULT_AUTH_FILE = SCRIPT_DIR / "auth.auto.tfvars"
 
+REQUIRED_PACKAGES = {
+    "python-hcl2": "hcl2",
+    "databricks-sdk": "databricks.sdk",
+}
+
+
+def _ensure_packages():
+    """Auto-install required packages if missing."""
+    missing = []
+    for pip_name, import_name in REQUIRED_PACKAGES.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing.append(pip_name)
+    if missing:
+        print(f"  Installing missing packages: {', '.join(missing)}...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet", *missing],
+        )
+
+
+_ensure_packages()
+
 
 def load_auth_config(auth_file: Path) -> dict:
     """Load auth config from a .tfvars file. Returns empty dict if not found."""
     if not auth_file.exists():
         return {}
-    try:
-        import hcl2
-    except ImportError:
-        print("  WARNING: python-hcl2 not installed — cannot read auth file.")
-        print("  Install with: pip install python-hcl2")
-        return {}
+    import hcl2
     try:
         with open(auth_file) as f:
             cfg = hcl2.load(f)
         non_empty = {k: v for k, v in cfg.items() if v}
         if non_empty:
             print(f"  Loaded auth from: {auth_file}")
-            if "uc_catalog_name" in non_empty:
-                print(f"    catalog: {non_empty['uc_catalog_name']}")
-            if "uc_schema_name" in non_empty:
-                print(f"    schema:  {non_empty['uc_schema_name']}")
+            if "uc_tables" in non_empty:
+                tables = non_empty["uc_tables"]
+                print(f"    uc_tables: {', '.join(tables)}")
         return cfg
     except Exception as e:
         print(f"  WARNING: Failed to parse {auth_file}: {e}")
@@ -110,22 +128,118 @@ def load_ddl_files(ddl_dir: Path) -> str:
     return combined
 
 
-def build_prompt(catalog: str, schema: str, ddl_text: str) -> str:
-    """Build the full prompt by injecting catalog/schema/DDL into the template."""
+def _parse_table_ref(ref: str) -> tuple[str, str, str]:
+    """Parse 'catalog.schema.table' or 'catalog.schema.*' into parts."""
+    parts = ref.split(".")
+    if len(parts) != 3:
+        print(f"ERROR: Invalid table reference '{ref}'")
+        print("  Expected format: catalog.schema.table or catalog.schema.*")
+        sys.exit(1)
+    return parts[0], parts[1], parts[2]
+
+
+def format_table_info(table_info) -> str:
+    """Format a TableInfo object into CREATE TABLE DDL text."""
+    full_name = table_info.full_name
+    lines = [f"-- Table: {full_name}"]
+    lines.append(f"CREATE TABLE {full_name} (")
+    if table_info.columns:
+        col_parts = []
+        for col in table_info.columns:
+            type_text = col.type_text or "STRING"
+            part = f"  {col.name} {type_text}"
+            if col.comment:
+                safe = col.comment.replace("'", "''")
+                part += f" COMMENT '{safe}'"
+            col_parts.append(part)
+        lines.append(",\n".join(col_parts))
+    lines.append(");")
+    if table_info.comment:
+        lines.append(f"-- Table comment: {table_info.comment}")
+    return "\n".join(lines)
+
+
+def fetch_tables_from_databricks(
+    table_refs: list[str],
+    auth_cfg: dict,
+) -> tuple[str, list[tuple[str, str]]]:
+    """Fetch table DDLs from Databricks using the SDK.
+
+    Returns (ddl_text, catalog_schema_pairs) where catalog_schema_pairs
+    is a deduplicated list of (catalog, schema) tuples found.
+    """
+    from databricks.sdk import WorkspaceClient
+
+    configure_databricks_env(auth_cfg)
+    w = WorkspaceClient()
+
+    tables = []
+    for ref in table_refs:
+        catalog, schema, table = _parse_table_ref(ref)
+        if table == "*":
+            print(f"  Listing tables in {catalog}.{schema}...")
+            for t in w.tables.list(
+                catalog_name=catalog, schema_name=schema
+            ):
+                tables.append(t)
+                print(f"    Found: {t.full_name}")
+        else:
+            full_name = f"{catalog}.{schema}.{table}"
+            print(f"  Fetching: {full_name}...")
+            t = w.tables.get(full_name=full_name)
+            tables.append(t)
+
+    if not tables:
+        print("ERROR: No tables found for the given references.")
+        sys.exit(1)
+
+    seen_pairs: dict[tuple[str, str], list[str]] = {}
+    parts = []
+    for t in tables:
+        parts.append(format_table_info(t))
+        cat = t.catalog_name
+        sch = t.schema_name
+        pair = (cat, sch)
+        seen_pairs.setdefault(pair, []).append(t.name)
+
+    ddl_text = "\n\n".join(parts)
+    catalog_schemas = list(seen_pairs.keys())
+
+    print(
+        f"  Fetched {len(tables)} table(s) from "
+        f"{len(catalog_schemas)} catalog.schema pair(s)\n"
+    )
+    return ddl_text, catalog_schemas
+
+
+def build_prompt(ddl_text: str,
+                 catalog_schemas: list[tuple[str, str]] | None = None) -> str:
+    """Build the full prompt by injecting DDL into the template."""
     template = PROMPT_TEMPLATE_PATH.read_text()
 
-    section_marker = "### MY CATALOG AND SCHEMA"
+    section_marker = "### MY TABLES"
     idx = template.find(section_marker)
+
+    cs_lines = ""
+    if catalog_schemas:
+        cs_lines = "Tables span these catalog.schema pairs:\n"
+        for cat, sch in catalog_schemas:
+            cs_lines += f"  - {cat}.{sch}\n"
+        cs_lines += (
+            "\nFor each fgac_policy, set catalog, function_catalog, and function_schema "
+            "to match the catalog.schema of the tables the policy applies to.\n"
+        )
+
     if idx == -1:
-        print("WARNING: Could not find '### MY CATALOG AND SCHEMA' in ABAC_PROMPT.md")
+        print("WARNING: Could not find '### MY TABLES' in ABAC_PROMPT.md")
         print("  Appending DDL at the end of the prompt instead.\n")
-        prompt = template + f"\n\nCatalog: {catalog}\nSchema: {schema}\n\n{ddl_text}\n"
+        prompt = template + f"\n\n{cs_lines}\n\n{ddl_text}\n"
     else:
         prompt_body = template[:idx].rstrip()
         user_input = (
-            f"\n\n### MY CATALOG AND SCHEMA\n\n"
-            f"```\nCatalog: {catalog}\nSchema:  {schema}\n```\n\n"
-            f"### MY TABLES\n\n```sql\n{ddl_text}\n```\n"
+            f"\n\n### MY TABLES\n\n"
+            f"{cs_lines}\n"
+            f"```sql\n{ddl_text}\n```\n"
         )
         prompt = prompt_body + user_input
 
@@ -163,20 +277,20 @@ TFVARS_STRIP_KEYS = {
     "databricks_workspace_host",
     "uc_catalog_name",
     "uc_schema_name",
+    "uc_tables",
 }
 
 
 def sanitize_tfvars_hcl(hcl_block: str) -> str:
     """
     Make AI-generated tfvars easier and safer to use:
-    - Strip auth + catalog/schema variables (these come from auth.auto.tfvars)
+    - Strip auth variables (these come from auth.auto.tfvars)
     - Insert section-level explanations and doc links
     """
 
     # --- Strip auth fields (and common adjacent headers) ---
     stripped_lines: list[str] = []
     for line in hcl_block.splitlines():
-        # Drop common header line(s) that introduce auth vars
         if re.match(r"^\s*#\s*Authentication\b", line, re.IGNORECASE):
             continue
         if re.match(r"^\s*#\s*Databricks\s+Authentication\b", line, re.IGNORECASE):
@@ -237,9 +351,9 @@ def sanitize_tfvars_hcl(hcl_block: str) -> str:
         "# ----------------------------------------------------------------------------\n"
         "# Apply governed tags to Unity Catalog objects.\n"
         "# - entity_type: \"tables\" or \"columns\"\n"
-        "# - entity_name: relative to uc_catalog_name.uc_schema_name\n"
-        "#   - table:  \"Customers\"\n"
-        "#   - column: \"Customers.SSN\"   (format: Table.Column)\n"
+        "# - entity_name: fully qualified three-level name\n"
+        "#   - table:  \"catalog.schema.Table\"\n"
+        "#   - column: \"catalog.schema.Table.Column\"\n"
         "# - Table-level tags are optional; use them to scope column masks or row filters\n"
         "#   to specific tables, or for governance.\n"
         "#\n"
@@ -255,6 +369,9 @@ def sanitize_tfvars_hcl(hcl_block: str) -> str:
         "# Common fields:\n"
         "# - name: logical name for the policy (must be unique)\n"
         "# - policy_type: POLICY_TYPE_COLUMN_MASK | POLICY_TYPE_ROW_FILTER\n"
+        "# - catalog: catalog this policy is scoped to\n"
+        "# - function_catalog: catalog where the masking UDF lives\n"
+        "# - function_schema: schema where the masking UDF lives\n"
         "# - to_principals: list of group names who receive this policy\n"
         "# - except_principals: optional list of groups excluded (break-glass/admin)\n"
         "# - comment: human-readable intent (recommended)\n"
@@ -480,10 +597,23 @@ def run_validation(out_dir: Path) -> bool:
 def main():
     parser = argparse.ArgumentParser(
         description="Generate ABAC configuration from table DDL using AI",
-        epilog="Example: python generate_abac.py  (reads catalog/schema from auth.auto.tfvars)",
+        epilog=(
+            "Examples:\n"
+            "  python generate_abac.py                       # reads uc_tables from auth.auto.tfvars\n"
+            "  python generate_abac.py --tables 'prod.sales.*'  # CLI override\n"
+            "  python generate_abac.py --promote              # generate + validate + copy to root\n"
+            "  python generate_abac.py --dry-run              # print prompt without calling LLM\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--catalog", help="Unity Catalog name (reads from auth.auto.tfvars if omitted)")
-    parser.add_argument("--schema", help="Schema name (reads from auth.auto.tfvars if omitted)")
+    parser.add_argument(
+        "--tables", nargs="+", metavar="CATALOG.SCHEMA.TABLE",
+        help="Fully-qualified table refs to fetch from Databricks "
+             "(overrides uc_tables in auth.auto.tfvars). "
+             "E.g. prod.sales.customers or prod.sales.* for all tables in a schema",
+    )
+    parser.add_argument("--catalog", help="Catalog for masking UDFs (auto-derived from first uc_tables entry if omitted)")
+    parser.add_argument("--schema", help="Schema for masking UDFs (auto-derived from first uc_tables entry if omitted)")
     parser.add_argument(
         "--auth-file",
         default=str(DEFAULT_AUTH_FILE),
@@ -508,6 +638,8 @@ def main():
     )
     parser.add_argument("--max-retries", type=int, default=3, help="Max LLM call attempts with exponential backoff (default: 3)")
     parser.add_argument("--skip-validation", action="store_true", help="Skip running validate_abac.py")
+    parser.add_argument("--promote", action="store_true",
+        help="Auto-copy generated files to module root after validation passes")
     parser.add_argument("--dry-run", action="store_true", help="Build the prompt and print it without calling the LLM")
 
     args = parser.parse_args()
@@ -522,33 +654,73 @@ def main():
 
     auth_cfg = load_auth_config(auth_file)
 
-    catalog = args.catalog or auth_cfg.get("uc_catalog_name", "")
-    schema = args.schema or auth_cfg.get("uc_schema_name", "")
+    catalog = args.catalog or ""
+    schema = args.schema or ""
 
-    if not catalog:
-        print("ERROR: --catalog not provided and uc_catalog_name not set in auth file.")
-        print(f"  Either pass --catalog or set uc_catalog_name in {auth_file}")
-        sys.exit(1)
-    if not schema:
-        print("ERROR: --schema not provided and uc_schema_name not set in auth file.")
-        print(f"  Either pass --schema or set uc_schema_name in {auth_file}")
-        sys.exit(1)
+    catalog_schemas: list[tuple[str, str]] | None = None
 
-    if not ddl_dir.exists():
-        print(f"\nERROR: DDL directory '{ddl_dir}' does not exist.")
-        print(f"  mkdir -p {ddl_dir}")
-        print("  # Then place your CREATE TABLE .sql files there")
-        sys.exit(1)
+    # Resolve table refs: CLI --tables overrides uc_tables from config
+    table_refs = args.tables or auth_cfg.get("uc_tables") or None
 
-    print(f"  Catalog:  {catalog}")
-    print(f"  Schema:   {schema}")
-    print(f"  Provider: {args.provider}")
-    print(f"  DDL dir:  {ddl_dir}")
-    print(f"  Out dir:  {out_dir}")
-    print()
+    if table_refs:
+        source = "--tables CLI" if args.tables else "uc_tables in auth config"
+        print(f"  Provider: {args.provider}")
+        print(f"  Out dir:  {out_dir}")
+        print(f"  Tables:   {', '.join(table_refs)} (from {source})")
+        print()
 
-    ddl_text = load_ddl_files(ddl_dir)
-    prompt = build_prompt(catalog, schema, ddl_text)
+        ddl_text, catalog_schemas = fetch_tables_from_databricks(
+            table_refs, auth_cfg,
+        )
+
+        if not catalog or not schema:
+            if not catalog_schemas:
+                print("ERROR: No tables found — cannot determine UDF deployment location.")
+                print("  Use --catalog and --schema to specify explicitly.")
+                sys.exit(1)
+            catalog = catalog or catalog_schemas[0][0]
+            schema = schema or catalog_schemas[0][1]
+
+        if catalog_schemas and len(catalog_schemas) > 1:
+            print("  Masking UDFs will be deployed to:")
+            for cat, sch in catalog_schemas:
+                print(f"    - {cat}.{sch}")
+        else:
+            print(f"  Masking UDFs will be deployed to: {catalog}.{schema}")
+
+        # Save fetched DDLs for inspection
+        ddl_dir.mkdir(parents=True, exist_ok=True)
+        fetched_path = ddl_dir / "_fetched.sql"
+        fetched_path.write_text(ddl_text + "\n")
+        print(f"  Fetched DDLs saved to: {fetched_path}")
+    else:
+        # Legacy mode: read from ddl/ directory
+        if not catalog:
+            print("ERROR: --catalog is required when using DDL files (no uc_tables configured).")
+            sys.exit(1)
+        if not schema:
+            print("ERROR: --schema is required when using DDL files (no uc_tables configured).")
+            sys.exit(1)
+
+        if not ddl_dir.exists():
+            print(f"\nERROR: DDL directory '{ddl_dir}' does not exist.")
+            print(f"  mkdir -p {ddl_dir}")
+            print("  # Then place your CREATE TABLE .sql files there")
+            sys.exit(1)
+
+        print(f"  Catalog:  {catalog}")
+        print(f"  Schema:   {schema}")
+        print(f"  Provider: {args.provider}")
+        print(f"  DDL dir:  {ddl_dir}")
+        print(f"  Out dir:  {out_dir}")
+        print()
+
+        ddl_text = load_ddl_files(ddl_dir)
+
+    prompt = build_prompt(
+        ddl_text,
+        catalog_schemas=catalog_schemas,
+    )
 
     if args.dry_run:
         print("=" * 60)
@@ -599,20 +771,34 @@ Before you apply, tune for your business roles and security requirements:
 
 ## Suggested workflow
 
-1. Review and edit `masking_functions.sql` (if needed), then run it in your Databricks SQL editor for `{catalog}.{schema}`.
-2. Review and edit `terraform.tfvars` (groups, tags, principals, policies).
-3. Validate (while files are still in `generated/`):
+1. Review and edit `masking_functions.sql` and `terraform.tfvars` in `generated/`.
+2. Validate after each change:
    ```bash
-   python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql
+   make validate-generated
    ```
-4. Copy to module root:
+3. When ready, apply (validates again, promotes to root, runs terraform):
    ```bash
-   cp generated/terraform.tfvars terraform.tfvars
+   make apply
    ```
-5. Apply (use -parallelism=1 to avoid tag policy race conditions):
-   ```bash
-   terraform init && terraform plan && terraform apply -parallelism=1
-   ```
+
+Or skip tuning and apply directly:
+
+```bash
+python generate_abac.py --promote && make apply
+```
+
+### Auto-deploying masking functions
+
+If `sql_warehouse_id` is set in `auth.auto.tfvars`, Terraform executes
+`masking_functions.sql` automatically during `terraform apply` — no need to
+run the SQL manually. To enable this, add a warehouse ID:
+
+```
+sql_warehouse_id = "your-warehouse-id"
+```
+
+If `sql_warehouse_id` is empty (default), you must run `masking_functions.sql`
+in your Databricks SQL editor before `terraform apply`.
 """
 
     tuning_path = out_dir / "TUNING.md"
@@ -620,28 +806,29 @@ Before you apply, tune for your business roles and security requirements:
     print(f"  Tuning checklist written to: {tuning_path}")
 
     if sql_block:
+        all_cs = catalog_schemas if catalog_schemas else [(catalog, schema)]
+        targets = ", ".join(f"{c}.{s}" for c, s in all_cs)
         sql_header = (
             "-- ============================================================================\n"
             "-- GENERATED MASKING FUNCTIONS (FIRST DRAFT)\n"
             "-- ============================================================================\n"
-            f"-- Target: {catalog}.{schema}\n"
+            f"-- Target(s): {targets}\n"
             "-- Next: review generated/TUNING.md, tune if needed, then run this SQL.\n"
             "-- ============================================================================\n\n"
         )
 
-        sql_block = sql_header + sql_block.replace("{catalog}", catalog).replace("{schema}", schema)
+        final_sql = sql_header + sql_block
         sql_path = out_dir / "masking_functions.sql"
-        sql_path.write_text(sql_block + "\n")
+        sql_path.write_text(final_sql + "\n")
         print(f"  masking_functions.sql written to: {sql_path}")
-        print(f"    (placeholders replaced: {{catalog}} → {catalog}, {{schema}} → {schema})")
+        print(f"    Target schemas: {targets}")
 
     if hcl_block:
         hcl_header = (
             "# ============================================================================\n"
             "# GENERATED ABAC CONFIG (FIRST DRAFT)\n"
             "# ============================================================================\n"
-            "# NOTE: Authentication + catalog/schema come from auth.auto.tfvars.\n"
-            "# This file is ABAC-only (groups, tags, and FGAC policies).\n"
+            "# NOTE: Authentication comes from auth.auto.tfvars.\n"
             "# Tune the following before apply:\n"
             "# - groups (business roles)\n"
             "# - tag_assignments (what data is considered sensitive)\n"
@@ -661,6 +848,16 @@ Before you apply, tune for your business roles and security requirements:
         if not passed:
             print("\n  Validation found errors. Review the output above and fix before running terraform apply.")
             sys.exit(1)
+
+        if args.promote and passed:
+            promoted = []
+            for fname in ["terraform.tfvars", "masking_functions.sql"]:
+                src = out_dir / fname
+                if src.exists():
+                    shutil.copy2(src, SCRIPT_DIR / fname)
+                    promoted.append(fname)
+            if promoted:
+                print(f"\n  Promoted to module root: {', '.join(promoted)}")
     elif not args.skip_validation and (not sql_block or not hcl_block):
         print("\n  [SKIP] Validation skipped — could not extract both code blocks.")
         print(f"  Review {response_path} and manually extract the files.")
@@ -668,12 +865,18 @@ Before you apply, tune for your business roles and security requirements:
     print("\n" + "=" * 60)
     print("  Done!")
     if sql_block and hcl_block:
-        print("  Next steps:")
-        print(f"    1. Review {out_dir}/TUNING.md")
-        print(f"    2. Run {out_dir}/masking_functions.sql in your Databricks SQL editor")
-        print(f"    3. python validate_abac.py {out_dir}/terraform.tfvars {out_dir}/masking_functions.sql")
-        print(f"    4. cp {out_dir}/terraform.tfvars terraform.tfvars")
-        print("    5. terraform init && terraform plan && terraform apply -parallelism=1")
+        if args.promote:
+            print("  Files promoted to root. Next step:")
+            print("    make apply   (or: terraform init && terraform apply -parallelism=1)")
+        else:
+            print("  Next steps:")
+            print(f"    1. Review {out_dir}/TUNING.md — tune generated/ files as needed")
+            print("    2. make validate-generated   (check your changes anytime)")
+            print("    3. make apply   (validates, promotes to root, runs terraform apply)")
+            print()
+            print("  Or skip tuning: python generate_abac.py --promote && make apply")
+        print()
+        print("  Tip: set sql_warehouse_id in auth.auto.tfvars to auto-deploy masking functions during apply.")
     print("=" * 60)
 
 

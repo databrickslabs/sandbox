@@ -1,4 +1,4 @@
-# Databricks Authentication & Catalog Config
+# Databricks Authentication Config
 # Copy this file to auth.auto.tfvars and fill in your values.
 # Terraform auto-loads *.auto.tfvars — no need to pass -var-file.
 #
@@ -12,5 +12,14 @@ databricks_client_secret = ""
 databricks_workspace_id  = ""
 databricks_workspace_host = ""
 
-uc_catalog_name = ""
-uc_schema_name  = ""
+# Tables to generate ABAC policies for (fully qualified: catalog.schema.table).
+# Use catalog.schema.* to include all tables in a schema.
+# Example:
+#   uc_tables = ["prod.sales.customers", "prod.sales.orders", "dev.finance.*"]
+uc_tables = []
+
+# SQL warehouse ID for auto-deploying masking functions during terraform apply.
+# When set, masking_functions.sql is executed automatically before FGAC policies.
+# When empty (default), you must run the SQL manually before terraform apply.
+# Find warehouse IDs: Databricks workspace > SQL Warehouses > select warehouse > copy ID
+sql_warehouse_id = ""

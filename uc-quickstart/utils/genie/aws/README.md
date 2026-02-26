@@ -29,8 +29,7 @@ This quickstart is designed to help data teams onboard business stakeholders to 
 │  │  databricks_client_id     = "..."    │    │  CREATE TABLE ...    │   │
 │  │  databricks_client_secret = "..."    │    │                      │   │
 │  │  databricks_workspace_host = "..."   │    │                      │   │
-│  │  uc_catalog_name = "my_catalog"      │    │                      │   │
-│  │  uc_schema_name  = "my_schema"       │    │                      │   │
+│  │  uc_tables = ["catalog.schema.tbl"]  │    │                      │   │
 │  └──────────────────┬───────────────────┘    └──────────┬───────────┘   │
 │                     │                                   │               │
 └─────────────────────┼───────────────────────────────────┼───────────────┘
@@ -67,9 +66,12 @@ This quickstart is designed to help data teams onboard business stakeholders to 
                 │                                    │
                 ▼                                    ▼
 ┌──────────────────────────────┐   ┌──────────────────────────────────────┐
-│  Run in Databricks SQL       │   │  validate_abac.py (auto)             │
-│  editor to create UDFs       │   │  ✓ structure  ✓ cross-refs  ✓ names  │
-│  in your catalog.schema      │   └──────────────────┬───────────────────┘
+│  masking_functions.sql       │   │  validate_abac.py (auto)             │
+│  (copied to module root)     │   │  ✓ structure  ✓ cross-refs  ✓ names  │
+│                              │   └──────────────────┬───────────────────┘
+│  Auto-deployed by Terraform  │                      │
+│  when sql_warehouse_id is    │                      │
+│  set, or run manually.       │                      │
 └──────────────────────────────┘                      │
                                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -104,48 +106,50 @@ This quickstart is designed to help data teams onboard business stakeholders to 
 
 Use the AI‑Assisted workflow to generate a strong first draft of masking functions and ABAC policies, then iterate quickly before applying.
 
-**Generate → Review → Tune → Validate → Apply**
+**Generate → Review/Tune → Apply**
 
 ## First-Time Setup
 
 ```bash
-# One-time: set up your credentials and catalog/schema
+# One-time: set up your credentials and tables
 cp auth.auto.tfvars.example auth.auto.tfvars
-# Edit auth.auto.tfvars — fill in all fields
+# Edit auth.auto.tfvars — fill in credentials and uc_tables:
+#   uc_tables = ["prod.sales.customers", "prod.sales.orders", "prod.finance.*"]
+# Each table's catalog/schema comes from its fully-qualified name.
+# Each policy in the generated terraform.tfvars specifies its own catalog/function_catalog/function_schema.
 ```
 
 ## AI‑Assisted (Recommended)
 
 ```bash
-# 1. Put your CREATE TABLE DDL(s) in ddl/
-cp my_tables.sql ddl/
-# Or use the healthcare sample: cp examples/healthcare/ddl/*.sql ddl/
-
-# 2. Install dependencies (one-time)
-pip install databricks-sdk python-hcl2
-
-# 3. Generate a first draft (reads catalog/schema from auth.auto.tfvars)
+# 1. Generate (dependencies are auto-installed on first run)
 python generate_abac.py
 
-# 4. Review + tune (see generated/TUNING.md)
-#    - Run generated/masking_functions.sql in your Databricks SQL editor
-#    - Edit generated/terraform.tfvars as needed
+# 2. Review + tune (see generated/TUNING.md)
+#    - Edit generated/terraform.tfvars and generated/masking_functions.sql as needed
+#    - Validate after each change:
+make validate-generated
 
-# 5. Validate before copying to root
-python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql
-
-# 6. Copy to root
-cp generated/terraform.tfvars terraform.tfvars
-
-# 7. Apply (parallelism=1 avoids tag policy race conditions)
-terraform init && terraform plan && terraform apply -parallelism=1
+# 3. Apply (validates, promotes generated/ to root, runs terraform apply)
+make apply
 ```
 
-You can also override catalog/schema or use different providers:
+Or skip tuning and apply directly:
 
 ```bash
-# Override catalog/schema
-python generate_abac.py --catalog other_catalog --schema other_schema
+python generate_abac.py --promote   # generate + validate + copy to root
+make apply                          # terraform apply
+```
+
+You can also override tables via CLI, use local DDL files, or change providers:
+
+```bash
+# Override tables from CLI (takes precedence over uc_tables in config)
+python generate_abac.py --tables "prod.sales.*" "prod.finance.*"
+
+# Use local DDL files (legacy — requires --catalog and --schema)
+cp my_tables.sql ddl/
+python generate_abac.py --catalog my_catalog --schema my_schema
 
 # Dry run — print the prompt without calling the LLM
 python generate_abac.py --dry-run
@@ -163,7 +167,7 @@ Quick checklist:
 - **Sensitive columns**: Are the right columns tagged (PII/PHI/financial/etc.)?
 - **Masking behavior**: Are you using the right mask type (partial, redact, hash) per sensitivity and use case?
 - **Row filters and exceptions**: Are filters too broad/strict? Are “break-glass” or admin exceptions intentional and minimal?
-- **Validate before apply**: Run `validate_abac.py` before `terraform apply` to catch mismatches early.
+- **Validate after each change**: Run `make validate-generated` to catch mismatches early. You can run this as many times as needed while tuning.
 
 ## Appendix: Alternatives & Tuning Toolkit
 
@@ -188,6 +192,7 @@ If you want a faster demo or prefer manual control, use these as building blocks
 | Group members | `group_members.tf` | User-to-group mappings from `var.group_members` |
 | UC grants | `uc_grants.tf` | `USE_CATALOG`, `USE_SCHEMA`, `SELECT` for each group |
 | SP manage grant | `uc_grants.tf` | `MANAGE` privilege for the Terraform SP to create policies |
+| Masking functions | `masking_functions.tf` | Optional auto-deployment of UDFs via Statement Execution API (when `sql_warehouse_id` is set) |
 | SQL warehouse | `genie_warehouse.tf` | Optional serverless warehouse for Genie |
 | Genie ACLs | `genie_space_acls.tf` | Optional CAN_RUN on a Genie Space for all groups |
 
@@ -202,10 +207,10 @@ If you want a faster demo or prefer manual control, use these as building blocks
 | `databricks_client_secret` | Service principal client secret |
 | `databricks_workspace_id` | Target workspace ID |
 | `databricks_workspace_host` | Workspace URL |
-| `uc_catalog_name` | Catalog for FGAC policies and UDFs |
-| `uc_schema_name` | Schema where masking UDFs are deployed |
+| `uc_tables` | Tables to generate ABAC for (only used by `generate_abac.py`, not Terraform) |
+| `sql_warehouse_id` | SQL warehouse ID for auto-deploying masking functions during `terraform apply`. When empty (default), deploy SQL manually. |
 
-### ABAC Config (in `terraform.tfvars`)
+### ABAC Config (in `terraform.tfvars` — auto-generated)
 
 | Variable | Description |
 |----------|-------------|
@@ -216,8 +221,8 @@ If you want a faster demo or prefer manual control, use these as building blocks
 | Variable | Type | Description |
 |----------|------|-------------|
 | `tag_policies` | list(object) | Tag keys + allowed values |
-| `tag_assignments` | list(object) | Tag-to-entity bindings |
-| `fgac_policies` | list(object) | Column masks and row filters |
+| `tag_assignments` | list(object) | Tag-to-entity bindings (fully-qualified entity names: `catalog.schema.table`) |
+| `fgac_policies` | list(object) | Column masks and row filters (`catalog` per policy for multi-catalog scoping) |
 | `group_members` | map(list) | User IDs to add to each group |
 
 ### Optional — Genie Space
@@ -253,8 +258,10 @@ aws/
   uc_grants.tf                   # UC data access grants
   outputs.tf                     # Module outputs
   provider.tf                    # Databricks provider config
+  masking_functions.tf            # Optional auto-deploy of masking UDFs
   genie_warehouse.tf             # Optional serverless warehouse
   genie_space_acls.tf            # Optional Genie Space ACLs
+  deploy_masking_functions.py    # Helper: executes SQL via Statement Execution API
   auth.auto.tfvars.example       # Credentials + catalog/schema (copy to auth.auto.tfvars)
   terraform.tfvars.example       # ABAC config skeleton (groups, tags, policies)
   masking_functions_library.sql  # Reusable masking UDF library
@@ -297,14 +304,14 @@ python validate_abac.py terraform.tfvars masking_funcs.sql  # tfvars + SQL cross
 The validator checks:
 - **Structure**: required variables, correct types, valid `entity_type` / `policy_type` values
 - **Cross-references**: groups in `fgac_policies` exist in `groups`, tag keys/values match `tag_policies`, `group_members` keys match `groups`
-- **Naming**: `entity_name` / `function_name` are relative (no catalog.schema prefix)
+- **Naming**: `entity_name` must be fully qualified (`catalog.schema.table`), `function_name` is relative (no catalog.schema prefix)
 - **SQL functions**: every `function_name` in `fgac_policies` has a matching `CREATE FUNCTION` in the SQL file
 - **Completeness**: warns about unused SQL functions and empty auth fields
 
 ## Prerequisites
 
 - Databricks **service principal** with Account Admin (groups, workspace assignment) and workspace admin (entitlements, tag policies, FGAC)
-- Masking UDFs deployed in `uc_catalog_name.uc_schema_name` before applying FGAC policies
+- Masking UDFs deployed in each policy's `function_catalog.function_schema` before applying FGAC policies (auto-deployed when `sql_warehouse_id` is set, or run the SQL manually)
 - Tables must exist before tag assignments can be applied
 
 ## Make Targets
@@ -316,9 +323,10 @@ A `Makefile` provides shortcuts for common workflows:
 | `make setup` | Copy example files, create `ddl/` and `generated/` directories |
 | `make generate` | Run `generate_abac.py` to produce masking SQL + tfvars |
 | `make validate-generated` | Validate `generated/` files before copying to root |
-| `make validate` | Validate root `terraform.tfvars` (after copying from `generated/`) |
+| `make validate` | Validate root `terraform.tfvars` + `masking_functions.sql` |
+| `make promote` | Validate `generated/` and copy to module root |
 | `make plan` | Run `terraform init` + `terraform plan` |
-| `make apply` | Run `terraform init` + `terraform apply -parallelism=1` |
+| `make apply` | Validate, promote `generated/` to root, then `terraform apply -parallelism=1` |
 | `make destroy` | Run `terraform destroy` |
 | `make clean` | Remove generated files, Terraform state, and `.terraform/` |
 
@@ -361,3 +369,10 @@ The script validates the finance, healthcare, and skeleton examples with `valida
 Requires a **Databricks service principal** with:
 - **Account Admin** for groups, workspace assignments, and group members
 - **Workspace Admin** for entitlements, tag policies, and FGAC policies
+
+## Roadmap
+
+- [ ] **Multi Genie Space support** — Configure and apply ACLs for multiple Genie Spaces in a single apply (currently supports one `genie_space_id`)
+- [ ] **Multi data steward / user support** — Allow multiple data steward personas with independent policy scoping and approval workflows, not just a single SP-driven config
+- [ ] **AI-assisted tuning and troubleshooting** — Use the LLM to interactively refine generated configs, diagnose policy mismatches, suggest fixes for failed applies, and validate masking behavior against sample data
+- [ ] **Import existing policies** — Auto-detect and import pre-existing FGAC policies, tag policies, and tag assignments into Terraform state so `terraform apply` doesn't conflict with manually created resources

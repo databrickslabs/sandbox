@@ -1,4 +1,4 @@
-.PHONY: setup generate validate validate-generated plan apply destroy clean help
+.PHONY: setup generate validate validate-generated promote plan apply destroy clean help
 
 SHELL := /bin/bash
 
@@ -36,12 +36,26 @@ validate-generated: ## Validate generated/ files before copying to root
 		python validate_abac.py generated/terraform.tfvars; \
 	fi
 
-validate: ## Validate root terraform.tfvars (after copying from generated/)
+validate: ## Validate root terraform.tfvars + masking_functions.sql
 	@echo "=== Validate ==="
-	@if [ -f generated/masking_functions.sql ]; then \
+	@if [ -f masking_functions.sql ]; then \
+		python validate_abac.py terraform.tfvars masking_functions.sql; \
+	elif [ -f generated/masking_functions.sql ]; then \
 		python validate_abac.py terraform.tfvars generated/masking_functions.sql; \
 	else \
 		python validate_abac.py terraform.tfvars; \
+	fi
+
+promote: ## Validate generated/ and copy to root
+	@echo "=== Promote generated/ to root ==="
+	@if [ -f generated/terraform.tfvars ]; then \
+		python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql && \
+		cp generated/terraform.tfvars terraform.tfvars && \
+		cp generated/masking_functions.sql masking_functions.sql && \
+		echo "Promoted generated/ files to root."; \
+	else \
+		echo "No generated/terraform.tfvars found. Run 'make generate' first."; \
+		exit 1; \
 	fi
 
 plan: ## Run terraform init + plan
@@ -49,14 +63,14 @@ plan: ## Run terraform init + plan
 	terraform init -input=false
 	terraform plan
 
-apply: ## Run terraform init + apply (parallelism=1 to avoid tag policy race conditions)
+apply: promote ## Validate, promote, then terraform apply
 	@echo "=== Terraform Apply ==="
 	terraform init -input=false
-	terraform apply -parallelism=1
+	terraform apply -parallelism=1 -auto-approve
 
-destroy: ## Run terraform destroy
+destroy: ## Run terraform destroy (drops masking functions if sql_warehouse_id is set)
 	@echo "=== Terraform Destroy ==="
-	terraform destroy
+	terraform destroy -auto-approve
 
 clean: ## Remove generated files, Terraform state, and .terraform/
 	@echo "=== Clean ==="

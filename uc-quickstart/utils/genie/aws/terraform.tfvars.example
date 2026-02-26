@@ -26,36 +26,43 @@ tag_policies = [
 
 # === Tag assignments: bind tags to your tables/columns ===
 # entity_type: "tables" or "columns"
-# entity_name is RELATIVE to uc_catalog_name.uc_schema_name:
-#   Tables:  "TableName"
-#   Columns: "TableName.ColumnName"
+# entity_name must be fully qualified:
+#   Tables:  "catalog.schema.TableName"
+#   Columns: "catalog.schema.TableName.ColumnName"
 tag_assignments = [
-  # { entity_type = "columns", entity_name = "Table.Column", tag_key = "sensitivity", tag_value = "confidential" }
+  # { entity_type = "columns", entity_name = "my_catalog.my_schema.Table.Column", tag_key = "sensitivity", tag_value = "confidential" }
 ]
 
 # === FGAC policies: the access rules ===
 # policy_type: POLICY_TYPE_COLUMN_MASK or POLICY_TYPE_ROW_FILTER
-# function_name is RELATIVE to uc_catalog_name.uc_schema_name (just the function name).
+# catalog, function_catalog, function_schema are REQUIRED on each policy.
+# function_name is relative (just the function name, e.g. "mask_redact").
 fgac_policies = [
   # Column mask example:
   # {
-  #   name            = "mask_confidential"
-  #   policy_type     = "POLICY_TYPE_COLUMN_MASK"
-  #   to_principals   = ["Restricted_Users"]
-  #   comment         = "Mask confidential columns"
-  #   match_condition = "hasTagValue('sensitivity', 'confidential')"
-  #   match_alias     = "cols"
-  #   function_name   = "mask_redact"
+  #   name             = "mask_confidential"
+  #   policy_type      = "POLICY_TYPE_COLUMN_MASK"
+  #   catalog          = "my_catalog"
+  #   to_principals    = ["Restricted_Users"]
+  #   comment          = "Mask confidential columns"
+  #   match_condition  = "hasTagValue('sensitivity', 'confidential')"
+  #   match_alias      = "cols"
+  #   function_name    = "mask_redact"
+  #   function_catalog = "my_catalog"
+  #   function_schema  = "my_schema"
   # }
   #
   # Row filter example:
   # {
-  #   name           = "region_filter"
-  #   policy_type    = "POLICY_TYPE_ROW_FILTER"
-  #   to_principals  = ["EU_Staff"]
-  #   comment        = "EU staff see EU data only"
-  #   when_condition = "hasTagValue('data_region', 'scoped')"
-  #   function_name  = "filter_by_region_eu"
+  #   name             = "region_filter"
+  #   policy_type      = "POLICY_TYPE_ROW_FILTER"
+  #   catalog          = "my_catalog"
+  #   to_principals    = ["EU_Staff"]
+  #   comment          = "EU staff see EU data only"
+  #   when_condition   = "hasTagValue('data_region', 'scoped')"
+  #   function_name    = "filter_by_region_eu"
+  #   function_catalog = "my_catalog"
+  #   function_schema  = "my_schema"
   # }
 ]
 

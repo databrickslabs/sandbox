@@ -12,6 +12,9 @@ auth.auto.tfvars
 # User-specific ABAC config
 terraform.tfvars
 
+# Auto-fetched DDLs (user-specific)
+ddl/_fetched.sql
+
 # AI-generated output (user-specific)
 generated/terraform.tfvars
 generated/masking_functions.sql
