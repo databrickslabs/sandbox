@@ -43,13 +43,13 @@ variable "uc_tables" {
 }
 
 # ----------------------------------------------------------------------------
-# SQL warehouse for deploying masking functions
+# SQL warehouse (shared by masking function deployment + Genie Space)
 # ----------------------------------------------------------------------------
 
 variable "sql_warehouse_id" {
   type        = string
   default     = ""
-  description = "SQL warehouse ID for deploying masking functions. When set, masking_functions.sql is executed automatically during terraform apply. When empty, masking functions must be deployed manually."
+  description = "Existing SQL warehouse ID. When set, reused for masking function deployment and Genie Space. When empty, Terraform auto-creates a serverless warehouse."
 }
 
 # ----------------------------------------------------------------------------
@@ -126,29 +126,29 @@ variable "fgac_policies" {
 }
 
 # ----------------------------------------------------------------------------
-# Genie Space: warehouse and data access
+# Genie Space
 # ----------------------------------------------------------------------------
 
-variable "genie_warehouse_name" {
+variable "warehouse_name" {
   type        = string
-  default     = "Genie ABAC Warehouse"
-  description = "Name of the serverless SQL warehouse created for Genie (used only when genie_use_existing_warehouse_id is empty)."
-}
-
-variable "genie_use_existing_warehouse_id" {
-  type        = string
-  default     = ""
-  description = "When set, do not create a new warehouse; use this ID for genie_space.sh create. When empty, Terraform creates a serverless warehouse."
-}
-
-variable "genie_default_warehouse_id" {
-  type        = string
-  default     = ""
-  description = "Deprecated: use genie_use_existing_warehouse_id."
+  default     = "ABAC Serverless Warehouse"
+  description = "Name of the auto-created serverless warehouse (only used when sql_warehouse_id is empty)."
 }
 
 variable "genie_space_id" {
   type        = string
   default     = ""
-  description = "Genie Space ID for setting ACLs. When set, Terraform runs set-acls using SP credentials to grant CAN_RUN to all configured groups."
+  description = "Existing Genie Space ID. When set, Terraform applies CAN_RUN ACLs for configured groups. When empty and uc_tables is non-empty, Terraform auto-creates a new Genie Space."
+}
+
+variable "genie_space_title" {
+  type        = string
+  default     = "One Ready Genie Space"
+  description = "Title for the auto-created Genie Space (only used when genie_space_id is empty)."
+}
+
+variable "genie_space_description" {
+  type        = string
+  default     = ""
+  description = "Optional description for the auto-created Genie Space (only used when genie_space_id is empty)."
 }

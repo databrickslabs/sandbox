@@ -51,7 +51,7 @@ def parse_sql_blocks(sql_text: str) -> list:
     catalog, schema = None, None
     blocks = []
 
-    for raw_stmt in re.split(r";\s*\n", sql_text):
+    for raw_stmt in re.split(r";\s*(?:--[^\n]*)?\n", sql_text):
         lines = [l for l in raw_stmt.split("\n")
                  if l.strip() and not l.strip().startswith("--")]
         stmt = "\n".join(lines).strip()

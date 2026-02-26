@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - auth.auto.tfvars configured with valid credentials
-#   - terraform.tfvars configured with groups/tag_policies/fgac_policies
+#   - abac.auto.tfvars configured with groups/tag_policies/fgac_policies
 #   - terraform init already run
 #
 # Usage:
@@ -48,8 +48,8 @@ done
 
 cd "$MODULE_DIR"
 
-if [ ! -f terraform.tfvars ]; then
-  echo "ERROR: terraform.tfvars not found. Configure it before importing."
+if [ ! -f abac.auto.tfvars ]; then
+  echo "ERROR: abac.auto.tfvars not found. Configure it before importing."
   exit 1
 fi
 
@@ -74,16 +74,16 @@ run_import() {
   fi
 }
 
-# Extract group names from terraform.tfvars using grep/sed
+# Extract group names from abac.auto.tfvars using grep/sed
 extract_group_names() {
   python3 -c "
 import hcl2, sys
-with open('terraform.tfvars') as f:
+with open('abac.auto.tfvars') as f:
     cfg = hcl2.load(f)
 for name in cfg.get('groups', {}):
     print(name)
 " 2>/dev/null || {
-    echo "WARNING: Could not parse terraform.tfvars with python-hcl2." >&2
+    echo "WARNING: Could not parse abac.auto.tfvars with python-hcl2." >&2
     echo "Install with: pip install python-hcl2" >&2
   }
 }
@@ -91,19 +91,19 @@ for name in cfg.get('groups', {}):
 extract_tag_keys() {
   python3 -c "
 import hcl2, sys
-with open('terraform.tfvars') as f:
+with open('abac.auto.tfvars') as f:
     cfg = hcl2.load(f)
 for tp in cfg.get('tag_policies', []):
     print(tp.get('key', ''))
 " 2>/dev/null || {
-    echo "WARNING: Could not parse terraform.tfvars with python-hcl2." >&2
+    echo "WARNING: Could not parse abac.auto.tfvars with python-hcl2." >&2
   }
 }
 
 extract_fgac_names() {
   python3 -c "
 import hcl2, sys
-with open('terraform.tfvars') as f:
+with open('abac.auto.tfvars') as f:
     cfg = hcl2.load(f)
 for p in cfg.get('fgac_policies', []):
     name = p.get('name', '')
@@ -127,7 +127,7 @@ if $IMPORT_GROUPS; then
   echo "--- Groups ---"
   group_names=$(extract_group_names)
   if [ -z "$group_names" ]; then
-    echo "  No groups found in terraform.tfvars."
+    echo "  No groups found in abac.auto.tfvars."
   else
     while IFS= read -r name; do
       [ -z "$name" ] && continue
@@ -142,7 +142,7 @@ if $IMPORT_TAGS; then
   echo "--- Tag Policies ---"
   tag_keys=$(extract_tag_keys)
   if [ -z "$tag_keys" ]; then
-    echo "  No tag policies found in terraform.tfvars."
+    echo "  No tag policies found in abac.auto.tfvars."
   else
     while IFS= read -r key; do
       [ -z "$key" ] && continue
@@ -157,7 +157,7 @@ if $IMPORT_FGAC; then
   echo "--- FGAC Policies ---"
   fgac_entries=$(extract_fgac_names)
   if [ -z "$fgac_entries" ]; then
-    echo "  No FGAC policies found in terraform.tfvars."
+    echo "  No FGAC policies found in abac.auto.tfvars."
   else
     while IFS='|' read -r policy_key policy_name; do
       [ -z "$policy_key" ] && continue

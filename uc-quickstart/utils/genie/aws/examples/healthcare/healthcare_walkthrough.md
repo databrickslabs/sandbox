@@ -145,7 +145,7 @@ RETURN
   OR is_account_group_member('Chief_Medical_Officer');
 ```
 
-### File 2: `terraform.tfvars` (ABAC config only — auth is in `auth.auto.tfvars`)
+### File 2: `abac.auto.tfvars` (ABAC config only — auth is in `auth.auto.tfvars`)
 
 ```hcl
 # === Groups ===
@@ -327,7 +327,7 @@ If you used the automated generator, validation runs automatically. For manual f
 
 ```bash
 pip install python-hcl2
-python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql
+python validate_abac.py generated/abac.auto.tfvars generated/masking_functions.sql
 ```
 
 Expected output:
@@ -355,7 +355,7 @@ All `[PASS]` — safe to proceed.
 #    (make sure USE CATALOG / USE SCHEMA match your auth.auto.tfvars)
 
 # 2. Copy the generated ABAC config to the module root
-cp generated/terraform.tfvars terraform.tfvars
+cp generated/abac.auto.tfvars abac.auto.tfvars
 
 # 3. Apply (auth.auto.tfvars is loaded automatically)
 terraform init

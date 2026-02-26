@@ -3,14 +3,14 @@
 Validate AI-generated ABAC configuration before terraform apply.
 
 Checks:
-  1. terraform.tfvars structure and required fields
+  1. abac.auto.tfvars structure and required fields
   2. masking_functions.sql function definitions
   3. Cross-references between both files
 
 Usage:
   pip install python-hcl2          # one-time
-  python validate_abac.py terraform.tfvars masking_functions.sql
-  python validate_abac.py terraform.tfvars   # skip SQL check
+  python validate_abac.py abac.auto.tfvars masking_functions.sql
+  python validate_abac.py abac.auto.tfvars   # skip SQL check
 """
 
 import sys
@@ -343,9 +343,9 @@ def validate_auth(cfg: dict, result: ValidationResult, tfvars_path: Path):
 def main():
     parser = argparse.ArgumentParser(
         description="Validate AI-generated ABAC configuration files",
-        epilog="Example: python validate_abac.py terraform.tfvars masking_functions.sql",
+        epilog="Example: python validate_abac.py abac.auto.tfvars masking_functions.sql",
     )
-    parser.add_argument("tfvars", help="Path to terraform.tfvars file")
+    parser.add_argument("tfvars", help="Path to abac.auto.tfvars file")
     parser.add_argument("sql", nargs="?", help="Path to masking_functions.sql (optional)")
     args = parser.parse_args()
 

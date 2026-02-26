@@ -13,11 +13,11 @@ setup: ## Copy example files and prompt for credentials
 	else \
 		echo "auth.auto.tfvars already exists — skipping."; \
 	fi
-	@if [ ! -f terraform.tfvars ]; then \
-		cp terraform.tfvars.example terraform.tfvars; \
-		echo "Created terraform.tfvars — edit it with your ABAC config."; \
+	@if [ ! -f abac.auto.tfvars ]; then \
+		cp abac.auto.tfvars.example abac.auto.tfvars; \
+		echo "Created abac.auto.tfvars — edit it with your ABAC config."; \
 	else \
-		echo "terraform.tfvars already exists — skipping."; \
+		echo "abac.auto.tfvars already exists — skipping."; \
 	fi
 	@mkdir -p ddl generated
 	@echo "Created ddl/ and generated/ directories."
@@ -31,30 +31,30 @@ generate: ## Run generate_abac.py to produce masking SQL + tfvars
 validate-generated: ## Validate generated/ files before copying to root
 	@echo "=== Validate (generated/) ==="
 	@if [ -f generated/masking_functions.sql ]; then \
-		python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql; \
+		python validate_abac.py generated/abac.auto.tfvars generated/masking_functions.sql; \
 	else \
-		python validate_abac.py generated/terraform.tfvars; \
+		python validate_abac.py generated/abac.auto.tfvars; \
 	fi
 
-validate: ## Validate root terraform.tfvars + masking_functions.sql
+validate: ## Validate root abac.auto.tfvars + masking_functions.sql
 	@echo "=== Validate ==="
 	@if [ -f masking_functions.sql ]; then \
-		python validate_abac.py terraform.tfvars masking_functions.sql; \
+		python validate_abac.py abac.auto.tfvars masking_functions.sql; \
 	elif [ -f generated/masking_functions.sql ]; then \
-		python validate_abac.py terraform.tfvars generated/masking_functions.sql; \
+		python validate_abac.py abac.auto.tfvars generated/masking_functions.sql; \
 	else \
-		python validate_abac.py terraform.tfvars; \
+		python validate_abac.py abac.auto.tfvars; \
 	fi
 
 promote: ## Validate generated/ and copy to root
 	@echo "=== Promote generated/ to root ==="
-	@if [ -f generated/terraform.tfvars ]; then \
-		python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql && \
-		cp generated/terraform.tfvars terraform.tfvars && \
+	@if [ -f generated/abac.auto.tfvars ]; then \
+		python validate_abac.py generated/abac.auto.tfvars generated/masking_functions.sql && \
+		cp generated/abac.auto.tfvars abac.auto.tfvars && \
 		cp generated/masking_functions.sql masking_functions.sql && \
 		echo "Promoted generated/ files to root."; \
 	else \
-		echo "No generated/terraform.tfvars found. Run 'make generate' first."; \
+		echo "No generated/abac.auto.tfvars found. Run 'make generate' first."; \
 		exit 1; \
 	fi
 
@@ -66,7 +66,16 @@ plan: ## Run terraform init + plan
 apply: promote ## Validate, promote, then terraform apply
 	@echo "=== Terraform Apply ==="
 	terraform init -input=false
-	terraform apply -parallelism=1 -auto-approve
+	@terraform apply -parallelism=1 -auto-approve 2>&1 || \
+	  ( echo ""; \
+	    echo "=== Importing tag policies (Databricks provider ordering bug workaround) ==="; \
+	    python3 -c "import hcl2,sys; d=hcl2.load(open('abac.auto.tfvars')); [print(tp['key']) for tp in d.get('tag_policies',[])]" 2>/dev/null | \
+	    while read key; do \
+	      echo "  importing $$key ..."; \
+	      terraform import "databricks_tag_policy.policies[\"$$key\"]" "$$key" 2>/dev/null || true; \
+	    done; \
+	    echo "=== Retrying apply ==="; \
+	    terraform apply -parallelism=1 -auto-approve )
 
 destroy: ## Run terraform destroy (drops masking functions if sql_warehouse_id is set)
 	@echo "=== Terraform Destroy ==="
@@ -74,7 +83,7 @@ destroy: ## Run terraform destroy (drops masking functions if sql_warehouse_id i
 
 clean: ## Remove generated files, Terraform state, and .terraform/
 	@echo "=== Clean ==="
-	rm -rf generated/terraform.tfvars generated/masking_functions.sql generated/generated_response.md
+	rm -rf generated/abac.auto.tfvars generated/masking_functions.sql generated/generated_response.md
 	rm -rf .terraform *.tfstate *.tfstate.backup .terraform.lock.hcl
 	@echo "Cleaned generated files and Terraform state."
-	@echo "NOTE: auth.auto.tfvars and terraform.tfvars were NOT removed."
+	@echo "NOTE: auth.auto.tfvars and abac.auto.tfvars were NOT removed."

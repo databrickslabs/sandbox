@@ -3,7 +3,7 @@
 Copy everything below the line into ChatGPT, Claude, or Cursor. Paste your table DDL / `DESCRIBE TABLE` output where indicated. The AI will generate:
 
 1. **`masking_functions.sql`** — SQL UDFs for your masking and row-filter requirements
-2. **`terraform.tfvars`** — A complete variable file ready for `terraform apply`
+2. **`abac.auto.tfvars`** — A complete variable file ready for `terraform apply`
 
 ---
 
@@ -47,12 +47,28 @@ Use these signatures. Replace `{catalog}.{schema}` with the user's catalog and s
 - `mask_hash(input STRING) RETURNS STRING` — full SHA-256 hash
 - `mask_nullify(input STRING) RETURNS STRING` — return NULL
 
-**Row Filters (zero-argument):**
-- `filter_by_region_us() RETURNS BOOLEAN` — US regional filter
-- `filter_by_region_eu() RETURNS BOOLEAN` — EU regional filter
-- `filter_by_region_apac() RETURNS BOOLEAN` — APAC regional filter
-- `filter_trading_hours() RETURNS BOOLEAN` — outside NYSE hours only
-- `filter_audit_expiry() RETURNS BOOLEAN` — temporary auditor access
+**Row Filters (zero-argument, must be self-contained):**
+
+Row filter functions take no arguments and return BOOLEAN. They must be **fully
+self-contained** — every function they call must either be a Databricks built-in
+or must also be defined in the same SQL file (before the caller). Do NOT reference
+undefined helper functions like `get_current_user_metadata`.
+
+Common patterns with example implementations:
+
+- `filter_by_region_us() RETURNS BOOLEAN` — placeholder for US region filtering. `RETURN TRUE;`
+- `filter_by_region_eu() RETURNS BOOLEAN` — placeholder for EU region filtering. `RETURN TRUE;`
+- `filter_by_region_apac() RETURNS BOOLEAN` — placeholder for APAC region filtering. `RETURN TRUE;`
+- `filter_trading_hours() RETURNS BOOLEAN` — restrict to non-market hours. `RETURN HOUR(NOW()) < 9 OR HOUR(NOW()) > 16;`
+- `filter_audit_expiry() RETURNS BOOLEAN` — time-limited access. `RETURN CURRENT_DATE() <= DATE('2025-12-31');`
+
+Note: The semicolon must be the **last character** on the RETURN line. Do NOT add inline comments after it (e.g., `RETURN TRUE; -- comment` breaks automated deployment).
+
+If a row filter needs user-specific metadata (e.g. the current user's region),
+define a helper function in the same SQL file **before** the filter that calls it.
+For example, define `get_current_user_metadata(key STRING) RETURNS STRING` that
+queries a `user_metadata` table or returns a stub `CAST(NULL AS STRING)`, then
+reference it from the filter.
 
 These are common patterns. If the user's data requires masking not covered above (e.g., vehicle VINs, student IDs, device serial numbers, product SKUs), create a new function following the same pattern (NULL-safe CASE expression, COMMENT describing usage).
 
@@ -61,6 +77,11 @@ These are common patterns. If the user's data requires masking not covered above
 Group functions by target schema. Only create each function in the schema(s) where
 it is referenced by `function_schema` in fgac_policies. If a function is used by
 policies targeting multiple schemas, include it in each schema that needs it.
+
+**CRITICAL — SQL formatting rules:**
+- Each function MUST end with a semicolon (`;`) as the **last character on that line**
+- Do NOT put inline comments after the semicolon (e.g., `RETURN TRUE; -- comment` will break parsing)
+- Put comments on separate lines above the function or in the COMMENT clause
 
 ```sql
 -- === schema_a functions ===
@@ -71,6 +92,12 @@ CREATE OR REPLACE FUNCTION mask_diagnosis_code(code STRING)
 RETURNS STRING
 COMMENT 'description'
 RETURN CASE ... END;
+
+-- Row filter — semicolon must be the last char on the RETURN line
+CREATE OR REPLACE FUNCTION filter_by_region_us()
+RETURNS BOOLEAN
+COMMENT 'Filters rows to show only US region data'
+RETURN TRUE;
 
 -- === schema_b functions ===
 USE CATALOG my_catalog;
@@ -84,7 +111,7 @@ RETURN CASE ... END;
 
 Only include functions the user actually needs. If a library function works as-is, still include it so the user has a self-contained SQL file.
 
-### Output Format — File 2: `terraform.tfvars`
+### Output Format — File 2: `abac.auto.tfvars`
 
 ```hcl
 groups = {
@@ -149,7 +176,7 @@ After generating both files, the user should validate them before running `terra
 
 ```bash
 pip install python-hcl2
-python validate_abac.py terraform.tfvars masking_functions.sql
+python validate_abac.py abac.auto.tfvars masking_functions.sql
 ```
 
 This checks cross-references (groups, tags, functions), naming conventions, and structure. Fix any `[FAIL]` errors before proceeding.
@@ -178,12 +205,15 @@ Every tag value used in `tag_assignments` and in `match_condition` / `when_condi
 2. Every `hasTagValue('key', 'value')` in `match_condition` or `when_condition` must reference a `key` and `value` that exist in `tag_policies`
 3. Every `function_name` in `fgac_policies` must have a corresponding `CREATE OR REPLACE FUNCTION` in `masking_functions.sql`
 4. Every group in `to_principals` / `except_principals` must be defined in `groups`
+5. If any generated function calls another non-built-in function (e.g. a helper like `get_current_user_metadata`), that helper MUST also be defined in `masking_functions.sql` **before** the function that calls it. Never reference undefined functions
 
 Violating any of these causes validation failures. Double-check consistency across all three sections (`tag_policies`, `tag_assignments`, `fgac_policies`) before outputting.
 
+**Common mistake**: Do NOT use a value from one tag policy in a different tag policy. For example, if `pii_level` has value `"masked"` but `compliance_level` does not, you MUST NOT write `tag_key = "compliance_level", tag_value = "masked"`. Each tag assignment and condition must use only the values defined for that specific tag key.
+
 ### Instructions
 
-1. Generate `masking_functions.sql` with functions **grouped by target schema**. Use separate `USE CATALOG` / `USE SCHEMA` blocks for each schema. Only deploy each function to the schema(s) where it is referenced by `function_schema` in fgac_policies — do NOT duplicate all functions into every schema. Do NOT include `uc_catalog_name`, `uc_schema_name`, or authentication variables (databricks_account_id, etc.) in the generated terraform.tfvars. Every `fgac_policies` entry MUST include `catalog`, `function_catalog`, and `function_schema` — set them to the catalog/schema that each policy's table belongs to.
+1. Generate `masking_functions.sql` with functions **grouped by target schema**. Use separate `USE CATALOG` / `USE SCHEMA` blocks for each schema. Only deploy each function to the schema(s) where it is referenced by `function_schema` in fgac_policies — do NOT duplicate all functions into every schema. Do NOT include `uc_catalog_name`, `uc_schema_name`, or authentication variables (databricks_account_id, etc.) in the generated abac.auto.tfvars. Every `fgac_policies` entry MUST include `catalog`, `function_catalog`, and `function_schema` — set them to the catalog/schema that each policy's table belongs to.
 2. Analyze each column in the user's tables for sensitivity. Common categories include but are not limited to:
    - PII (names, emails, SSN, phone, address, date of birth, national IDs)
    - Financial (credit cards, account numbers, amounts, IBAN, trading data)

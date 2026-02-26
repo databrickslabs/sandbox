@@ -59,7 +59,7 @@ RETURN CASE ... END;
 
 Only include functions the user actually needs. If a library function works as-is, still include it so the user has a self-contained SQL file.
 
-### Output Format — File 2: `terraform.tfvars`
+### Output Format — File 2: `abac.auto.tfvars`
 
 ```hcl
 # Authentication (user fills in)
@@ -117,7 +117,7 @@ After generating both files, the user should validate them before running `terra
 
 ```bash
 pip install python-hcl2
-python validate_abac.py terraform.tfvars masking_functions.sql
+python validate_abac.py abac.auto.tfvars masking_functions.sql
 ```
 
 This checks cross-references (groups, tags, functions), naming conventions, and structure. Fix any `[FAIL]` errors before proceeding.

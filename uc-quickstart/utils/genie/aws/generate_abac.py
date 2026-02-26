@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate ABAC masking_functions.sql and terraform.tfvars from table DDL files.
+Generate ABAC masking_functions.sql and abac.auto.tfvars from table DDL files.
 
 Reads DDL files from a folder (or fetches them live from Databricks),
 combines them with the ABAC prompt template, sends to an LLM, and writes
@@ -578,7 +578,7 @@ def call_with_retries(call_fn, prompt: str, model: str, max_retries: int) -> str
 def run_validation(out_dir: Path) -> bool:
     """Run validate_abac.py on the generated files. Returns True if passed."""
     validator = SCRIPT_DIR / "validate_abac.py"
-    tfvars_path = out_dir / "terraform.tfvars"
+    tfvars_path = out_dir / "abac.auto.tfvars"
     sql_path = out_dir / "masking_functions.sql"
 
     if not validator.exists():
@@ -601,7 +601,7 @@ def main():
             "Examples:\n"
             "  python generate_abac.py                       # reads uc_tables from auth.auto.tfvars\n"
             "  python generate_abac.py --tables 'prod.sales.*'  # CLI override\n"
-            "  python generate_abac.py --promote              # generate + validate + copy to root\n"
+            "  python generate_abac.py --promote              # generate + validate + copy to root (legacy)\n"
             "  python generate_abac.py --dry-run              # print prompt without calling LLM\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -757,7 +757,7 @@ def main():
 
 This folder contains a **first draft** of:
 - `masking_functions.sql` — masking UDFs + row filter functions
-- `terraform.tfvars` — groups, tags, and FGAC policies that reference those functions
+- `abac.auto.tfvars` — groups, tags, and FGAC policies that reference those functions
 
 Before you apply, tune for your business roles and security requirements:
 
@@ -771,7 +771,7 @@ Before you apply, tune for your business roles and security requirements:
 
 ## Suggested workflow
 
-1. Review and edit `masking_functions.sql` and `terraform.tfvars` in `generated/`.
+1. Review and edit `masking_functions.sql` and `abac.auto.tfvars` in `generated/`.
 2. Validate after each change:
    ```bash
    make validate-generated
@@ -834,14 +834,14 @@ in your Databricks SQL editor before `terraform apply`.
             "# - tag_assignments (what data is considered sensitive)\n"
             "# - fgac_policies (who sees what, and how)\n"
             "# Then validate before copying to root:\n"
-            "#   python validate_abac.py generated/terraform.tfvars generated/masking_functions.sql\n"
+            "#   python validate_abac.py generated/abac.auto.tfvars generated/masking_functions.sql\n"
             "# ============================================================================\n\n"
         )
 
         hcl_block = sanitize_tfvars_hcl(hcl_block)
-        tfvars_path = out_dir / "terraform.tfvars"
+        tfvars_path = out_dir / "abac.auto.tfvars"
         tfvars_path.write_text(hcl_header + hcl_block + "\n")
-        print(f"  terraform.tfvars written to: {tfvars_path}")
+        print(f"  abac.auto.tfvars written to: {tfvars_path}")
 
     if sql_block and hcl_block and not args.skip_validation:
         passed = run_validation(out_dir)
@@ -851,7 +851,7 @@ in your Databricks SQL editor before `terraform apply`.
 
         if args.promote and passed:
             promoted = []
-            for fname in ["terraform.tfvars", "masking_functions.sql"]:
+            for fname in ["abac.auto.tfvars", "masking_functions.sql"]:
                 src = out_dir / fname
                 if src.exists():
                     shutil.copy2(src, SCRIPT_DIR / fname)

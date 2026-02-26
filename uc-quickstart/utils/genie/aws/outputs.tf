@@ -31,20 +31,34 @@ output "group_entitlements" {
 }
 
 # ----------------------------------------------------------------------------
-# Genie: warehouse for genie_space.sh create
+# SQL warehouse (provided or auto-created)
 # ----------------------------------------------------------------------------
 
-output "genie_warehouse_id" {
-  description = "SQL warehouse ID for the Genie Space (created or existing)."
-  value       = local.genie_warehouse_id
+output "sql_warehouse_id" {
+  description = "Effective SQL warehouse ID (user-provided or auto-created)."
+  value       = local.effective_warehouse_id
 }
 
 output "genie_space_acls_applied" {
-  description = "Whether Genie Space ACLs were applied via Terraform"
-  value       = length(null_resource.genie_space_acls) > 0
+  description = "Whether Genie Space ACLs were applied (existing or newly created space)"
+  value       = length(null_resource.genie_space_acls) > 0 || length(null_resource.genie_space_create) > 0
 }
 
 output "genie_space_acls_groups" {
   description = "Groups that were granted CAN_RUN on the Genie Space"
-  value       = length(null_resource.genie_space_acls) > 0 ? keys(var.groups) : []
+  value = (
+    length(null_resource.genie_space_acls) > 0 || length(null_resource.genie_space_create) > 0
+    ? keys(var.groups)
+    : []
+  )
+}
+
+output "genie_space_created" {
+  description = "Whether a new Genie Space was auto-created by Terraform"
+  value       = length(null_resource.genie_space_create) > 0
+}
+
+output "genie_groups_csv" {
+  description = "Comma-separated group names for genie_space.sh"
+  value       = join(",", keys(var.groups))
 }

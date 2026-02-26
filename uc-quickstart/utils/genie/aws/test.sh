@@ -91,10 +91,10 @@ else
   report "FAIL" "healthcare: $HC_TFVARS not found"
 fi
 
-# --- Validate terraform.tfvars.example skeleton ---
+# --- Validate abac.auto.tfvars.example skeleton ---
 echo ""
 echo "--- Skeleton Example ---"
-SKELETON_TFVARS="terraform.tfvars.example"
+SKELETON_TFVARS="abac.auto.tfvars.example"
 
 if [ -f "$SKELETON_TFVARS" ]; then
   if python3 validate_abac.py "$SKELETON_TFVARS" > /dev/null 2>&1; then
@@ -114,7 +114,7 @@ if ! $SKIP_TF; then
   TMPDIR_TF=$(mktemp -d)
   trap 'rm -rf "$TMPDIR_TF"' EXIT
 
-  cp "$FINANCE_TFVARS" "$TMPDIR_TF/terraform.tfvars" 2>/dev/null || true
+  cp "$FINANCE_TFVARS" "$TMPDIR_TF/abac.auto.tfvars" 2>/dev/null || true
   cp auth.auto.tfvars.example "$TMPDIR_TF/auth.auto.tfvars" 2>/dev/null || true
 
   if terraform -chdir="$SCRIPT_DIR" validate -no-color > "$TMPDIR_TF/tf_validate.log" 2>&1; then

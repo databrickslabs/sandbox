@@ -7,7 +7,7 @@ If the warehouse, groups, or tag policies **already exist**, Terraform will fail
 Before running the import script, ensure:
 
 1. `auth.auto.tfvars` is configured with valid credentials.
-2. `terraform.tfvars` is configured with the groups and tag policies you want to import.
+2. `abac.auto.tfvars` is configured with the groups and tag policies you want to import.
 3. `terraform init` has been run.
 
 ## Usage
@@ -28,14 +28,14 @@ From **genie/aws**:
 ./scripts/import_existing.sh --dry-run
 ```
 
-The script reads group names from `terraform.tfvars` and tag policy keys from the same file. For each resource, it checks whether an import is needed and runs `terraform import` if the resource exists in Databricks but not in Terraform state.
+The script reads group names from `abac.auto.tfvars` and tag policy keys from the same file. For each resource, it checks whether an import is needed and runs `terraform import` if the resource exists in Databricks but not in Terraform state.
 
-## Optional: warehouse only (no Terraform management)
+## Optional: reuse an existing warehouse
 
-To use an existing warehouse **without** importing it, set in **terraform.tfvars**:
+To use an existing warehouse instead of auto-creating one, set in **auth.auto.tfvars**:
 
 ```hcl
-genie_use_existing_warehouse_id = "<WAREHOUSE_ID>"
+sql_warehouse_id = "<WAREHOUSE_ID>"
 ```
 
-Then Terraform won't create a warehouse and will use this ID for genie_space.sh create and outputs.
+Terraform will skip warehouse creation and reuse this ID for masking function deployment, Genie Space, and outputs.

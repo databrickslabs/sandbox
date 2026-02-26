@@ -1,22 +1,20 @@
 # ============================================================================
-# Masking Functions Deployment (opt-in)
+# Masking Functions Deployment
 # ============================================================================
-# When sql_warehouse_id is set, executes masking_functions.sql via the
-# Databricks Statement Execution API before FGAC policies are created.
-# When empty (default), the user must run the SQL manually.
+# Executes masking_functions.sql via the Databricks Statement Execution API
+# before FGAC policies are created. Uses local.effective_warehouse_id which
+# is either the user-provided sql_warehouse_id or an auto-created warehouse.
 #
 # Re-runs automatically when the SQL file content changes (filemd5 trigger).
 # CREATE OR REPLACE FUNCTION is idempotent, so re-execution is safe.
 # ============================================================================
 
 resource "null_resource" "deploy_masking_functions" {
-  count = var.sql_warehouse_id != "" ? 1 : 0
-
   triggers = {
     sql_hash      = filemd5("masking_functions.sql")
     sql_file      = "${path.module}/masking_functions.sql"
     script        = "${path.module}/deploy_masking_functions.py"
-    warehouse_id  = var.sql_warehouse_id
+    warehouse_id  = local.effective_warehouse_id
     host          = var.databricks_workspace_host
     client_id     = var.databricks_client_id
     client_secret = var.databricks_client_secret
@@ -43,5 +41,8 @@ resource "null_resource" "deploy_masking_functions" {
     }
   }
 
-  depends_on = [time_sleep.wait_for_tag_propagation]
+  depends_on = [
+    time_sleep.wait_for_tag_propagation,
+    databricks_sql_endpoint.warehouse,
+  ]
 }

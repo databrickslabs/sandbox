@@ -6,7 +6,7 @@
 #
 # Setup:
 #   1. cp auth.auto.tfvars.example auth.auto.tfvars   (fill in credentials once)
-#   2. cp terraform.tfvars.example terraform.tfvars    (fill in ABAC config)
+#   2. cp abac.auto.tfvars.example abac.auto.tfvars    (fill in ABAC config)
 #   3. terraform apply   (loads both files automatically)
 #
 # For a complete working example see examples/finance/finance.tfvars.example.
@@ -73,5 +73,5 @@ group_members = {
 }
 
 # === Genie Space (optional) ===
-# genie_use_existing_warehouse_id = ""  # Use existing warehouse; leave empty to create one
-# genie_space_id = ""                   # Set to apply CAN_RUN ACLs to the Genie Space
+# genie_space_title       = "My Analytics Space"
+# genie_space_description = "Genie space for customer analytics"
