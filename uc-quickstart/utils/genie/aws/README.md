@@ -1,6 +1,97 @@
 # OneReady — Genie Onboarding Quickstart
 
-Automate business-user onboarding for **Genie in Databricks One** — groups, entitlements, data access, ABAC governance, masking functions, and Genie Space — all from two config files, no `.tf` editing required.
+Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terraform quickstart that automates business-user onboarding — groups, entitlements, data access, ABAC governance, masking functions, and Genie Space — all from two config files, no `.tf` editing required.
+
+## What This Quickstart Automates
+
+- **Business groups** — Create account-level groups (access tiers) and optionally manage group membership.
+- **Workspace onboarding** — Assign groups to a target workspace so they can authenticate and use Genie.
+- **Databricks One entitlement** — Enable consumer access so business users can use the **Databricks One UI** without full workspace access.
+- **Data access grants** — Apply minimum Unity Catalog privileges (`USE_CATALOG`, `USE_SCHEMA`, `SELECT`) for data exposed through Genie.
+- **ABAC governance** — Create governed tag policies, tag assignments on tables/columns, and FGAC policies (column masks + row filters).
+- **Masking functions** — Auto-deploy SQL UDFs to enforce column-level data masking (e.g., mask SSN, redact PII, hash emails).
+- **Genie Space** — Auto-create a Genie Space from your tables (or apply ACLs to an existing one) with `CAN_RUN` for all configured groups.
+- **SQL warehouse** — Auto-create a serverless warehouse or reuse an existing one.
+
+## How It Works
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                    YOU PROVIDE (one-time setup)                       │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌─────────────────────────────────────┐                              │
+│  │  auth.auto.tfvars                   │                              │
+│  │  (credentials — never checked in)   │                              │
+│  │                                     │                              │
+│  │  databricks_account_id    = "..."   │                              │
+│  │  databricks_client_id     = "..."   │                              │
+│  │  databricks_client_secret = "..."   │                              │
+│  │  databricks_workspace_host = "..."  │                              │
+│  │  uc_tables = ["cat.schema.*"]       │                              │
+│  └──────────────────┬──────────────────┘                              │
+│                     │                                                 │
+└─────────────────────┼─────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                make generate  (generate_abac.py)                      │
+│                                                                       │
+│  1. Fetches DDLs from Unity Catalog (via Databricks SDK)              │
+│  2. Reads ABAC_PROMPT.md + DDLs  ──▶  LLM (Claude Sonnet)             │
+│                                                                       │
+│  Providers: Databricks FMAPI (default) | Anthropic | OpenAI           │
+└──────────────────────────────────┬────────────────────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼                             ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                     generated/  (output folder)                       │
+│                                                                       │
+│  ┌─────────────────────────┐  ┌───────────────────────────────────┐   │
+│  │  masking_functions.sql  │  │  abac.auto.tfvars                 │   │
+│  │                         │  │  (ABAC config — no credentials)   │   │
+│  │  SQL UDFs:              │  │                                   │   │
+│  │  • mask_pii_partial()   │  │  groups        ─ access tiers     │   │
+│  │  • mask_ssn()           │  │  tag_policies  ─ sensitivity tags │   │
+│  │  • mask_email()         │  │  tag_assignments ─ tags on cols   │   │
+│  │  • filter_by_region()   │  │  fgac_policies ─ masks & filters  │   │
+│  │  • ...                  │  │  group_members ─ user mappings    │   │
+│  └────────────┬────────────┘  └─────────────────┬─────────────────┘   │
+└───────────────┼─────────────────────────────────┼─────────────────────┘
+                │             ▲  TUNE & VALIDATE  │
+                │             │  make validate-generated
+                │             │  (repeat until PASS)
+                ▼                                 ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│  make apply  (validate → promote → terraform apply)                   │
+│  Loads: auth.auto.tfvars (credentials) + abac.auto.tfvars (ABAC)      │
+│                                                                       │
+│  Creates in Databricks:                                               │
+│  ┌────────────────┐  ┌───────────────┐  ┌─────────────────────────┐   │
+│  │ Account Groups │  │ Tag Policies  │  │ Tag Assignments         │   │
+│  │ Analyst        │  │ pii_level     │  │ Customers.SSN           │   │
+│  │ Manager        │  │ phi_level     │  │   → pii_level=masked    │   │
+│  │ Compliance     │  │ data_region   │  │ Billing.Amount          │   │
+│  │ Admin          │  │               │  │   → pii_level=masked    │   │
+│  └────────────────┘  └───────────────┘  └─────────────────────────┘   │
+│  ┌────────────────────────────────────────────────────────────────┐   │
+│  │ FGAC Policies (Column Masks + Row Filters)                     │   │
+│  │                                                                │   │
+│  │ "Analyst sees SSN as ***-**-1234"      ──▶ mask_ssn()          │   │
+│  │ "Manager sees notes as [REDACTED]"     ──▶ mask_redact()       │   │
+│  │ "US_Staff sees only US rows"           ──▶ filter_by_region()  │   │
+│  └────────────────────────────────────────────────────────────────┘   │
+│  ┌────────────────────┐  ┌────────────────┐  ┌────────────────────┐   │
+│  │ Masking Functions  │  │ UC Grants      │  │ Genie Space        │   │
+│  │ (auto-deploy UDFs) │  │ USE_CATALOG    │  │ (auto-created      │   │
+│  │                    │  │ USE_SCHEMA     │  │  or ACLs-only)     │   │
+│  │ + SQL Warehouse    │  │ SELECT         │  │                    │   │
+│  │ (auto-created if   │  │                │  │ + CAN_RUN ACLs     │   │
+│  │  needed)           │  │                │  │ for all groups     │   │
+│  └────────────────────┘  └────────────────┘  └────────────────────┘   │
+└───────────────────────────────────────────────────────────────────────┘
+```
 
 ## Quick Start
 
