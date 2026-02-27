@@ -26,6 +26,10 @@
 #   GENIE_SAMPLE_QUESTIONS  Optional. JSON array of sample question strings.
 #   GENIE_INSTRUCTIONS   Optional. Text instructions for the Genie LLM.
 #   GENIE_BENCHMARKS     Optional. JSON array of {question, sql} objects.
+#   GENIE_SQL_FILTERS    Optional. JSON array of {sql, display_name, comment, instruction}.
+#   GENIE_SQL_EXPRESSIONS Optional. JSON array of {alias, sql, display_name, comment, instruction}.
+#   GENIE_SQL_MEASURES   Optional. JSON array of {alias, sql, display_name, comment, instruction}.
+#   GENIE_JOIN_SPECS     Optional. JSON array of {left_table, left_alias, right_table, right_alias, sql, comment, instruction}.
 #   GENIE_ID_FILE        Optional. File path to save the created space ID
 #                        (used by Terraform for lifecycle management).
 #
@@ -244,10 +248,11 @@ create_genie_space() {
   local tables_csv
   tables_csv=$(IFS=','; echo "${sorted_identifiers[*]}")
 
-  # Build the full create body (including serialized_space) via Python
-  # for correct JSON escaping of nested structures
-  local create_body
-  create_body=$(python3 << PYEOF
+  # Build create + patch bodies via Python for correct JSON escaping.
+  # The CREATE endpoint doesn't reliably accept sql_snippets/join_specs,
+  # so we create first with core config, then PATCH to add them.
+  local python_output
+  python_output=$(python3 << PYEOF
 import json, random, datetime, os
 
 def gen_id():
@@ -306,9 +311,83 @@ desc = os.environ.get("GENIE_DESCRIPTION", "")
 if desc:
     body["description"] = desc
 
-print(json.dumps(body))
+# Build patch space with sql_snippets and join_specs (applied after create)
+has_patch = False
+patch_instructions = dict(space.get("instructions", {}))
+
+filt_json = os.environ.get("GENIE_SQL_FILTERS", "")
+if filt_json:
+    try:
+        filters = json.loads(filt_json)
+        if filters:
+            items = [{"id": gen_id(), "sql": [f["sql"]], "display_name": f["display_name"]} for f in filters]
+            items.sort(key=lambda x: x["id"])
+            patch_instructions.setdefault("sql_snippets", {})["filters"] = items
+            has_patch = True
+    except json.JSONDecodeError:
+        pass
+
+expr_json = os.environ.get("GENIE_SQL_EXPRESSIONS", "")
+if expr_json:
+    try:
+        expressions = json.loads(expr_json)
+        if expressions:
+            items = [{"id": gen_id(), "alias": e["alias"], "sql": [e["sql"]]} for e in expressions]
+            items.sort(key=lambda x: x["id"])
+            patch_instructions.setdefault("sql_snippets", {})["expressions"] = items
+            has_patch = True
+    except json.JSONDecodeError:
+        pass
+
+meas_json = os.environ.get("GENIE_SQL_MEASURES", "")
+if meas_json:
+    try:
+        measures = json.loads(meas_json)
+        if measures:
+            items = [{"id": gen_id(), "alias": m["alias"], "sql": [m["sql"]]} for m in measures]
+            items.sort(key=lambda x: x["id"])
+            patch_instructions.setdefault("sql_snippets", {})["measures"] = items
+            has_patch = True
+    except json.JSONDecodeError:
+        pass
+
+join_json = os.environ.get("GENIE_JOIN_SPECS", "")
+if join_json:
+    try:
+        joins = json.loads(join_json)
+        if joins:
+            items = []
+            for j in joins:
+                items.append({
+                    "id": gen_id(),
+                    "left": {"identifier": j["left_table"]},
+                    "right": {"identifier": j["right_table"]},
+                    "sql": [j["sql"]],
+                })
+            items.sort(key=lambda x: x["id"])
+            patch_instructions["join_specs"] = items
+            has_patch = True
+    except json.JSONDecodeError:
+        pass
+
+patch_body = None
+if has_patch:
+    patch_space = dict(space)
+    patch_space["instructions"] = patch_instructions
+    patch_body = {"serialized_space": json.dumps(patch_space, separators=(',', ':'))}
+
+output = {"create": body}
+if patch_body:
+    output["patch"] = patch_body
+print(json.dumps(output))
 PYEOF
   )
+
+  local create_body
+  create_body=$(echo "$python_output" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['create']))")
+
+  local patch_body
+  patch_body=$(echo "$python_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d['patch']) if 'patch' in d else '')")
 
   local tables_display
   tables_display=$(printf '%s\n' "${sorted_identifiers[@]}" | tr '\n' ' ')
@@ -353,6 +432,35 @@ PYEOF
   if [[ -n "${GENIE_ID_FILE:-}" ]]; then
     echo "$space_id" > "$GENIE_ID_FILE"
     echo "Space ID saved to ${GENIE_ID_FILE}"
+  fi
+
+  # PATCH to add sql_snippets and join_specs (not supported on CREATE)
+  if [[ -n "$patch_body" ]]; then
+    echo "Updating Genie Space with sql_snippets and join_specs..."
+    local patch_tmpfile
+    patch_tmpfile=$(mktemp)
+    echo "$patch_body" > "$patch_tmpfile"
+
+    local patch_response
+    patch_response=$(curl -s -w "\n%{http_code}" -X PATCH \
+      -H "Authorization: Bearer ${token}" \
+      -H "Content-Type: application/json" \
+      -d @"${patch_tmpfile}" \
+      "${workspace_url}/api/2.0/genie/spaces/${space_id}")
+    rm -f "$patch_tmpfile"
+
+    local patch_http_code
+    patch_http_code=$(echo "$patch_response" | tail -n1)
+
+    if [[ "$patch_http_code" == "200" || "$patch_http_code" == "201" ]]; then
+      echo "Genie Space updated with sql_snippets and join_specs."
+    else
+      local patch_response_body
+      patch_response_body=$(echo "$patch_response" | sed '$d')
+      echo "WARNING: Failed to update Genie Space with sql_snippets/join_specs (HTTP ${patch_http_code})."
+      echo "  API response: ${patch_response_body}"
+      echo "  The space was created successfully. You can add sql_snippets and join_specs manually via the Genie UI."
+    fi
   fi
 
   echo "Setting ACLs for groups..."

@@ -173,3 +173,52 @@ variable "genie_benchmarks" {
   default     = []
   description = "Benchmark questions with ground-truth SQL for evaluating Genie Space accuracy."
 }
+
+variable "genie_sql_filters" {
+  type = list(object({
+    sql          = string
+    display_name = string
+    comment      = string
+    instruction  = string
+  }))
+  default     = []
+  description = "SQL snippet filters for the Genie Space (e.g., default WHERE clauses like active customers, completed transactions)."
+}
+
+variable "genie_sql_expressions" {
+  type = list(object({
+    alias        = string
+    sql          = string
+    display_name = string
+    comment      = string
+    instruction  = string
+  }))
+  default     = []
+  description = "SQL snippet expressions/dimensions for the Genie Space (e.g., transaction year, age bucket)."
+}
+
+variable "genie_sql_measures" {
+  type = list(object({
+    alias        = string
+    sql          = string
+    display_name = string
+    comment      = string
+    instruction  = string
+  }))
+  default     = []
+  description = "SQL snippet measures/aggregations for the Genie Space (e.g., total revenue, average risk score)."
+}
+
+variable "genie_join_specs" {
+  type = list(object({
+    left_table  = string
+    left_alias  = string
+    right_table = string
+    right_alias = string
+    sql         = string
+    comment     = string
+    instruction = string
+  }))
+  default     = []
+  description = "Join specifications between tables for the Genie Space (e.g., accounts to customers on CustomerID)."
+}

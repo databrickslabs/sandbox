@@ -69,6 +69,10 @@ resource "null_resource" "genie_space_create" {
       GENIE_SAMPLE_QUESTIONS   = length(var.genie_sample_questions) > 0 ? jsonencode(var.genie_sample_questions) : ""
       GENIE_INSTRUCTIONS       = var.genie_instructions
       GENIE_BENCHMARKS         = length(var.genie_benchmarks) > 0 ? jsonencode(var.genie_benchmarks) : ""
+      GENIE_SQL_FILTERS        = length(var.genie_sql_filters) > 0 ? jsonencode(var.genie_sql_filters) : ""
+      GENIE_SQL_EXPRESSIONS    = length(var.genie_sql_expressions) > 0 ? jsonencode(var.genie_sql_expressions) : ""
+      GENIE_SQL_MEASURES       = length(var.genie_sql_measures) > 0 ? jsonencode(var.genie_sql_measures) : ""
+      GENIE_JOIN_SPECS         = length(var.genie_join_specs) > 0 ? jsonencode(var.genie_join_specs) : ""
       GENIE_ID_FILE            = self.triggers.id_file
     }
   }

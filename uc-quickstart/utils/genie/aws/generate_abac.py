@@ -501,7 +501,10 @@ def call_databricks(prompt: str, model: str) -> str:
         print("  pip install databricks-sdk")
         sys.exit(2)
 
-    w = WorkspaceClient()
+    from databricks.sdk.config import Config
+
+    cfg = Config(http_timeout_seconds=600)
+    w = WorkspaceClient(config=cfg)
     print(f"  Calling Databricks FMAPI ({model})...")
 
     response = w.serving_endpoints.query(
@@ -768,20 +771,30 @@ def main():
 
 This folder contains a **first draft** of:
 - `masking_functions.sql` — masking UDFs + row filter functions
-- `abac.auto.tfvars` — groups, tags, and FGAC policies that reference those functions
+- `abac.auto.tfvars` — groups, tags, FGAC policies, and Genie Space config
 
-Before you apply, tune for your business roles and security requirements:
+Before you apply, tune for your business roles, security requirements, and Genie accuracy:
 
-## Checklist
+## Checklist — Genie Accuracy (review first)
+
+- **Benchmarks**: Each benchmark question must be **unambiguous and self-contained**. The natural-language question and its ground-truth SQL must agree on the exact scope — e.g., "What is the average risk score for **active** customers?" (not "What is the average customer risk score?"). Run benchmarks in the Genie UI after apply to verify accuracy.
+- **SQL filters**: Do the default WHERE clauses match your business definitions? (e.g., "active customers" = `CustomerStatus = 'Active'`, "completed transactions" = `TransactionStatus = 'Completed'`). These filters guide Genie's SQL generation.
+- **SQL measures**: Are the standard metrics correct? (e.g., total revenue = `SUM(Amount)`, average risk = `AVG(RiskScore)`).
+- **SQL expressions**: Are the computed dimensions useful? (e.g., transaction year, age bucket).
+- **Join specs**: Do the join conditions between tables use the correct keys? Incorrect joins cause wrong results across all multi-table queries.
+- **Instructions**: Does the instruction text define business defaults (e.g., "customer" means active by default) and domain conventions (date handling, metric calculations)?
+
+## Checklist — ABAC & Masking
 
 - **Groups and personas**: Do the groups map to real business roles?
 - **Sensitive columns**: Are the right columns tagged (PII/PHI/financial/etc.)?
 - **Masking behavior**: Are you using the right approach (partial, redact, hash) per sensitivity and use case?
 - **Row filters and exceptions**: Are filters too broad/strict? Are exceptions minimal and intentional?
+
+## Checklist — Genie Space Metadata
+
 - **Genie title & description**: Does the AI-generated title/description accurately represent the space?
 - **Genie sample questions**: Do the sample questions reflect what business users will ask?
-- **Genie instructions**: Does the instruction text match your domain conventions (e.g., date handling, metric definitions)?
-- **Genie benchmarks**: Do the benchmark SQL queries return correct results?
 - **Validate before apply**: Run validation before `terraform apply`.
 
 ## Suggested workflow

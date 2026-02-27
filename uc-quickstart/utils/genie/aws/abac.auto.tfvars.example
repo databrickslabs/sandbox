@@ -86,13 +86,59 @@ group_members = {
 #   "Which accounts have been flagged for AML review?",
 # ]
 
-# Domain-specific guidance for the Genie LLM.
-# genie_instructions = "When calculating revenue, sum the Amount column. 'Last month' means the previous calendar month. Round monetary values to 2 decimal places."
+# Domain-specific guidance for the Genie LLM (include business defaults).
+# genie_instructions = "When asked about 'customers' without a status qualifier, default to active customers (CustomerStatus = 'Active'). 'Last month' means the previous calendar month. Round monetary values to 2 decimal places."
 
 # Ground-truth SQL for evaluating Genie accuracy.
+# Each question must be unambiguous — include explicit qualifiers so question and SQL agree on scope.
 # genie_benchmarks = [
 #   {
-#     question = "What is the total transaction amount?"
-#     sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions"
+#     question = "What is the total amount of completed transactions?"
+#     sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions WHERE TransactionStatus = 'Completed'"
+#   },
+# ]
+
+# Default WHERE clauses that guide Genie's SQL generation.
+# genie_sql_filters = [
+#   {
+#     sql          = "customers.CustomerStatus = 'Active'"
+#     display_name = "active customers"
+#     comment      = "Only include customers with Active status"
+#     instruction  = "Apply when the user asks about customers without specifying a status"
+#   },
+# ]
+
+# Standard aggregate metrics for Genie to use.
+# genie_sql_measures = [
+#   {
+#     alias        = "total_revenue"
+#     sql          = "SUM(transactions.Amount)"
+#     display_name = "total revenue"
+#     comment      = "Sum of all transaction amounts"
+#     instruction  = "Use for revenue, total amount, or sales calculations"
+#   },
+# ]
+
+# Computed dimensions/columns for Genie to use.
+# genie_sql_expressions = [
+#   {
+#     alias        = "transaction_year"
+#     sql          = "YEAR(transactions.TransactionDate)"
+#     display_name = "transaction year"
+#     comment      = "Extracts year from transaction date"
+#     instruction  = "Use for year-over-year analysis of transactions"
+#   },
+# ]
+
+# Join relationships between tables.
+# genie_join_specs = [
+#   {
+#     left_table  = "catalog.schema.accounts"
+#     left_alias  = "accounts"
+#     right_table = "catalog.schema.customers"
+#     right_alias = "customers"
+#     sql         = "accounts.CustomerID = customers.CustomerID"
+#     comment     = "Join accounts to customers on CustomerID"
+#     instruction = "Use when you need customer details for account queries"
 #   },
 # ]

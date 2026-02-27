@@ -228,16 +228,20 @@ Violating any of these causes validation failures. Double-check consistency acro
 6. Select masking functions from the library above (or create new ones)
 7. Generate both output files. For entity names in tag_assignments, always use **fully qualified** names (`catalog.schema.table` or `catalog.schema.table.column`). For function_name in fgac_policies, use relative names only (e.g. `mask_pii`). Every fgac_policy MUST include `catalog`, `function_catalog`, and `function_schema`. **CRITICAL**: set `function_schema` to the schema where the tagged columns actually live — do NOT default all policies to the first schema. In `masking_functions.sql`, group the `CREATE FUNCTION` statements by schema with separate `USE SCHEMA` blocks. Only create each function in the schema where it is needed
 8. Every `match_condition` and `when_condition` MUST only use `hasTagValue()` and/or `hasTag()` — no other functions or operators
-9. Generate Genie Space config — all five fields below. Tailor everything to the user's actual tables, domain, and business context:
-   - `genie_space_title` — a concise, descriptive title (e.g., "Financial Compliance Analytics", "Clinical Data Explorer")
+9. Generate Genie Space config — all nine fields below. **Derive everything from the user's actual tables, columns, and domain** — do NOT copy the finance/healthcare examples below if the user's data is from a different industry. Adapt terminology, metrics, filters, and joins to whatever vertical the tables belong to (retail, manufacturing, telecom, education, logistics, etc.):
+   - `genie_space_title` — a concise, descriptive title reflecting the user's domain (e.g., finance → "Financial Compliance Analytics", retail → "Retail Sales & Inventory Explorer", telecom → "Network Performance Dashboard")
    - `genie_space_description` — 1–2 sentence summary of what the space covers and who it's for
-   - `genie_sample_questions` — 5–10 natural-language questions a business user would ask (shown as conversation starters in the UI)
-   - `genie_instructions` — domain-specific guidance for the Genie LLM (e.g., how to calculate metrics, date conventions, terminology, masking behaviour awareness)
-   - `genie_benchmarks` — 3–5 benchmark questions with ground-truth SQL for evaluating accuracy
+   - `genie_sample_questions` — 5–10 natural-language questions a business user in that domain would ask (shown as conversation starters in the UI). Must reference the user's actual table/column names.
+   - `genie_instructions` — domain-specific guidance for the Genie LLM. **Must include business defaults** — look at status/state columns in the user's tables and define which values are the default filter (e.g., if a table has `OrderStatus` with values like 'Fulfilled'/'Cancelled'/'Pending', instruct: "default to fulfilled orders"). Also cover date conventions, metric calculations, terminology, and masking awareness relevant to the user's domain.
+   - `genie_benchmarks` — 3–5 benchmark questions with ground-truth SQL. **Each question must be unambiguous and self-contained** — include explicit qualifiers so the question and SQL agree on scope (e.g., "What is the average risk score for active customers?" not "What is the average customer risk score?"). Avoid questions that could reasonably be interpreted with different WHERE clauses.
+   - `genie_sql_filters` — default WHERE clauses derived from the user's status/state columns (e.g., active records, completed transactions, open orders). Each filter has `sql`, `display_name`, `comment`, and `instruction`.
+   - `genie_sql_measures` — standard aggregate metrics derived from the user's numeric columns (e.g., sums, averages, counts that are meaningful in the domain). Each measure has `alias`, `sql`, `display_name`, `comment`, and `instruction`.
+   - `genie_sql_expressions` — computed dimensions derived from the user's date/category columns (e.g., year extraction, bucketing, status grouping). Each expression has `alias`, `sql`, `display_name`, `comment`, and `instruction`.
+   - `genie_join_specs` — relationships between the user's tables based on foreign key columns (look for matching ID columns like `CustomerID`, `OrderID`, `ProductID`). Each join has `left_table`, `left_alias`, `right_table`, `right_alias`, `sql`, `comment`, and `instruction`.
 
 ### Output Format — Genie Space Config (in `abac.auto.tfvars`)
 
-Include these variables alongside groups, tag_policies, etc.:
+Include these variables alongside groups, tag_policies, etc. The example below shows a **finance/healthcare** scenario — adapt all values to match the user's actual tables and industry:
 
 ```hcl
 genie_space_title       = "Financial & Clinical Analytics"
@@ -245,22 +249,89 @@ genie_space_description = "Explore transaction data, patient encounters, and com
 
 genie_sample_questions = [
   "What is the total revenue by region for last quarter?",
-  "Show the top 10 customers by transaction volume",
+  "Show the top 10 active customers by transaction volume",
   "Which accounts have been flagged for AML review?",
   "How many patient encounters occurred last month?",
-  "What is the average transaction amount by account type?",
+  "What is the average completed transaction amount by account type?",
 ]
 
-genie_instructions = "When calculating revenue, sum the Amount column. 'Last month' means the previous calendar month (not last 30 days). Round monetary values to 2 decimal places. Patient names are masked for non-clinical roles — queries about patient counts or encounter dates are always allowed."
+genie_instructions = "When asked about 'customers' without a status qualifier, default to active customers (CustomerStatus = 'Active'). When asked about 'transactions' without specifying status, default to completed transactions (TransactionStatus = 'Completed'). 'Last month' means the previous calendar month (not last 30 days). Round monetary values to 2 decimal places. Patient names are masked for non-clinical roles — queries about patient counts or encounter dates are always allowed."
 
 genie_benchmarks = [
   {
-    question = "What is the total transaction amount?"
-    sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions"
+    question = "What is the total amount of completed transactions?"
+    sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions WHERE TransactionStatus = 'Completed'"
   },
   {
-    question = "How many patients were seen last month?"
+    question = "How many patient encounters occurred last month?"
     sql      = "SELECT COUNT(*) FROM catalog.schema.encounters WHERE EncounterDate >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL 1 MONTH) AND EncounterDate < DATE_TRUNC('month', CURRENT_DATE)"
+  },
+  {
+    question = "What is the average risk score for active customers?"
+    sql      = "SELECT AVG(RiskScore) as avg_risk_score FROM catalog.schema.customers WHERE CustomerStatus = 'Active'"
+  },
+]
+
+genie_sql_filters = [
+  {
+    sql          = "customers.CustomerStatus = 'Active'"
+    display_name = "active customers"
+    comment      = "Only include customers with Active status"
+    instruction  = "Apply when the user asks about customers without specifying a status"
+  },
+  {
+    sql          = "transactions.TransactionStatus = 'Completed'"
+    display_name = "completed transactions"
+    comment      = "Only include completed transactions"
+    instruction  = "Apply when the user asks about transactions or amounts without specifying a status"
+  },
+]
+
+genie_sql_measures = [
+  {
+    alias        = "total_revenue"
+    sql          = "SUM(transactions.Amount)"
+    display_name = "total revenue"
+    comment      = "Sum of all transaction amounts"
+    instruction  = "Use for revenue, total amount, or sales calculations"
+  },
+  {
+    alias        = "avg_risk_score"
+    sql          = "AVG(customers.RiskScore)"
+    display_name = "average risk score"
+    comment      = "Average AML risk score across customers"
+    instruction  = "Use when asked about risk scores or risk averages"
+  },
+]
+
+genie_sql_expressions = [
+  {
+    alias        = "transaction_year"
+    sql          = "YEAR(transactions.TransactionDate)"
+    display_name = "transaction year"
+    comment      = "Extracts year from transaction date"
+    instruction  = "Use for year-over-year analysis of transactions"
+  },
+]
+
+genie_join_specs = [
+  {
+    left_table  = "catalog.schema.accounts"
+    left_alias  = "accounts"
+    right_table = "catalog.schema.customers"
+    right_alias = "customers"
+    sql         = "accounts.CustomerID = customers.CustomerID"
+    comment     = "Join accounts to customers on CustomerID"
+    instruction = "Use when you need customer details for account queries"
+  },
+  {
+    left_table  = "catalog.schema.transactions"
+    left_alias  = "transactions"
+    right_table = "catalog.schema.accounts"
+    right_alias = "accounts"
+    sql         = "transactions.AccountID = accounts.AccountID"
+    comment     = "Join transactions to accounts on AccountID"
+    instruction = "Use when you need account or customer context for transactions"
   },
 ]
 ```

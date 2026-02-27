@@ -19,12 +19,6 @@ setup: ## Copy example files and prompt for credentials
 	else \
 		echo "env.auto.tfvars already exists — skipping."; \
 	fi
-	@if [ ! -f abac.auto.tfvars ]; then \
-		cp abac.auto.tfvars.example abac.auto.tfvars; \
-		echo "Created abac.auto.tfvars — edit it with your ABAC config."; \
-	else \
-		echo "abac.auto.tfvars already exists — skipping."; \
-	fi
 	@mkdir -p ddl generated
 	@echo "Created ddl/ and generated/ directories."
 	@echo ""

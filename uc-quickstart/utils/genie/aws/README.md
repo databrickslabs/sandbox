@@ -1,6 +1,6 @@
 # OneReady — Genie Onboarding Quickstart
 
-Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terraform quickstart that automates business-user onboarding — from ABAC governance and masking functions to a fully configured Genie Space with AI-generated sample questions, instructions, and benchmarks — all from three config files, no `.tf` editing required.
+Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terraform quickstart that automates business-user onboarding — from ABAC governance and masking functions to a fully configured Genie Space with AI-generated sample questions, instructions, benchmarks, SQL filters, measures, and join specs — all from three config files, no `.tf` editing required.
 
 ## What This Quickstart Automates
 
@@ -12,8 +12,11 @@ Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terra
 - **Masking functions** — Auto-deploy SQL UDFs to enforce column-level data masking (e.g., mask SSN, redact PII, hash emails).
 - **Genie Space** — Auto-create a new Genie Space from your tables, or bring an existing one. New spaces include AI-generated config:
   - **Sample questions** — Conversation starters tailored to your data domain
-  - **Instructions** — Domain-specific LLM guidance (metric definitions, date conventions, terminology)
-  - **Benchmarks** — Ground-truth question + SQL pairs for evaluating Genie accuracy
+  - **Instructions** — Domain-specific LLM guidance with business defaults (e.g., "customer" means active by default)
+  - **Benchmarks** — Unambiguous ground-truth question + SQL pairs for evaluating Genie accuracy
+  - **SQL filters** — Default WHERE clauses (e.g., active customers, completed transactions) that guide Genie's SQL generation
+  - **SQL measures & expressions** — Standard metrics (total revenue, avg risk score) and computed dimensions (transaction year)
+  - **Join specs** — Table relationships with join conditions so Genie knows how to combine tables
   - **Title & description** — Contextual naming based on your tables and domain
   - For existing spaces, set `genie_space_id` in `env.auto.tfvars` to apply `CAN_RUN` ACLs for all configured business groups
 - **SQL warehouse** — Auto-create a serverless warehouse or reuse an existing one.
@@ -64,6 +67,9 @@ Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terra
 │  │                         │  │  genie_sample_questions (5–10)    │   │
 │  │                         │  │  genie_instructions               │   │
 │  │                         │  │  genie_benchmarks (3–5 w/ SQL)    │   │
+│  │                         │  │  genie_sql_filters / measures     │   │
+│  │                         │  │  genie_sql_expressions            │   │
+│  │                         │  │  genie_join_specs                 │   │
 │  └────────────┬────────────┘  └─────────────────┬─────────────────┘   │
 └───────────────┼─────────────────────────────────┼─────────────────────┘
                 │             ▲  TUNE & VALIDATE  │
@@ -94,8 +100,10 @@ Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terra
 │  │ (auto-deploy UDFs) │  │ USE_CATALOG    │  │ • sample questions │   │
 │  │                    │  │ USE_SCHEMA     │  │ • instructions     │   │
 │  │ + SQL Warehouse    │  │ SELECT         │  │ • benchmarks       │   │
-│  │ (auto-created if   │  │                │  │ • CAN_RUN ACLs     │   │
-│  │  needed)           │  │                │  │   for all groups   │   │
+│  │ (auto-created if   │  │                │  │ • sql filters /    │   │
+│  │  needed)           │  │                │  │   measures / joins │   │
+│  │                    │  │                │  │ • CAN_RUN ACLs     │   │
+│  │                    │  │                │  │   for all groups   │   │
 │  └────────────────────┘  └────────────────┘  └────────────────────┘   │
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -113,7 +121,7 @@ make validate-generated     # 3. (Optional) Tune generated/ files, validate afte
 make apply                  #    Validates → promotes → terraform apply
 ```
 
-That's it. `make apply` creates groups, tags, masking functions, FGAC policies, UC grants, and a Genie Space (with AI-generated sample questions, instructions, and benchmarks) — all in one command.
+That's it. `make apply` creates groups, tags, masking functions, FGAC policies, UC grants, and a Genie Space (with AI-generated sample questions, instructions, benchmarks, SQL filters/measures/expressions, and join specs) — all in one command.
 
 To tear everything down: `make destroy`.
 
@@ -166,16 +174,20 @@ Managed automatically based on `genie_space_id` in `env.auto.tfvars`:
 When `make generate` creates the ABAC config, it also generates Genie Space config in `abac.auto.tfvars`:
 
 
-| Variable                  | Purpose                                                                                 |
-| ------------------------- | --------------------------------------------------------------------------------------- |
-| `genie_space_title`       | AI-generated title for the Genie Space (e.g., "Financial Compliance Analytics")         |
-| `genie_space_description` | 1–2 sentence summary of the space's scope and audience                                  |
-| `genie_sample_questions`  | Natural-language questions shown as conversation starters in the Genie UI               |
-| `genie_instructions`      | Domain-specific guidance for the Genie LLM (metric definitions, date conventions, etc.) |
-| `genie_benchmarks`        | Ground-truth question + SQL pairs for evaluating Genie accuracy                         |
+| Variable                  | Purpose                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `genie_space_title`       | AI-generated title for the Genie Space (e.g., "Financial Compliance Analytics")                            |
+| `genie_space_description` | 1–2 sentence summary of the space's scope and audience                                                     |
+| `genie_sample_questions`  | Natural-language questions shown as conversation starters in the Genie UI                                  |
+| `genie_instructions`      | Domain-specific guidance including business defaults (e.g., "customer" = active by default)                |
+| `genie_benchmarks`        | Unambiguous ground-truth question + SQL pairs for evaluating Genie accuracy                                |
+| `genie_sql_filters`       | Default WHERE clauses (e.g., active customers, completed transactions) that guide Genie's SQL generation   |
+| `genie_sql_measures`      | Standard aggregate metrics (e.g., total revenue, average risk score)                                       |
+| `genie_sql_expressions`   | Computed dimensions (e.g., transaction year, age bucket)                                                   |
+| `genie_join_specs`        | Table relationships with join conditions (e.g., accounts to customers on CustomerID)                       |
 
 
-All five fields are included in the `serialized_space` when a new Genie Space is created. Review and tune them in `generated/abac.auto.tfvars` alongside the ABAC policies before applying.
+All nine fields are included in the `serialized_space` when a new Genie Space is created. Review and tune them in `generated/abac.auto.tfvars` alongside the ABAC policies before applying.
 
 ## Make Targets
 
