@@ -1,16 +1,21 @@
 # OneReady — Genie Onboarding Quickstart
 
-Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terraform quickstart that automates business-user onboarding — groups, entitlements, data access, ABAC governance, masking functions, and Genie Space — all from two config files, no `.tf` editing required.
+Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terraform quickstart that automates business-user onboarding — from ABAC governance and masking functions to a fully configured Genie Space with AI-generated sample questions, instructions, and benchmarks — all from three config files, no `.tf` editing required.
 
 ## What This Quickstart Automates
 
+- **AI-generated ABAC config** — Point at your tables, and an LLM analyzes column sensitivity to generate groups, tag policies, tag assignments, FGAC policies, and masking functions automatically.
 - **Business groups** — Create account-level groups (access tiers) and optionally manage group membership.
-- **Workspace onboarding** — Assign groups to a target workspace so they can authenticate and use Genie.
-- **Databricks One entitlement** — Enable consumer access so business users can use the **Databricks One UI** without full workspace access.
+- **Workspace onboarding** — Assign groups to a target workspace with Databricks One consumer entitlements.
 - **Data access grants** — Apply minimum Unity Catalog privileges (`USE_CATALOG`, `USE_SCHEMA`, `SELECT`) for data exposed through Genie.
 - **ABAC governance** — Create governed tag policies, tag assignments on tables/columns, and FGAC policies (column masks + row filters).
 - **Masking functions** — Auto-deploy SQL UDFs to enforce column-level data masking (e.g., mask SSN, redact PII, hash emails).
-- **Genie Space** — Auto-create a Genie Space from your tables (or apply ACLs to an existing one) with `CAN_RUN` for all configured groups.
+- **Genie Space** — Auto-create a new Genie Space from your tables, or bring an existing one. New spaces include AI-generated config:
+  - **Sample questions** — Conversation starters tailored to your data domain
+  - **Instructions** — Domain-specific LLM guidance (metric definitions, date conventions, terminology)
+  - **Benchmarks** — Ground-truth question + SQL pairs for evaluating Genie accuracy
+  - **Title & description** — Contextual naming based on your tables and domain
+  - For existing spaces, set `genie_space_id` in `env.auto.tfvars` to apply `CAN_RUN` ACLs for all configured business groups
 - **SQL warehouse** — Auto-create a serverless warehouse or reuse an existing one.
 
 ## How It Works
@@ -20,20 +25,19 @@ Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terra
 │                    YOU PROVIDE (one-time setup)                       │
 ├───────────────────────────────────────────────────────────────────────┤
 │                                                                       │
-│  ┌─────────────────────────────────────┐                              │
-│  │  auth.auto.tfvars                   │                              │
-│  │  (credentials — never checked in)   │                              │
-│  │                                     │                              │
-│  │  databricks_account_id    = "..."   │                              │
-│  │  databricks_client_id     = "..."   │                              │
-│  │  databricks_client_secret = "..."   │                              │
-│  │  databricks_workspace_host = "..."  │                              │
-│  │  uc_tables = ["cat.schema.*"]       │                              │
-│  └──────────────────┬──────────────────┘                              │
-│                     │                                                 │
-└─────────────────────┼─────────────────────────────────────────────────┘
-                      │
-                      ▼
+│  ┌───────────────────────────────┐ ┌───────────────────────────────┐  │
+│  │  auth.auto.tfvars             │ │  env.auto.tfvars              │  │
+│  │  (secrets — gitignored)       │ │  (environment — checked in)   │  │
+│  │                               │ │                               │  │
+│  │  databricks_account_id = "..."│ │  uc_tables = ["cat.sch.*"]    │  │
+│  │  databricks_client_id  = "..."│ │  sql_warehouse_id = ""        │  │
+│  │  databricks_client_secret     │ │  genie_space_id = ""          │  │
+│  │  databricks_workspace_host    │ │                               │  │
+│  └───────────────┬───────────────┘ └───────────────┬───────────────┘  │
+│                  └────────────────┬────────────────┘                  │
+└────────────────────────────────────┼──────────────────────────────────┘
+                                     │
+                                     ▼
 ┌───────────────────────────────────────────────────────────────────────┐
 │                make generate  (generate_abac.py)                      │
 │                                                                       │
@@ -50,13 +54,16 @@ Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terra
 │                                                                       │
 │  ┌─────────────────────────┐  ┌───────────────────────────────────┐   │
 │  │  masking_functions.sql  │  │  abac.auto.tfvars                 │   │
-│  │                         │  │  (ABAC config — no credentials)   │   │
+│  │                         │  │  (ABAC + Genie — no credentials)  │   │
 │  │  SQL UDFs:              │  │                                   │   │
 │  │  • mask_pii_partial()   │  │  groups        ─ access tiers     │   │
 │  │  • mask_ssn()           │  │  tag_policies  ─ sensitivity tags │   │
 │  │  • mask_email()         │  │  tag_assignments ─ tags on cols   │   │
 │  │  • filter_by_region()   │  │  fgac_policies ─ masks & filters  │   │
-│  │  • ...                  │  │  group_members ─ user mappings    │   │
+│  │  • ...                  │  │  genie_space_title / description  │   │
+│  │                         │  │  genie_sample_questions (5–10)    │   │
+│  │                         │  │  genie_instructions               │   │
+│  │                         │  │  genie_benchmarks (3–5 w/ SQL)    │   │
 │  └────────────┬────────────┘  └─────────────────┬─────────────────┘   │
 └───────────────┼─────────────────────────────────┼─────────────────────┘
                 │             ▲  TUNE & VALIDATE  │
@@ -65,7 +72,7 @@ Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terra
                 ▼                                 ▼
 ┌───────────────────────────────────────────────────────────────────────┐
 │  make apply  (validate → promote → terraform apply)                   │
-│  Loads: auth.auto.tfvars (credentials) + abac.auto.tfvars (ABAC)      │
+│  Loads: auth.auto.tfvars + env.auto.tfvars + abac.auto.tfvars         │
 │                                                                       │
 │  Creates in Databricks:                                               │
 │  ┌────────────────┐  ┌───────────────┐  ┌─────────────────────────┐   │
@@ -84,11 +91,11 @@ Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terra
 │  └────────────────────────────────────────────────────────────────┘   │
 │  ┌────────────────────┐  ┌────────────────┐  ┌────────────────────┐   │
 │  │ Masking Functions  │  │ UC Grants      │  │ Genie Space        │   │
-│  │ (auto-deploy UDFs) │  │ USE_CATALOG    │  │ (auto-created      │   │
-│  │                    │  │ USE_SCHEMA     │  │  or ACLs-only)     │   │
-│  │ + SQL Warehouse    │  │ SELECT         │  │                    │   │
-│  │ (auto-created if   │  │                │  │ + CAN_RUN ACLs     │   │
-│  │  needed)           │  │                │  │ for all groups     │   │
+│  │ (auto-deploy UDFs) │  │ USE_CATALOG    │  │ • sample questions │   │
+│  │                    │  │ USE_SCHEMA     │  │ • instructions     │   │
+│  │ + SQL Warehouse    │  │ SELECT         │  │ • benchmarks       │   │
+│  │ (auto-created if   │  │                │  │ • CAN_RUN ACLs     │   │
+│  │  needed)           │  │                │  │   for all groups   │   │
 │  └────────────────────┘  └────────────────┘  └────────────────────┘   │
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -96,8 +103,9 @@ Get your workspace **OneReady** for Genie in Databricks One. A data-driven Terra
 ## Quick Start
 
 ```bash
-make setup                  # 1. Creates auth.auto.tfvars from example
-vi auth.auto.tfvars         #    Fill in credentials + uc_tables
+make setup                  # 1. Creates auth.auto.tfvars + env.auto.tfvars from examples
+vi auth.auto.tfvars         #    Fill in credentials (gitignored)
+vi env.auto.tfvars          #    Fill in uc_tables, sql_warehouse_id (checked in)
 
 make generate               # 2. Fetches DDLs, calls LLM, outputs to generated/
 
@@ -105,20 +113,23 @@ make validate-generated     # 3. (Optional) Tune generated/ files, validate afte
 make apply                  #    Validates → promotes → terraform apply
 ```
 
-That's it. `make apply` creates groups, tags, masking functions, FGAC policies, UC grants, and (optionally) a Genie Space — all in one command.
+That's it. `make apply` creates groups, tags, masking functions, FGAC policies, UC grants, and a Genie Space (with AI-generated sample questions, instructions, and benchmarks) — all in one command.
 
 To tear everything down: `make destroy`.
 
 ## Configuration
 
-You only edit two files:
+Three files, clear separation of concerns:
 
-| File | What goes here | Tracked in git? |
-|------|---------------|-----------------|
-| `auth.auto.tfvars` | Credentials, `uc_tables`, `sql_warehouse_id`, `genie_space_id` | No (secrets) |
-| `abac.auto.tfvars` | Groups, tag policies, tag assignments, FGAC policies, group members | **Yes** |
 
-### `auth.auto.tfvars` — your environment
+| File               | What goes here                                                           | Tracked in git? |
+| ------------------ | ------------------------------------------------------------------------ | --------------- |
+| `auth.auto.tfvars` | Credentials only (account ID, client ID/secret, workspace)               | No (secrets)    |
+| `env.auto.tfvars`  | `uc_tables`, `sql_warehouse_id`, `genie_space_id`                        | **Yes**         |
+| `abac.auto.tfvars` | Groups, tag policies, tag assignments, FGAC policies, Genie Space config | **Yes**         |
+
+
+### `auth.auto.tfvars` — credentials (gitignored)
 
 ```hcl
 databricks_account_id    = "..."
@@ -126,48 +137,61 @@ databricks_client_id     = "..."
 databricks_client_secret = "..."
 databricks_workspace_id  = "..."
 databricks_workspace_host = "https://..."
+```
 
+### `env.auto.tfvars` — environment config (checked in)
+
+```hcl
 uc_tables = ["catalog.schema.table1", "catalog.schema.*"]  # tables for ABAC + Genie
 sql_warehouse_id = ""          # set to reuse existing, or leave empty to auto-create
 genie_space_id   = ""          # set for existing space, or leave empty to auto-create
 ```
 
-### `abac.auto.tfvars` — your ABAC config (auto-generated)
+### `abac.auto.tfvars` — ABAC + Genie config (auto-generated)
 
-Generated by `make generate`. Contains groups, tag policies, tag assignments, and FGAC policies. Tune it before applying. See `generated/TUNING.md` for guidance.
+Generated by `make generate`. Contains groups, tag policies, tag assignments, FGAC policies, and Genie Space config (title, description, sample questions, instructions, benchmarks). Tune it before applying. See `generated/TUNING.md` for guidance.
 
 ## Genie Space
 
-Managed automatically based on `genie_space_id` in `auth.auto.tfvars`:
+Managed automatically based on `genie_space_id` in `env.auto.tfvars`:
 
-| `genie_space_id` | `uc_tables` | What happens on `make apply` |
-|-------------------|-------------|------------------------------|
-| Empty | Non-empty | Auto-creates a Genie Space from `uc_tables`, sets CAN_RUN ACLs, trashes on `make destroy` |
-| Set | Any | Applies CAN_RUN ACLs to the existing space |
-| Empty | Empty | No Genie Space action |
 
-Optional overrides in `auth.auto.tfvars` (uncomment to customise):
+| `genie_space_id` | `uc_tables` | What happens on `make apply`                                                              |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| Empty            | Non-empty   | Auto-creates a Genie Space from `uc_tables`, sets CAN_RUN ACLs, trashes on `make destroy` |
+| Set              | Any         | Applies CAN_RUN ACLs to the existing space                                                |
+| Empty            | Empty       | No Genie Space action                                                                     |
 
-```hcl
-genie_space_title       = "Sales Analytics"
-genie_space_description = "Genie space for the sales team"
-```
 
-> **Note**: Instructions and benchmark questions must be added via the Databricks UI after the space is created (the API does not support these at creation time).
+When `make generate` creates the ABAC config, it also generates Genie Space config in `abac.auto.tfvars`:
+
+
+| Variable                  | Purpose                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| `genie_space_title`       | AI-generated title for the Genie Space (e.g., "Financial Compliance Analytics")         |
+| `genie_space_description` | 1–2 sentence summary of the space's scope and audience                                  |
+| `genie_sample_questions`  | Natural-language questions shown as conversation starters in the Genie UI               |
+| `genie_instructions`      | Domain-specific guidance for the Genie LLM (metric definitions, date conventions, etc.) |
+| `genie_benchmarks`        | Ground-truth question + SQL pairs for evaluating Genie accuracy                         |
+
+
+All five fields are included in the `serialized_space` when a new Genie Space is created. Review and tune them in `generated/abac.auto.tfvars` alongside the ABAC policies before applying.
 
 ## Make Targets
 
-| Target | Description |
-|--------|-------------|
-| `make setup` | Copy example files, create `ddl/` and `generated/` directories |
-| `make generate` | Run `generate_abac.py` to produce masking SQL + tfvars |
-| `make validate-generated` | Validate `generated/` files (run after each tuning edit) |
-| `make validate` | Validate root `abac.auto.tfvars` + `masking_functions.sql` |
-| `make promote` | Validate `generated/` and copy to module root |
-| `make plan` | `terraform init` + `terraform plan` |
-| `make apply` | Validate, promote, then `terraform apply` |
-| `make destroy` | `terraform destroy` (cleans up everything including Genie Space) |
-| `make clean` | Remove generated files, Terraform state, and `.terraform/` |
+
+| Target                    | Description                                                      |
+| ------------------------- | ---------------------------------------------------------------- |
+| `make setup`              | Copy example files, create `ddl/` and `generated/` directories   |
+| `make generate`           | Run `generate_abac.py` to produce masking SQL + tfvars           |
+| `make validate-generated` | Validate `generated/` files (run after each tuning edit)         |
+| `make validate`           | Validate root `abac.auto.tfvars` + `masking_functions.sql`       |
+| `make promote`            | Validate `generated/` and copy to module root                    |
+| `make plan`               | `terraform init` + `terraform plan`                              |
+| `make apply`              | Validate, promote, then `terraform apply`                        |
+| `make destroy`            | `terraform destroy` (cleans up everything including Genie Space) |
+| `make clean`              | Remove generated files, Terraform state, and `.terraform/`       |
+
 
 ## Importing Existing Resources
 
@@ -181,169 +205,51 @@ If groups, tag policies, or FGAC policies already exist in Databricks, `terrafor
 ./scripts/import_existing.sh --fgac-only   # import only FGAC policies
 ```
 
-See [`IMPORT_EXISTING.md`](IMPORT_EXISTING.md) for details.
+See `[IMPORT_EXISTING.md](IMPORT_EXISTING.md)` for details.
 
 ## Troubleshooting
 
-| Error | Fix |
-|-------|-----|
-| "Could not find principal" | Re-run `terraform apply` (group sync timing) |
-| "User does not have USE SCHEMA" | Module grants MANAGE to SP automatically — re-apply |
-| "already exists" | Run `./scripts/import_existing.sh` to adopt into state |
-| "Operation aborted due to concurrent modification" | Already handled — `make apply` uses `-parallelism=1` |
-
 ### "Provider produced inconsistent result after apply" (tag policies)
 
-This is a **known Databricks provider bug** affecting `databricks_tag_policy` resources. The Databricks API silently reorders tag policy values after creation (e.g., you send `["masked", "public", "restricted"]`, the API stores `["public", "restricted", "masked"]`). The Terraform provider then compares by index position and reports a mismatch.
+A known Databricks provider bug — the API reorders tag policy values after creation, causing a state mismatch. **Your tag policies are created correctly**; only the Terraform state comparison fails.
 
-**The tag policies are created correctly in Databricks** — only the Terraform state comparison fails.
-
-`make apply` handles this automatically: if the first apply fails, it imports all tag policies from Databricks (capturing the API's ordering) and retries. No manual action is needed.
-
-If you run `terraform apply` directly (outside `make apply`) and hit this error, fix it manually:
+`make apply` handles this automatically (imports the API's ordering and retries). If you run `terraform apply` directly and hit this, import the failed policies manually:
 
 ```bash
-# 1. Import each failed tag policy into state
 terraform import 'databricks_tag_policy.policies["pii_level"]' pii_level
-terraform import 'databricks_tag_policy.policies["phi_level"]' phi_level
-# ... repeat for each tag policy key listed in the error
-
-# 2. Re-run apply — tag policies are now in state with the API's ordering
 terraform apply -parallelism=1 -auto-approve
 ```
 
-The `lifecycle { ignore_changes = [values] }` block in `tag_policies.tf` prevents this error from recurring on subsequent applies. It only occurs on **first-time creation** of tag policies.
+### "already exists"
+
+Resources (groups, tag policies) already exist in Databricks. Import them so Terraform can manage them:
+
+```bash
+./scripts/import_existing.sh
+```
 
 ## Advanced Usage
-
-### Generation options
-
-`make generate` calls `generate_abac.py` under the hood. For advanced options, call the script directly:
-
-```bash
-python generate_abac.py --tables "a.b.*" "c.d.e"  # override uc_tables from CLI
-python generate_abac.py --dry-run              # print prompt without calling LLM
-python generate_abac.py --max-retries 5        # retry on transient LLM failures
-```
-
-### Manual Genie Space script
-
-The `scripts/genie_space.sh` script can be used independently outside Terraform:
-
-```bash
-# Create a space
-GENIE_GROUPS_CSV=$(terraform output -raw genie_groups_csv) \
-GENIE_TABLES_CSV="catalog.schema.table1,catalog.schema.table2" \
-./scripts/genie_space.sh create
-
-# Set ACLs only
-GENIE_GROUPS_CSV=$(terraform output -raw genie_groups_csv) \
-GENIE_SPACE_OBJECT_ID="<space_id>" \
-./scripts/genie_space.sh set-acls
-
-# Trash a space
-GENIE_ID_FILE=.genie_space_id ./scripts/genie_space.sh trash
-```
-
-### Alternative workflows
-
-- **Tier 1 (Demo)**: Pre-built finance config in [`examples/finance/`](examples/finance/)
-- **Tier 2 (Manual)**: Use `abac.auto.tfvars.example` + pick functions from `masking_functions_library.sql`
-- **Manual prompt**: Chat with an AI using `ABAC_PROMPT.md`, then validate with `make validate`
-- **Worked example**: See [`examples/healthcare/`](examples/healthcare/) for an end-to-end walkthrough
-
----
-
-## Reference
 
 ### Prerequisites
 
 - Databricks **service principal** with Account Admin + Workspace Admin
-- Tables must exist before tag assignments can be applied
+- Tables must exist in Unity Catalog before running `make generate`
 
-### What `make apply` creates
+### Generation options
 
-| Resource | Terraform File |
-|----------|---------------|
-| Account-level groups | `main.tf` |
-| Workspace assignments + consumer entitlements | `main.tf` |
-| Tag policies (governed tags) | `tag_policies.tf` |
-| Tag assignments (tables/columns) | `entity_tag_assignments.tf` |
-| FGAC policies (column masks + row filters) | `fgac_policies.tf` |
-| Group members | `group_members.tf` |
-| UC grants (USE_CATALOG, USE_SCHEMA, SELECT) | `uc_grants.tf` |
-| SP manage grant (CREATE_FUNCTION, MANAGE) | `uc_grants.tf` |
-| Masking functions (auto-deployed UDFs) | `masking_functions.tf` |
-| SQL warehouse (auto-created if needed) | `warehouse.tf` |
-| Genie Space (auto-created or ACLs-only) | `genie_space.tf` |
-
-### Variables — `auth.auto.tfvars`
-
-| Variable | Description |
-|----------|-------------|
-| `databricks_account_id` | Databricks account ID |
-| `databricks_client_id` | Service principal client ID |
-| `databricks_client_secret` | Service principal client secret |
-| `databricks_workspace_id` | Target workspace ID |
-| `databricks_workspace_host` | Workspace URL |
-| `uc_tables` | Tables for ABAC + Genie. Wildcards supported (`catalog.schema.*`). |
-| `sql_warehouse_id` | Existing warehouse ID (leave empty to auto-create) |
-| `genie_space_id` | Existing Genie Space ID (leave empty to auto-create) |
-
-### Variables — `abac.auto.tfvars`
-
-| Variable | Type | Description |
-|----------|------|-------------|
-| `groups` | map(object) | Business role groups |
-| `tag_policies` | list(object) | Governed tag keys + allowed values |
-| `tag_assignments` | list(object) | Tags on tables/columns (fully-qualified names) |
-| `fgac_policies` | list(object) | Column masks and row filters |
-| `group_members` | map(list) | User IDs per group |
-| `warehouse_name` | string | Name for auto-created warehouse (default: `"ABAC Serverless Warehouse"`) |
-| `genie_space_title` | string | Title for auto-created Genie Space (default: `"ABAC Genie Space"`) |
-| `genie_space_description` | string | Description for auto-created Genie Space |
-
-### Outputs
-
-| Output | Description |
-|--------|-------------|
-| `group_ids` | Map of group names to group IDs |
-| `group_names` | List of all created group names |
-| `sql_warehouse_id` | Effective warehouse ID (provided or auto-created) |
-| `genie_space_acls_applied` | Whether Genie Space ACLs were applied |
-| `genie_space_created` | Whether a new Genie Space was auto-created |
-| `genie_groups_csv` | Comma-separated group names (for script usage) |
-
-### File layout
-
+```bash
+python generate_abac.py --tables "a.b.*" "c.d.e"  # override uc_tables
+python generate_abac.py --dry-run                  # preview prompt without calling LLM
 ```
-aws/
-  auth.auto.tfvars.example     # Copy to auth.auto.tfvars, fill in credentials
-  abac.auto.tfvars.example     # ABAC config skeleton (auto-generated in practice)
-  Makefile                     # make setup/generate/validate/apply/destroy
-  generate_abac.py             # AI-assisted ABAC config generator
-  validate_abac.py             # Config validator
-  deploy_masking_functions.py  # UDF deployer (called by Terraform)
-  ABAC_PROMPT.md               # AI prompt template
-  masking_functions_library.sql  # Reusable UDF library
-  main.tf / variables.tf / outputs.tf / provider.tf
-  tag_policies.tf / entity_tag_assignments.tf / fgac_policies.tf
-  uc_grants.tf / group_members.tf
-  masking_functions.tf / warehouse.tf / genie_space.tf
-  scripts/
-    genie_space.sh             # Create/ACL/trash Genie Spaces
-    import_existing.sh         # Import pre-existing resources into Terraform state
-  examples/
-    finance/                   # Pre-built finance demo (Tier 1)
-    healthcare/                # AI-assisted walkthrough (Tier 3)
-  ddl/                         # Auto-fetched table DDLs
-  generated/                   # AI-generated output (masking SQL + tfvars)
-```
+
+### Examples
+
+A pre-built finance demo is available in `examples/finance/` — copy the tfvars and SQL files to try without AI generation. Sample healthcare DDLs are in `examples/healthcare/ddl/` for testing `make generate`.
 
 ## Roadmap
 
-- [ ] Genie Space instructions & benchmarks via API
-- [ ] Multi Genie Space support
-- [ ] Multi data steward / user support
-- [ ] AI-assisted tuning and troubleshooting
-- [ ] Auto-detect and import existing policies
+- Multi Genie Space support
+- Multi data steward / user support
+- AI-assisted tuning and troubleshooting
+- Auto-detect and import existing policies
+

@@ -1,7 +1,7 @@
 # ============================================================================
 # SQL Warehouse (shared by masking function deployment + Genie Space)
 # ============================================================================
-# When sql_warehouse_id is set in auth.auto.tfvars, that existing warehouse is
+# When sql_warehouse_id is set in env.auto.tfvars, that existing warehouse is
 # reused for everything. When empty, Terraform auto-creates a serverless
 # warehouse. The effective ID is exposed as local.effective_warehouse_id.
 # ============================================================================

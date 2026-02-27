@@ -66,6 +66,9 @@ resource "null_resource" "genie_space_create" {
       GENIE_WAREHOUSE_ID       = self.triggers.warehouse_id
       GENIE_TITLE              = var.genie_space_title
       GENIE_DESCRIPTION        = var.genie_space_description
+      GENIE_SAMPLE_QUESTIONS   = length(var.genie_sample_questions) > 0 ? jsonencode(var.genie_sample_questions) : ""
+      GENIE_INSTRUCTIONS       = var.genie_instructions
+      GENIE_BENCHMARKS         = length(var.genie_benchmarks) > 0 ? jsonencode(var.genie_benchmarks) : ""
       GENIE_ID_FILE            = self.triggers.id_file
     }
   }

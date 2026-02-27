@@ -13,6 +13,12 @@ setup: ## Copy example files and prompt for credentials
 	else \
 		echo "auth.auto.tfvars already exists — skipping."; \
 	fi
+	@if [ ! -f env.auto.tfvars ]; then \
+		cp env.auto.tfvars.example env.auto.tfvars; \
+		echo "Created env.auto.tfvars — edit it with your tables and environment config."; \
+	else \
+		echo "env.auto.tfvars already exists — skipping."; \
+	fi
 	@if [ ! -f abac.auto.tfvars ]; then \
 		cp abac.auto.tfvars.example abac.auto.tfvars; \
 		echo "Created abac.auto.tfvars — edit it with your ABAC config."; \
@@ -22,7 +28,10 @@ setup: ## Copy example files and prompt for credentials
 	@mkdir -p ddl generated
 	@echo "Created ddl/ and generated/ directories."
 	@echo ""
-	@echo "Next: edit auth.auto.tfvars, then run 'make generate' or 'make plan'."
+	@echo "Next steps:"
+	@echo "  1. Edit credentials (gitignored):  $$(pwd)/auth.auto.tfvars"
+	@echo "  2. Edit tables & environment:       $$(pwd)/env.auto.tfvars"
+	@echo "  3. Run:  make generate"
 
 generate: ## Run generate_abac.py to produce masking SQL + tfvars
 	@echo "=== Generate ABAC Config ==="
@@ -86,4 +95,4 @@ clean: ## Remove generated files, Terraform state, and .terraform/
 	rm -rf generated/abac.auto.tfvars generated/masking_functions.sql generated/generated_response.md
 	rm -rf .terraform *.tfstate *.tfstate.backup .terraform.lock.hcl
 	@echo "Cleaned generated files and Terraform state."
-	@echo "NOTE: auth.auto.tfvars and abac.auto.tfvars were NOT removed."
+	@echo "NOTE: auth.auto.tfvars, env.auto.tfvars, and abac.auto.tfvars were NOT removed."

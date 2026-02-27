@@ -299,11 +299,11 @@ def validate_group_members(cfg: dict, group_names: set[str], result: ValidationR
         result.ok(f"group_members: {len(members)} group(s) with member assignments")
 
 
-def _find_auth_file(tfvars_path: Path) -> Path | None:
-    """Locate auth.auto.tfvars relative to the given tfvars file."""
+def _find_tfvars_file(tfvars_path: Path, name: str) -> Path | None:
+    """Locate a sibling tfvars file relative to the given tfvars file."""
     candidates = [
-        tfvars_path.parent / "auth.auto.tfvars",
-        tfvars_path.parent.parent / "auth.auto.tfvars",
+        tfvars_path.parent / name,
+        tfvars_path.parent.parent / name,
     ]
     for p in candidates:
         if p.exists():
@@ -321,16 +321,17 @@ def validate_auth(cfg: dict, result: ValidationResult, tfvars_path: Path):
     ]
 
     auth_cfg = dict(cfg)
-    auth_file = _find_auth_file(tfvars_path)
-    if auth_file:
-        try:
-            file_cfg = parse_tfvars(auth_file)
-            for k, v in file_cfg.items():
-                if v and not auth_cfg.get(k):
-                    auth_cfg[k] = v
-            result.ok(f"Auth vars loaded from {auth_file.name}")
-        except Exception as e:
-            result.warn(f"Could not parse {auth_file}: {e}")
+    for fname in ["auth.auto.tfvars", "env.auto.tfvars"]:
+        found = _find_tfvars_file(tfvars_path, fname)
+        if found:
+            try:
+                file_cfg = parse_tfvars(found)
+                for k, v in file_cfg.items():
+                    if v and not auth_cfg.get(k):
+                        auth_cfg[k] = v
+                result.ok(f"Vars loaded from {found.name}")
+            except Exception as e:
+                result.warn(f"Could not parse {found}: {e}")
 
     for key in required:
         val = auth_cfg.get(key, "")

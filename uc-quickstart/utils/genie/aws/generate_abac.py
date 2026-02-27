@@ -7,10 +7,10 @@ combines them with the ABAC prompt template, sends to an LLM, and writes
 the generated output files.  Optionally runs validate_abac.py on the result.
 
 Authentication:
-  The script reads auth.auto.tfvars (or --auth-file) to get Databricks
-  credentials and uc_tables.  Catalog/schema for UDF deployment are
-  auto-derived from the first table in uc_tables (override with
-  --catalog / --schema).
+  The script reads auth.auto.tfvars for Databricks credentials and
+  env.auto.tfvars for uc_tables and environment config.  Catalog/schema
+  for UDF deployment are auto-derived from the first table in uc_tables
+  (override with --catalog / --schema).
 
 Supported LLM providers:
   - databricks (default) — Claude Sonnet via Databricks Foundation Model API
@@ -19,8 +19,9 @@ Supported LLM providers:
 
 Usage:
   # One-time setup
-  cp auth.auto.tfvars.example auth.auto.tfvars
-  # Fill in credentials and uc_tables:
+  cp auth.auto.tfvars.example auth.auto.tfvars   # credentials (gitignored)
+  cp env.auto.tfvars.example env.auto.tfvars     # tables + environment (checked in)
+  # Edit env.auto.tfvars:
   #   uc_tables = ["prod.sales.customers", "prod.sales.orders", "prod.finance.*"]
 
   # Generate (reads tables from uc_tables; catalog/schema auto-derived)
@@ -50,6 +51,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPT_TEMPLATE_PATH = SCRIPT_DIR / "ABAC_PROMPT.md"
 DEFAULT_AUTH_FILE = SCRIPT_DIR / "auth.auto.tfvars"
+DEFAULT_ENV_FILE = SCRIPT_DIR / "env.auto.tfvars"
 
 REQUIRED_PACKAGES = {
     "python-hcl2": "hcl2",
@@ -75,24 +77,33 @@ def _ensure_packages():
 _ensure_packages()
 
 
-def load_auth_config(auth_file: Path) -> dict:
-    """Load auth config from a .tfvars file. Returns empty dict if not found."""
-    if not auth_file.exists():
+def _load_tfvars(path: Path, label: str) -> dict:
+    """Load a single .tfvars file. Returns empty dict if not found."""
+    if not path.exists():
         return {}
     import hcl2
     try:
-        with open(auth_file) as f:
+        with open(path) as f:
             cfg = hcl2.load(f)
         non_empty = {k: v for k, v in cfg.items() if v}
         if non_empty:
-            print(f"  Loaded auth from: {auth_file}")
-            if "uc_tables" in non_empty:
-                tables = non_empty["uc_tables"]
-                print(f"    uc_tables: {', '.join(tables)}")
+            print(f"  Loaded {label} from: {path}")
         return cfg
     except Exception as e:
-        print(f"  WARNING: Failed to parse {auth_file}: {e}")
+        print(f"  WARNING: Failed to parse {path}: {e}")
         return {}
+
+
+def load_auth_config(auth_file: Path, env_file: Path | None = None) -> dict:
+    """Load config from auth + env tfvars files. Merges both; env overrides auth."""
+    cfg = _load_tfvars(auth_file, "credentials")
+    if env_file is None:
+        env_file = auth_file.parent / "env.auto.tfvars"
+    env_cfg = _load_tfvars(env_file, "environment")
+    cfg.update(env_cfg)
+    if "uc_tables" in cfg and cfg["uc_tables"]:
+        print(f"    uc_tables: {', '.join(cfg['uc_tables'])}")
+    return cfg
 
 
 def configure_databricks_env(auth_cfg: dict):
@@ -599,7 +610,7 @@ def main():
         description="Generate ABAC configuration from table DDL using AI",
         epilog=(
             "Examples:\n"
-            "  python generate_abac.py                       # reads uc_tables from auth.auto.tfvars\n"
+            "  python generate_abac.py                       # reads uc_tables from env.auto.tfvars\n"
             "  python generate_abac.py --tables 'prod.sales.*'  # CLI override\n"
             "  python generate_abac.py --promote              # generate + validate + copy to root (legacy)\n"
             "  python generate_abac.py --dry-run              # print prompt without calling LLM\n"
@@ -609,7 +620,7 @@ def main():
     parser.add_argument(
         "--tables", nargs="+", metavar="CATALOG.SCHEMA.TABLE",
         help="Fully-qualified table refs to fetch from Databricks "
-             "(overrides uc_tables in auth.auto.tfvars). "
+             "(overrides uc_tables in env.auto.tfvars). "
              "E.g. prod.sales.customers or prod.sales.* for all tables in a schema",
     )
     parser.add_argument("--catalog", help="Catalog for masking UDFs (auto-derived from first uc_tables entry if omitted)")
@@ -767,6 +778,10 @@ Before you apply, tune for your business roles and security requirements:
 - **Sensitive columns**: Are the right columns tagged (PII/PHI/financial/etc.)?
 - **Masking behavior**: Are you using the right approach (partial, redact, hash) per sensitivity and use case?
 - **Row filters and exceptions**: Are filters too broad/strict? Are exceptions minimal and intentional?
+- **Genie title & description**: Does the AI-generated title/description accurately represent the space?
+- **Genie sample questions**: Do the sample questions reflect what business users will ask?
+- **Genie instructions**: Does the instruction text match your domain conventions (e.g., date handling, metric definitions)?
+- **Genie benchmarks**: Do the benchmark SQL queries return correct results?
 - **Validate before apply**: Run validation before `terraform apply`.
 
 ## Suggested workflow
@@ -781,24 +796,6 @@ Before you apply, tune for your business roles and security requirements:
    make apply
    ```
 
-Or skip tuning and apply directly:
-
-```bash
-python generate_abac.py --promote && make apply
-```
-
-### Auto-deploying masking functions
-
-If `sql_warehouse_id` is set in `auth.auto.tfvars`, Terraform executes
-`masking_functions.sql` automatically during `terraform apply` — no need to
-run the SQL manually. To enable this, add a warehouse ID:
-
-```
-sql_warehouse_id = "your-warehouse-id"
-```
-
-If `sql_warehouse_id` is empty (default), you must run `masking_functions.sql`
-in your Databricks SQL editor before `terraform apply`.
 """
 
     tuning_path = out_dir / "TUNING.md"
@@ -828,7 +825,7 @@ in your Databricks SQL editor before `terraform apply`.
             "# ============================================================================\n"
             "# GENERATED ABAC CONFIG (FIRST DRAFT)\n"
             "# ============================================================================\n"
-            "# NOTE: Authentication comes from auth.auto.tfvars.\n"
+            "# NOTE: Authentication comes from auth.auto.tfvars, environment from env.auto.tfvars.\n"
             "# Tune the following before apply:\n"
             "# - groups (business roles)\n"
             "# - tag_assignments (what data is considered sensitive)\n"
@@ -870,13 +867,13 @@ in your Databricks SQL editor before `terraform apply`.
             print("    make apply   (or: terraform init && terraform apply -parallelism=1)")
         else:
             print("  Next steps:")
-            print(f"    1. Review {out_dir}/TUNING.md — tune generated/ files as needed")
-            print("    2. make validate-generated   (check your changes anytime)")
-            print("    3. make apply   (validates, promotes to root, runs terraform apply)")
-            print()
-            print("  Or skip tuning: python generate_abac.py --promote && make apply")
-        print()
-        print("  Tip: set sql_warehouse_id in auth.auto.tfvars to auto-deploy masking functions during apply.")
+            print(f"    1. Review the tuning checklist:")
+            print(f"       {out_dir.resolve()}/TUNING.md")
+            print(f"    2. Review and tune generated files:")
+            print(f"       {out_dir.resolve()}/masking_functions.sql")
+            print(f"       {out_dir.resolve()}/abac.auto.tfvars")
+            print("    3. make validate-generated   (check your changes anytime)")
+            print("    4. make apply   (validates, promotes to root, runs terraform apply)")
     print("=" * 60)
 
 

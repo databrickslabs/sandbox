@@ -116,6 +116,7 @@ if ! $SKIP_TF; then
 
   cp "$FINANCE_TFVARS" "$TMPDIR_TF/abac.auto.tfvars" 2>/dev/null || true
   cp auth.auto.tfvars.example "$TMPDIR_TF/auth.auto.tfvars" 2>/dev/null || true
+  cp env.auto.tfvars.example "$TMPDIR_TF/env.auto.tfvars" 2>/dev/null || true
 
   if terraform -chdir="$SCRIPT_DIR" validate -no-color > "$TMPDIR_TF/tf_validate.log" 2>&1; then
     report "PASS" "terraform validate passed"

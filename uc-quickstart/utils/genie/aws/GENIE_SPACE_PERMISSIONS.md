@@ -17,7 +17,7 @@ This document lists everything that must be in place for business users (the gro
 
 - **SQL warehouse:** A single SQL warehouse is used for both masking function deployment and the Genie Space. Genie embeds on this warehouse; end users do **not** need explicit **CAN USE** on the warehouse.
 - **Terraform:** `warehouse.tf` handles warehouse resolution:
-  - `sql_warehouse_id` set in `auth.auto.tfvars` -> reuses the existing warehouse (dev)
+  - `sql_warehouse_id` set in `env.auto.tfvars` -> reuses the existing warehouse (dev)
   - `sql_warehouse_id` empty or omitted -> auto-creates a serverless warehouse (prod)
 
 ## 4. Data access
@@ -27,18 +27,18 @@ This document lists everything that must be in place for business users (the gro
 
 ## 5. Genie Space (create + ACLs)
 
-- **Genie Space:** Create a Genie Space with the tables from `uc_tables` (in `auth.auto.tfvars`) and grant at least **CAN VIEW** and **CAN RUN** to all groups.
+- **Genie Space:** Create a Genie Space with the tables from `uc_tables` (in `env.auto.tfvars`) and grant at least **CAN VIEW** and **CAN RUN** to all groups.
 - **Automation:** Terraform manages Genie Space lifecycle via `genie_space.tf`:
   - **`genie_space_id` empty** (greenfield): `terraform apply` auto-creates a Genie Space from `uc_tables`, sets ACLs, and trashes the space on `terraform destroy`.
   - **`genie_space_id` set** (existing): `terraform apply` only applies CAN_RUN ACLs to the existing space.
 
 ### Auto-create mode
 
-Set `genie_space_id = ""` in `auth.auto.tfvars` and ensure `uc_tables` is non-empty. Terraform runs `genie_space.sh create` automatically during apply. Wildcards (`catalog.schema.*`) are expanded via the UC Tables API.
+Set `genie_space_id = ""` in `env.auto.tfvars` and ensure `uc_tables` is non-empty. Terraform runs `genie_space.sh create` automatically during apply. Wildcards (`catalog.schema.*`) are expanded via the UC Tables API.
 
 ### Existing space mode
 
-Set `genie_space_id` to your Genie Space ID in `auth.auto.tfvars`. Terraform runs `genie_space.sh set-acls` to grant CAN_RUN to all configured groups.
+Set `genie_space_id` to your Genie Space ID in `env.auto.tfvars`. Terraform runs `genie_space.sh set-acls` to grant CAN_RUN to all configured groups.
 
 ### Manual script usage
 

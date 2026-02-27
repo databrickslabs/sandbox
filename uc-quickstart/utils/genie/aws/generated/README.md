@@ -3,7 +3,7 @@
 `generate_abac.py` writes its output files here:
 
 - `masking_functions.sql` — SQL UDFs for column masking and row filtering
-- `abac.auto.tfvars` — ABAC config (groups, tags, FGAC). Auth comes from `auth.auto.tfvars`.
+- `abac.auto.tfvars` — ABAC + Genie config (groups, tags, FGAC, Genie Space). Credentials come from `auth.auto.tfvars`.
 - `TUNING.md` — Review + tuning checklist before applying
 - `generated_response.md` — Full LLM response for reference
 

@@ -1,34 +1,11 @@
-# Databricks Authentication Config
-# Copy this file to auth.auto.tfvars and fill in your values.
+# Databricks Authentication — secrets only.
 # Terraform auto-loads *.auto.tfvars — no need to pass -var-file.
+# This file is gitignored. NEVER check it in.
 #
 #   cp auth.auto.tfvars.example auth.auto.tfvars
-#
-# This file is NEVER overwritten by generate_abac.py.
 
 databricks_account_id    = ""
 databricks_client_id     = ""
 databricks_client_secret = ""
 databricks_workspace_id  = ""
 databricks_workspace_host = ""
-
-# Tables to generate ABAC policies for (fully qualified: catalog.schema.table).
-# Use catalog.schema.* to include all tables in a schema.
-# Example:
-#   uc_tables = ["prod.sales.customers", "prod.sales.orders", "dev.finance.*"]
-uc_tables = []
-
-# SQL warehouse ID (shared by masking function deployment + Genie Space).
-# Set to reuse an existing warehouse (dev). Leave empty to auto-create a
-# serverless warehouse (prod/greenfield).
-# Find warehouse IDs: Databricks workspace > SQL Warehouses > select warehouse > copy ID
-sql_warehouse_id = ""
-
-# Genie Space ID. Set to apply ACLs to an existing space.
-# Leave empty to auto-create a new Genie Space from uc_tables on apply.
-# Find space ID: open the Genie Space in Databricks UI > copy ID from the URL.
-genie_space_id = ""
-
-# Genie Space title and description (used only when auto-creating a new space).
-# genie_space_title       = "Sales Analytics"
-# genie_space_description = "Genie space for the sales team"

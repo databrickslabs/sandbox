@@ -1,11 +1,13 @@
 # ============================================================================
-# ABAC Terraform Module — Variable Skeleton (ABAC config only)
+# ABAC Terraform Module — Variable Skeleton (ABAC + Genie config)
 # ============================================================================
-# This file contains ONLY the ABAC configuration (groups, tags, policies).
-# Authentication and catalog/schema settings go in auth.auto.tfvars.
+# This file contains the ABAC configuration (groups, tags, policies)
+# and Genie Space config (title, description, questions, instructions,
+# benchmarks). Credentials go in auth.auto.tfvars; environment in env.auto.tfvars.
 #
 # Setup:
-#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (fill in credentials once)
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (credentials — gitignored)
+#      cp env.auto.tfvars.example env.auto.tfvars     (tables + environment)
 #   2. cp abac.auto.tfvars.example abac.auto.tfvars    (fill in ABAC config)
 #   3. terraform apply   (loads both files automatically)
 #
@@ -72,6 +74,25 @@ group_members = {
   # "GroupName" = ["user_id_1", "user_id_2"]
 }
 
-# === Genie Space (optional) ===
-# genie_space_title       = "My Analytics Space"
-# genie_space_description = "Genie space for customer analytics"
+# === Genie Space Config (AI-generated — tune as needed) ===
+# Title and description for the auto-created Genie Space.
+# genie_space_title       = "Financial & Clinical Analytics"
+# genie_space_description = "Explore transaction data, patient encounters, and compliance metrics with natural language."
+
+# Sample questions shown as conversation starters in the Genie Space UI.
+# genie_sample_questions = [
+#   "What is the total revenue by region for last quarter?",
+#   "Show the top 10 customers by transaction volume",
+#   "Which accounts have been flagged for AML review?",
+# ]
+
+# Domain-specific guidance for the Genie LLM.
+# genie_instructions = "When calculating revenue, sum the Amount column. 'Last month' means the previous calendar month. Round monetary values to 2 decimal places."
+
+# Ground-truth SQL for evaluating Genie accuracy.
+# genie_benchmarks = [
+#   {
+#     question = "What is the total transaction amount?"
+#     sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions"
+#   },
+# ]

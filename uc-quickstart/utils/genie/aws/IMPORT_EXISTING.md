@@ -6,7 +6,7 @@ If the warehouse, groups, or tag policies **already exist**, Terraform will fail
 
 Before running the import script, ensure:
 
-1. `auth.auto.tfvars` is configured with valid credentials.
+1. `auth.auto.tfvars` is configured with valid credentials and `env.auto.tfvars` with your environment.
 2. `abac.auto.tfvars` is configured with the groups and tag policies you want to import.
 3. `terraform init` has been run.
 
@@ -32,7 +32,7 @@ The script reads group names from `abac.auto.tfvars` and tag policy keys from th
 
 ## Optional: reuse an existing warehouse
 
-To use an existing warehouse instead of auto-creating one, set in **auth.auto.tfvars**:
+To use an existing warehouse instead of auto-creating one, set in **env.auto.tfvars**:
 
 ```hcl
 sql_warehouse_id = "<WAREHOUSE_ID>"

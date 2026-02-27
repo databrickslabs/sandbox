@@ -20,13 +20,14 @@ The DDL files are in the [`ddl/`](ddl/) subfolder — one file per table:
 To use these with the automated generator:
 
 ```bash
-# 1. Set up auth (one-time) — fill in credentials + set catalog/schema
-cp auth.auto.tfvars.example auth.auto.tfvars
+# 1. Set up config (one-time)
+cp auth.auto.tfvars.example auth.auto.tfvars   # credentials (gitignored)
+cp env.auto.tfvars.example env.auto.tfvars     # tables + environment
 
 # 2. Copy the healthcare DDL files into the ddl/ folder
 cp examples/healthcare/ddl/*.sql ddl/
 
-# 3. Generate (reads catalog/schema from auth.auto.tfvars)
+# 3. Generate (reads uc_tables from env.auto.tfvars)
 python generate_abac.py
 ```
 

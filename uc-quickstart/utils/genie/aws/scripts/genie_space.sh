@@ -20,9 +20,12 @@
 #                        table names (catalog.schema.table). Wildcards (catalog.schema.*)
 #                        are expanded via the UC Tables API.
 #   GENIE_WAREHOUSE_ID   Warehouse ID for create. Falls back to sql_warehouse_id
-#                        in auth.auto.tfvars if not set.
+#                        in env.auto.tfvars if not set.
 #   GENIE_TITLE          Optional. Title for the new Genie Space (default: "ABAC Genie Space").
 #   GENIE_DESCRIPTION    Optional. Description for the new Genie Space.
+#   GENIE_SAMPLE_QUESTIONS  Optional. JSON array of sample question strings.
+#   GENIE_INSTRUCTIONS   Optional. Text instructions for the Genie LLM.
+#   GENIE_BENCHMARKS     Optional. JSON array of {question, sql} objects.
 #   GENIE_ID_FILE        Optional. File path to save the created space ID
 #                        (used by Terraform for lifecycle management).
 #
@@ -111,11 +114,11 @@ resolve_token() {
   return 1
 }
 
-# ---------- Read sql_warehouse_id from auth.auto.tfvars (fallback) ----------
+# ---------- Read sql_warehouse_id from env.auto.tfvars (fallback) ----------
 read_warehouse_from_tfvars() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local tfvars="${script_dir}/../auth.auto.tfvars"
+  local tfvars="${script_dir}/../env.auto.tfvars"
   if [[ -f "$tfvars" ]]; then
     grep -E '^\s*sql_warehouse_id\s*=' "$tfvars" \
       | sed 's/.*=\s*"\(.*\)".*/\1/' \
@@ -238,35 +241,90 @@ create_genie_space() {
     exit 1
   fi
 
-  local tables_json=""
-  for id in "${sorted_identifiers[@]}"; do
-    tables_json="${tables_json}{\"identifier\": \"${id}\"},"
-  done
-  tables_json="[${tables_json%,}]"
+  local tables_csv
+  tables_csv=$(IFS=','; echo "${sorted_identifiers[*]}")
 
-  local serialized_space="{\"version\":1,\"data_sources\":{\"tables\":${tables_json}}}"
-  local serialized_escaped
-  serialized_escaped=$(echo "$serialized_space" | sed 's/\\/\\\\/g; s/"/\\"/g')
-
-  # Build create body with optional description
-  local description="${GENIE_DESCRIPTION:-}"
+  # Build the full create body (including serialized_space) via Python
+  # for correct JSON escaping of nested structures
   local create_body
-  if [[ -n "$description" ]]; then
-    create_body="{\"warehouse_id\": \"${warehouse_id}\", \"title\": \"${title}\", \"description\": \"${description}\", \"serialized_space\": \"${serialized_escaped}\"}"
-  else
-    create_body="{\"warehouse_id\": \"${warehouse_id}\", \"title\": \"${title}\", \"serialized_space\": \"${serialized_escaped}\"}"
-  fi
+  create_body=$(python3 << PYEOF
+import json, random, datetime, os
+
+def gen_id():
+    t = int((datetime.datetime.now() - datetime.datetime(1582,10,15)).total_seconds() * 1e7)
+    hi = (t & 0xFFFFFFFFFFFF0000) | (1 << 12) | ((t & 0xFFFF) >> 4)
+    lo = random.getrandbits(62) | 0x8000000000000000
+    return f"{hi:016x}{lo:016x}"
+
+tables = [{"identifier": t} for t in sorted("${tables_csv}".split(",")) if t]
+
+space = {"version": 2, "data_sources": {"tables": tables}}
+
+# Sample questions
+sq_json = os.environ.get("GENIE_SAMPLE_QUESTIONS", "")
+if sq_json:
+    try:
+        questions = json.loads(sq_json)
+        if questions:
+            items = [{"id": gen_id(), "question": [q]} for q in questions]
+            items.sort(key=lambda x: x["id"])
+            space.setdefault("config", {})["sample_questions"] = items
+    except json.JSONDecodeError:
+        pass
+
+# Text instructions
+instr = os.environ.get("GENIE_INSTRUCTIONS", "")
+if instr:
+    space.setdefault("instructions", {})["text_instructions"] = [
+        {"id": gen_id(), "content": [instr]}
+    ]
+
+# Benchmarks
+bm_json = os.environ.get("GENIE_BENCHMARKS", "")
+if bm_json:
+    try:
+        benchmarks = json.loads(bm_json)
+        if benchmarks:
+            items = []
+            for bm in benchmarks:
+                items.append({
+                    "id": gen_id(),
+                    "question": [bm["question"]],
+                    "answer": [{"format": "SQL", "content": [bm["sql"]]}]
+                })
+            items.sort(key=lambda x: x["id"])
+            space["benchmarks"] = {"questions": items}
+    except json.JSONDecodeError:
+        pass
+
+body = {
+    "warehouse_id": "${warehouse_id}",
+    "title": "${title}",
+    "serialized_space": json.dumps(space, separators=(',', ':'))
+}
+desc = os.environ.get("GENIE_DESCRIPTION", "")
+if desc:
+    body["description"] = desc
+
+print(json.dumps(body))
+PYEOF
+  )
 
   local tables_display
   tables_display=$(printf '%s\n' "${sorted_identifiers[@]}" | tr '\n' ' ')
   echo "Creating Genie Space '${title}' with warehouse ${warehouse_id} and ${#sorted_identifiers[@]} tables: ${tables_display}"
 
+  local tmpfile
+  tmpfile=$(mktemp)
+  echo "$create_body" > "$tmpfile"
+
   local response
   response=$(curl -s -w "\n%{http_code}" -X POST \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/json" \
-    -d "${create_body}" \
+    -d @"${tmpfile}" \
     "${workspace_url}/api/2.0/genie/spaces")
+  rm -f "$tmpfile"
 
   local http_code
   http_code=$(echo "$response" | tail -n1)
@@ -372,7 +430,7 @@ if [[ "$COMMAND" == "create" ]]; then
     WAREHOUSE_ID=$(read_warehouse_from_tfvars)
   fi
   if [[ -z "$WAREHOUSE_ID" ]]; then
-    echo "No warehouse ID found. Set GENIE_WAREHOUSE_ID, pass as argument, or configure sql_warehouse_id in auth.auto.tfvars."
+    echo "No warehouse ID found. Set GENIE_WAREHOUSE_ID, pass as argument, or configure sql_warehouse_id in env.auto.tfvars."
     exit 1
   fi
 

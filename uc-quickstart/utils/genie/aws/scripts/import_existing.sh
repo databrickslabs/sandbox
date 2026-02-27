@@ -7,6 +7,7 @@
 #
 # Prerequisites:
 #   - auth.auto.tfvars configured with valid credentials
+#   - env.auto.tfvars configured with uc_tables and environment settings
 #   - abac.auto.tfvars configured with groups/tag_policies/fgac_policies
 #   - terraform init already run
 #

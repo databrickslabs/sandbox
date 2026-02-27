@@ -2,17 +2,15 @@
 # Finance ABAC Example — Complete tfvars (ABAC config only)
 # ============================================================================
 # This reproduces the original 5-group finance demo.
-# Authentication and catalog/schema go in auth.auto.tfvars (see auth.auto.tfvars.example).
+# Credentials go in auth.auto.tfvars; environment config in env.auto.tfvars.
 #
 # Setup:
-#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (fill in credentials + catalog/schema)
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (credentials — gitignored)
+#      cp env.auto.tfvars.example env.auto.tfvars     (tables + environment)
 #   2. cp examples/finance/finance.tfvars.example abac.auto.tfvars
 #   3. Run examples/finance/0.1finance_abac_functions.sql in SQL editor
 #   4. Run examples/finance/0.2finance_database_schema.sql in SQL editor
 #   5. terraform apply
-#
-# entity_name and function_name are relative — Terraform automatically
-# prepends uc_catalog_name.uc_schema_name from auth.auto.tfvars.
 # ============================================================================
 
 # === Groups ===
