@@ -1,0 +1,25 @@
+# Databricks App Configuration for Multi-Agent Registry Web App
+# Deploy this app using: databricks apps create
+
+command:
+  - "sh"
+  - "-c"
+  - "npm run build && node server.js"
+
+env:
+  - name: PORT
+    value: "8000"
+  - name: REGISTRY_API_URL
+    value: "https://registry-api-7474660127789418.aws.databricksapps.com"
+
+resources:
+  cpu: "1"
+  memory: "2Gi"
+
+# Health check endpoint
+# The app must respond to HTTP requests on port 8000
+port: 8000
+
+# App metadata
+name: "multi-agent-registry-ui"
+description: "React web interface for multi-agent registry and supervisor management"

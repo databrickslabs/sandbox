@@ -1,0 +1,177 @@
+.discover-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.discover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.discover-title h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.discover-subtitle {
+  margin: 4px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.discover-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.discover-controls {
+  margin-bottom: 20px;
+}
+
+.discover-stats {
+  display: flex;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0066cc;
+}
+
+.workspace-section {
+  margin: 24px 0;
+}
+
+.workspace-section-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.workspace-section-subtitle {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.discover-loading,
+.discover-error {
+  text-align: center;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.discover-error-banner {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 16px 0;
+  border-left: 4px solid #c62828;
+}
+
+.discover-empty {
+  text-align: center;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-top: 24px;
+}
+
+.discover-empty p {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.add-to-collection-modal .collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-to-collection-modal .collection-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.add-to-collection-modal .collection-option:hover {
+  border-color: #0066cc;
+  background: #f9f9f9;
+}
+
+.add-to-collection-modal .collection-option h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+}
+
+.add-to-collection-modal .collection-option p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .discover-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .discover-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .discover-grid {
+    grid-template-columns: 1fr;
+  }
+}
