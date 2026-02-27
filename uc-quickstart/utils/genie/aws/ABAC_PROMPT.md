@@ -197,6 +197,25 @@ The `match_condition` and `when_condition` fields ONLY support these functions:
 
 To target specific columns, use **distinct tag values** assigned to those columns, not `columnName()`. For example, instead of `hasTagValue('phi_level', 'full_phi') AND columnName() = 'MRN'`, create a separate tag value like `phi_level = 'mrn_restricted'` and assign it only to the MRN column.
 
+### CRITICAL — One Mask Per Column Per Group
+
+Each column must be matched by **at most one** column mask policy per principal group. If two policies with the same `to_principals` both match a column, Databricks will reject the query with `MULTIPLE_MASKS`. This means:
+
+1. **No overlapping match conditions**: If two column mask policies target the same group and their `match_condition` values both evaluate to true for any column, you'll get a conflict. For example, `hasTagValue('phi_level', 'masked_phi')` and `hasTagValue('phi_level', 'masked_phi') AND hasTag('phi_level')` are logically identical — the `AND hasTag(...)` is always true when `hasTagValue(...)` already matches — so both policies would apply to the same columns.
+
+2. **One tag value = one masking function**: Every column mask policy has a `match_condition` that selects columns by tag value, and ALL columns matching that value get the SAME masking function. You cannot use `columnName()` to differentiate — it is not supported. Therefore, if columns need different masking functions, they MUST have different tag values, even if they belong to the same sensitivity category.
+
+   **Common mistake (WRONG):** Tagging FirstName, Email, and AccountID all as `pii_level = 'masked'`, then creating three separate policies — `mask_pii_partial`, `mask_email`, and `mask_account_number` — each matching `hasTagValue('pii_level', 'masked')`. This causes all three masks to apply to all three columns.
+
+   **Correct approach:** Use distinct tag values per masking need:
+   - FirstName, LastName → `pii_level = 'masked'` → policy uses `mask_pii_partial`
+   - Email → `pii_level = 'masked_email'` → policy uses `mask_email`
+   - AccountID → `pii_level = 'masked_account'` → policy uses `mask_account_number`
+
+   Remember to add all new tag values to the `tag_policies` `values` list.
+
+3. **Quick check**: For every pair of column mask policies that share any group in `to_principals`, verify that their `match_condition` values cannot both be true for the same column. If they can, either merge the policies or split the tag values. The number of distinct tag values in `tag_policies` should be >= the number of distinct masking functions you want to apply for that tag key.
+
 ### CRITICAL — Internal Consistency
 
 Every tag value used in `tag_assignments` and in `match_condition` / `when_condition` MUST be defined in `tag_policies`. Before generating, cross-check:

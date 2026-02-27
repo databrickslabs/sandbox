@@ -5,9 +5,9 @@
 # tag key and its allowed values. Tag policies must exist before tags can be
 # assigned to entities and before FGAC policies can reference them.
 #
-# NOTE: The Databricks provider has a known bug where the API reorders tag
-# policy values after creation, causing "Provider produced inconsistent result
-# after apply". The lifecycle block below suppresses value-ordering drift.
+# NOTE: The Databricks provider may reorder tag policy values after creation,
+# causing "Provider produced inconsistent result after apply" on subsequent
+# plans. This is cosmetic — the values are correct, just in a different order.
 # On first apply the error is expected; `make apply` auto-imports the
 # policies and retries cleanly.
 # ============================================================================
