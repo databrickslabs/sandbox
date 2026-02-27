@@ -8,9 +8,33 @@ Demonstrates all framework capabilities:
 - UC Functions integration
 """
 
-import asyncio
+from contextlib import asynccontextmanager
 from databricks_agents import AgentApp
 from databricks_agents.mcp import UCFunctionAdapter
+
+
+@asynccontextmanager
+async def lifespan(app):
+    """Discover UC Functions and make them available as tools on startup."""
+    try:
+        adapter = UCFunctionAdapter()
+
+        # Discover functions from a UC schema
+        functions = adapter.discover_functions(
+            catalog="main",
+            schema="data_functions"
+        )
+
+        print(f"Discovered {len(functions)} UC Functions")
+
+        # Note: In a full implementation, you'd register these as tools
+        # For now, they're available via the MCP server
+
+    except Exception as e:
+        print(f"UC Functions discovery failed: {e}")
+
+    yield
+
 
 # Create agent with full configuration
 app = AgentApp(
@@ -21,6 +45,7 @@ app = AgentApp(
     uc_schema="agents",
     auto_register=True,  # Auto-register in UC on startup
     enable_mcp=True,     # Enable MCP server at /api/mcp
+    lifespan=lifespan,
 )
 
 
@@ -59,28 +84,6 @@ async def check_data_quality(
         "checks": results,
         "overall_status": "passed"
     }
-
-
-# Optionally discover and register UC Functions
-@app.on_event("startup")
-async def discover_uc_functions():
-    """Discover UC Functions and make them available as tools."""
-    try:
-        adapter = UCFunctionAdapter()
-        
-        # Discover functions from a UC schema
-        functions = adapter.discover_functions(
-            catalog="main",
-            schema="data_functions"
-        )
-        
-        print(f"✓ Discovered {len(functions)} UC Functions")
-        
-        # Note: In a full implementation, you'd register these as tools
-        # For now, they're available via the MCP server
-        
-    except Exception as e:
-        print(f"⚠ UC Functions discovery failed: {e}")
 
 
 # Run the agent

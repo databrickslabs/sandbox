@@ -250,13 +250,13 @@ async def search_customers(query: str, limit: int = 10) -> dict:
     return {"results": [...]}
 ```
 
-## Unity Catalog Integration (Future)
+## Unity Catalog Integration
 
-The framework is designed to support future Unity Catalog integration for:
+The framework integrates with Unity Catalog for agent registration and discovery:
 
-- Registering agents as `AGENT` catalog objects
-- Discovering agents via Unity Catalog metadata
-- Managing agent permissions through UC grants
+- Register agents as catalog objects with `auto_register=True`
+- Discover agents via Unity Catalog metadata
+- Manage agent permissions through UC grants
 
 Configuration example:
 
@@ -265,9 +265,9 @@ app = AgentApp(
     name="customer_research",
     description="Research agent",
     capabilities=["search"],
-    uc_catalog="main",          # Future: UC catalog
-    uc_schema="agents",         # Future: UC schema
-    auto_register=True,         # Future: Auto-register in UC
+    uc_catalog="main",          # UC catalog for registration
+    uc_schema="agents",         # UC schema for registration
+    auto_register=True,         # Auto-register in UC on startup
 )
 ```
 
@@ -326,9 +326,8 @@ ruff check src/
 
 ## Roadmap
 
-- [ ] Unity Catalog integration for agent registration
-- [ ] MCP (Model Context Protocol) server support
-- [ ] Multi-agent orchestration patterns
+- [x] Unity Catalog integration for agent registration
+- [x] MCP (Model Context Protocol) server support
 - [ ] Built-in RAG and vector search utilities
 - [ ] Observability and logging integrations
 
