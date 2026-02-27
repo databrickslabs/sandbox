@@ -1,0 +1,51 @@
+name: databricks-agents
+version: 0.1.0
+description: Framework for building discoverable AI agents on Databricks Apps
+author: Databricks Labs
+license: Apache-2.0
+homepage: https://github.com/databrickslabs/sandbox/tree/main/databricks-agents
+documentation: https://databrickslabs.github.io/sandbox/databricks-agents/
+
+tags:
+  - agents
+  - a2a
+  - mcp
+  - unity-catalog
+  - databricks-apps
+
+python:
+  min_version: "3.10"
+  package: databricks-agents
+  entry_point: databricks_agents
+
+dependencies:
+  - fastapi>=0.115.0
+  - uvicorn[standard]>=0.30.0
+  - pydantic>=2.0.0
+  - httpx>=0.27.0
+  - databricks-sdk>=0.30.0
+
+dev_dependencies:
+  - pytest>=8.0.0
+  - pytest-asyncio>=0.23.0
+  - pytest-cov>=4.1.0
+  - black>=24.0.0
+  - ruff>=0.5.0
+  - mypy>=1.8.0
+
+status: experimental
+maturity: sandbox
+
+features:
+  - Auto-generates A2A protocol endpoints
+  - Agent discovery across workspace
+  - Unity Catalog integration
+  - MCP server support
+  - UC Functions adapter
+  - Agent-to-agent communication
+
+use_cases:
+  - Building discoverable agents on Databricks Apps
+  - Multi-agent systems
+  - Tool-based agents with UC Functions
+  - Workspace-wide agent orchestration
