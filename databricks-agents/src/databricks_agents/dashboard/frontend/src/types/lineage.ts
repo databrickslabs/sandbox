@@ -10,7 +10,8 @@ export type RelationshipType =
   | "writes_to"
   | "registered_as"
   | "observed_uses_tool"
-  | "observed_calls_agent";
+  | "observed_calls_agent"
+  | "observed_reads_table";
 
 export interface LineageNode {
   id: string;
