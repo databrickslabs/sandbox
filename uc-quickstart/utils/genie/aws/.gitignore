@@ -13,10 +13,8 @@ auth.auto.tfvars
 ddl/_fetched.sql
 
 # AI-generated output (user-specific)
-generated/abac.auto.tfvars
-generated/masking_functions.sql
-generated/generated_response.md
-generated/TUNING.md
+generated/
+masking_functions.sql
 
 # Auto-created Genie Space ID (managed by Terraform lifecycle)
 .genie_space_id

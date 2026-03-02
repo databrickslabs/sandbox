@@ -604,6 +604,49 @@ def call_with_retries(call_fn, prompt: str, model: str, max_retries: int) -> str
     raise RuntimeError(f"All {max_retries} attempts failed. Last error: {last_error}")
 
 
+def autofix_tag_policies(tfvars_path: Path) -> int:
+    """Add tag values used in assignments/policies but missing from tag_policies."""
+    text = tfvars_path.read_text()
+
+    allowed: dict[str, list[str]] = {}
+    for m in re.finditer(
+        r'\{\s*key\s*=\s*"([^"]+)"[^}]*?values\s*=\s*\[([^\]]*)\]',
+        text,
+        re.DOTALL,
+    ):
+        allowed[m.group(1)] = re.findall(r'"([^"]+)"', m.group(2))
+
+    used: dict[str, set[str]] = {}
+    for m in re.finditer(r'tag_key\s*=\s*"([^"]+)"[^}]*?tag_value\s*=\s*"([^"]+)"', text, re.DOTALL):
+        used.setdefault(m.group(1), set()).add(m.group(2))
+    for m in re.finditer(r"hasTagValue\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\)", text):
+        used.setdefault(m.group(1), set()).add(m.group(2))
+
+    added_total = 0
+    for key in used:
+        if key not in allowed:
+            continue
+        missing = sorted(used[key] - set(allowed[key]))
+        if not missing:
+            continue
+        old_vals = ", ".join(f'"{v}"' for v in allowed[key])
+        new_vals = ", ".join(f'"{v}"' for v in allowed[key] + missing)
+        text = text.replace(
+            f'values = [{old_vals}]',
+            f'values = [{new_vals}]',
+            1,
+        )
+        allowed[key].extend(missing)
+        added_total += len(missing)
+        for val in missing:
+            print(f"  [AUTOFIX] Added '{val}' to tag_policy '{key}'")
+
+    if added_total:
+        tfvars_path.write_text(text)
+
+    return added_total
+
+
 def run_validation(out_dir: Path) -> bool:
     """Run validate_abac.py on the generated files. Returns True if passed."""
     validator = SCRIPT_DIR / "validate_abac.py"
@@ -867,6 +910,10 @@ Before you apply, tune for your business roles, security requirements, and Genie
         tfvars_path = out_dir / "abac.auto.tfvars"
         tfvars_path.write_text(hcl_header + hcl_block + "\n")
         print(f"  abac.auto.tfvars written to: {tfvars_path}")
+
+        n_fixed = autofix_tag_policies(tfvars_path)
+        if n_fixed:
+            print(f"  Auto-fixed {n_fixed} missing tag_policy value(s)")
 
     if sql_block and hcl_block and not args.skip_validation:
         passed = run_validation(out_dir)

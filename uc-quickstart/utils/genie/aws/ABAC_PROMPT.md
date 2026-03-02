@@ -228,7 +228,11 @@ Every tag value used in `tag_assignments` and in `match_condition` / `when_condi
 
 Violating any of these causes validation failures. Double-check consistency across all three sections (`tag_policies`, `tag_assignments`, `fgac_policies`) before outputting.
 
-**Common mistake**: Do NOT use a value from one tag policy in a different tag policy. For example, if `pii_level` has value `"masked"` but `compliance_level` does not, you MUST NOT write `tag_key = "compliance_level", tag_value = "masked"`. Each tag assignment and condition must use only the values defined for that specific tag key.
+**Common mistake 1 — cross-key value leakage**: Do NOT use a value from one tag policy in a different tag policy. For example, if `pii_level` has value `"masked"` but `compliance_level` does not, you MUST NOT write `tag_key = "compliance_level", tag_value = "masked"`. Each tag assignment and condition must use only the values defined for that specific tag key.
+
+**Common mistake 2 — generic fallback values**: Do NOT use a generic value like `"masked"` in a tag assignment or match_condition unless that exact string appears in the `values` list for that tag key. If you created distinct values (e.g., `"masked_diagnosis"`, `"masked_notes"`) for a tag policy, you MUST use one of those — not a shortened or generic form. For example, if `phi_level` has values `["public", "masked_diagnosis", "masked_notes", "restricted"]`, writing `tag_value = "masked"` will fail validation because `"masked"` is not in the list.
+
+**Final check before outputting**: Enumerate every unique `tag_value` across all `tag_assignments` entries and every value referenced in `hasTagValue()` calls in `match_condition` / `when_condition`. For each one, confirm it appears in the `values` list of its corresponding `tag_key` in `tag_policies`. If any value is missing, either add it to the tag policy or change the assignment/condition to use an existing value.
 
 ### Instructions
 

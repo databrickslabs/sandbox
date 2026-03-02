@@ -1,4 +1,4 @@
-.PHONY: setup generate validate validate-generated promote plan apply destroy clean help
+.PHONY: setup generate validate validate-generated promote plan apply sync-tags destroy clean help
 
 SHELL := /bin/bash
 export DATABRICKS_USER_AGENT_EXTRA := genie-abac-quickstart/0.1.0
@@ -67,19 +67,21 @@ plan: ## Run terraform init + plan
 	terraform init -input=false
 	terraform plan
 
-apply: promote ## Validate, promote, then terraform apply
+sync-tags: ## Sync tag policy values to Databricks (bypasses provider reordering bug)
+	@echo "=== Sync Tag Policies ==="
+	@python3 scripts/sync_tag_policies.py
+
+apply: promote sync-tags ## Validate, promote, sync tags, then terraform apply
 	@echo "=== Terraform Apply ==="
 	terraform init -input=false
-	@terraform apply -parallelism=1 -auto-approve 2>&1 || \
-	  ( echo ""; \
-	    echo "=== Importing tag policies (Databricks provider ordering bug workaround) ==="; \
-	    python3 -c "import hcl2,sys; d=hcl2.load(open('abac.auto.tfvars')); [print(tp['key']) for tp in d.get('tag_policies',[])]" 2>/dev/null | \
-	    while read key; do \
-	      echo "  importing $$key ..."; \
-	      terraform import "databricks_tag_policy.policies[\"$$key\"]" "$$key" 2>/dev/null || true; \
-	    done; \
-	    echo "=== Retrying apply ==="; \
-	    terraform apply -parallelism=1 -auto-approve )
+	@echo "--- Importing tag policies into state ---"
+	@python3 -c "import hcl2,sys; d=hcl2.load(open('abac.auto.tfvars')); [print(tp['key']) for tp in d.get('tag_policies',[])]" 2>/dev/null | \
+	  while read key; do \
+	    terraform state rm "databricks_tag_policy.policies[\"$$key\"]" 2>/dev/null || true; \
+	    terraform import "databricks_tag_policy.policies[\"$$key\"]" "$$key" 2>/dev/null || true; \
+	  done
+	@echo "--- Running terraform apply ---"
+	terraform apply -parallelism=1 -auto-approve
 
 destroy: ## Run terraform destroy (drops masking functions if sql_warehouse_id is set)
 	@echo "=== Terraform Destroy ==="

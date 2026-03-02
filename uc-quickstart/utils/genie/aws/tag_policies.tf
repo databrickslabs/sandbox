@@ -5,11 +5,11 @@
 # tag key and its allowed values. Tag policies must exist before tags can be
 # assigned to entities and before FGAC policies can reference them.
 #
-# NOTE: The Databricks provider may reorder tag policy values after creation,
-# causing "Provider produced inconsistent result after apply" on subsequent
-# plans. This is cosmetic — the values are correct, just in a different order.
-# On first apply the error is expected; `make apply` auto-imports the
-# policies and retries cleanly.
+# IMPORTANT: ignore_changes on values is required because the Databricks
+# provider has a bug where it reorders tag policy values after apply, causing
+# "Provider produced inconsistent result" errors. Tag policy value updates
+# are handled externally by `make sync-tags` (which calls the Databricks
+# SDK to update values before terraform apply).
 # ============================================================================
 
 resource "databricks_tag_policy" "policies" {
