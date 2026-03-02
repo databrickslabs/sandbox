@@ -5,6 +5,7 @@ Registers and manages agents as Unity Catalog AGENT objects for
 catalog-based discovery and permission management.
 """
 
+import json
 import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
@@ -147,47 +148,29 @@ class UCAgentRegistry:
             # In a future UC version with native AGENT support, this would use:
             # client.agents.create(name=full_name, properties=properties)
             
+            # Encode properties as JSON suffix in comment for discovery
+            # Format: "description\n---AGENT_META---\n{json}"
+            meta = {"databricks_agent": True, **properties}
+            comment = spec.description or ""
+            comment_with_meta = f"{comment}\n---AGENT_META---\n{json.dumps(meta)}"
+
             try:
                 # Try to get existing model
-                model = client.registered_models.get(full_name)
+                client.registered_models.get(full_name)
                 logger.info(f"Agent '{full_name}' already exists, updating metadata")
-                
-                # Update properties
                 client.registered_models.update(
-                    name=full_name,
-                    comment=spec.description,
+                    full_name,
+                    comment=comment_with_meta,
                 )
-                
             except Exception:
-                # Create new model
+                # Create new model — name must be short name, not fully qualified
                 logger.info(f"Creating new agent '{full_name}'")
                 client.registered_models.create(
-                    name=full_name,
+                    name=spec.name,
                     catalog_name=spec.catalog,
                     schema_name=spec.schema,
-                    comment=spec.description,
+                    comment=comment_with_meta,
                 )
-            
-            # Set properties as tags (workaround until UC has native AGENT type)
-            for key, value in properties.items():
-                try:
-                    client.registered_models.set_tag(
-                        full_name=full_name,
-                        key=key,
-                        value=str(value),
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to set tag {key}: {e}")
-            
-            # Mark as agent type
-            try:
-                client.registered_models.set_tag(
-                    full_name=full_name,
-                    key="databricks_agent",
-                    value="true",
-                )
-            except Exception as e:
-                logger.warning(f"Failed to set agent tag: {e}")
             
             logger.info(f"Successfully registered agent '{full_name}'")
             
@@ -207,53 +190,63 @@ class UCAgentRegistry:
                 f"Failed to register agent '{full_name}': {e}"
             ) from e
     
+    @staticmethod
+    def _parse_agent_meta(comment: Optional[str]) -> Optional[Dict[str, Any]]:
+        """Parse agent metadata from comment field (JSON after ---AGENT_META--- marker)."""
+        if not comment or "---AGENT_META---" not in comment:
+            return None
+        try:
+            _, meta_json = comment.split("---AGENT_META---", 1)
+            return json.loads(meta_json.strip())
+        except (ValueError, json.JSONDecodeError):
+            return None
+
+    @staticmethod
+    def _clean_description(comment: Optional[str]) -> str:
+        """Extract human-readable description from comment (before the meta marker)."""
+        if not comment:
+            return ""
+        if "---AGENT_META---" in comment:
+            return comment.split("---AGENT_META---")[0].strip()
+        return comment
+
     def get_agent(self, catalog: str, schema: str, name: str) -> Optional[Dict[str, Any]]:
         """
         Get agent metadata from Unity Catalog.
-        
+
         Args:
             catalog: UC catalog name
             schema: UC schema name
             name: Agent name
-            
+
         Returns:
             Agent metadata dictionary or None if not found
         """
         client = self._get_client()
         full_name = f"{catalog}.{schema}.{name}"
-        
+
         try:
             model = client.registered_models.get(full_name)
-            
-            # Get tags
-            tags = {}
-            try:
-                tag_list = client.registered_models.list_tags(full_name)
-                for tag in tag_list:
-                    tags[tag.key] = tag.value
-            except Exception:
-                pass
-            
-            # Check if it's marked as an agent
-            if tags.get("databricks_agent") != "true":
+            meta = self._parse_agent_meta(model.comment)
+            if not meta or not meta.get("databricks_agent"):
                 return None
-            
+
             return {
                 "full_name": full_name,
                 "catalog": catalog,
                 "schema": schema,
                 "name": name,
-                "description": model.comment,
-                "endpoint_url": tags.get("endpoint_url"),
-                "agent_card_url": tags.get("agent_card_url"),
-                "capabilities": tags.get("capabilities", "").split(",") if tags.get("capabilities") else None,
-                "properties": tags,
+                "description": self._clean_description(model.comment),
+                "endpoint_url": meta.get("endpoint_url"),
+                "agent_card_url": meta.get("agent_card_url"),
+                "capabilities": meta.get("capabilities", "").split(",") if meta.get("capabilities") else None,
+                "properties": meta,
             }
-            
+
         except Exception as e:
             logger.debug(f"Agent '{full_name}' not found: {e}")
             return None
-    
+
     def list_agents(
         self,
         catalog: str,
@@ -261,56 +254,52 @@ class UCAgentRegistry:
     ) -> List[Dict[str, Any]]:
         """
         List all agents in a catalog or schema.
-        
+
         Args:
             catalog: UC catalog name
             schema: Optional UC schema name (lists all schemas if not specified)
-            
+
         Returns:
             List of agent metadata dictionaries
         """
         client = self._get_client()
         agents = []
-        
-        try:
-            # List all registered models in catalog/schema
-            if schema:
-                pattern = f"{catalog}.{schema}.*"
-            else:
-                pattern = f"{catalog}.*"
-            
-            models = client.registered_models.list(catalog_name=catalog)
-            
-            for model in models:
-                model_name = model.name
-                
-                # Check if it's an agent
-                try:
-                    tags = {}
-                    tag_list = client.registered_models.list_tags(model_name)
-                    for tag in tag_list:
-                        tags[tag.key] = tag.value
-                    
-                    if tags.get("databricks_agent") == "true":
-                        parts = model_name.split(".")
-                        agents.append({
-                            "full_name": model_name,
-                            "catalog": parts[0] if len(parts) > 0 else catalog,
-                            "schema": parts[1] if len(parts) > 1 else "",
-                            "name": parts[2] if len(parts) > 2 else model_name,
-                            "description": model.comment,
-                            "endpoint_url": tags.get("endpoint_url"),
-                            "capabilities": tags.get("capabilities", "").split(",") if tags.get("capabilities") else None,
-                        })
-                except Exception as e:
-                    logger.debug(f"Failed to check model {model_name}: {e}")
-                    continue
-            
-            return agents
-            
-        except Exception as e:
-            logger.error(f"Failed to list agents in {catalog}: {e}")
-            return []
+
+        # Determine which schemas to scan
+        schemas_to_scan = [schema] if schema else []
+        if not schema:
+            try:
+                for s in client.schemas.list(catalog_name=catalog):
+                    if s.name != "information_schema":
+                        schemas_to_scan.append(s.name)
+            except Exception as e:
+                logger.error(f"Failed to list schemas in {catalog}: {e}")
+                return []
+
+        for schema_name in schemas_to_scan:
+            try:
+                models = client.registered_models.list(
+                    catalog_name=catalog, schema_name=schema_name
+                )
+                for model in models:
+                    meta = self._parse_agent_meta(model.comment)
+                    if not meta or not meta.get("databricks_agent"):
+                        continue
+
+                    agents.append({
+                        "full_name": model.full_name,
+                        "catalog": catalog,
+                        "schema": schema_name,
+                        "name": model.name,
+                        "description": self._clean_description(model.comment),
+                        "endpoint_url": meta.get("endpoint_url"),
+                        "capabilities": meta.get("capabilities", "").split(",") if meta.get("capabilities") else None,
+                    })
+            except Exception as e:
+                logger.debug(f"Failed to list models in {catalog}.{schema_name}: {e}")
+                continue
+
+        return agents
     
     def delete_agent(self, catalog: str, schema: str, name: str) -> bool:
         """
