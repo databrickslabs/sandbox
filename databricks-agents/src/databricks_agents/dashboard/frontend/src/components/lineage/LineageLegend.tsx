@@ -25,6 +25,7 @@ const EDGE_COLORS: Record<RelationshipType, string> = {
   registered_as: "#ef4444",
   observed_uses_tool: "#06b6d4",
   observed_calls_agent: "#06b6d4",
+  observed_reads_table: "#06b6d4",
 };
 
 const EDGE_LABELS: Record<RelationshipType, string> = {
@@ -36,6 +37,7 @@ const EDGE_LABELS: Record<RelationshipType, string> = {
   registered_as: "Registered As",
   observed_uses_tool: "Observed (runtime)",
   observed_calls_agent: "Observed (runtime)",
+  observed_reads_table: "Observed table read",
 };
 
 const EDGE_DASHED: Record<RelationshipType, boolean> = {
@@ -47,6 +49,7 @@ const EDGE_DASHED: Record<RelationshipType, boolean> = {
   registered_as: true,
   observed_uses_tool: true,
   observed_calls_agent: true,
+  observed_reads_table: true,
 };
 
 interface Props {

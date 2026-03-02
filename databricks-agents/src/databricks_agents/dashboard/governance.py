@@ -164,6 +164,14 @@ class GovernanceService:
                 self._observed_edges.setdefault(agent_name, set()).add(edge)
                 logger.info(f"Observed handoff: {agent_name} → {sub_agent}")
 
+            # Tables accessed by the sub-agent (downstream lineage)
+            tables = routing.get("tables_accessed", [])
+            for table in tables:
+                if isinstance(table, str):
+                    edge = (f"agent:{sub_agent or agent_name}", f"table:{table}", "observed_reads_table")
+                    self._observed_edges.setdefault(agent_name, set()).add(edge)
+                    logger.info(f"Observed table access: {sub_agent or agent_name} → {table}")
+
         # Explicit target_agent in request payload (A2A delegation)
         req_payload = trace.get("request_payload", {})
         if isinstance(req_payload, dict) and "target_agent" in req_payload:
@@ -196,6 +204,19 @@ class GovernanceService:
                     name = tgt.replace("agent:", "")
                     graph.add_node(LineageNode(
                         id=tgt, node_type="agent", name=name, full_name=name,
+                    ))
+                elif tgt.startswith("table:"):
+                    full_name = tgt.replace("table:", "")
+                    name = full_name.split(".")[-1] if "." in full_name else full_name
+                    graph.add_node(LineageNode(
+                        id=tgt, node_type="table", name=name, full_name=full_name,
+                    ))
+            # Ensure source node exists too (e.g. sub-agent node)
+            if not any(n.id == src for n in graph.nodes):
+                if src.startswith("agent:"):
+                    name = src.replace("agent:", "")
+                    graph.add_node(LineageNode(
+                        id=src, node_type="agent", name=name, full_name=name,
                     ))
             graph.add_edge(LineageEdge(source=src, target=tgt, relationship=rel))
 

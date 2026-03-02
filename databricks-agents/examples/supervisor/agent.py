@@ -268,6 +268,14 @@ Checks:
         "call_compliance_check": "compliance",
     }
 
+    # Tables each sub-agent is known to access (for lineage visibility)
+    SUBAGENT_TABLES = {
+        "research": ["main.agents.expert_transcripts"],
+        "expert_finder": ["main.agents.experts_vs_index"],
+        "analytics": ["main.agents.call_metrics", "main.agents.engagement_summary"],
+        "compliance": ["main.agents.restricted_list", "main.agents.nda_registry"],
+    }
+
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
         """Route query to appropriate sub-agent."""
         from langchain_core.messages import HumanMessage, AIMessage
@@ -330,10 +338,12 @@ Your role is to route user queries to the appropriate specialized sub-agent:
             tool_name = tool_call['name']
             tool_args = tool_call['args']
 
-            # Record the routing decision
+            # Record the routing decision (including downstream tables)
+            sub_agent = self.TOOL_TO_SUBAGENT.get(tool_name, tool_name)
             self._last_routing = {
                 "tool": tool_name,
-                "sub_agent": self.TOOL_TO_SUBAGENT.get(tool_name, tool_name),
+                "sub_agent": sub_agent,
+                "tables_accessed": self.SUBAGENT_TABLES.get(sub_agent, []),
             }
 
             # Find and execute the tool

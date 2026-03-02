@@ -105,6 +105,14 @@ def create_dashboard_app(
             result = await scanner.send_a2a_message(
                 agent.endpoint_url, body.message, body.context_id
             )
+            # Auto-ingest trace for runtime lineage
+            if governance and isinstance(result, dict):
+                trace = result.get("_trace", {})
+                if trace:
+                    try:
+                        governance.ingest_trace(name, trace)
+                    except Exception:
+                        pass  # best-effort
             return {"result": result}
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=502)
