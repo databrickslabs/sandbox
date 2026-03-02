@@ -36,9 +36,9 @@ def _ensure_packages():
             [sys.executable, "-m", "pip", "install", "--quiet", *missing],
         )
     try:
-        __import__("databricks.sdk.config")
+        __import__("databricks.sdk.useragent")
     except (ImportError, ModuleNotFoundError):
-        print("  Upgrading databricks-sdk (need databricks.sdk.config)...")
+        print("  Upgrading databricks-sdk (need databricks.sdk.useragent)...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--quiet", "--upgrade", "databricks-sdk"],
         )
@@ -46,8 +46,12 @@ def _ensure_packages():
 
 _ensure_packages()
 
+import databricks.sdk.useragent as ua  # noqa: E402
+
+ua.with_extra(PRODUCT_NAME, PRODUCT_VERSION)
+ua.with_product(PRODUCT_NAME, PRODUCT_VERSION)
+
 from databricks.sdk import WorkspaceClient  # noqa: E402
-from databricks.sdk.config import Config  # noqa: E402
 from databricks.sdk.service.sql import (  # noqa: E402
     StatementState,
 )
@@ -94,8 +98,7 @@ def extract_function_name(stmt: str) -> str:
 
 
 def deploy(sql_file: str, warehouse_id: str) -> None:
-    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
-    w = WorkspaceClient(config=cfg)
+    w = WorkspaceClient()
 
     with open(sql_file) as f:
         sql_text = f.read()
@@ -146,8 +149,7 @@ def deploy(sql_file: str, warehouse_id: str) -> None:
 
 
 def drop(sql_file: str, warehouse_id: str) -> None:
-    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
-    w = WorkspaceClient(config=cfg)
+    w = WorkspaceClient()
 
     with open(sql_file) as f:
         sql_text = f.read()

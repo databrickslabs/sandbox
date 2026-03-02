@@ -76,15 +76,20 @@ def _ensure_packages():
             [sys.executable, "-m", "pip", "install", "--quiet", *missing],
         )
     try:
-        __import__("databricks.sdk.config")
+        __import__("databricks.sdk.useragent")
     except (ImportError, ModuleNotFoundError):
-        print("  Upgrading databricks-sdk (need databricks.sdk.config)...")
+        print("  Upgrading databricks-sdk (need databricks.sdk.useragent)...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--quiet", "--upgrade", "databricks-sdk"],
         )
 
 
 _ensure_packages()
+
+import databricks.sdk.useragent as ua  # noqa: E402
+
+ua.with_extra(PRODUCT_NAME, PRODUCT_VERSION)
+ua.with_product(PRODUCT_NAME, PRODUCT_VERSION)
 
 
 def _load_tfvars(path: Path, label: str) -> dict:
@@ -190,11 +195,9 @@ def fetch_tables_from_databricks(
     is a deduplicated list of (catalog, schema) tuples found.
     """
     from databricks.sdk import WorkspaceClient
-    from databricks.sdk.config import Config
 
     configure_databricks_env(auth_cfg)
-    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
-    w = WorkspaceClient(config=cfg)
+    w = WorkspaceClient()
 
     tables = []
     for ref in table_refs:
@@ -515,11 +518,7 @@ def call_databricks(prompt: str, model: str) -> str:
 
     from databricks.sdk.config import Config
 
-    cfg = Config(
-        http_timeout_seconds=600,
-        product=PRODUCT_NAME,
-        product_version=PRODUCT_VERSION,
-    )
+    cfg = Config(http_timeout_seconds=600)
     w = WorkspaceClient(config=cfg)
     print(f"  Calling Databricks FMAPI ({model})...")
 
