@@ -155,6 +155,16 @@ class GovernanceService:
                     edge = (f"agent:{agent_name}", f"tool:{agent_name}:{tool_name}", "observed_uses_tool")
                     self._observed_edges.setdefault(agent_name, set()).add(edge)
 
+        # Agent handoff: routing metadata from supervisor-style agents
+        routing = trace.get("routing")
+        if isinstance(routing, dict):
+            sub_agent = routing.get("sub_agent")
+            if sub_agent:
+                edge = (f"agent:{agent_name}", f"agent:{sub_agent}", "observed_calls_agent")
+                self._observed_edges.setdefault(agent_name, set()).add(edge)
+                logger.info(f"Observed handoff: {agent_name} → {sub_agent}")
+
+        # Explicit target_agent in request payload (A2A delegation)
         req_payload = trace.get("request_payload", {})
         if isinstance(req_payload, dict) and "target_agent" in req_payload:
             target = req_payload["target_agent"]
