@@ -223,13 +223,19 @@ class DashboardScanner:
         if not text_parts:
             text_parts = [_json.dumps(call_result, indent=2)]
 
+        # Extract _routing metadata from tool response (agent handoff tracking)
+        routing = None
+        inner_result = call_result.get("result", {}) if isinstance(call_result, dict) else {}
+        if isinstance(inner_result, dict) and "_routing" in inner_result:
+            routing = inner_result["_routing"]
+
         total_ms = round((time.monotonic() - t_total) * 1000, 1)
         resp = {
             "parts": [{"text": "\n".join(text_parts)}],
             "tool_used": tool_name,
             "tool_args": args,
         }
-        resp["_trace"] = {
+        trace: Dict[str, Any] = {
             "request_sent_at": request_sent_at,
             "response_received_at": datetime.now(timezone.utc).isoformat(),
             "latency_ms": total_ms,
@@ -238,6 +244,9 @@ class DashboardScanner:
             "response_payload": {k: v for k, v in resp.items() if k != "_trace"},
             "sub_events": sub_events,
         }
+        if routing:
+            trace["routing"] = routing
+        resp["_trace"] = trace
         return resp
 
     async def stream_a2a_message(
