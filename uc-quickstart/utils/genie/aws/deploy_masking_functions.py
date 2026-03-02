@@ -17,6 +17,9 @@ import re
 import subprocess
 import sys
 
+PRODUCT_NAME = "genie-abac-quickstart"
+PRODUCT_VERSION = "0.1.0"
+
 REQUIRED_PACKAGES = {"databricks-sdk": "databricks.sdk"}
 
 
@@ -32,11 +35,19 @@ def _ensure_packages():
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--quiet", *missing],
         )
+    try:
+        __import__("databricks.sdk.config")
+    except (ImportError, ModuleNotFoundError):
+        print("  Upgrading databricks-sdk (need databricks.sdk.config)...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet", "--upgrade", "databricks-sdk"],
+        )
 
 
 _ensure_packages()
 
 from databricks.sdk import WorkspaceClient  # noqa: E402
+from databricks.sdk.config import Config  # noqa: E402
 from databricks.sdk.service.sql import (  # noqa: E402
     StatementState,
 )
@@ -83,7 +94,8 @@ def extract_function_name(stmt: str) -> str:
 
 
 def deploy(sql_file: str, warehouse_id: str) -> None:
-    w = WorkspaceClient()
+    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
+    w = WorkspaceClient(config=cfg)
 
     with open(sql_file) as f:
         sql_text = f.read()
@@ -134,7 +146,8 @@ def deploy(sql_file: str, warehouse_id: str) -> None:
 
 
 def drop(sql_file: str, warehouse_id: str) -> None:
-    w = WorkspaceClient()
+    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
+    w = WorkspaceClient(config=cfg)
 
     with open(sql_file) as f:
         sql_text = f.read()

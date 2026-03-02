@@ -44,6 +44,8 @@
 
 set -e
 
+UA_HEADER="User-Agent: genie-abac-quickstart/0.1.0"
+
 usage() {
   echo "Usage: $0 create [workspace_url] [token] [title] [warehouse_id]"
   echo "       $0 set-acls [workspace_url] [token] [space_id]"
@@ -64,6 +66,7 @@ get_sp_token() {
 
   local response
   response=$(curl -s -w "\n%{http_code}" -X POST \
+    -H "${UA_HEADER}" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "grant_type=client_credentials&client_id=${client_id}&client_secret=${client_secret}&scope=all-apis" \
     "${token_endpoint}")
@@ -151,7 +154,7 @@ expand_tables() {
 
       local api_url="${workspace_url}/api/2.1/unity-catalog/tables?catalog_name=${catalog}&schema_name=${schema}"
       local resp
-      resp=$(curl -s -H "Authorization: Bearer ${token}" "${api_url}")
+      resp=$(curl -s -H "${UA_HEADER}" -H "Authorization: Bearer ${token}" "${api_url}")
 
       local table_names
       table_names=$(echo "$resp" | grep -o '"full_name"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
@@ -198,6 +201,7 @@ set_genie_acls() {
   echo "Putting permissions on Genie Space ${space_id} for groups: ${GENIE_GROUPS[*]}"
   local response
   response=$(curl -s -w "\n%{http_code}" -X PUT \
+    -H "${UA_HEADER}" \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/json" \
     -d "${body}" \
@@ -399,6 +403,7 @@ PYEOF
 
   local response
   response=$(curl -s -w "\n%{http_code}" -X POST \
+    -H "${UA_HEADER}" \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/json" \
     -d @"${tmpfile}" \
@@ -443,6 +448,7 @@ PYEOF
 
     local patch_response
     patch_response=$(curl -s -w "\n%{http_code}" -X PATCH \
+      -H "${UA_HEADER}" \
       -H "Authorization: Bearer ${token}" \
       -H "Content-Type: application/json" \
       -d @"${patch_tmpfile}" \
@@ -496,6 +502,7 @@ trash_genie_space() {
   echo "Trashing Genie Space ${space_id}..."
   local response
   response=$(curl -s -w "\n%{http_code}" -X DELETE \
+    -H "${UA_HEADER}" \
     -H "Authorization: Bearer ${token}" \
     "${workspace_url}/api/2.0/genie/spaces/${space_id}")
 

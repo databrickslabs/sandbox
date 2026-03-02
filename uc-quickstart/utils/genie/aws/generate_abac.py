@@ -48,6 +48,9 @@ import threading
 import time
 from pathlib import Path
 
+PRODUCT_NAME = "genie-abac-quickstart"
+PRODUCT_VERSION = "0.1.0"
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPT_TEMPLATE_PATH = SCRIPT_DIR / "ABAC_PROMPT.md"
 DEFAULT_AUTH_FILE = SCRIPT_DIR / "auth.auto.tfvars"
@@ -71,6 +74,13 @@ def _ensure_packages():
         print(f"  Installing missing packages: {', '.join(missing)}...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--quiet", *missing],
+        )
+    try:
+        __import__("databricks.sdk.config")
+    except (ImportError, ModuleNotFoundError):
+        print("  Upgrading databricks-sdk (need databricks.sdk.config)...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet", "--upgrade", "databricks-sdk"],
         )
 
 
@@ -180,9 +190,11 @@ def fetch_tables_from_databricks(
     is a deduplicated list of (catalog, schema) tuples found.
     """
     from databricks.sdk import WorkspaceClient
+    from databricks.sdk.config import Config
 
     configure_databricks_env(auth_cfg)
-    w = WorkspaceClient()
+    cfg = Config(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
+    w = WorkspaceClient(config=cfg)
 
     tables = []
     for ref in table_refs:
@@ -503,7 +515,11 @@ def call_databricks(prompt: str, model: str) -> str:
 
     from databricks.sdk.config import Config
 
-    cfg = Config(http_timeout_seconds=600)
+    cfg = Config(
+        http_timeout_seconds=600,
+        product=PRODUCT_NAME,
+        product_version=PRODUCT_VERSION,
+    )
     w = WorkspaceClient(config=cfg)
     print(f"  Calling Databricks FMAPI ({model})...")
 
