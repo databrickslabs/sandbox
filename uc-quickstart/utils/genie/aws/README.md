@@ -108,6 +108,17 @@ Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terra
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
+## Prerequisites
+
+- Tables must exist in Unity Catalog before running `make generate`
+- A Databricks **service principal** with the following roles:
+
+| Role | Why it's needed |
+| ---- | --------------- |
+| **Account Admin** | Create account-level groups, assign groups to workspace, manage group membership |
+| **Workspace Admin** | Grant entitlements (`workspace_consume`), create/manage Genie Spaces and permissions |
+| **Metastore Admin** | Create governed tag policies (`databricks_tag_policy`), and grant itself `USE_CATALOG`, `USE_SCHEMA`, `EXECUTE`, `MANAGE`, `CREATE_FUNCTION` on any catalog to create FGAC policies, assign tags, and deploy masking functions. Without this role, tag policies must be pre-created manually and catalog-level privileges must be granted by a catalog owner |
+
 ## Quick Start
 
 ```bash
@@ -225,10 +236,17 @@ See `[IMPORT_EXISTING.md](IMPORT_EXISTING.md)` for details.
 
 A known Databricks provider bug — the API reorders tag policy values after creation, causing a state mismatch. **Your tag policies are created correctly**; only the Terraform state comparison fails.
 
-`make apply` handles this automatically (imports the API's ordering and retries). If you run `terraform apply` directly and hit this, import the failed policies manually:
+`make apply` prevents this entirely via three mechanisms: `make sync-tags` updates values directly through the Databricks SDK (bypassing Terraform), all tag policies are reimported before apply to sync state with the API's ordering, and `ignore_changes = [values]` in `tag_policies.tf` prevents Terraform from attempting value reordering. You should not see this error when using `make apply`.
+
+If you run `terraform apply` directly (bypassing the Makefile) and hit this error, use `make apply` instead. If you need to recover manually:
 
 ```bash
-terraform import 'databricks_tag_policy.policies["pii_level"]' pii_level
+# Remove and reimport all tag policies to sync state
+python3 -c "import hcl2,sys; d=hcl2.load(open('abac.auto.tfvars')); [print(tp['key']) for tp in d.get('tag_policies',[])]" | \
+  while read key; do
+    terraform state rm "databricks_tag_policy.policies[\"$key\"]" 2>/dev/null || true
+    terraform import "databricks_tag_policy.policies[\"$key\"]" "$key"
+  done
 terraform apply -parallelism=1 -auto-approve
 ```
 
@@ -241,11 +259,6 @@ Resources (groups, tag policies) already exist in Databricks. Import them so Ter
 ```
 
 ## Advanced Usage
-
-### Prerequisites
-
-- Databricks **service principal** with Account Admin + Workspace Admin
-- Tables must exist in Unity Catalog before running `make generate`
 
 ### Generation options
 
@@ -264,4 +277,5 @@ A pre-built finance demo is available in `examples/finance/` — copy the tfvars
 - Multi data steward / user support
 - AI-assisted tuning and troubleshooting
 - Auto-detect and import existing policies
+- Import existing groups
 
