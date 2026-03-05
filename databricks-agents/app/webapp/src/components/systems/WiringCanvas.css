@@ -1,0 +1,74 @@
+.wiring-canvas-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.wiring-node {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0;
+  font-size: 13px;
+  min-width: 160px;
+  cursor: grab;
+  transition: all 0.15s;
+}
+
+.wiring-node:hover {
+  border-color: #0066cc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.wiring-node-selected {
+  border-color: #0066cc;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+}
+
+.wiring-node-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-left: 4px solid #1565c0;
+  border-radius: 7px;
+}
+
+.wiring-node-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.wiring-node-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+  color: #333;
+  font-weight: 500;
+}
+
+.wiring-canvas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.wiring-canvas-empty p {
+  margin: 0;
+}

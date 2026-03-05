@@ -31,7 +31,14 @@ class DashboardScanner:
         """Run workspace discovery and cache results. Thread-safe via asyncio.Lock."""
         async with self._scan_lock:
             result = await self._discovery.discover_agents()
-            self._agents = result.agents
+            # Deduplicate by agent name (multiple apps may share the same agent name)
+            seen: dict[str, DiscoveredAgent] = {}
+            for agent in result.agents:
+                if agent.name not in seen:
+                    seen[agent.name] = agent
+                else:
+                    logger.debug("Skipping duplicate agent '%s' from app '%s'", agent.name, agent.app_name)
+            self._agents = list(seen.values())
             self._scanned = True
             if result.errors:
                 for err in result.errors:
@@ -114,9 +121,15 @@ class DashboardScanner:
             }
             return result
         except A2AClientError as e:
-            logger.info("A2A message/send failed (%s), falling back to MCP", e)
+            logger.info("A2A message/send failed (%s), trying /invocations", e)
 
-        # Fallback: get tools list, pick the first tool, call it via MCP
+        # Fallback 1: try /invocations (standard Databricks protocol)
+        try:
+            return await self.call_invocations(endpoint_url, message)
+        except Exception as e:
+            logger.info("/invocations failed (%s), falling back to MCP", e)
+
+        # Fallback 2: get tools list, pick the first tool, call it via MCP
         return await self._mcp_chat_fallback_traced(endpoint_url, message)
 
     async def _mcp_chat_fallback_traced(
@@ -248,6 +261,58 @@ class DashboardScanner:
             trace["routing"] = routing
         resp["_trace"] = trace
         return resp
+
+    async def call_invocations(
+        self,
+        endpoint_url: str,
+        message: str,
+    ) -> Dict[str, Any]:
+        """
+        Call an agent via the Databricks /invocations protocol.
+
+        Sends: {"input": [{"role": "user", "content": message}]}
+        Returns: The agent's response dict with _trace metadata.
+        """
+        invocations_url = endpoint_url.rstrip("/") + "/invocations"
+        headers = {"Content-Type": "application/json"}
+        if self.workspace_token:
+            headers["Authorization"] = f"Bearer {self.workspace_token}"
+
+        payload = {"input": [{"role": "user", "content": message}]}
+
+        request_sent_at = datetime.now(timezone.utc).isoformat()
+        t0 = time.monotonic()
+
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as http:
+            response = await http.post(invocations_url, json=payload, headers=headers)
+            response.raise_for_status()
+            result = response.json()
+
+        latency_ms = round((time.monotonic() - t0) * 1000, 1)
+
+        # Extract text from Responses Agent protocol format
+        parts = []
+        for output_item in result.get("output", []):
+            if isinstance(output_item, dict):
+                for content_item in output_item.get("content", []):
+                    if isinstance(content_item, dict) and content_item.get("type") == "output_text":
+                        parts.append({"text": content_item.get("text", "")})
+
+        if not parts:
+            import json as _json
+            parts = [{"text": _json.dumps(result, indent=2)}]
+
+        return {
+            "parts": parts,
+            "_trace": {
+                "request_sent_at": request_sent_at,
+                "response_received_at": datetime.now(timezone.utc).isoformat(),
+                "latency_ms": latency_ms,
+                "protocol": "invocations",
+                "request_payload": payload,
+                "response_payload": result,
+            },
+        }
 
     async def stream_a2a_message(
         self,

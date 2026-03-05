@@ -9,6 +9,7 @@ import type {
   ArtifactType,
   ChatSession,
   SessionIndex,
+  RoutingInfo,
 } from "../types";
 import { sendMessage } from "../api/chat";
 import { observeTrace } from "../api/governance";
@@ -231,9 +232,51 @@ function buildTrace(
       latencyMs: serverTrace.latency_ms as number,
       subEvents: (serverTrace.sub_events ?? undefined) as NonNullable<TraceTurn["serverTiming"]>["subEvents"],
     };
+
+    // Extract _routing from the server trace (nested in MCP tool call response)
+    const routing = extractRouting(serverTrace);
+    if (routing) {
+      turn.routing = routing;
+    }
   }
 
   return turn;
+}
+
+/**
+ * Extract _routing info from the server trace.
+ * The routing data lives inside the MCP tool call response payload,
+ * nested as: _trace.routing or _trace.sub_events[].response.result._routing
+ */
+function extractRouting(
+  serverTrace: Record<string, unknown>,
+): RoutingInfo | undefined {
+  // Direct routing field (dashboard extracts it to top-level)
+  if (serverTrace.routing && typeof serverTrace.routing === "object") {
+    return serverTrace.routing as RoutingInfo;
+  }
+
+  // Check inside sub_events for MCP tool call response
+  const subEvents = serverTrace.sub_events as Array<Record<string, unknown>> | undefined;
+  if (!subEvents) return undefined;
+
+  for (const ev of subEvents) {
+    if (ev.type !== "mcp_tools_call") continue;
+    const resp = ev.response as Record<string, unknown> | undefined;
+    if (!resp) continue;
+    const result = resp.result as Record<string, unknown> | undefined;
+    if (!result) continue;
+
+    // Check for _routing in the tool result
+    const routing = result._routing as RoutingInfo | undefined;
+    if (routing) return routing;
+
+    // Also check nested: result.result._routing (double-wrapped)
+    const innerResult = result.result as Record<string, unknown> | undefined;
+    if (innerResult?._routing) return innerResult._routing as RoutingInfo;
+  }
+
+  return undefined;
 }
 
 export function useChat(agentName: string): UseChatResult {

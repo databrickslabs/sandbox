@@ -4,6 +4,7 @@ import { Shell } from "./components/layout/Shell";
 import { AgentGrid } from "./components/agents/AgentGrid";
 import { AgentDetail } from "./components/detail/AgentDetail";
 import { LineagePage } from "./pages/LineagePage";
+import { SystemBuilderPage } from "./pages/SystemBuilderPage";
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
             <Route path="/" element={<AgentGrid />} />
             <Route path="/agent/:name" element={<AgentDetail />} />
             <Route path="/lineage" element={<LineagePage />} />
+            <Route path="/systems" element={<SystemBuilderPage />} />
           </Routes>
         </Shell>
       </HashRouter>

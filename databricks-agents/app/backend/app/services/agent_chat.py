@@ -454,7 +454,7 @@ class AgentChatService:
                 timestamp=start_time + 200, duration=100,
                 details={
                     "analysisType": "Intent classification",
-                    "selectedAgent": "guidepoint_sgp_research",
+                    "selectedAgent": "guidepoint_research",
                     "confidence": 0.95,
                     "reasoning": "Query requires expert transcript search",
                 },

@@ -128,7 +128,7 @@ def initialize_demo_data() -> Dict[str, Any]:
     # Create a demo collection
     try:
         WarehouseDB.create_collection(
-            name="SGP Research Tools",
+            name="Research Tools",
             description="Collection of tools for searching expert transcripts and profiles"
         )
         stats["collections_created"] = 1

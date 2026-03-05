@@ -32,6 +32,9 @@ export default function Layout() {
             <Link to="/lineage" className={`nav-link ${isActive('/lineage')}`}>
               Lineage
             </Link>
+            <Link to="/systems" className={`nav-link ${isActive('/systems')}`}>
+              Systems
+            </Link>
             <Link to="/audit-log" className={`nav-link ${isActive('/audit-log')}`}>
               Audit Log
             </Link>

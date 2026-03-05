@@ -1,0 +1,150 @@
+.properties-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.properties-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.properties-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.properties-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.properties-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  margin-top: 4px;
+}
+
+.properties-input {
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.properties-input:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.properties-textarea {
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.properties-textarea:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.properties-hint {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.4;
+}
+
+.properties-detail {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.properties-detail-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.properties-url {
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+  color: #0066cc;
+}
+
+.properties-empty {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  padding: 24px 0;
+  line-height: 1.5;
+}
+
+.properties-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.properties-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.properties-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.properties-btn-primary {
+  background: #0066cc;
+  color: white;
+}
+
+.properties-btn-primary:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.properties-btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.properties-btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.properties-btn-danger {
+  background: none;
+  color: #d32f2f;
+  border: 1px solid #d32f2f;
+  margin-top: 8px;
+}
+
+.properties-btn-danger:hover:not(:disabled) {
+  background: #fef2f2;
+}

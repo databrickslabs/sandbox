@@ -932,6 +932,336 @@ textarea:focus {
   overflow-y: auto;
 }
 
+/* ========== Routing Panel ========== */
+.routing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.routing-card {
+  background: #111827;
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+}
+.routing-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.routing-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.routing-card-turn {
+  color: var(--muted);
+  font-weight: 400;
+}
+.routing-card-arrow {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.routing-card-agent {
+  color: var(--accent);
+}
+.routing-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* Routing decision row */
+.routing-decision-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.routing-decision-model,
+.routing-decision-tool {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.routing-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.routing-value {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+.routing-value-mono {
+  font-family: var(--font-mono);
+  color: #93c5fd;
+}
+.routing-value-url {
+  font-size: 0.7rem;
+  word-break: break-all;
+  opacity: 0.8;
+}
+.routing-endpoint {
+  margin-bottom: 0.5rem;
+}
+
+/* Keywords */
+.routing-keywords {
+  margin-bottom: 0.5rem;
+}
+.routing-keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+.routing-keyword {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  font-family: var(--font-mono);
+}
+
+/* Tables */
+.routing-tables {
+  margin-bottom: 0.5rem;
+}
+.routing-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.2rem;
+}
+.routing-table {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  font-family: var(--font-mono);
+  display: inline-block;
+  width: fit-content;
+}
+
+/* Timing bar */
+.routing-timing {
+  margin: 0.6rem 0;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+.routing-timing-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+.routing-timing-total {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.routing-timing-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.routing-timing-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+.routing-timing-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.routing-timing-routing {
+  background: var(--accent);
+}
+.routing-timing-network {
+  background: var(--yellow);
+}
+.routing-timing-sql {
+  background: var(--green);
+}
+.routing-timing-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.routing-legend-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+/* SQL queries section */
+.routing-sql-section {
+  margin-top: 0.4rem;
+}
+.routing-sql-toggle {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-family: inherit;
+}
+.routing-sql-toggle:hover {
+  color: var(--text);
+}
+.routing-sql-card {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  margin-top: 0.4rem;
+  border: 1px solid transparent;
+}
+.routing-sql-card:hover {
+  border-color: var(--border);
+}
+.routing-sql-error {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.routing-sql-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.routing-sql-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+.routing-sql-rows {
+  color: var(--green);
+  font-weight: 600;
+}
+.routing-sql-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.routing-sql-duration {
+  color: var(--muted);
+}
+.routing-sql-wh {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+.routing-sql-expand {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+.routing-sql-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--red);
+}
+.routing-sql-error-msg {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  font-family: var(--font-mono);
+}
+
+/* SQL detail (expanded) */
+.routing-sql-detail {
+  margin-top: 0.5rem;
+}
+.routing-sql-statement {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #93c5fd;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+  margin-bottom: 0.4rem;
+}
+.routing-sql-params {
+  margin-top: 0.3rem;
+}
+.routing-sql-params-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.routing-sql-param {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.7rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.routing-sql-param-name {
+  color: #93c5fd;
+  font-family: var(--font-mono);
+}
+.routing-sql-param-eq {
+  color: var(--muted);
+}
+.routing-sql-param-value {
+  color: #86efac;
+  font-family: var(--font-mono);
+}
+
+/* SQL schema columns */
+.routing-sql-schema {
+  margin-top: 0.4rem;
+}
+.routing-sql-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+}
+.routing-sql-column {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+.routing-sql-col-name {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+.routing-sql-col-type {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+}
+
 /* ========== Artifacts Panel ========== */
 .artifacts-empty {
   padding: 1.5rem 1rem;
@@ -1019,4 +1349,587 @@ textarea:focus {
   .session-dropdown {
     min-width: 250px;
   }
+}
+
+/* ========== System Builder — Wizard Layout ========== */
+
+/* Break wizard out of .container max-width constraint */
+.container:has(> .sb-wizard) {
+  max-width: none;
+  padding: 0;
+}
+
+/* Wizard container */
+.sb-wizard {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+.sb-wizard-content {
+  flex: 1;
+  overflow: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.sb-wizard-header {
+  margin-bottom: 1rem;
+}
+.sb-wizard-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* --- Wizard Sidebar --- */
+.sb-wizard-sidebar {
+  width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 16px;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+}
+.sb-wizard-sidebar.collapsed {
+  width: 56px;
+  padding: 12px 8px;
+  align-items: center;
+}
+.sb-sidebar-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  align-self: flex-end;
+  transition: color 0.15s;
+}
+.sb-sidebar-toggle:hover { color: var(--text); border-color: var(--accent); }
+.sb-sidebar-section { margin-bottom: 4px; }
+.sb-sidebar-select {
+  font-size: 0.8rem;
+  padding: 5px 8px;
+}
+.sb-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.sb-sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Step items */
+.sb-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: left;
+  transition: background 0.15s;
+}
+.sb-step:hover { background: rgba(59, 130, 246, 0.08); }
+.sb-step--active {
+  background: var(--accent);
+  color: #fff;
+}
+.sb-step--active:hover { background: var(--accent-hover); }
+.sb-step--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.sb-step--completed .sb-step-num {
+  background: var(--green);
+}
+.sb-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sb-step--active .sb-step-num { background: rgba(255,255,255,0.25); }
+.sb-step-icon { font-size: 1rem; }
+.sb-step-label { font-weight: 500; }
+
+/* --- Shared form elements (preserved) --- */
+.sb-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.sb-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.sb-input--error {
+  border-color: var(--red);
+}
+.sb-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.sb-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.sb-muted-center {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* --- Agent Palette (preserved) --- */
+.sb-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+.sb-palette-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.sb-palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+.sb-palette-item {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.sb-palette-item:hover { border-color: var(--accent); }
+.sb-palette-item--added {
+  opacity: 0.4;
+  cursor: default;
+}
+.sb-palette-item--added:hover { border-color: var(--border); }
+.sb-palette-name { font-size: 0.85rem; font-weight: 600; }
+.sb-palette-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-palette-caps { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.sb-cap-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent);
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+.sb-palette-added {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* --- Wiring Canvas --- */
+.sb-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+/* --- Custom AgentNode --- */
+.sb-agent-node {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 200px;
+  max-width: 240px;
+  cursor: grab;
+  display: flex;
+  overflow: visible;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+/* Make handles larger and visible for easier dragging */
+.sb-agent-node .react-flow__handle {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  transition: transform 0.15s, background 0.15s;
+  z-index: 10;
+}
+.sb-agent-node .react-flow__handle:hover {
+  transform: scale(1.4);
+  background: #60a5fa;
+}
+.sb-agent-node--dimmed { opacity: 0.2; }
+.sb-agent-node--highlighted {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+  border-color: var(--accent);
+}
+.sb-agent-node-bar {
+  width: 4px;
+  flex-shrink: 0;
+}
+.sb-agent-node-body {
+  padding: 8px 10px;
+  flex: 1;
+  min-width: 0;
+}
+.sb-agent-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.sb-agent-node-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-agent-node-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sb-agent-node-desc {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-agent-node-caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+/* --- Edge label --- */
+.sb-edge-label {
+  position: absolute;
+  padding: 2px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sb-edge-label--selected {
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Properties panel (preserved for ConfigureStep) --- */
+.sb-props {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+.sb-props-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.sb-props-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* --- Deploy progress --- */
+.sb-deploy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.sb-deploy-header { display: flex; align-items: center; gap: 8px; }
+.sb-deploy-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.sb-deploy-steps { display: flex; flex-direction: column; gap: 3px; }
+.sb-deploy-step {
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.sb-deploy-step:hover { background: var(--surface); }
+.sb-deploy-step-row { display: flex; align-items: center; gap: 6px; }
+.sb-deploy-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sb-deploy-detail {
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 4px 0 2px 14px;
+  word-break: break-word;
+}
+
+/* Pulsing animation for in-progress deploy */
+.sb-deploy-pulse {
+  animation: sb-pulse 2s ease-in-out infinite;
+}
+@keyframes sb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Edge dash animation */
+@keyframes sb-edge-dash {
+  to { stroke-dashoffset: -20; }
+}
+
+/* --- Step Content Layouts --- */
+.sb-step-content {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.sb-step-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.sb-step-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.sb-step-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Step 1: Select Agents */
+.sb-step-select {
+  gap: 1rem;
+}
+.sb-step-select-palette {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.sb-step-select-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sb-step-canvas-mini {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Step 2: Wire Connections */
+.sb-step-wire {
+  position: relative;
+}
+.sb-step-wire-canvas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sb-step-wire-panel {
+  position: absolute;
+  top: 60px;
+  right: 16px;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Step 3: Configure */
+.sb-step-configure {
+  gap: 1rem;
+}
+.sb-step-configure-canvas {
+  flex: 6;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sb-step-configure-panel {
+  flex: 4;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.sb-env-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sb-env-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sb-env-agents {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.sb-env-input {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.sb-step-validation {
+  font-size: 0.8rem;
+  color: var(--red);
+  padding: 6px 0;
+}
+
+/* Step 4: Deploy */
+.sb-step-deploy {
+  gap: 1rem;
+}
+.sb-step-deploy-canvas {
+  flex: 6;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sb-step-deploy-panel {
+  flex: 4;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Deploy terminal (build logs) */
+.sb-deploy-terminal {
+  background: #0a0a0a;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 10px;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* --- Dual coloring mode toggle --- */
+.sb-color-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.sb-color-btn {
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sb-color-btn:hover { color: var(--text); }
+.sb-color-btn--active {
+  background: var(--accent);
+  color: #fff;
 }
