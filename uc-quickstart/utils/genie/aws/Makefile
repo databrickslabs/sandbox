@@ -1,7 +1,7 @@
 .PHONY: setup generate validate validate-generated promote plan apply sync-tags destroy clean help
 
 SHELL := /bin/bash
-export DATABRICKS_USER_AGENT_EXTRA := genie-abac-quickstart/0.1.0
+export DATABRICKS_USER_AGENT_EXTRA := genierails/0.1.0
 
 help: ## Show this help
 	@grep -E '^[a-z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'

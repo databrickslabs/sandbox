@@ -44,7 +44,7 @@
 
 set -e
 
-UA_HEADER="User-Agent: genie-abac-quickstart/0.1.0"
+UA_HEADER="User-Agent: genierails/0.1.0"
 
 usage() {
   echo "Usage: $0 create [workspace_url] [token] [title] [warehouse_id]"

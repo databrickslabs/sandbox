@@ -48,7 +48,7 @@ import threading
 import time
 from pathlib import Path
 
-PRODUCT_NAME = "genie-abac-quickstart"
+PRODUCT_NAME = "genierails"
 PRODUCT_VERSION = "0.1.0"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -197,7 +197,7 @@ def fetch_tables_from_databricks(
     from databricks.sdk import WorkspaceClient
 
     configure_databricks_env(auth_cfg)
-    w = WorkspaceClient()
+    w = WorkspaceClient(product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
 
     tables = []
     for ref in table_refs:
@@ -518,7 +518,7 @@ def call_databricks(prompt: str, model: str) -> str:
 
     from databricks.sdk.config import Config
 
-    cfg = Config(http_timeout_seconds=600)
+    cfg = Config(http_timeout_seconds=600, product=PRODUCT_NAME, product_version=PRODUCT_VERSION)
     w = WorkspaceClient(config=cfg)
     print(f"  Calling Databricks FMAPI ({model})...")
 

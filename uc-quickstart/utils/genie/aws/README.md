@@ -1,6 +1,6 @@
-# OneReady — Genie Onboarding Quickstart
+# GenieRails
 
-Get your workspace **OneReady** for Genie in Databricks One. An AI-powered Terraform quickstart that automates business-user onboarding — from ABAC governance and masking functions to a fully configured Genie Space with AI-generated sample questions, instructions, benchmarks, SQL filters, measures, and join specs — all from three config files, no `.tf` editing required.
+Put Genie onboarding on rails — with built-in guardrails. An AI-powered Terraform quickstart that gets business users into Genie quickly and safely — ABAC governance, masking functions, and a fully configured Genie Space with AI-generated sample questions, instructions, benchmarks, SQL filters, measures, and join specs — all from three config files, no `.tf` editing required.
 
 ## What This Quickstart Automates
 
@@ -273,6 +273,7 @@ A pre-built finance demo is available in `examples/finance/` — copy the tfvars
 
 ## Roadmap
 
+- Unity Catalog metrics in Genie
 - Multi Genie Space support
 - Multi data steward / user support
 - AI-assisted tuning and troubleshooting
