@@ -1,18 +1,41 @@
-"""Minimal agent example -- one tool, no external dependencies."""
-from databricks_agents import AgentApp
+"""
+Minimal agent example — plain FastAPI + discoverability helper.
 
-app = AgentApp(
-    name="hello",
-    description="A minimal greeting agent",
-    capabilities=["greetings"],
-    auto_register=False,
-    enable_mcp=False,
-)
+Build your agent however you want. Call add_agent_card() to make it
+discoverable by the Agent Platform.
+"""
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+from databricks_agents import add_agent_card
+
+app = FastAPI()
 
 
-@app.tool(description="Say hello")
-async def greet(name: str) -> dict:
-    return {"message": f"Hello, {name}!"}
+@app.post("/invocations")
+async def invocations(request: Request):
+    """Standard Databricks /invocations endpoint."""
+    body = await request.json()
+    # Extract last user message
+    query = ""
+    for item in reversed(body.get("input", [])):
+        if isinstance(item, dict) and item.get("role") == "user":
+            query = item.get("content", "")
+            break
+
+    return {
+        "output": [
+            {
+                "type": "message",
+                "content": [{"type": "output_text", "text": f"Hello, {query}!"}],
+            }
+        ]
+    }
+
+
+# Make this app discoverable by the Agent Platform
+add_agent_card(app, name="hello", description="A minimal greeting agent", capabilities=["greetings"])
 
 
 if __name__ == "__main__":

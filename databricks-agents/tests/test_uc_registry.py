@@ -1,7 +1,7 @@
 """Tests for UCAgentRegistry — Unity Catalog agent registration."""
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 from dataclasses import dataclass
 
 from databricks_agents.registry.uc_registry import (
@@ -9,12 +9,6 @@ from databricks_agents.registry.uc_registry import (
     UCAgentSpec,
     UCRegistrationError,
 )
-
-
-@dataclass
-class _FakeTag:
-    key: str
-    value: str
 
 
 @dataclass
@@ -56,10 +50,9 @@ def test_register_agent_creates_new(registry, agent_spec):
     client.catalogs.get.return_value = MagicMock()
     client.schemas.get.return_value = MagicMock()
 
-    # Model doesn't exist — force creation path
-    client.registered_models.get.side_effect = Exception("Not found")
+    # Update fails (model doesn't exist) → falls through to create
+    client.registered_models.update.side_effect = Exception("Not found")
     client.registered_models.create.return_value = _FakeModel()
-    client.registered_models.set_tag.return_value = None
 
     result = reg.register_agent(agent_spec)
 
@@ -75,10 +68,8 @@ def test_register_agent_updates_existing(registry, agent_spec):
     client.catalogs.get.return_value = MagicMock()
     client.schemas.get.return_value = MagicMock()
 
-    # Model already exists
-    client.registered_models.get.return_value = _FakeModel()
+    # Update succeeds (model exists)
     client.registered_models.update.return_value = MagicMock()
-    client.registered_models.set_tag.return_value = None
 
     result = reg.register_agent(agent_spec)
 
@@ -88,25 +79,29 @@ def test_register_agent_updates_existing(registry, agent_spec):
     client.registered_models.create.assert_not_called()
 
 
-def test_register_agent_sets_tags(registry, agent_spec):
-    """Sets property tags including the databricks_agent marker."""
+def test_register_agent_embeds_meta_in_comment(registry, agent_spec):
+    """Embeds agent metadata as JSON in the model comment."""
+    import json
+
     reg, client = registry
 
     client.catalogs.get.return_value = MagicMock()
     client.schemas.get.return_value = MagicMock()
-    client.registered_models.get.side_effect = Exception("Not found")
+    client.registered_models.update.side_effect = Exception("Not found")
     client.registered_models.create.return_value = _FakeModel()
-    client.registered_models.set_tag.return_value = None
 
     reg.register_agent(agent_spec)
 
-    tag_calls = client.registered_models.set_tag.call_args_list
-    tag_keys = {call.kwargs.get("key", call[1].get("key", "")) for call in tag_calls}
+    # Verify comment contains ---AGENT_META--- marker with correct keys
+    create_call = client.registered_models.create.call_args
+    comment = create_call.kwargs.get("comment", create_call[1].get("comment", ""))
+    assert "---AGENT_META---" in comment
 
-    # Should include standard tags
-    assert "databricks_agent" in tag_keys
-    assert "endpoint_url" in tag_keys
-    assert "agent_card_url" in tag_keys
+    meta_json = comment.split("---AGENT_META---")[1].strip()
+    meta = json.loads(meta_json)
+    assert meta["databricks_agent"] is True
+    assert meta["endpoint_url"] == "https://app.example.com"
+    assert "agent_card_url" in meta
 
 
 def test_register_agent_catalog_not_found(registry, agent_spec):
@@ -134,18 +129,22 @@ def test_register_agent_schema_not_found(registry, agent_spec):
 
 
 def test_get_agent_found(registry):
-    """Returns agent metadata when found with databricks_agent tag."""
+    """Returns agent metadata when comment contains AGENT_META marker."""
+    import json
+
     reg, client = registry
+
+    meta = json.dumps({
+        "databricks_agent": True,
+        "endpoint_url": "https://app.example.com",
+        "capabilities": "search,analysis",
+    })
+    comment = f"Research agent\n---AGENT_META---\n{meta}"
 
     client.registered_models.get.return_value = _FakeModel(
         name="main.agents.research",
-        comment="Research agent",
+        comment=comment,
     )
-    client.registered_models.list_tags.return_value = [
-        _FakeTag("databricks_agent", "true"),
-        _FakeTag("endpoint_url", "https://app.example.com"),
-        _FakeTag("capabilities", "search,analysis"),
-    ]
 
     result = reg.get_agent("main", "agents", "research")
 
@@ -153,16 +152,16 @@ def test_get_agent_found(registry):
     assert result["full_name"] == "main.agents.research"
     assert result["endpoint_url"] == "https://app.example.com"
     assert result["capabilities"] == ["search", "analysis"]
+    assert result["description"] == "Research agent"
 
 
 def test_get_agent_not_an_agent(registry):
-    """Returns None for a model without the databricks_agent tag."""
+    """Returns None for a model without the AGENT_META marker."""
     reg, client = registry
 
-    client.registered_models.get.return_value = _FakeModel()
-    client.registered_models.list_tags.return_value = [
-        _FakeTag("some_other_tag", "value"),
-    ]
+    client.registered_models.get.return_value = _FakeModel(
+        comment="Just a regular model, no agent meta"
+    )
 
     result = reg.get_agent("main", "agents", "test_agent")
     assert result is None
@@ -181,22 +180,24 @@ def test_get_agent_not_found(registry):
 # --- list_agents ---
 
 
-def test_list_agents_filters_by_tag(registry):
-    """Only returns models tagged as databricks_agent."""
+def test_list_agents_filters_by_comment_meta(registry):
+    """Only returns models with AGENT_META marker in comment."""
+    import json
+
     reg, client = registry
 
-    model_a = _FakeModel(name="main.agents.agent_a", comment="Agent A")
-    model_b = _FakeModel(name="main.agents.not_agent", comment="Regular model")
+    agent_meta = json.dumps({"databricks_agent": True, "endpoint_url": "https://a.com"})
+    model_a = _FakeModel(
+        name="agent_a",
+        comment=f"Agent A\n---AGENT_META---\n{agent_meta}",
+    )
+    # full_name needed by list_agents
+    model_a.full_name = "main.agents.agent_a"
+
+    model_b = _FakeModel(name="not_agent", comment="Regular model")
+    model_b.full_name = "main.agents.not_agent"
 
     client.registered_models.list.return_value = [model_a, model_b]
-
-    # agent_a has the tag, not_agent doesn't
-    def list_tags(full_name):
-        if "agent_a" in full_name:
-            return [_FakeTag("databricks_agent", "true"), _FakeTag("endpoint_url", "https://a.com")]
-        return [_FakeTag("other", "value")]
-
-    client.registered_models.list_tags.side_effect = lambda fn: list_tags(fn)
 
     agents = reg.list_agents("main", schema="agents")
 

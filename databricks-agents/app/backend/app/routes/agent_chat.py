@@ -56,8 +56,8 @@ async def get_endpoints() -> AgentChatEndpointsResponse:
     """
     endpoints = [
         AgentChatEndpoint(
-            name="guidepoint_sgp_research",
-            displayName="SGP Research Agent",
+            name="guidepoint_research",
+            displayName="Research Agent",
             description="Search and analyze expert interview transcripts",
             type="research",
         ),

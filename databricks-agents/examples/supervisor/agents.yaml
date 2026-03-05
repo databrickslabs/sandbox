@@ -1,0 +1,59 @@
+# Multi-agent deployment configuration
+# Deploy with: databricks-agents deploy --config agents.yaml --profile <PROFILE>
+
+project:
+  name: sgp-multi-agent
+  workspace_path: /Workspace/Shared/apps
+
+uc:
+  catalog: serverless_dxukih_catalog
+  schema: agents
+
+warehouse:
+  id: 387bcda0f2ece20c
+
+agents:
+  - name: research
+    source: ./agents/research
+    tables: [expert_transcripts]
+    env:
+      UC_CATALOG: "${uc.catalog}"
+      UC_SCHEMA: "${uc.schema}"
+      WAREHOUSE_ID: "${warehouse.id}"
+
+  - name: expert-finder
+    source: ./agents/expert_finder
+    tables: [experts]
+    env:
+      UC_CATALOG: "${uc.catalog}"
+      UC_SCHEMA: "${uc.schema}"
+      WAREHOUSE_ID: "${warehouse.id}"
+
+  - name: analytics
+    source: ./agents/analytics
+    tables: [call_metrics, engagement_summary]
+    env:
+      UC_CATALOG: "${uc.catalog}"
+      UC_SCHEMA: "${uc.schema}"
+      WAREHOUSE_ID: "${warehouse.id}"
+
+  - name: compliance
+    source: ./agents/compliance
+    tables: [restricted_list, nda_registry]
+    env:
+      UC_CATALOG: "${uc.catalog}"
+      UC_SCHEMA: "${uc.schema}"
+      WAREHOUSE_ID: "${warehouse.id}"
+
+  - name: supervisor
+    source: .
+    depends_on: [research, expert-finder, analytics, compliance]
+    url_env_map:
+      research: RESEARCH_URL
+      expert-finder: EXPERT_FINDER_URL
+      analytics: ANALYTICS_URL
+      compliance: COMPLIANCE_URL
+    env:
+      MODEL_ENDPOINT: databricks-claude-sonnet-4-5
+      UC_CATALOG: "${uc.catalog}"
+      UC_SCHEMA: "${uc.schema}"

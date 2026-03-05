@@ -1,23 +1,31 @@
-"""Tests for MCP server — JSON-RPC protocol endpoints."""
+"""Tests for MCP server — works with plain FastAPI (no AgentApp required)."""
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents import AgentApp
+from databricks_agents.mcp import MCPServerConfig, setup_mcp_server
+from databricks_agents.core.agent_app import ToolDefinition
 
 
-def _make_mcp_app_with_tool():
-    """Create an AgentApp with MCP enabled and one tool registered."""
-    app = AgentApp(
-        name="mcp_test",
-        description="MCP test agent",
-        capabilities=["test"],
-        auto_register=False,
-        enable_mcp=True,
-    )
+def _make_mcp_app():
+    """Create a plain FastAPI app with MCP endpoints via setup_mcp_server."""
+    app = FastAPI()
 
-    @app.tool(description="Echo back the input")
     async def echo(text: str) -> dict:
         return {"echo": text}
+
+    # Use ToolDefinition objects (the decoupled MCPServer handles both dicts and objects)
+    tools = [
+        ToolDefinition(
+            name="echo",
+            description="Echo back the input",
+            parameters={"text": {"type": "string", "required": True}},
+            function=echo,
+        )
+    ]
+
+    config = MCPServerConfig(name="test_mcp", description="Test MCP server")
+    setup_mcp_server(tools, config=config, fastapi_app=app)
 
     return app
 
@@ -27,8 +35,7 @@ def _make_mcp_app_with_tool():
 
 def test_mcp_tools_list():
     """tools/list returns all registered tools in MCP format."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.post(
         "/api/mcp",
@@ -49,12 +56,11 @@ def test_mcp_tools_list():
 
 def test_mcp_tools_list_empty():
     """tools/list returns empty list when no tools registered."""
-    app = AgentApp(
-        name="empty", description="Empty", capabilities=["test"],
-        auto_register=False, enable_mcp=True,
-    )
-    client = TestClient(app)
+    app = FastAPI()
+    config = MCPServerConfig(name="empty")
+    setup_mcp_server([], config=config, fastapi_app=app)
 
+    client = TestClient(app)
     response = client.post(
         "/api/mcp",
         json={"jsonrpc": "2.0", "method": "tools/list", "id": "1"},
@@ -69,8 +75,7 @@ def test_mcp_tools_list_empty():
 
 def test_mcp_tools_call_success():
     """tools/call executes a tool and returns the result."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.post(
         "/api/mcp",
@@ -89,8 +94,7 @@ def test_mcp_tools_call_success():
 
 def test_mcp_tools_call_not_found():
     """tools/call with unknown tool name returns error."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.post(
         "/api/mcp",
@@ -113,8 +117,7 @@ def test_mcp_tools_call_not_found():
 
 def test_mcp_server_info():
     """server/info returns server metadata."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.post(
         "/api/mcp",
@@ -124,7 +127,7 @@ def test_mcp_server_info():
     assert response.status_code == 200
     data = response.json()
     info = data["result"]
-    assert info["name"] == "mcp_test"
+    assert info["name"] == "test_mcp"
     assert "version" in info
     assert "protocol_version" in info
 
@@ -134,8 +137,7 @@ def test_mcp_server_info():
 
 def test_mcp_unknown_method():
     """Unknown JSON-RPC method returns -32601 error."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.post(
         "/api/mcp",
@@ -153,8 +155,7 @@ def test_mcp_unknown_method():
 
 def test_mcp_tools_get_endpoint():
     """GET /api/mcp/tools returns tool list."""
-    app = _make_mcp_app_with_tool()
-    client = TestClient(app)
+    client = TestClient(_make_mcp_app())
 
     response = client.get("/api/mcp/tools")
 
@@ -162,3 +163,30 @@ def test_mcp_tools_get_endpoint():
     tools = response.json()["tools"]
     assert len(tools) == 1
     assert tools[0]["name"] == "echo"
+
+
+# --- backward compat: MCPServer with AgentApp ---
+
+
+def test_mcp_with_legacy_agent_app():
+    """setup_mcp_server still works when passed an AgentApp instance."""
+    from databricks_agents import AgentApp
+
+    agent = AgentApp(
+        name="compat", description="Compat test", capabilities=["test"],
+        auto_register=False, enable_mcp=True,
+    )
+
+    @agent.tool(description="Ping")
+    async def ping(msg: str) -> dict:
+        return {"pong": msg}
+
+    client = TestClient(agent.as_fastapi())
+    response = client.post(
+        "/api/mcp",
+        json={"jsonrpc": "2.0", "method": "tools/list", "id": "1"},
+    )
+    assert response.status_code == 200
+    tools = response.json()["result"]["tools"]
+    assert len(tools) == 1
+    assert tools[0]["name"] == "ping"

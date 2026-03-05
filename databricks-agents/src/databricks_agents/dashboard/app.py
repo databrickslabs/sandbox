@@ -5,17 +5,22 @@ Routes:
   SPA:   GET /           — React SPA (if built) or server-rendered HTML fallback
   API:   GET  /api/agents              — JSON list of agents
          GET  /api/agents/{name}/card  — full agent card
+         POST /api/agents/{name}/test  — call agent via /invocations
          GET  /api/agents/{name}/lineage    — agent-centric lineage graph
          GET  /api/agents/{name}/governance — UC registration status
          POST /api/agents/{name}/mcp   — MCP JSON-RPC proxy
-         POST /api/agents/{name}/chat  — A2A message/send proxy
+         POST /api/agents/{name}/chat  — A2A message/send proxy (A2A -> /invocations -> MCP)
          POST /api/agents/{name}/chat/stream — SSE streaming A2A proxy
          GET  /api/lineage             — workspace-wide lineage graph
+         POST /api/uc/register-all     — batch UC registration
+         POST /api/uc/auto-register    — toggle auto-registration
          POST /api/scan                — trigger re-scan
          GET  /health                  — health check
 """
 
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +31,7 @@ from pydantic import BaseModel
 
 from .governance import GovernanceService
 from .scanner import DashboardScanner
+from .system_builder import SystemBuilderService, SystemCreate, SystemUpdate, DeployProgress
 from .templates import render_agent_list, render_agent_detail
 
 logger = logging.getLogger(__name__)
@@ -43,9 +49,65 @@ def create_dashboard_app(
     scanner: DashboardScanner,
     profile: Optional[str] = None,
     governance: Optional[GovernanceService] = None,
+    system_builder: Optional[SystemBuilderService] = None,
+    auto_scan_interval: int = 60,
 ) -> FastAPI:
-    """Build and return the dashboard FastAPI app."""
-    app = FastAPI(title="databricks-agents dashboard", docs_url=None, redoc_url=None)
+    """Build and return the dashboard FastAPI app.
+
+    Args:
+        scanner: DashboardScanner for workspace discovery
+        profile: Databricks CLI profile name
+        governance: Optional GovernanceService for lineage/UC
+        auto_scan_interval: Seconds between background scans (0 to disable)
+    """
+    auto_register_enabled = False
+
+    async def _background_scan():
+        """Periodically re-scan workspace and auto-register new agents."""
+        while True:
+            await asyncio.sleep(auto_scan_interval)
+            try:
+                agents = await scanner.scan()
+                logger.info("Background scan found %d agent(s)", len(agents))
+                if auto_register_enabled and governance:
+                    try:
+                        result = await governance.register_all_agents(schema="agents")
+                        logger.info("Auto-register result: %s", result)
+                    except Exception as e:
+                        logger.warning("Auto-register failed: %s", e)
+            except Exception as e:
+                logger.warning("Background scan failed: %s", e)
+
+    @asynccontextmanager
+    async def lifespan(app):
+        # Initial scan on startup
+        try:
+            agents = await scanner.scan()
+            logger.info("Startup scan found %d agent(s)", len(agents))
+        except Exception as e:
+            logger.warning("Startup scan failed: %s", e)
+
+        # Start background scan task if interval > 0
+        bg_task = None
+        if auto_scan_interval > 0:
+            bg_task = asyncio.create_task(_background_scan())
+            logger.info("Background scan started (every %ds)", auto_scan_interval)
+
+        yield
+
+        if bg_task:
+            bg_task.cancel()
+            try:
+                await bg_task
+            except asyncio.CancelledError:
+                pass
+
+    app = FastAPI(
+        title="Agent Platform",
+        docs_url=None,
+        redoc_url=None,
+        lifespan=lifespan,
+    )
 
     has_spa = (STATIC_DIR / "index.html").is_file()
 
@@ -93,6 +155,26 @@ def create_dashboard_app(
                 {"jsonrpc": "2.0", "id": None, "error": {"code": -1, "message": str(e)}},
                 status_code=502,
             )
+
+    @app.post("/api/agents/{name}/test")
+    async def api_test_agent(name: str, body: ChatRequest):
+        """Test an agent via the /invocations protocol (Databricks standard)."""
+        agent = scanner.get_agent_by_name(name)
+        if not agent:
+            return JSONResponse({"error": "Agent not found"}, status_code=404)
+
+        try:
+            result = await scanner.call_invocations(agent.endpoint_url, body.message)
+            if governance and isinstance(result, dict):
+                trace = result.get("_trace", {})
+                if trace:
+                    try:
+                        governance.ingest_trace(name, trace)
+                    except Exception:
+                        pass
+            return {"result": result}
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=502)
 
     @app.post("/api/agents/{name}/chat")
     async def api_chat(name: str, body: ChatRequest):
@@ -194,6 +276,21 @@ def create_dashboard_app(
         result = await governance.register_all_agents(schema=schema)
         return result
 
+    @app.post("/api/uc/auto-register")
+    async def api_auto_register_toggle(request: Request):
+        """Toggle automatic UC registration of discovered agents."""
+        nonlocal auto_register_enabled
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        if isinstance(body, dict) and "enabled" in body:
+            auto_register_enabled = bool(body["enabled"])
+        else:
+            auto_register_enabled = not auto_register_enabled
+        return {"auto_register": auto_register_enabled}
+
     @app.post("/api/lineage/observe")
     async def api_observe_trace(request: Request):
         if not governance:
@@ -216,6 +313,83 @@ def create_dashboard_app(
             "agents": [a.name for a in agents],
             "lineage_refreshed": governance is not None,
         }
+
+    # --- System Builder API -----------------------------------------------
+
+    @app.get("/api/systems")
+    async def api_list_systems():
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        return [s.model_dump() for s in system_builder.list_systems()]
+
+    @app.post("/api/systems")
+    async def api_create_system(request: Request):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        body = await request.json()
+        try:
+            data = SystemCreate(**body)
+            defn = system_builder.create_system(data)
+            return defn.model_dump()
+        except ValueError as e:
+            return JSONResponse({"error": str(e)}, status_code=400)
+
+    @app.get("/api/systems/{system_id}")
+    async def api_get_system(system_id: str):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        defn = system_builder.get_system(system_id)
+        if not defn:
+            return JSONResponse({"error": "System not found"}, status_code=404)
+        return defn.model_dump()
+
+    @app.put("/api/systems/{system_id}")
+    async def api_update_system(system_id: str, request: Request):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        body = await request.json()
+        try:
+            data = SystemUpdate(**body)
+            defn = system_builder.update_system(system_id, data)
+            if not defn:
+                return JSONResponse({"error": "System not found"}, status_code=404)
+            return defn.model_dump()
+        except ValueError as e:
+            return JSONResponse({"error": str(e)}, status_code=400)
+
+    @app.delete("/api/systems/{system_id}")
+    async def api_delete_system(system_id: str):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        if system_builder.delete_system(system_id):
+            return {"ok": True}
+        return JSONResponse({"error": "System not found"}, status_code=404)
+
+    @app.post("/api/systems/{system_id}/deploy")
+    async def api_deploy_system(system_id: str, request: Request):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        # Async mode: start background deploy and return immediately
+        if isinstance(body, dict) and body.get("async"):
+            progress = system_builder.start_deploy(system_id)
+            return progress.model_dump()
+        # Sync mode (legacy): wait for full result
+        result = await system_builder.deploy_system(system_id)
+        return result.model_dump()
+
+    @app.get("/api/systems/{system_id}/deploy/status")
+    async def api_deploy_status(system_id: str):
+        if not system_builder:
+            return JSONResponse({"error": "System builder not available"}, status_code=503)
+        progress = system_builder.get_deploy_status(system_id)
+        if not progress:
+            return JSONResponse({"error": "No active deploy"}, status_code=404)
+        return progress.model_dump()
 
     @app.get("/health")
     async def health():

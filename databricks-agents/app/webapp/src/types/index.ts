@@ -574,3 +574,45 @@ export interface WorkspaceProfilesResponse {
   total: number
   valid: number
 }
+
+// --- System Builder types ---
+
+export interface WiringEdge {
+  source_agent: string
+  target_agent: string
+  env_var: string
+}
+
+export interface SystemDefinition {
+  id: string
+  name: string
+  description: string
+  agents: string[]
+  edges: WiringEdge[]
+  uc_catalog: string
+  uc_schema: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SystemCreate {
+  name: string
+  description?: string
+  agents?: string[]
+  edges?: WiringEdge[]
+  uc_catalog?: string
+  uc_schema?: string
+}
+
+export interface DeployStepResult {
+  agent: string
+  action: string
+  status: 'success' | 'failed' | 'skipped'
+  detail: string
+}
+
+export interface DeployResult {
+  system_id: string
+  steps: DeployStepResult[]
+  status: 'success' | 'partial' | 'failed'
+}

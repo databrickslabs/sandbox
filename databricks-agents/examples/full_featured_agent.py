@@ -1,59 +1,27 @@
 """
-Example: Full-Featured Agent
+Example: Full-Featured Agent with MCP
 
-Demonstrates all framework capabilities:
-- AgentApp with tools
-- Unity Catalog registration
-- MCP server
-- UC Functions integration
+Demonstrates the recommended pattern:
+- Plain FastAPI app with /invocations
+- add_agent_card() for platform discoverability
+- add_mcp_endpoints() for MCP-aware clients
+- Tools defined as plain async functions
 """
 
-from contextlib import asynccontextmanager
-from databricks_agents import AgentApp
-from databricks_agents.mcp import UCFunctionAdapter
+import json
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+from databricks_agents import add_agent_card, add_mcp_endpoints
 
 
-@asynccontextmanager
-async def lifespan(app):
-    """Discover UC Functions and make them available as tools on startup."""
-    try:
-        adapter = UCFunctionAdapter()
-
-        # Discover functions from a UC schema
-        functions = adapter.discover_functions(
-            catalog="main",
-            schema="data_functions"
-        )
-
-        print(f"Discovered {len(functions)} UC Functions")
-
-        # Note: In a full implementation, you'd register these as tools
-        # For now, they're available via the MCP server
-
-    except Exception as e:
-        print(f"UC Functions discovery failed: {e}")
-
-    yield
+app = FastAPI()
 
 
-# Create agent with full configuration
-app = AgentApp(
-    name="data_processor",
-    description="Process and analyze data with UC Functions",
-    capabilities=["data_processing", "analysis", "uc_integration"],
-    uc_catalog="main",
-    uc_schema="agents",
-    auto_register=True,  # Auto-register in UC on startup
-    enable_mcp=True,     # Enable MCP server at /api/mcp
-    lifespan=lifespan,
-)
+# --- Define your tools as plain async functions ---
 
-
-# Register custom tools
-@app.tool(description="Process CSV data and return statistics")
 async def process_csv(file_path: str, calculate_stats: bool = True) -> dict:
     """Process CSV file and optionally calculate statistics."""
-    # In production, this would actually read and process the file
     return {
         "file_path": file_path,
         "rows_processed": 1000,
@@ -61,45 +29,101 @@ async def process_csv(file_path: str, calculate_stats: bool = True) -> dict:
         "statistics": {
             "mean": 45.6,
             "median": 42.0,
-            "std_dev": 12.3
-        } if calculate_stats else None
+            "std_dev": 12.3,
+        } if calculate_stats else None,
     }
 
 
-@app.tool(description="Run data quality checks")
-async def check_data_quality(
-    table_name: str,
-    checks: list[str] = ["nulls", "duplicates", "outliers"]
-) -> dict:
+async def check_data_quality(table_name: str) -> dict:
     """Run data quality checks on a table."""
-    results = {}
-    for check in checks:
-        results[check] = {
-            "passed": True,
-            "issues_found": 0,
-            "severity": "none"
-        }
+    checks = ["nulls", "duplicates", "outliers"]
     return {
         "table": table_name,
-        "checks": results,
-        "overall_status": "passed"
+        "checks": {c: {"passed": True, "issues_found": 0} for c in checks},
+        "overall_status": "passed",
     }
 
 
-# Run the agent
+# --- Standard Databricks /invocations endpoint ---
+
+TOOL_DISPATCH = {
+    "process_csv": process_csv,
+    "check_data_quality": check_data_quality,
+}
+
+
+@app.post("/invocations")
+async def invocations(request: Request):
+    body = await request.json()
+
+    # Extract last user message
+    query = ""
+    for item in reversed(body.get("input", [])):
+        if isinstance(item, dict) and item.get("role") == "user":
+            query = item.get("content", "")
+            break
+
+    if not query:
+        return JSONResponse({"error": "No user message found"}, status_code=400)
+
+    # Simple dispatch: call process_csv with the query as file_path
+    result = await process_csv(file_path=query)
+
+    return {
+        "output": [
+            {
+                "type": "message",
+                "content": [{"type": "output_text", "text": json.dumps(result, indent=2)}],
+            }
+        ],
+    }
+
+
+# --- Make discoverable by Agent Platform ---
+
+tools_metadata = [
+    {
+        "name": "process_csv",
+        "description": "Process CSV data and return statistics",
+        "function": process_csv,
+        "parameters": {
+            "file_path": {"type": "string", "required": True},
+            "calculate_stats": {"type": "boolean", "required": False},
+        },
+    },
+    {
+        "name": "check_data_quality",
+        "description": "Run data quality checks on a table",
+        "function": check_data_quality,
+        "parameters": {
+            "table_name": {"type": "string", "required": True},
+        },
+    },
+]
+
+add_agent_card(
+    app,
+    name="data_processor",
+    description="Process and analyze data",
+    capabilities=["data_processing", "analysis"],
+    tools=[{"name": t["name"], "description": t["description"], "parameters": t["parameters"]} for t in tools_metadata],
+)
+
+add_mcp_endpoints(app, tools=tools_metadata)
+
+
 if __name__ == "__main__":
     import uvicorn
-    
-    print("\n" + "="*60)
-    print("🤖 Full-Featured Agent Starting")
-    print("="*60)
-    print("\nFeatures enabled:")
-    print("  ✓ Agent card at /.well-known/agent.json")
-    print("  ✓ OIDC config at /.well-known/openid-configuration")
-    print("  ✓ Health check at /health")
-    print("  ✓ MCP server at /api/mcp")
-    print("  ✓ Custom tools at /api/tools/*")
-    print("  ✓ Unity Catalog registration (on deployment)")
-    print("\n" + "="*60 + "\n")
-    
+
+    print("\n" + "=" * 60)
+    print("Full-Featured Agent Starting")
+    print("=" * 60)
+    print("\nEndpoints:")
+    print("  /.well-known/agent.json  — agent card (platform discovery)")
+    print("  /health                  — health check")
+    print("  /invocations             — Databricks standard protocol")
+    print("  /api/mcp                 — MCP JSON-RPC server")
+    print("  /api/mcp/tools           — MCP tool listing")
+    print("\n" + "=" * 60 + "\n")
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

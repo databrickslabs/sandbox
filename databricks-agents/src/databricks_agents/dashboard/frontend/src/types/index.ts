@@ -90,6 +90,44 @@ export interface ScanResult {
   lineage_refreshed?: boolean;
 }
 
+/* ---------- Routing Observability ---------- */
+
+export interface SqlQueryTrace {
+  statement: string;
+  parameters: Array<{ name: string; value: string }>;
+  row_count: number;
+  columns: Array<{ name: string; type: string }>;
+  duration_ms: number;
+  warehouse_id: string;
+  error?: string;
+  fallback_reason?: string;
+}
+
+export interface RoutingInfo {
+  tool: string | null;
+  sub_agent: string | null;
+  timestamp: string;
+  data_source: "live" | "demo_fallback" | "llm_direct";
+  tables_accessed: string[];
+  keywords_extracted: string[];
+  routing_decision: {
+    model: string;
+    latency_ms: number;
+    tool_selected: string | null;
+    tool_args?: Record<string, unknown>;
+    reason?: string;
+  };
+  sql_queries: SqlQueryTrace[];
+  timing: {
+    routing_ms: number;
+    network_ms: number;
+    sql_total_ms: number;
+    subagent_ms: number;
+    total_ms: number;
+  };
+  agent_endpoint?: string | null;
+}
+
 /* ---------- Trace / Event Inspection ---------- */
 
 export interface TraceEvent {
@@ -124,6 +162,7 @@ export interface TraceTurn {
   };
   requestPayload?: unknown;
   responsePayload?: unknown;
+  routing?: RoutingInfo;
 }
 
 /* ---------- Session Persistence ---------- */

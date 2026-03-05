@@ -34,6 +34,16 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               Lineage
             </Link>
+            <Link
+              to="/systems"
+              style={
+                location.pathname === "/systems"
+                  ? { color: "var(--text)" }
+                  : undefined
+              }
+            >
+              Systems
+            </Link>
             <a href="/health" target="_blank" rel="noreferrer">
               Health
             </a>

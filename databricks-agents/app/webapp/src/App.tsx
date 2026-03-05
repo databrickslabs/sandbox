@@ -8,6 +8,7 @@ import ChatPage from './pages/ChatPage'
 import AgentChatPage from './pages/AgentChatPage'
 import LineagePage from './pages/LineagePage'
 import AuditLogPage from './pages/AuditLogPage'
+import SystemBuilderPage from './pages/SystemBuilderPage'
 import './App.css'
 
 export default function App() {
@@ -37,6 +38,9 @@ export default function App() {
             } />
             <Route path="audit-log" element={
               <ErrorBoundary><AuditLogPage /></ErrorBoundary>
+            } />
+            <Route path="systems" element={
+              <ErrorBoundary><SystemBuilderPage /></ErrorBoundary>
             } />
             <Route path="*" element={<Navigate to="/discover" replace />} />
           </Route>

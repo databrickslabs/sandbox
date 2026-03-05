@@ -1,0 +1,34 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # Foundation Model endpoint for routing decisions
+  - name: MODEL_ENDPOINT
+    value: databricks-claude-sonnet-4-5
+
+  # Unity Catalog settings
+  - name: UC_CATALOG
+    value: serverless_dxukih_catalog
+
+  - name: UC_SCHEMA
+    value: agents
+
+  # Sub-agent URLs (independently deployed Databricks Apps)
+  - name: RESEARCH_URL
+    value: https://sdk-sub-research-7474660127789418.aws.databricksapps.com
+
+  - name: EXPERT_FINDER_URL
+    value: https://sdk-sub-expert-finder-7474660127789418.aws.databricksapps.com
+
+  - name: ANALYTICS_URL
+    value: https://sdk-sub-analytics-7474660127789418.aws.databricksapps.com
+
+  - name: COMPLIANCE_URL
+    value: https://sdk-sub-compliance-7474660127789418.aws.databricksapps.com
