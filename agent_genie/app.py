@@ -975,13 +975,13 @@ async def query(request: Request):
         table_schema = {}
         if catalog_name and schema_name:
             try:
-                tables_result = get_tables(catalog_name, schema_name, fallback_workspace_url, None)
+                tables_result = get_tables(catalog_name, schema_name, fallback_workspace_url, fallback_access_token)
                 if tables_result["success"]:
                     table_schema = {}
                     for table in tables_result["tables"]:
                         table_name = table["name"]
                         try:
-                            columns_result = get_table_columns(catalog_name, schema_name, table_name, fallback_workspace_url, None)
+                            columns_result = get_table_columns(catalog_name, schema_name, table_name, fallback_workspace_url, fallback_access_token)
                             
                             if columns_result["success"]:
                                 columns = columns_result["columns"]
