@@ -38,9 +38,9 @@ Put Genie onboarding on rails — with built-in guardrails. An AI-powered Terraf
 │  │  databricks_workspace_host    │ │                               │  │
 │  └───────────────┬───────────────┘ └───────────────┬───────────────┘  │
 │                  └────────────────┬────────────────┘                  │
-└────────────────────────────────────┼──────────────────────────────────┘
-                                     │
-                                     ▼
+└───────────────────────────────────┼───────────────────────────────────┘
+                                    │
+                                    ▼
 ┌───────────────────────────────────────────────────────────────────────┐
 │                make generate  (generate_abac.py)                      │
 │                                                                       │
@@ -113,11 +113,13 @@ Put Genie onboarding on rails — with built-in guardrails. An AI-powered Terraf
 - Tables must exist in Unity Catalog before running `make generate`
 - A Databricks **service principal** with the following roles:
 
-| Role | Why it's needed |
-| ---- | --------------- |
-| **Account Admin** | Create account-level groups, assign groups to workspace, manage group membership |
-| **Workspace Admin** | Grant entitlements (`workspace_consume`), create/manage Genie Spaces and permissions |
+
+| Role                | Why it's needed                                                                                                                                                                                                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Account Admin**   | Create account-level groups, assign groups to workspace, manage group membership                                                                                                                                                                                                                                                                             |
+| **Workspace Admin** | Grant entitlements (`workspace_consume`), create/manage Genie Spaces and permissions                                                                                                                                                                                                                                                                         |
 | **Metastore Admin** | Create governed tag policies (`databricks_tag_policy`), and grant itself `USE_CATALOG`, `USE_SCHEMA`, `EXECUTE`, `MANAGE`, `CREATE_FUNCTION` on any catalog to create FGAC policies, assign tags, and deploy masking functions. Without this role, tag policies must be pre-created manually and catalog-level privileges must be granted by a catalog owner |
+
 
 ## Quick Start
 
@@ -185,17 +187,17 @@ Managed automatically based on `genie_space_id` in `env.auto.tfvars`:
 When `make generate` creates the ABAC config, it also generates Genie Space config in `abac.auto.tfvars`:
 
 
-| Variable                  | Purpose                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `genie_space_title`       | AI-generated title for the Genie Space (e.g., "Financial Compliance Analytics")                            |
-| `genie_space_description` | 1–2 sentence summary of the space's scope and audience                                                     |
-| `genie_sample_questions`  | Natural-language questions shown as conversation starters in the Genie UI                                  |
-| `genie_instructions`      | Domain-specific guidance including business defaults (e.g., "customer" = active by default)                |
-| `genie_benchmarks`        | Unambiguous ground-truth question + SQL pairs for evaluating Genie accuracy                                |
-| `genie_sql_filters`       | Default WHERE clauses (e.g., active customers, completed transactions) that guide Genie's SQL generation   |
-| `genie_sql_measures`      | Standard aggregate metrics (e.g., total revenue, average risk score)                                       |
-| `genie_sql_expressions`   | Computed dimensions (e.g., transaction year, age bucket)                                                   |
-| `genie_join_specs`        | Table relationships with join conditions (e.g., accounts to customers on CustomerID)                       |
+| Variable                  | Purpose                                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `genie_space_title`       | AI-generated title for the Genie Space (e.g., "Financial Compliance Analytics")                          |
+| `genie_space_description` | 1–2 sentence summary of the space's scope and audience                                                   |
+| `genie_sample_questions`  | Natural-language questions shown as conversation starters in the Genie UI                                |
+| `genie_instructions`      | Domain-specific guidance including business defaults (e.g., "customer" = active by default)              |
+| `genie_benchmarks`        | Unambiguous ground-truth question + SQL pairs for evaluating Genie accuracy                              |
+| `genie_sql_filters`       | Default WHERE clauses (e.g., active customers, completed transactions) that guide Genie's SQL generation |
+| `genie_sql_measures`      | Standard aggregate metrics (e.g., total revenue, average risk score)                                     |
+| `genie_sql_expressions`   | Computed dimensions (e.g., transaction year, age bucket)                                                 |
+| `genie_join_specs`        | Table relationships with join conditions (e.g., accounts to customers on CustomerID)                     |
 
 
 All nine fields are included in the `serialized_space` when a new Genie Space is created. Review and tune them in `generated/abac.auto.tfvars` alongside the ABAC policies before applying.
