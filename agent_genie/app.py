@@ -982,7 +982,7 @@ async def query(request: Request):
                         table_name = table["name"]
                         try:
                             columns_result = get_table_columns(catalog_name, schema_name, table_name, fallback_workspace_url, fallback_access_token)
-                            
+
                             if columns_result["success"]:
                                 columns = columns_result["columns"]
                                 table_schema[table_name] = columns

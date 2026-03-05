@@ -1,0 +1,1722 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Judge Builder API",
+    "description": "API for LLM Judge Builder with MLflow integration",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/judge-builders/": {
+      "get": {
+        "tags": [
+          "api",
+          "judge-builders"
+        ],
+        "summary": "List Judge Builders",
+        "description": "List all judge builders.",
+        "operationId": "list_judge_builders_api_judge_builders__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JudgeResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Judge Builders Api Judge Builders  Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api",
+          "judge-builders"
+        ],
+        "summary": "Create Judge Builder",
+        "description": "Create a new judge builder.",
+        "operationId": "create_judge_builder_api_judge_builders__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JudgeCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JudgeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/judge-builders/{judge_id}": {
+      "get": {
+        "tags": [
+          "api",
+          "judge-builders"
+        ],
+        "summary": "Get Judge Builder",
+        "description": "Get a judge builder by ID.",
+        "operationId": "get_judge_builder_api_judge_builders__judge_id__get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JudgeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "judge-builders"
+        ],
+        "summary": "Delete Judge Builder",
+        "description": "Delete a judge builder.",
+        "operationId": "delete_judge_builder_api_judge_builders__judge_id__delete",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/judges/": {
+      "get": {
+        "tags": [
+          "api",
+          "judges"
+        ],
+        "summary": "List Judges",
+        "description": "List all judges.",
+        "operationId": "list_judges_api_judges__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JudgeResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Judges Api Judges  Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api",
+          "judges"
+        ],
+        "summary": "Create Judge",
+        "description": "Create a new judge (direct judge creation, not full orchestration).",
+        "operationId": "create_judge_api_judges__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JudgeCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JudgeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/judges/{judge_id}": {
+      "get": {
+        "tags": [
+          "api",
+          "judges"
+        ],
+        "summary": "Get Judge",
+        "description": "Get a judge by ID.",
+        "operationId": "get_judge_api_judges__judge_id__get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JudgeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "judges"
+        ],
+        "summary": "Delete Judge",
+        "description": "Delete a judge.",
+        "operationId": "delete_judge_api_judges__judge_id__delete",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labeling/{judge_id}/examples": {
+      "post": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Add Examples",
+        "description": "Add examples to a judge.",
+        "operationId": "add_examples_api_labeling__judge_id__examples_post",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Get Examples",
+        "description": "Get examples for a judge.",
+        "operationId": "get_examples_api_labeling__judge_id__examples_get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labeling/{judge_id}/labeling-progress": {
+      "get": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Get Labeling Progress",
+        "description": "Get labeling progress for a judge.",
+        "operationId": "get_labeling_progress_api_labeling__judge_id__labeling_progress_get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabelingProgress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labeling/{judge_id}/labeling": {
+      "post": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Create Labeling Session",
+        "description": "Create a new labeling session for a judge.",
+        "operationId": "create_labeling_session_api_labeling__judge_id__labeling_post",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLabelingSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLabelingSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Get Labeling Session",
+        "description": "Get the labeling session for a judge.",
+        "operationId": "get_labeling_session_api_labeling__judge_id__labeling_get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "labeling"
+        ],
+        "summary": "Delete Labeling Session",
+        "description": "Delete the labeling session for a judge.",
+        "operationId": "delete_labeling_session_api_labeling__judge_id__labeling_delete",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alignment/{judge_id}/align": {
+      "post": {
+        "tags": [
+          "api",
+          "alignment"
+        ],
+        "summary": "Run Alignment",
+        "description": "Run alignment for a judge.",
+        "operationId": "run_alignment_api_alignment__judge_id__align_post",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alignment/{judge_id}/evaluate": {
+      "post": {
+        "tags": [
+          "api",
+          "alignment"
+        ],
+        "summary": "Evaluate Judge",
+        "description": "Run judge evaluation on traces and log to MLflow.",
+        "operationId": "evaluate_judge_api_alignment__judge_id__evaluate_post",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alignment/{judge_id}/test": {
+      "post": {
+        "tags": [
+          "api",
+          "alignment"
+        ],
+        "summary": "Test Judge",
+        "description": "Test judge on a single trace (for play buttons).",
+        "operationId": "test_judge_api_alignment__judge_id__test_post",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestJudgeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestJudgeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alignment/{judge_id}/alignment-comparison": {
+      "get": {
+        "tags": [
+          "api",
+          "alignment"
+        ],
+        "summary": "Get Alignment Comparison",
+        "description": "Get alignment comparison data including metrics and confusion matrix.",
+        "operationId": "get_alignment_comparison_api_alignment__judge_id__alignment_comparison_get",
+        "parameters": [
+          {
+            "name": "judge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Judge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "api",
+          "users"
+        ],
+        "summary": "Get Current User",
+        "description": "Get current user information.",
+        "operationId": "get_current_user_api_users_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/experiments/": {
+      "get": {
+        "tags": [
+          "api",
+          "experiments"
+        ],
+        "summary": "List Experiments",
+        "description": "List available MLflow experiments.",
+        "operationId": "list_experiments_api_experiments__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/experiments/{experiment_id}": {
+      "get": {
+        "tags": [
+          "api",
+          "experiments"
+        ],
+        "summary": "Get Experiment",
+        "description": "Get experiment by ID.",
+        "operationId": "get_experiment_api_experiments__experiment_id__get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/experiments/{experiment_id}/traces": {
+      "get": {
+        "tags": [
+          "api",
+          "experiments"
+        ],
+        "summary": "Get Experiment Traces",
+        "description": "Get traces from experiment.",
+        "operationId": "get_experiment_traces_api_experiments__experiment_id__traces_get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Health check endpoint.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlignmentRequest": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id",
+            "description": "MLflow experiment ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "experiment_id"
+        ],
+        "title": "AlignmentRequest",
+        "description": "Request model for running judge alignment."
+      },
+      "AlignmentResponse": {
+        "properties": {
+          "judge_id": {
+            "type": "string",
+            "title": "Judge Id",
+            "description": "Judge identifier"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether alignment succeeded"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Result message"
+          },
+          "new_version": {
+            "type": "integer",
+            "title": "New Version",
+            "description": "New judge version number"
+          },
+          "improvement_metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement Metrics",
+            "description": "Performance improvement metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "judge_id",
+          "success",
+          "message",
+          "new_version"
+        ],
+        "title": "AlignmentResponse",
+        "description": "Response model for alignment results."
+      },
+      "AssessmentError": {
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "stack_trace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stack Trace"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code"
+        ],
+        "title": "AssessmentError"
+      },
+      "AssessmentSource": {
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "default": "default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_type"
+        ],
+        "title": "AssessmentSource"
+      },
+      "CreateLabelingSessionRequest": {
+        "properties": {
+          "trace_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trace Ids",
+            "description": "List of trace IDs to include in labeling session"
+          },
+          "sme_emails": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sme Emails",
+            "description": "SME email addresses for labeling session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trace_ids",
+          "sme_emails"
+        ],
+        "title": "CreateLabelingSessionRequest",
+        "description": "Request model for creating a labeling session."
+      },
+      "CreateLabelingSessionResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "description": "Labeling session identifier"
+          },
+          "mlflow_run_id": {
+            "type": "string",
+            "title": "Mlflow Run Id",
+            "description": "MLflow run ID for the labeling dataset"
+          },
+          "labeling_url": {
+            "type": "string",
+            "title": "Labeling Url",
+            "description": "URL to the labeling interface"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "When session was created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "mlflow_run_id",
+          "labeling_url",
+          "created_at"
+        ],
+        "title": "CreateLabelingSessionResponse",
+        "description": "Response model for creating a labeling session."
+      },
+      "EvaluationResult": {
+        "properties": {
+          "judge_id": {
+            "type": "string",
+            "title": "Judge Id",
+            "description": "Judge identifier"
+          },
+          "judge_version": {
+            "type": "integer",
+            "title": "Judge Version",
+            "description": "Judge version used for evaluation"
+          },
+          "mlflow_run_id": {
+            "type": "string",
+            "title": "Mlflow Run Id",
+            "description": "MLflow run ID for this evaluation"
+          },
+          "evaluation_results": {
+            "items": {
+              "$ref": "#/components/schemas/JudgeTraceResult"
+            },
+            "type": "array",
+            "title": "Evaluation Results",
+            "description": "Individual trace evaluation results"
+          },
+          "total_traces": {
+            "type": "integer",
+            "title": "Total Traces",
+            "description": "Total number of traces evaluated"
+          },
+          "pass_count": {
+            "type": "integer",
+            "title": "Pass Count",
+            "description": "Number of traces that passed"
+          },
+          "fail_count": {
+            "type": "integer",
+            "title": "Fail Count",
+            "description": "Number of traces that failed"
+          },
+          "evaluation_timestamp": {
+            "type": "string",
+            "title": "Evaluation Timestamp",
+            "description": "When evaluation was completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "judge_id",
+          "judge_version",
+          "mlflow_run_id",
+          "evaluation_results",
+          "total_traces",
+          "pass_count",
+          "fail_count",
+          "evaluation_timestamp"
+        ],
+        "title": "EvaluationResult",
+        "description": "Result from running judge evaluation on traces."
+      },
+      "ExpectationValue": {
+        "properties": {
+          "value": {
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "ExpectationValue"
+      },
+      "Feedback": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "source": {
+            "$ref": "#/components/schemas/AssessmentSource"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "span_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span Id"
+          },
+          "create_time_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Create Time Ms"
+          },
+          "last_update_time_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Update Time Ms"
+          },
+          "assessment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExpectationValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedbackValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overrides"
+          },
+          "valid": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "source"
+        ],
+        "title": "Feedback"
+      },
+      "FeedbackValue": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Value"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "FeedbackValue"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "JudgeCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable name for the judge"
+          },
+          "instruction": {
+            "type": "string",
+            "title": "Instruction",
+            "description": "Natural language evaluation criteria"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id",
+            "description": "MLflow experiment ID to attach judge to"
+          },
+          "sme_emails": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sme Emails",
+            "description": "Optional list of SME email addresses for labeling session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "instruction",
+          "experiment_id"
+        ],
+        "title": "JudgeCreateRequest",
+        "description": "Request model for creating a new judge."
+      },
+      "JudgeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique judge identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable name for the judge"
+          },
+          "instruction": {
+            "type": "string",
+            "title": "Instruction",
+            "description": "User-provided evaluation criteria (always shown to user)"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id",
+            "description": "MLflow experiment ID"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Judge version number",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "experiment_id"
+        ],
+        "title": "JudgeResponse",
+        "description": "Response model for judge information."
+      },
+      "JudgeTraceResult": {
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "title": "Trace Id",
+            "description": "MLflow trace ID"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/Feedback",
+            "description": "Judge evaluation feedback (MLflow Feedback object)"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "description": "Judge confidence score"
+          },
+          "judge_version": {
+            "type": "integer",
+            "title": "Judge Version",
+            "description": "Judge version used for evaluation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trace_id",
+          "feedback",
+          "judge_version"
+        ],
+        "title": "JudgeTraceResult",
+        "description": "Judge evaluation result for a specific trace."
+      },
+      "LabelingProgress": {
+        "properties": {
+          "total_examples": {
+            "type": "integer",
+            "title": "Total Examples",
+            "description": "Total number of examples"
+          },
+          "labeled_examples": {
+            "type": "integer",
+            "title": "Labeled Examples",
+            "description": "Number of labeled examples"
+          },
+          "used_for_alignment": {
+            "type": "integer",
+            "title": "Used For Alignment",
+            "description": "Number used for alignment"
+          },
+          "labeling_session_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labeling Session Url",
+            "description": "URL to labeling session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_examples",
+          "labeled_examples",
+          "used_for_alignment"
+        ],
+        "title": "LabelingProgress",
+        "description": "Model for labeling progress."
+      },
+      "TestJudgeRequest": {
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "title": "Trace Id",
+            "description": "MLflow trace ID to test on"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trace_id"
+        ],
+        "title": "TestJudgeRequest",
+        "description": "Request model for testing a judge on a single trace."
+      },
+      "TestJudgeResponse": {
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "title": "Trace Id",
+            "description": "MLflow trace ID that was tested"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/Feedback",
+            "description": "Judge evaluation feedback (MLflow Feedback object)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trace_id",
+          "feedback"
+        ],
+        "title": "TestJudgeResponse",
+        "description": "Response model for testing a judge."
+      },
+      "TraceRequest": {
+        "properties": {
+          "trace_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trace Ids",
+            "description": "List of trace IDs to process"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trace_ids"
+        ],
+        "title": "TraceRequest",
+        "description": "Request model for adding traces as examples or for evaluation."
+      },
+      "UserInfo": {
+        "properties": {
+          "userName": {
+            "type": "string",
+            "title": "Username",
+            "description": "Username"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname",
+            "description": "Display name"
+          },
+          "databricks_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Databricks Host",
+            "description": "Databricks workspace host URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userName",
+          "displayName"
+        ],
+        "title": "UserInfo",
+        "description": "User information model."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

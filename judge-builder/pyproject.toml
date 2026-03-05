@@ -1,0 +1,129 @@
+[project]
+name = "databricks-app-template"
+version = "0.3.4"
+description = "Modern Databricks App Template - FastAPI backend with React TypeScript frontend"
+authors = [
+    {name = "Your Name", email = "your.email@databricks.com"},
+]
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "databricks-sdk==0.59.0",
+    "pydantic>=2.5.0",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.25.0",
+    "pandas>=2.1.0",
+    "requests>=2.32.4",
+    "rich>=14.0.0",
+    "click>=8.1.0",
+    "mlflow[databricks]>=3.5.0",
+    "databricks-agents>=1.8.0",
+    "dspy>=2.6.27",
+    "cachetools>=5.5.2",
+]
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "uv>=0.5.0",  # Package and environment manager
+    "databricks-connect>=16.1.6",  # Latest version compatible with Python 3.11
+    "debugpy>=1.8.15",
+    "ruff>=0.12.2",
+    "ty>=0.0.1a14",  # Type checker for development only
+    "watchdog>=6.0.0",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["server", "scripts"]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+# Assume Python 3.12.
+target-version = "py312"
+# Enable auto-fix
+fix = true
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  "__pycache__",
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "client",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+# Enable Pyflakes `F`, pycodestyle "W" and `E`, "Q" quotes, "I" imports.
+ignore = [
+  "D105", # Missing docstring in magic method.
+  "D106", # Missing docstring in a public nested class.
+  "D107", # Missing docstring in __init__.
+  "D203", # 1 blank line required before class docstring.
+  "D204", # 1 blank line required after class docstring.
+  "D213", # Multi-line docstring summary should start at the second line.
+  "D401", # First line of docstring should be in imperative mood: "{first_line}"
+  "D407", # Missing dashed underline after section.
+]
+select = ["E", "W", "F", "Q", "I", "D"]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.per-file-ignores]
+"*_test.py" = ["D101", "D102", "D103", "D104"]
+"__init__.py" = ["D104"]
+
+[tool.ruff.lint.pep8-naming]
+# Allow Pydantic's `@validator` decorator to trigger class method treatment.
+classmethod-decorators = ["classmethod", "pydantic.validator"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "ruff>=0.12.10",
+    "tomli>=2.2.1",
+]
