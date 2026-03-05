@@ -64,7 +64,7 @@ def main():
     from databricks.sdk import WorkspaceClient
     from databricks.sdk.service.tags import TagPolicy, Value
 
-    w = WorkspaceClient()
+    w = WorkspaceClient(product="genie-abac-quickstart", product_version="0.1.0")
 
     existing = {}
     for tp in w.tag_policies.list_tag_policies():
