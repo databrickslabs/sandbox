@@ -86,11 +86,6 @@ def _ensure_packages():
 
 _ensure_packages()
 
-import databricks.sdk.useragent as ua  # noqa: E402
-
-ua.with_extra(PRODUCT_NAME, PRODUCT_VERSION)
-ua.with_product(PRODUCT_NAME, PRODUCT_VERSION)
-
 
 def _load_tfvars(path: Path, label: str) -> dict:
     """Load a single .tfvars file. Returns empty dict if not found."""

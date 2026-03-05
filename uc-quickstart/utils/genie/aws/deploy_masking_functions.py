@@ -46,11 +46,6 @@ def _ensure_packages():
 
 _ensure_packages()
 
-import databricks.sdk.useragent as ua  # noqa: E402
-
-ua.with_extra(PRODUCT_NAME, PRODUCT_VERSION)
-ua.with_product(PRODUCT_NAME, PRODUCT_VERSION)
-
 from databricks.sdk import WorkspaceClient  # noqa: E402
 from databricks.sdk.service.sql import (  # noqa: E402
     StatementState,

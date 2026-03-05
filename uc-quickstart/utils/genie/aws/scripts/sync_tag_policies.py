@@ -63,14 +63,7 @@ def main():
 
     from databricks.sdk import WorkspaceClient
     from databricks.sdk.service.tags import TagPolicy, Value
-    import databricks.sdk.useragent as ua
-
-    _product_name = "genierails"
-    _product_version = "0.1.0"
-    ua.with_extra(_product_name, _product_version)
-    ua.with_product(_product_name, _product_version)
-
-    w = WorkspaceClient(product=_product_name, product_version=_product_version)
+    w = WorkspaceClient(product="genierails", product_version="0.1.0")
 
     existing = {}
     for tp in w.tag_policies.list_tag_policies():
