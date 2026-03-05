@@ -1,0 +1,26 @@
+.collection-card {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collection-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.collection-description {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.collection-card.active {
+  border-color: #0066cc;
+  background: #f0f7ff;
+}

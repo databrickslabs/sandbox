@@ -1,0 +1,19 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  - name: UC_CATALOG
+    value: serverless_dxukih_catalog
+
+  - name: UC_SCHEMA
+    value: agents
+
+  - name: WAREHOUSE_ID
+    value: 387bcda0f2ece20c

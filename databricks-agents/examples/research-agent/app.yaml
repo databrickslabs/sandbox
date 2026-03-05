@@ -1,0 +1,40 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # Unity Catalog configuration
+  - name: UC_CATALOG
+    value: main
+
+  - name: UC_SCHEMA
+    value: agents
+
+  # Model endpoint
+  - name: MODEL_ENDPOINT
+    value: databricks-claude-sonnet-4-5
+
+  # Model parameters
+  - name: TEMPERATURE
+    value: "0.7"
+
+  - name: MAX_TOKENS
+    value: "4096"
+
+  # SQL Warehouse ID (optional - will auto-detect serverless if not provided)
+  # - name: WAREHOUSE_ID
+  #   value: your-warehouse-id
+
+  # MLflow tracking
+  - name: MLFLOW_EXPERIMENT_NAME
+    value: /Users/databricks/agent-tracking
+
+  # Python path
+  - name: PYTHONPATH
+    value: /Workspace/Applications/${app_name}
