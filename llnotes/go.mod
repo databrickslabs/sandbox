@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/llnotes
 
-go 1.24
+go 1.26
 
 require (
 	github.com/databricks/databricks-sdk-go v0.118.0
