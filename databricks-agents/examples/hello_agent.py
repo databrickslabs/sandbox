@@ -8,7 +8,7 @@ discoverable by the Agent Platform.
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from databricks_agents import add_agent_card
+from dbx_agent_app import add_agent_card
 
 app = FastAPI()
 

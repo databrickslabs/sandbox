@@ -12,7 +12,7 @@ import json
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from databricks_agents import add_agent_card, add_mcp_endpoints
+from dbx_agent_app import add_agent_card, add_mcp_endpoints
 
 
 app = FastAPI()

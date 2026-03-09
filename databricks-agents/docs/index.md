@@ -1,10 +1,10 @@
-# databricks-agents
+# dbx-agent-app
 
 A lightweight Python framework for building discoverable AI agents on Databricks Apps.
 
-## What is databricks-agents?
+## What is dbx-agent-app?
 
-`databricks-agents` makes it trivial to turn any Databricks App into a discoverable, standards-compliant agent that can:
+`dbx-agent-app` makes it trivial to turn any Databricks App into a discoverable, standards-compliant agent that can:
 
 - **Auto-generate A2A protocol endpoints** for agent discovery and communication
 - **Register in Unity Catalog** for centralized agent management
@@ -15,7 +15,7 @@ A lightweight Python framework for building discoverable AI agents on Databricks
 
 :material-rocket-launch: **5 Lines to Create an Agent**
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="my_agent",
@@ -38,7 +38,7 @@ Register agents as UC objects with built-in permission management
 ## Quick Example
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 # Create your agent
 @app_agent(
@@ -53,7 +53,7 @@ async def customer_research(request: AgentRequest) -> AgentResponse:
 app = customer_research.app
 ```
 
-## Why databricks-agents?
+## Why dbx-agent-app?
 
 ### Before
 
@@ -160,10 +160,10 @@ FastAPI endpoints for each registered tool
 
 ## Community
 
-- :material-github: [GitHub Repository](https://github.com/databricks-labs/databricks-agents)
-- :material-bug: [Issue Tracker](https://github.com/databricks-labs/databricks-agents/issues)
-- :material-chat: [Discussions](https://github.com/databricks-labs/databricks-agents/discussions)
+- :material-github: [GitHub Repository](https://github.com/databricks-labs/dbx-agent-app)
+- :material-bug: [Issue Tracker](https://github.com/databricks-labs/dbx-agent-app/issues)
+- :material-chat: [Discussions](https://github.com/databricks-labs/dbx-agent-app/discussions)
 
 ## License
 
-Apache 2.0 - See [LICENSE](https://github.com/databricks-labs/databricks-agents/blob/main/LICENSE) for details
+Apache 2.0 - See [LICENSE](https://github.com/databricks-labs/dbx-agent-app/blob/main/LICENSE) for details

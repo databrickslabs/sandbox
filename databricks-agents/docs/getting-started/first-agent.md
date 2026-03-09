@@ -7,7 +7,7 @@ This guide walks through building an agent with two tools, testing it locally, a
 Create a file called `app.py`:
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="company_lookup",

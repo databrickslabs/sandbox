@@ -5,7 +5,7 @@ import pytest
 import httpx
 import respx
 
-from databricks_agents.discovery.a2a_client import A2AClient, A2AClientError
+from dbx_agent_app.discovery.a2a_client import A2AClient, A2AClientError
 
 
 AGENT_CARD = {

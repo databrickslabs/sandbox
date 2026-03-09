@@ -9,7 +9,7 @@ import time
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementParameterListItem
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 logger = logging.getLogger(__name__)
 

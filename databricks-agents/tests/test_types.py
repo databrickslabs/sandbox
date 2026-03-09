@@ -2,7 +2,7 @@
 
 import json
 
-from databricks_agents.core.types import (
+from dbx_agent_app.core.types import (
     AgentRequest,
     AgentResponse,
     InputItem,

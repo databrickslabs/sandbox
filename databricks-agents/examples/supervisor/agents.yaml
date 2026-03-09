@@ -1,5 +1,5 @@
 # Multi-agent deployment configuration
-# Deploy with: databricks-agents deploy --config agents.yaml --profile <PROFILE>
+# Deploy with: dbx-agent-app deploy --config agents.yaml --profile <PROFILE>
 
 project:
   name: sgp-multi-agent

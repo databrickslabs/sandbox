@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-from databricks_agents.deploy.config import (
+from dbx_agent_app.deploy.config import (
     AgentSpec,
     AppResourceSpec,
     DatabaseResource,
@@ -18,7 +18,7 @@ from databricks_agents.deploy.config import (
     UCSecurableResource,
     WarehouseConfig,
 )
-from databricks_agents.deploy.engine import DeployEngine
+from dbx_agent_app.deploy.engine import DeployEngine
 
 
 # ===================================================================

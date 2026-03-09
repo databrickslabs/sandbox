@@ -9,7 +9,7 @@
 ## Install from PyPI
 
 ```bash
-pip install databricks-agents
+pip install dbx-agent-app
 ```
 
 ## Install for development
@@ -17,8 +17,8 @@ pip install databricks-agents
 Clone the repository and install in editable mode with dev dependencies:
 
 ```bash
-git clone https://github.com/databricks-labs/databricks-agents.git
-cd databricks-agents
+git clone https://github.com/databricks-labs/dbx-agent-app.git
+cd dbx-agent-app
 pip install -e ".[dev]"
 ```
 
@@ -27,7 +27,7 @@ The `[dev]` extra installs testing and linting tools: pytest, pytest-asyncio, py
 ## Verify the installation
 
 ```bash
-python -c "from databricks_agents import app_agent, AgentRequest, AgentResponse; print('OK')"
+python -c "from dbx_agent_app import app_agent, AgentRequest, AgentResponse; print('OK')"
 ```
 
 You should see `OK` printed with no errors.

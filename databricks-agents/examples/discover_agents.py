@@ -5,7 +5,7 @@ Demonstrates how to discover agent-enabled Databricks Apps in a workspace.
 """
 
 import asyncio
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 
 async def main():

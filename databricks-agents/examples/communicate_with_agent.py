@@ -5,7 +5,7 @@ Demonstrates how to use the A2A client to communicate with a discovered agent.
 """
 
 import asyncio
-from databricks_agents.discovery import AgentDiscovery, A2AClient
+from dbx_agent_app.discovery import AgentDiscovery, A2AClient
 
 
 async def main():

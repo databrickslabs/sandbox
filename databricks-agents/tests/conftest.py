@@ -1,11 +1,11 @@
-"""Shared test fixtures for databricks-agents SDK tests."""
+"""Shared test fixtures for dbx-agent-app SDK tests."""
 
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents import add_agent_card, add_mcp_endpoints
+from dbx_agent_app import add_agent_card, add_mcp_endpoints
 
 
 # --- Helper-based fixtures ---

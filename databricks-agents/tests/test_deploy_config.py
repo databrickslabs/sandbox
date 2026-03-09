@@ -4,7 +4,7 @@ import pytest
 import yaml
 from pathlib import Path
 
-from databricks_agents.deploy.config import (
+from dbx_agent_app.deploy.config import (
     AppResourceSpec,
     AgentSpec,
     DeployConfig,

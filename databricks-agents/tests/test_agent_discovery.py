@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from dataclasses import dataclass
 
-from databricks_agents.discovery.agent_discovery import (
+from dbx_agent_app.discovery.agent_discovery import (
     AgentDiscovery,
     DiscoveredAgent,
 )
@@ -169,7 +169,7 @@ async def test_probe_parses_dict_capabilities():
         "capabilities": {"streaming": True, "pushNotifications": False},
     }
 
-    with patch("databricks_agents.discovery.agent_discovery.A2AClient") as mock_cls:
+    with patch("dbx_agent_app.discovery.agent_discovery.A2AClient") as mock_cls:
         mock_instance = AsyncMock()
         mock_instance.fetch_agent_card = AsyncMock(return_value=card_with_dict_caps)
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
@@ -196,7 +196,7 @@ async def test_probe_parses_list_capabilities():
         "capabilities": ["search", "analysis"],
     }
 
-    with patch("databricks_agents.discovery.agent_discovery.A2AClient") as mock_cls:
+    with patch("dbx_agent_app.discovery.agent_discovery.A2AClient") as mock_cls:
         mock_instance = AsyncMock()
         mock_instance.fetch_agent_card = AsyncMock(return_value=card_with_list_caps)
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_instance)

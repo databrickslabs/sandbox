@@ -1,19 +1,19 @@
 # Quick Start
 
-Get up and running with databricks-agents in 5 minutes.
+Get up and running with dbx-agent-app in 5 minutes.
 
 ## Installation
 
 Install via pip:
 
 ```bash
-pip install databricks-agents
+pip install dbx-agent-app
 ```
 
 For development:
 
 ```bash
-pip install databricks-agents[dev]
+pip install dbx-agent-app[dev]
 ```
 
 ## Create Your First Agent
@@ -21,7 +21,7 @@ pip install databricks-agents[dev]
 Create a file called `app.py`:
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 # Create the agent
 @app_agent(
@@ -130,7 +130,7 @@ Create `discover.py`:
 
 ```python
 import asyncio
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 async def main():
     discovery = AgentDiscovery(profile="DEFAULT")

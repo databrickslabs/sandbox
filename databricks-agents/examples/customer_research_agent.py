@@ -5,7 +5,7 @@ A Databricks App that uses the @app_agent decorator to create
 a discoverable agent with tool capabilities.
 """
 
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 
 @app_agent(

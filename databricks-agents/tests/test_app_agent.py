@@ -5,8 +5,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from databricks_agents import app_agent, AgentRequest, AgentResponse, StreamEvent, UserContext
-from databricks_agents.core.app_agent import AppAgent
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse, StreamEvent, UserContext
+from dbx_agent_app.core.app_agent import AppAgent
 
 
 # ===================================================================

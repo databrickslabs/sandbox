@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from databricks_agents.dashboard.app import create_dashboard_app
-from databricks_agents.dashboard.scanner import DashboardScanner
-from databricks_agents.discovery import DiscoveredAgent
+from dbx_agent_app.dashboard.app import create_dashboard_app
+from dbx_agent_app.dashboard.scanner import DashboardScanner
+from dbx_agent_app.discovery import DiscoveredAgent
 
 
 @pytest.fixture

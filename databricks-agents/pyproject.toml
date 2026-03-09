@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "databricks-agent-deploy"
+name = "dbx-agent-app"
 version = "0.3.0"
 description = "Agent platform for Databricks: discover, test, trace, and govern agents in your workspace"
 readme = "README.md"
@@ -38,18 +38,17 @@ dev = [
 ]
 
 [project.scripts]
-databricks-agent-deploy = "databricks_agents.cli:main"
-databricks-agents = "databricks_agents.cli:main"
+dbx-agent-app = "dbx_agent_app.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/databricks-labs/databricks-agent-deploy"
-Documentation = "https://databricks-labs.github.io/databricks-agent-deploy"
+Homepage = "https://github.com/databricks-labs/dbx-agent-app"
+Documentation = "https://databricks-labs.github.io/dbx-agent-app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"databricks_agents.dashboard" = ["static/**/*"]
+"dbx_agent_app.dashboard" = ["static/**/*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

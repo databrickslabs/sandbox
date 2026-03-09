@@ -21,8 +21,8 @@ import time
 from contextlib import contextmanager
 import contextlib
 
-from databricks_agents import AgentRequest, AgentResponse, StreamEvent, UserContext
-from databricks_agents.core.compat import to_langchain_messages
+from dbx_agent_app import AgentRequest, AgentResponse, StreamEvent, UserContext
+from dbx_agent_app.core.compat import to_langchain_messages
 from databricks_langchain import ChatDatabricks
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.config import Config

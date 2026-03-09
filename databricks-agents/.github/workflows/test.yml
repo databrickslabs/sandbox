@@ -42,7 +42,7 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest tests/ -v --cov=databricks_agents --cov-report=xml --cov-report=term
+        pytest tests/ -v --cov=dbx_agent_app --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

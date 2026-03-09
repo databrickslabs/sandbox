@@ -1,6 +1,6 @@
-# Contributing to databricks-agents
+# Contributing to dbx-agent-app
 
-Thank you for your interest in contributing to databricks-agents! This project is a Databricks Labs initiative to make it easier to build discoverable AI agents on Databricks Apps.
+Thank you for your interest in contributing to dbx-agent-app! This project is a Databricks Labs initiative to make it easier to build discoverable AI agents on Databricks Apps.
 
 ## Development Setup
 

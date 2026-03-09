@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents import add_agent_card, add_mcp_endpoints
+from dbx_agent_app import add_agent_card, add_mcp_endpoints
 
 
 # ===================================================================

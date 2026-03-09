@@ -18,7 +18,7 @@ from typing import Dict, Any
 
 import httpx
 
-from databricks_agents import AgentRequest, AgentResponse, UserContext
+from dbx_agent_app import AgentRequest, AgentResponse, UserContext
 from databricks_langchain import ChatDatabricks
 from databricks.sdk import WorkspaceClient
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage

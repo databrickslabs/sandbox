@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents.mcp import MCPServerConfig, setup_mcp_server
+from dbx_agent_app.mcp import MCPServerConfig, setup_mcp_server
 
 
 def _make_mcp_app():

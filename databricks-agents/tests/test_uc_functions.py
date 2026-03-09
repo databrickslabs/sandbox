@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from dataclasses import dataclass
 from typing import List, Optional
 
-from databricks_agents.mcp.uc_functions import UCFunctionAdapter
+from dbx_agent_app.mcp.uc_functions import UCFunctionAdapter
 
 
 @dataclass

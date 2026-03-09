@@ -1,5 +1,5 @@
 """Minimal deployable agent -- one tool, MCP enabled, zero external deps."""
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 
 @app_agent(

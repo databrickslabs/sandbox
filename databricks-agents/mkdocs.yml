@@ -1,8 +1,8 @@
-site_name: databricks-agents
+site_name: dbx-agent-app
 site_description: Framework for building discoverable AI agents on Databricks Apps
-site_url: https://databricks-labs.github.io/databricks-agents
-repo_url: https://github.com/databricks-labs/databricks-agents
-repo_name: databricks-labs/databricks-agents
+site_url: https://databricks-labs.github.io/dbx-agent-app
+repo_url: https://github.com/databricks-labs/dbx-agent-app
+repo_name: databricks-labs/dbx-agent-app
 
 theme:
   name: material

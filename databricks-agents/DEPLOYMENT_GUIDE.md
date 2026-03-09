@@ -12,8 +12,8 @@ This framework is ready for deployment to the [Databricks Labs Sandbox](https://
 ## Repository Structure
 
 ```
-databricks-agents/
-├── src/databricks_agents/        # Core framework
+dbx-agent-app/
+├── src/dbx_agent_app/        # Core framework
 │   ├── core/                      # @app_agent decorator, agent request/response types
 │   ├── discovery/                 # Agent discovery, A2A client
 │   ├── mcp/                       # MCP server, UC Functions
@@ -74,25 +74,25 @@ databricks-agents/
 git clone <current-location>
 
 # Add sandbox as remote
-cd databricks-agents
+cd dbx-agent-app
 git remote add sandbox git@github.com:databrickslabs/sandbox.git
 
 # Create feature branch
-git checkout -b databricks-agents-framework
+git checkout -b dbx-agent-app-framework
 
 # Push to sandbox
-git push sandbox databricks-agents-framework
+git push sandbox dbx-agent-app-framework
 ```
 
 ### 2. Create PR to sandbox/main
 
-**PR Title**: Add databricks-agents framework for building discoverable agents
+**PR Title**: Add dbx-agent-app framework for building discoverable agents
 
 **PR Description**:
 ```markdown
 ## Summary
 
-Adds `databricks-agents`, a lightweight Python framework for building discoverable AI agents on Databricks Apps. This framework makes it trivial to turn any Databricks App into a standards-compliant agent with auto-generated A2A protocol endpoints.
+Adds `dbx-agent-app`, a lightweight Python framework for building discoverable AI agents on Databricks Apps. This framework makes it trivial to turn any Databricks App into a standards-compliant agent with auto-generated A2A protocol endpoints.
 
 ## What It Does
 
@@ -104,18 +104,18 @@ Adds `databricks-agents`, a lightweight Python framework for building discoverab
 
 ## Key Files
 
-- `src/databricks_agents/core/decorator.py` - @app_agent decorator
-- `src/databricks_agents/core/types.py` - AgentRequest, AgentResponse types
-- `src/databricks_agents/discovery/` - Agent discovery and A2A client
-- `src/databricks_agents/registry/` - Unity Catalog integration
-- `src/databricks_agents/mcp/` - MCP server support
+- `src/dbx_agent_app/core/decorator.py` - @app_agent decorator
+- `src/dbx_agent_app/core/types.py` - AgentRequest, AgentResponse types
+- `src/dbx_agent_app/discovery/` - Agent discovery and A2A client
+- `src/dbx_agent_app/registry/` - Unity Catalog integration
+- `src/dbx_agent_app/mcp/` - MCP server support
 - `examples/` - Complete working examples
 - `tests/` - Test suite
 
 ## Example Usage
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="customer_research",

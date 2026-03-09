@@ -1,4 +1,4 @@
-# databricks-agents Framework Overview
+# dbx-agent-app Framework Overview
 
 ## What We've Built
 
@@ -21,8 +21,8 @@ This framework treats Databricks Apps as first-class agents, allowing them to:
 ## Framework Structure
 
 ```
-databricks-agents/
-├── src/databricks_agents/
+dbx-agent-app/
+├── src/dbx_agent_app/
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── decorator.py            # @app_agent decorator
@@ -62,7 +62,7 @@ Python decorator that transforms an async function into an agent with auto-gener
 
 **Usage:**
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="my_agent",
@@ -84,7 +84,7 @@ Discovers agent-enabled apps in your workspace by:
 
 **Usage:**
 ```python
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 discovery = AgentDiscovery(profile="my-profile")
 result = await discovery.discover_agents()
@@ -103,7 +103,7 @@ Communicates with agents using A2A protocol:
 
 **Usage:**
 ```python
-from databricks_agents.discovery import A2AClient
+from dbx_agent_app.discovery import A2AClient
 
 async with A2AClient() as client:
     card = await client.fetch_agent_card(agent_url)
@@ -138,7 +138,7 @@ Delegates to Databricks workspace OIDC provider for authentication
 ### Creating an Agent with @app_agent
 ```python
 # examples/customer_research_agent.py
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="customer_research",
@@ -155,7 +155,7 @@ app = customer_research.app
 ```python
 # examples/plain_fastapi_agent.py
 from fastapi import FastAPI
-from databricks_agents import add_agent_card
+from dbx_agent_app import add_agent_card
 
 app = FastAPI()
 
@@ -174,7 +174,7 @@ add_agent_card(
 ### Discovering Agents
 ```python
 # examples/discover_agents.py
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 discovery = AgentDiscovery(profile="my-profile")
 result = await discovery.discover_agents()

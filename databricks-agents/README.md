@@ -1,10 +1,10 @@
-# databricks-agents
+# dbx-agent-app
 
 A lightweight Python framework for building discoverable AI agents on Databricks Apps that automatically expose A2A (Agent-to-Agent) protocol endpoints.
 
 ## What It Does
 
-The `databricks-agents` framework makes it trivial to turn a Databricks App into a discoverable, standards-compliant agent:
+The `dbx-agent-app` framework makes it trivial to turn a Databricks App into a discoverable, standards-compliant agent:
 
 - **Auto-generates A2A protocol endpoints** (`/.well-known/agent.json`, `/.well-known/openid-configuration`)
 - **Wraps FastAPI** to seamlessly integrate agent capabilities with your web app
@@ -31,13 +31,13 @@ The [A2A (Agent-to-Agent) protocol](https://a2a.so/) provides a standard way for
 ## Installation
 
 ```bash
-pip install databricks-agents
+pip install dbx-agent-app
 ```
 
 Or with development dependencies:
 
 ```bash
-pip install databricks-agents[dev]
+pip install dbx-agent-app[dev]
 ```
 
 ## Quick Start
@@ -45,7 +45,7 @@ pip install databricks-agents[dev]
 ### 1. Create an Agent
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 # Create your agent with capabilities
 @app_agent(
@@ -94,7 +94,7 @@ databricks apps deploy customer-research --source-code-path ./
 
 ```python
 import asyncio
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 async def main():
     discovery = AgentDiscovery(profile="my-profile")
@@ -168,7 +168,7 @@ Standard health check endpoint:
 The `AgentDiscovery` class scans your workspace for agent-enabled apps:
 
 ```python
-from databricks_agents.discovery import AgentDiscovery
+from dbx_agent_app.discovery import AgentDiscovery
 
 # Initialize with optional profile
 discovery = AgentDiscovery(profile="my-profile")
@@ -196,7 +196,7 @@ if result.errors:
 Communicate with other agents using the A2A protocol:
 
 ```python
-from databricks_agents.discovery import A2AClient
+from dbx_agent_app.discovery import A2AClient
 
 async with A2AClient() as client:
     # Fetch an agent's card
@@ -222,7 +222,7 @@ For agents using plain FastAPI with the `add_agent_card()` helper, tools can be 
 Example:
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="customer_research",

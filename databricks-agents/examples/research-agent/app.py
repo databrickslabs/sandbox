@@ -14,7 +14,7 @@ Endpoints (auto-generated):
 import os
 import mlflow
 
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 from agent import SGPResearchAgent
 
 

@@ -4,10 +4,10 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 
-from databricks_agents.discovery import DiscoveredAgent
-from databricks_agents.dashboard.scanner import DashboardScanner
-from databricks_agents.dashboard.app import create_dashboard_app
-from databricks_agents.dashboard.cli import main as cli_main
+from dbx_agent_app.discovery import DiscoveredAgent
+from dbx_agent_app.dashboard.scanner import DashboardScanner
+from dbx_agent_app.dashboard.app import create_dashboard_app
+from dbx_agent_app.dashboard.cli import main as cli_main
 
 
 # --- Fixtures -------------------------------------------------------------
@@ -115,7 +115,7 @@ def test_get_agent_by_name(scanner):
 @pytest.mark.asyncio
 async def test_get_agent_card(scanner):
     """get_agent_card fetches via A2AClient."""
-    with patch("databricks_agents.dashboard.scanner.A2AClient") as mock_cls:
+    with patch("dbx_agent_app.dashboard.scanner.A2AClient") as mock_cls:
         mock_instance = AsyncMock()
         mock_instance.fetch_agent_card = AsyncMock(return_value=FAKE_CARD)
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
@@ -134,7 +134,7 @@ async def test_proxy_mcp(scanner):
 
     mcp_response = {"jsonrpc": "2.0", "id": "1", "result": {"tools": []}}
 
-    with patch("databricks_agents.dashboard.scanner.httpx.AsyncClient") as mock_http_cls:
+    with patch("dbx_agent_app.dashboard.scanner.httpx.AsyncClient") as mock_http_cls:
         mock_http = AsyncMock()
         mock_resp = MagicMock()
         mock_resp.json.return_value = mcp_response
@@ -255,7 +255,7 @@ def test_cli_help(capsys):
     """CLI --help exits cleanly."""
     with pytest.raises(SystemExit) as exc:
         import sys
-        sys.argv = ["databricks-agents", "dashboard", "--help"]
+        sys.argv = ["dbx-agent-app", "dashboard", "--help"]
         cli_main()
     assert exc.value.code == 0
 
@@ -263,7 +263,7 @@ def test_cli_help(capsys):
 def test_cli_no_command(capsys):
     """CLI with no subcommand prints help and exits."""
     import sys
-    sys.argv = ["databricks-agents"]
+    sys.argv = ["dbx-agent-app"]
     with pytest.raises(SystemExit) as exc:
         cli_main()
     assert exc.value.code == 1

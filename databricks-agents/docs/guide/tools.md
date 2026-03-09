@@ -7,7 +7,7 @@ For agents using plain FastAPI with helpers, you can define tools in your agent 
 ## Basic usage with @app_agent
 
 ```python
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 
 @app_agent(
     name="my_agent",
@@ -63,7 +63,7 @@ For agents that need full control over their FastAPI app:
 
 ```python
 from fastapi import FastAPI
-from databricks_agents import add_agent_card, AgentRequest, AgentResponse
+from dbx_agent_app import add_agent_card, AgentRequest, AgentResponse
 
 app = FastAPI()
 

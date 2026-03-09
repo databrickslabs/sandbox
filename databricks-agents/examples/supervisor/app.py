@@ -9,7 +9,7 @@ Single-layer API: the decorated function IS the /invocations handler.
 
 import os
 
-from databricks_agents import app_agent, AgentRequest, AgentResponse
+from dbx_agent_app import app_agent, AgentRequest, AgentResponse
 from agent import SupervisorAgent
 
 
