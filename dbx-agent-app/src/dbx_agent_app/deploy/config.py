@@ -71,6 +71,7 @@ UC_SECURABLE_PERMISSIONS = {
 # Resource type field names (for validation)
 _RESOURCE_TYPE_FIELDS = (
     "uc_securable", "sql_warehouse", "job", "secret", "serving_endpoint", "database",
+    "genie_space",
 )
 
 
@@ -133,6 +134,13 @@ class DatabaseResource(BaseModel):
     permission: str = "CAN_CONNECT_AND_CREATE"
 
 
+class GenieSpaceResource(BaseModel):
+    """A Genie Space resource — grants access to a Genie space for AI/BI queries."""
+
+    id: str
+    permission: str = "CAN_VIEW"
+
+
 class AppResourceSpec(BaseModel):
     """A resource declaration for an agent's Databricks App.
 
@@ -147,6 +155,7 @@ class AppResourceSpec(BaseModel):
     secret: Optional[SecretResource] = None
     serving_endpoint: Optional[ServingEndpointResource] = None
     database: Optional[DatabaseResource] = None
+    genie_space: Optional[GenieSpaceResource] = None
 
     @model_validator(mode="after")
     def exactly_one_resource_type(self) -> AppResourceSpec:
@@ -188,6 +197,7 @@ class AgentSpec(BaseModel):
     source: str
     tables: list[str] = []  # Legacy — auto-converted to uc_securable resources
     resources: list[AppResourceSpec] = []
+    user_api_scopes: list[str] = []  # OAuth scopes for on-behalf-of-user auth
     depends_on: list[str] = []
     url_env_map: dict[str, str] = {}
     env: dict[str, str] = {}
@@ -282,6 +292,7 @@ class DeployConfig(BaseModel):
                     source=source,
                     tables=tables,
                     resources=resources,
+                    user_api_scopes=agent_data.get("user_api_scopes", []),
                     depends_on=agent_data.get("depends_on", []),
                     url_env_map=agent_data.get("url_env_map", {}),
                     env=env,
@@ -362,6 +373,13 @@ def _parse_resource(data: dict[str, Any], context: dict[str, str]) -> AppResourc
             instance_name=d["instance_name"],
             database_name=d["database_name"],
             permission=d.get("permission", "CAN_CONNECT_AND_CREATE"),
+        )
+
+    if "genie_space" in data:
+        g = data["genie_space"]
+        kwargs["genie_space"] = GenieSpaceResource(
+            id=_interpolate(str(g["id"]), context),
+            permission=g.get("permission", "CAN_VIEW"),
         )
 
     return AppResourceSpec(**kwargs)

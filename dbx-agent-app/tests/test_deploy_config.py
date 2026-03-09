@@ -14,6 +14,7 @@ from dbx_agent_app.deploy.config import (
     SecretResource,
     ServingEndpointResource,
     DatabaseResource,
+    GenieSpaceResource,
     _parse_resource,
     _interpolate,
     _build_context,
@@ -112,8 +113,9 @@ def test_resource_spec_each_type_valid():
             name="t6",
             database=DatabaseResource(instance_name="db1", database_name="prod"),
         ),
+        AppResourceSpec(name="t7", genie_space=GenieSpaceResource(id="gs1")),
     ]
-    assert len(specs) == 6
+    assert len(specs) == 7
 
 
 # ===================================================================
@@ -341,3 +343,64 @@ def test_from_yaml(tmp_path):
     assert config.agents[0].resources[0].sql_warehouse.id == "w"
     # Source path should be resolved relative to config file
     assert Path(config.agents[0].source).is_absolute()
+
+
+# ===================================================================
+# Genie space resource type
+# ===================================================================
+
+
+def test_parse_genie_space(context):
+    data = {"name": "genie", "genie_space": {"id": "01abc", "permission": "CAN_VIEW"}}
+    spec = _parse_resource(data, context)
+    assert spec.genie_space is not None
+    assert spec.genie_space.id == "01abc"
+    assert spec.genie_space.permission == "CAN_VIEW"
+
+
+def test_parse_genie_space_default_permission(context):
+    data = {"name": "genie", "genie_space": {"id": "01abc"}}
+    spec = _parse_resource(data, context)
+    assert spec.genie_space.permission == "CAN_VIEW"
+
+
+def test_parse_genie_space_interpolation(context):
+    context["genie.id"] = "gs-123"
+    data = {"name": "genie", "genie_space": {"id": "${genie.id}"}}
+    spec = _parse_resource(data, context)
+    assert spec.genie_space.id == "gs-123"
+
+
+def test_from_dict_with_genie_space():
+    raw = _base_raw(agents=[{
+        "name": "genie-agent",
+        "source": "/tmp/genie",
+        "resources": [{"name": "space", "genie_space": {"id": "01efg"}}],
+    }])
+    config = DeployConfig.from_dict(raw)
+    agent = config.agents[0]
+    assert len(agent.resources) == 1
+    assert agent.resources[0].genie_space.id == "01efg"
+
+
+# ===================================================================
+# user_api_scopes
+# ===================================================================
+
+
+def test_from_dict_with_user_api_scopes():
+    raw = _base_raw(agents=[{
+        "name": "scoped",
+        "source": "/tmp/scoped",
+        "resources": [{"name": "wh", "sql_warehouse": {"id": "x"}}],
+        "user_api_scopes": ["sql", "serving.serving-endpoints", "dashboards.genie"],
+    }])
+    config = DeployConfig.from_dict(raw)
+    agent = config.agents[0]
+    assert agent.user_api_scopes == ["sql", "serving.serving-endpoints", "dashboards.genie"]
+
+
+def test_from_dict_user_api_scopes_defaults_empty():
+    raw = _base_raw(agents=[{"name": "basic", "source": "/tmp/basic"}])
+    config = DeployConfig.from_dict(raw)
+    assert config.agents[0].user_api_scopes == []

@@ -411,7 +411,7 @@ class DeployEngine:
         CONNECTION require REST (same approach as the Terraform provider).
         """
         app_name = self.config.app_name(agent)
-        if not agent.resources:
+        if not agent.resources and not agent.user_api_scopes:
             return
 
         payload_resources = []
@@ -453,19 +453,30 @@ class DeployEngine:
                     "database_name": r.database.database_name,
                     "permission": r.database.permission,
                 }
+            elif r.genie_space:
+                res["genie_space"] = {
+                    "id": r.genie_space.id,
+                    "permission": r.genie_space.permission,
+                }
             else:
                 continue
 
             payload_resources.append(res)
 
-        if not payload_resources:
+        if not payload_resources and not agent.user_api_scopes:
             return
+
+        body: dict[str, Any] = {"name": app_name}
+        if payload_resources:
+            body["resources"] = payload_resources
+        if agent.user_api_scopes:
+            body["user_api_scopes"] = agent.user_api_scopes
 
         try:
             self.w.api_client.do(
                 "PATCH",
                 f"/api/2.0/apps/{app_name}",
-                body={"name": app_name, "resources": payload_resources},
+                body=body,
             )
             print(f"  {agent.name:<20} {len(payload_resources)} resource(s) set")
         except Exception as e:

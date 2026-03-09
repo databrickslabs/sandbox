@@ -22,6 +22,8 @@ function resourceDetail(r: DeclaredResource): string {
       return (r.name_value as string) ?? r.name ?? "—";
     case "database":
       return [r.instance_name, r.database_name].filter(Boolean).join("/") || "—";
+    case "genie_space":
+      return r.id ?? "—";
     default:
       return "—";
   }
@@ -34,6 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
   secret: "Secret",
   serving_endpoint: "Serving Endpoint",
   database: "Database",
+  genie_space: "Genie Space",
 };
 
 export function GovernanceTab({ agentName }: Props) {

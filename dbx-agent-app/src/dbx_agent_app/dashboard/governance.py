@@ -609,7 +609,7 @@ class GovernanceService:
                     for r in resources:
                         res_info: Dict[str, Any] = {"name": getattr(r, "name", "")}
                         # Check each resource type
-                        for rtype in ("uc_securable", "sql_warehouse", "job", "secret", "serving_endpoint", "database"):
+                        for rtype in ("uc_securable", "sql_warehouse", "job", "secret", "serving_endpoint", "database", "genie_space"):
                             obj = getattr(r, rtype, None)
                             if obj:
                                 res_info["type"] = rtype

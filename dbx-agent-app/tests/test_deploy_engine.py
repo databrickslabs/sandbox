@@ -9,6 +9,7 @@ from dbx_agent_app.deploy.config import (
     AppResourceSpec,
     DatabaseResource,
     DeployConfig,
+    GenieSpaceResource,
     JobResource,
     ProjectConfig,
     SecretResource,
@@ -242,6 +243,67 @@ def test_grant_app_to_app_handles_failure(caplog):
 # ===================================================================
 # Dry run
 # ===================================================================
+
+
+def test_set_app_resources_genie_space():
+    agent = AgentSpec(
+        name="genie-agent",
+        source="/tmp",
+        resources=[
+            AppResourceSpec(name="space", genie_space=GenieSpaceResource(id="01abc"))
+        ],
+    )
+    engine = _make_engine(_make_config([agent]))
+    engine._set_app_resources(agent)
+
+    body = engine.w.api_client.do.call_args[1]["body"]
+    assert body["resources"][0]["genie_space"]["id"] == "01abc"
+    assert body["resources"][0]["genie_space"]["permission"] == "CAN_VIEW"
+
+
+def test_set_app_resources_with_user_api_scopes():
+    agent = AgentSpec(
+        name="scoped",
+        source="/tmp",
+        resources=[AppResourceSpec(name="wh", sql_warehouse=SqlWarehouseResource(id="wh1"))],
+        user_api_scopes=["sql", "serving.serving-endpoints"],
+    )
+    engine = _make_engine(_make_config([agent]))
+    engine._set_app_resources(agent)
+
+    body = engine.w.api_client.do.call_args[1]["body"]
+    assert body["resources"][0]["sql_warehouse"]["id"] == "wh1"
+    assert body["user_api_scopes"] == ["sql", "serving.serving-endpoints"]
+
+
+def test_set_app_resources_scopes_only():
+    """Agent with scopes but no resources still makes the PATCH call."""
+    agent = AgentSpec(
+        name="scope-only",
+        source="/tmp",
+        resources=[],
+        user_api_scopes=["sql"],
+    )
+    engine = _make_engine(_make_config([agent]))
+    engine._set_app_resources(agent)
+
+    body = engine.w.api_client.do.call_args[1]["body"]
+    assert "resources" not in body
+    assert body["user_api_scopes"] == ["sql"]
+
+
+def test_set_app_resources_no_scopes_in_body():
+    """When no scopes set, body should not include user_api_scopes key."""
+    agent = AgentSpec(
+        name="no-scopes",
+        source="/tmp",
+        resources=[AppResourceSpec(name="wh", sql_warehouse=SqlWarehouseResource(id="x"))],
+    )
+    engine = _make_engine(_make_config([agent]))
+    engine._set_app_resources(agent)
+
+    body = engine.w.api_client.do.call_args[1]["body"]
+    assert "user_api_scopes" not in body
 
 
 def test_dry_run_skips_deployment():

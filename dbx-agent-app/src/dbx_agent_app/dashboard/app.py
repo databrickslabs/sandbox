@@ -6,6 +6,8 @@ Routes:
   API:   GET  /api/agents              — JSON list of agents
          GET  /api/agents/{name}/card  — full agent card
          POST /api/agents/{name}/test  — call agent via /invocations
+         POST /api/agents/{name}/evaluate — run eval bridge against agent
+         GET  /api/agents/{name}/analytics — invocation analytics summary
          GET  /api/agents/{name}/lineage    — agent-centric lineage graph
          GET  /api/agents/{name}/governance — app governance status + declared resources
          POST /api/agents/{name}/mcp   — MCP JSON-RPC proxy
@@ -18,6 +20,7 @@ Routes:
 
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -27,6 +30,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from .analytics import AnalyticsTracker
 from .governance import GovernanceService
 from .scanner import DashboardScanner
 from .system_builder import SystemBuilderService, SystemCreate, SystemUpdate, DeployProgress
@@ -99,6 +103,8 @@ def create_dashboard_app(
         lifespan=lifespan,
     )
 
+    analytics = AnalyticsTracker()
+
     has_spa = (STATIC_DIR / "index.html").is_file()
 
     # --- JSON API ---------------------------------------------------------
@@ -153,8 +159,11 @@ def create_dashboard_app(
         if not agent:
             return JSONResponse({"error": "Agent not found"}, status_code=404)
 
+        t0 = time.monotonic()
         try:
             result = await scanner.call_invocations(agent.endpoint_url, body.message)
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=True, latency_ms=latency, source="test")
             if governance and isinstance(result, dict):
                 trace = result.get("_trace", {})
                 if trace:
@@ -164,6 +173,8 @@ def create_dashboard_app(
                         pass
             return {"result": result}
         except Exception as e:
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=False, latency_ms=latency, source="test", error=str(e))
             return JSONResponse({"error": str(e)}, status_code=502)
 
     @app.post("/api/agents/{name}/chat")
@@ -173,10 +184,13 @@ def create_dashboard_app(
         if not agent:
             return JSONResponse({"error": "Agent not found"}, status_code=404)
 
+        t0 = time.monotonic()
         try:
             result = await scanner.send_a2a_message(
                 agent.endpoint_url, body.message, body.context_id
             )
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=True, latency_ms=latency, source="chat")
             # Auto-ingest trace for runtime lineage
             if governance and isinstance(result, dict):
                 trace = result.get("_trace", {})
@@ -187,6 +201,8 @@ def create_dashboard_app(
                         pass  # best-effort
             return {"result": result}
         except Exception as e:
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=False, latency_ms=latency, source="chat", error=str(e))
             return JSONResponse({"error": str(e)}, status_code=502)
 
     @app.post("/api/agents/{name}/chat/stream")
@@ -214,6 +230,54 @@ def create_dashboard_app(
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
+
+    # --- Analytics & Evaluation API ----------------------------------------
+
+    @app.get("/api/agents/{name}/analytics")
+    async def api_agent_analytics(name: str):
+        """Return invocation analytics summary for an agent."""
+        return analytics.get_summary(name)
+
+    @app.post("/api/agents/{name}/evaluate")
+    async def api_evaluate_agent(name: str, request: Request):
+        """Run eval bridge — send messages to agent and return structured result."""
+        agent = scanner.get_agent_by_name(name)
+        if not agent:
+            return JSONResponse({"error": "Agent not found"}, status_code=404)
+        if not agent.endpoint_url:
+            return JSONResponse({"error": "Agent has no endpoint URL"}, status_code=400)
+
+        body = await request.json()
+        messages = body.get("messages", [])
+        if not messages:
+            return JSONResponse({"error": "messages required"}, status_code=400)
+
+        from dbx_agent_app.bridge.eval import app_predict_fn
+
+        # Get auth token from scanner's workspace client if available
+        token = None
+        try:
+            ws = scanner._discovery._w if hasattr(scanner, "_discovery") else None
+            if ws:
+                auth = ws.config.authenticate()
+                if callable(auth):
+                    headers = auth()
+                    if headers:
+                        token = dict(headers).get("Authorization", "").replace("Bearer ", "")
+        except Exception:
+            pass
+
+        t0 = time.monotonic()
+        try:
+            predict = app_predict_fn(agent.endpoint_url, token=token)
+            result = predict(messages=messages)
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=True, latency_ms=latency, source="evaluate")
+            return result
+        except Exception as e:
+            latency = int((time.monotonic() - t0) * 1000)
+            analytics.record(name, success=False, latency_ms=latency, source="evaluate", error=str(e))
+            return JSONResponse({"error": str(e)}, status_code=502)
 
     # --- Lineage & Governance API ------------------------------------------
 

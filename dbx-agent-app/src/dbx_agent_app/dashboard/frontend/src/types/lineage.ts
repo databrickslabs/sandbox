@@ -45,7 +45,8 @@ export type ResourceType =
   | "job"
   | "secret"
   | "serving_endpoint"
-  | "database";
+  | "database"
+  | "genie_space";
 
 export interface DeclaredResource {
   name: string;
@@ -63,4 +64,26 @@ export interface GovernanceStatus {
   declared_resources: DeclaredResource[];
   connected_tables: ConnectedTable[];
   connected_table_count: number;
+}
+
+export interface InvocationRecord {
+  timestamp: number;
+  success: boolean;
+  latency_ms: number;
+  source: string;
+  error: string | null;
+}
+
+export interface AgentAnalytics {
+  total: number;
+  success_count: number;
+  failure_count: number;
+  success_rate: number;
+  avg_latency_ms: number;
+  recent: InvocationRecord[];
+}
+
+export interface EvalResult {
+  response: string;
+  output: Record<string, unknown>[];
 }
