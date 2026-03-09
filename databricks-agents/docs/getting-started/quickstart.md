@@ -21,32 +21,22 @@ pip install databricks-agents[dev]
 Create a file called `app.py`:
 
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 # Create the agent
-app = AgentApp(
+@app_agent(
     name="hello_agent",
     description="A simple greeting agent",
     capabilities=["greetings"],
 )
-
-# Add a tool
-@app.tool(description="Generate a personalized greeting")
-async def greet(name: str, language: str = "english") -> dict:
-    greetings = {
-        "english": f"Hello, {name}!",
-        "spanish": f"¡Hola, {name}!",
-        "french": f"Bonjour, {name}!",
-    }
-    return {
-        "greeting": greetings.get(language, greetings["english"]),
-        "language": language,
-    }
+async def hello_agent(request: AgentRequest) -> AgentResponse:
+    user_message = request.last_user_message
+    return AgentResponse.text(f"Hello! You said: {user_message}")
 
 # Run the app
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(hello_agent.app, host="0.0.0.0", port=8000)
 ```
 
 ## Test Locally
@@ -73,36 +63,24 @@ Expected response:
   "capabilities": ["greetings"],
   "version": "1.0.0",
   "endpoints": {
-    "mcp": "/api/mcp",
-    "invoke": "/api/invoke"
-  },
-  "tools": [
-    {
-      "name": "greet",
-      "description": "Generate a personalized greeting",
-      "parameters": {
-        "name": {"type": "str", "required": true},
-        "language": {"type": "str", "required": false}
-      }
-    }
-  ]
+    "invoke": "/invocations"
+  }
 }
 ```
 
-Test a tool endpoint:
+Test the invocations endpoint:
 
 ```bash
-curl -X POST http://localhost:8000/api/tools/greet \
+curl -X POST http://localhost:8000/invocations \
   -H "Content-Type: application/json" \
-  -d '{"name": "Alice", "language": "spanish"}'
+  -d '{"input": [{"role": "user", "content": "Hi Alice"}]}'
 ```
 
 Expected response:
 
 ```json
 {
-  "greeting": "¡Hola, Alice!",
-  "language": "spanish"
+  "output": "Hello! You said: Hi Alice"
 }
 ```
 
@@ -142,9 +120,8 @@ databricks apps deploy hello-agent \
 
 Your agent is now:
 
-✅ Running on Databricks Apps  
-✅ Discoverable via agent card  
-✅ Registered in Unity Catalog (main.agents.hello_agent)  
+✅ Running on Databricks Apps
+✅ Discoverable via agent card
 ✅ Available to other agents
 
 ## Discover Your Agent

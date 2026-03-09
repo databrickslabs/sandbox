@@ -1,4 +1,7 @@
-"""Multi-Agent Supervisor — Routes queries to independently deployed sub-agents via /invocations."""
+"""Multi-Agent Supervisor — Routes queries to independently deployed sub-agents via /invocations.
+
+Uses SDK types (AgentRequest/AgentResponse) instead of mlflow.pyfunc.ResponsesAgent.
+"""
 
 # IMPORTANT: Clean up auth environment BEFORE any Databricks SDK imports
 # In Databricks Apps, both OAuth and PAT token may be present
@@ -11,48 +14,20 @@ import time
 import logging
 from datetime import datetime, timezone
 from uuid import uuid4
-from typing import Generator
+from typing import Dict, Any
 
 import httpx
 
-# Import mlflow types with fallbacks for version compatibility
-try:
-    from mlflow.pyfunc import ResponsesAgent
-except ImportError:
-    ResponsesAgent = object
-
-from mlflow.types.responses import (
-    ResponsesAgentRequest,
-    ResponsesAgentResponse,
-    ResponsesAgentStreamEvent,
-)
+from databricks_agents import AgentRequest, AgentResponse, UserContext
 from databricks_langchain import ChatDatabricks
 from databricks.sdk import WorkspaceClient
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
 
-def _make_output_item(text: str, item_id: str = None):
-    """Create a text output item compatible with any mlflow version."""
-    _id = item_id or str(uuid4())
-    try:
-        from mlflow.types.responses import OutputItem
-        return OutputItem(
-            type="message",
-            id=_id,
-            content=[{"type": "output_text", "text": text}],
-        )
-    except (ImportError, AttributeError, TypeError):
-        return {
-            "type": "message",
-            "id": _id,
-            "content": [{"type": "output_text", "text": text}],
-        }
-
-
-class SupervisorAgent(ResponsesAgent):
+class SupervisorAgent:
     """
     Multi-agent supervisor that routes queries to independently deployed sub-agents.
 
@@ -84,6 +59,9 @@ class SupervisorAgent(ResponsesAgent):
         # Workspace client for auth token generation
         self.workspace = WorkspaceClient()
 
+        # Per-request user context (set in predict, used in tool calls)
+        self._current_user_context: UserContext | None = None
+
         # Observability state — reset per call
         self._last_tables_accessed = []
         self._last_sql_queries = []
@@ -106,18 +84,10 @@ class SupervisorAgent(ResponsesAgent):
     # Sub-agent client — calls deployed agents via /invocations
     # ------------------------------------------------------------------
 
-    def _call_subagent_invocations(self, endpoint_name: str, query: str) -> dict:
-        """
-        Call a sub-agent via /invocations (Databricks Responses Agent protocol).
-
-        Args:
-            endpoint_name: Key into SUBAGENT_CONFIG (e.g. "research")
-            query: The user's query string
-
-        Returns:
-            Parsed sub-agent response dict with response, data_source,
-            tables_accessed, sql_queries, timing, etc.
-        """
+    def _call_subagent_invocations(
+        self, endpoint_name: str, query: str, user_context: UserContext | None = None,
+    ) -> dict:
+        """Call a sub-agent via /invocations (Databricks Responses Agent protocol)."""
         config = self.SUBAGENT_CONFIG[endpoint_name]
         agent_url = os.environ.get(config["url_env"])
 
@@ -128,7 +98,7 @@ class SupervisorAgent(ResponsesAgent):
 
         invocations_url = f"{agent_url.rstrip('/')}/invocations"
 
-        # Authenticate using workspace OAuth
+        # Authenticate using workspace OAuth (service principal)
         auth_headers = {}
         try:
             header_factory = self.workspace.config.authenticate()
@@ -138,6 +108,10 @@ class SupervisorAgent(ResponsesAgent):
                 auth_headers = header_factory
         except Exception as e:
             logger.warning("Auth header generation failed: %s", e)
+
+        # Forward user identity so sub-agents can execute as the calling user
+        if user_context is not None:
+            auth_headers.update(user_context.as_forwarded_headers())
 
         payload = {
             "input": [{"role": "user", "content": query}],
@@ -176,12 +150,10 @@ class SupervisorAgent(ResponsesAgent):
         metadata = response_data.get("_metadata") or {}
 
         if isinstance(metadata, dict) and "response" in metadata:
-            # Sub-agent returned structured data — use it directly
             metadata["_network_ms"] = call_duration
             metadata["_agent_url"] = agent_url
             return metadata
 
-        # Wrap plain text response
         return {
             "response": response_text,
             "data_source": metadata.get("data_source", "live"),
@@ -248,12 +220,11 @@ class SupervisorAgent(ResponsesAgent):
         }
 
     # ------------------------------------------------------------------
-    # Sub-agent dispatch (wraps MCP call with observability)
+    # Sub-agent dispatch (wraps invocations call with observability)
     # ------------------------------------------------------------------
 
     def _call_subagent(self, endpoint_name: str, query: str) -> str:
         """Call a sub-agent via /invocations and update observability state."""
-        # Reset observability state
         self._last_tables_accessed = []
         self._last_sql_queries = []
         self._last_keywords = []
@@ -262,9 +233,10 @@ class SupervisorAgent(ResponsesAgent):
         self._last_network_ms = 0
         self._last_agent_url = None
 
-        result = self._call_subagent_invocations(endpoint_name, query)
+        result = self._call_subagent_invocations(
+            endpoint_name, query, self._current_user_context
+        )
 
-        # Populate observability from sub-agent response
         self._last_tables_accessed = result.get("tables_accessed", [])
         self._last_sql_queries = result.get("sql_queries", [])
         self._last_keywords = result.get("keywords_extracted", [])
@@ -276,7 +248,7 @@ class SupervisorAgent(ResponsesAgent):
         return result.get("response", str(result))
 
     # ------------------------------------------------------------------
-    # Tool definitions (sync — no async/threading needed)
+    # Tool definitions
     # ------------------------------------------------------------------
 
     def _create_subagent_tools(self):
@@ -292,12 +264,6 @@ class SupervisorAgent(ResponsesAgent):
             - Industry insights, trends, expert opinions
             - "What do experts think about..."
             - Summarizing expert perspectives
-
-            Args:
-                query: The research question to ask
-
-            Returns:
-                Expert insights with citations
             """
             return self._call_subagent("research", query)
 
@@ -310,13 +276,6 @@ class SupervisorAgent(ResponsesAgent):
             - "Find experts who know about..."
             - "Who has discussed..."
             - Identifying advisors with specific expertise
-            - "Who should I talk to about [topic]?"
-
-            Args:
-                query: The topic or expertise to search for
-
-            Returns:
-                Ranked list of experts with relevance scores
             """
             return self._call_subagent("expert_finder", query)
 
@@ -329,13 +288,6 @@ class SupervisorAgent(ResponsesAgent):
             - Questions with numbers, counts, percentages
             - "How many...", "What percentage...", "Show me usage..."
             - Trends over time, comparisons
-            - Data in structured tables
-
-            Args:
-                query: The analytics question to answer
-
-            Returns:
-                Metrics and data results
             """
             return self._call_subagent("analytics", query)
 
@@ -348,36 +300,27 @@ class SupervisorAgent(ResponsesAgent):
             - "Check if this engagement is compliant..."
             - "Any conflicts with..."
             - Conflict of interest screening
-            - "Can this expert discuss [company]?"
-
-            Args:
-                query: The compliance question or engagement to check
-
-            Returns:
-                Compliance status and any issues found
             """
             return self._call_subagent("compliance", query)
 
         return [call_research, call_expert_finder, call_analytics, call_compliance_check]
 
     # ------------------------------------------------------------------
-    # Predict (sync tool invocation — no threading)
+    # Predict
     # ------------------------------------------------------------------
 
-    def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
+    def predict(self, request: AgentRequest) -> AgentResponse:
         """Route query to appropriate sub-agent via /invocations."""
-        from langchain_core.messages import HumanMessage, AIMessage
+        # Capture user context for forwarding to sub-agents during tool calls
+        self._current_user_context = request.user_context
 
-        # Convert input items to LangChain messages
+        # Convert SDK request to LangChain messages
         messages = []
         for item in request.input:
-            item_dict = item.model_dump() if hasattr(item, "model_dump") else item
-            role = item_dict.get("role", "user")
-            content = item_dict.get("content", "")
-            if role == "user":
-                messages.append(HumanMessage(content=content))
-            elif role == "assistant":
-                messages.append(AIMessage(content=content))
+            if item.role == "user":
+                messages.append(HumanMessage(content=item.content))
+            elif item.role == "assistant":
+                messages.append(AIMessage(content=item.content))
 
         # System prompt for routing
         system_msg = SystemMessage(content="""You are a multi-agent supervisor for an expert network platform.
@@ -388,19 +331,15 @@ Your role is to route user queries to the appropriate specialized sub-agent:
 
 1. **call_research**: Expert interview transcript research
    - Use for: qualitative insights, expert opinions, "what do experts say about..."
-   - Has: Access to expert transcript data
 
 2. **call_expert_finder**: Find experts by topic/domain
    - Use for: "find experts who...", "who knows about...", expert recommendations
-   - Returns: ranked list of experts with relevance scores
 
 3. **call_analytics**: Business metrics and SQL queries
    - Use for: numbers, counts, trends, "how many...", quantitative questions
-   - Uses: Call metrics and engagement data
 
 4. **call_compliance_check**: Compliance and conflict checks
    - Use for: policy adherence, conflicts of interest, engagement approval
-   - Checks: Restricted list and NDA registry
 
 **Routing Guidelines:**
 - Choose ONE sub-agent that best matches the query intent
@@ -413,12 +352,10 @@ Your role is to route user queries to the appropriate specialized sub-agent:
 - Call multiple tools (pick the best one)
 - Modify or summarize the sub-agent's response""")
 
-        # Invoke LLM with tools (track routing latency)
         llm_start = time.monotonic()
         response = self.llm_with_tools.invoke([system_msg] + messages)
         llm_duration_ms = round((time.monotonic() - llm_start) * 1000, 1)
 
-        # Track routing decision for lineage
         self._last_routing = None
         call_timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -428,12 +365,10 @@ Your role is to route user queries to the appropriate specialized sub-agent:
             tool_name = tool_call['name']
             tool_args = tool_call['args']
 
-            # Find and execute the tool (sync — no threading needed)
             for t in self.tools:
                 if t.name == tool_name:
                     result = t.invoke(tool_args)
 
-                    # Build rich routing trace with sub-agent metadata
                     sub_agent = self.TOOL_TO_SUBAGENT.get(tool_name, tool_name)
                     total_sql_ms = sum(
                         q.get("duration_ms", 0) for q in self._last_sql_queries
@@ -467,13 +402,9 @@ Your role is to route user queries to the appropriate specialized sub-agent:
                         "agent_endpoint": agent_url,
                     }
 
-                    output_item = _make_output_item(
-                        text=result,
-                        item_id=str(uuid4())
-                    )
-                    return ResponsesAgentResponse(output=[output_item])
+                    return AgentResponse.text(result)
 
-        # No tool called - return LLM response directly
+        # No tool called — return LLM response directly
         self._last_routing = {
             "tool": None,
             "sub_agent": None,
@@ -497,35 +428,4 @@ Your role is to route user queries to the appropriate specialized sub-agent:
             },
             "agent_endpoint": None,
         }
-        output_item = _make_output_item(
-            text=response.content,
-            item_id=str(uuid4())
-        )
-        return ResponsesAgentResponse(output=[output_item])
-
-    def predict_stream(self, request: ResponsesAgentRequest) -> Generator[ResponsesAgentStreamEvent, None, None]:
-        """Streaming is not supported for supervisor (routing is fast)."""
-        response = self.predict(request)
-
-        item_id = str(uuid4())
-        item = response.output[0]
-        if hasattr(item, "text") and item.text:
-            text = item.text
-        elif hasattr(item, "content") and item.content:
-            text = next((p.text if hasattr(p, "text") else p.get("text", "") for p in item.content), "")
-        else:
-            text = str(item)
-
-        chunk_size = 50
-        for i in range(0, len(text), chunk_size):
-            chunk = text[i:i+chunk_size]
-            yield ResponsesAgentStreamEvent(
-                type="response.output_text.delta",
-                item_id=item_id,
-                delta=chunk,
-            )
-
-        yield ResponsesAgentStreamEvent(
-            type="response.output_item.done",
-            item=_make_output_item(text=text, item_id=item_id),
-        )
+        return AgentResponse.text(response.content)

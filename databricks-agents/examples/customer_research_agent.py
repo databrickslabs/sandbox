@@ -1,31 +1,27 @@
 """
 Example: Customer Research Agent
 
-A Databricks App that uses the databricks-agent-deploy framework to create
+A Databricks App that uses the @app_agent decorator to create
 a discoverable agent with tool capabilities.
 """
 
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-agent = AgentApp(
+
+@app_agent(
     name="customer_research",
     description="Research customer information and market trends",
     capabilities=["search", "analysis", "research"],
 )
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    """Route to search_companies by default."""
+    result = await search_companies(request.last_user_message)
+    return AgentResponse.from_dict(result)
 
 
-@agent.tool(description="Search for companies by industry")
+@customer_research.tool(description="Search for companies by industry")
 async def search_companies(industry: str, limit: int = 10) -> dict:
-    """
-    Search for companies in a specific industry.
-
-    Args:
-        industry: Industry sector to search (e.g., "technology", "healthcare")
-        limit: Maximum number of results to return
-
-    Returns:
-        Dictionary with company search results
-    """
+    """Search for companies in a specific industry."""
     return {
         "industry": industry,
         "results": [
@@ -36,18 +32,9 @@ async def search_companies(industry: str, limit: int = 10) -> dict:
     }
 
 
-@agent.tool(description="Analyze market trends for a sector")
+@customer_research.tool(description="Analyze market trends for a sector")
 async def analyze_trends(sector: str, timeframe: str = "1y") -> dict:
-    """
-    Analyze market trends for a business sector.
-
-    Args:
-        sector: Business sector to analyze
-        timeframe: Time period (e.g., "1y", "6m", "3m")
-
-    Returns:
-        Dictionary with trend analysis
-    """
+    """Analyze market trends for a business sector."""
     return {
         "sector": sector,
         "timeframe": timeframe,
@@ -61,7 +48,7 @@ async def analyze_trends(sector: str, timeframe: str = "1y") -> dict:
     }
 
 
-app = agent.as_fastapi()
+app = customer_research.app
 
 
 if __name__ == "__main__":

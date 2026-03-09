@@ -1,9 +1,9 @@
-"""Tests for add_agent_card() and add_mcp_endpoints() helpers, plus legacy AgentApp."""
+"""Tests for add_agent_card() and add_mcp_endpoints() helpers."""
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents import add_agent_card, add_mcp_endpoints, AgentApp
+from databricks_agents import add_agent_card, add_mcp_endpoints
 
 
 # ===================================================================
@@ -184,59 +184,3 @@ def test_mcp_multiple_tools():
     assert len(mcp_tools) == 2
     names = {t["name"] for t in mcp_tools}
     assert names == {"tool_a", "tool_b"}
-
-
-# ===================================================================
-# Legacy AgentApp tests (backward compatibility)
-# ===================================================================
-
-
-def test_legacy_agent_app_creation(basic_app):
-    """Legacy AgentApp still works."""
-    assert basic_app.agent_metadata.name == "test_agent"
-    assert basic_app.agent_metadata.capabilities == ["test"]
-
-
-def test_legacy_agent_card(legacy_client):
-    """Legacy AgentApp still serves /.well-known/agent.json."""
-    response = legacy_client.get("/.well-known/agent.json")
-    assert response.status_code == 200
-    assert response.json()["name"] == "test_agent"
-
-
-def test_legacy_health(legacy_client):
-    """Legacy AgentApp still serves /health."""
-    response = legacy_client.get("/health")
-    assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
-
-
-def test_legacy_invocations():
-    """Legacy AgentApp /invocations still works."""
-    agent = AgentApp(
-        name="inv_test", description="Test", capabilities=["test"],
-        auto_register=False, enable_mcp=False,
-    )
-
-    @agent.tool(description="Echo tool")
-    async def echo(query: str) -> dict:
-        return {"response": f"Echo: {query}"}
-
-    client = TestClient(agent.as_fastapi())
-    response = client.post(
-        "/invocations",
-        json={"input": [{"role": "user", "content": "hello world"}]},
-    )
-    assert response.status_code == 200
-    assert response.json()["output"][0]["content"][0]["text"] == "Echo: hello world"
-
-
-def test_legacy_tool_registration(basic_app):
-    """Legacy @agent.tool() decorator still works."""
-
-    @basic_app.tool(description="Test tool")
-    async def test_tool(param: str) -> dict:
-        return {"result": param}
-
-    assert len(basic_app.agent_metadata.tools) == 1
-    assert basic_app.agent_metadata.tools[0].name == "test_tool"

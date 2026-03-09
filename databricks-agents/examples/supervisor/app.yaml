@@ -32,3 +32,18 @@ env:
 
   - name: COMPLIANCE_URL
     value: https://sdk-sub-compliance-7474660127789418.aws.databricksapps.com
+
+# ── User Authorization (on-behalf-of) ──────────────────────────────
+# When user authorization scopes are configured, the supervisor forwards
+# X-Forwarded-* headers to sub-agents so UC governance applies per-user.
+#
+# Configure via Databricks CLI or Custom App Integration API:
+#   databricks apps update <app-name> --json '{
+#     "resources": [{
+#       "name": "user-auth",
+#       "description": "On-behalf-of user authorization",
+#       "sql": { "permission": "CAN_USE" }
+#     }]
+#   }'
+#
+# See: https://docs.databricks.com/en/dev-tools/databricks-apps/app-development.html

@@ -7,13 +7,11 @@ Routes:
          GET  /api/agents/{name}/card  — full agent card
          POST /api/agents/{name}/test  — call agent via /invocations
          GET  /api/agents/{name}/lineage    — agent-centric lineage graph
-         GET  /api/agents/{name}/governance — UC registration status
+         GET  /api/agents/{name}/governance — app governance status + declared resources
          POST /api/agents/{name}/mcp   — MCP JSON-RPC proxy
          POST /api/agents/{name}/chat  — A2A message/send proxy (A2A -> /invocations -> MCP)
          POST /api/agents/{name}/chat/stream — SSE streaming A2A proxy
          GET  /api/lineage             — workspace-wide lineage graph
-         POST /api/uc/register-all     — batch UC registration
-         POST /api/uc/auto-register    — toggle auto-registration
          POST /api/scan                — trigger re-scan
          GET  /health                  — health check
 """
@@ -60,21 +58,13 @@ def create_dashboard_app(
         governance: Optional GovernanceService for lineage/UC
         auto_scan_interval: Seconds between background scans (0 to disable)
     """
-    auto_register_enabled = False
-
     async def _background_scan():
-        """Periodically re-scan workspace and auto-register new agents."""
+        """Periodically re-scan workspace for agents."""
         while True:
             await asyncio.sleep(auto_scan_interval)
             try:
                 agents = await scanner.scan()
                 logger.info("Background scan found %d agent(s)", len(agents))
-                if auto_register_enabled and governance:
-                    try:
-                        result = await governance.register_all_agents(schema="agents")
-                        logger.info("Auto-register result: %s", result)
-                    except Exception as e:
-                        logger.warning("Auto-register failed: %s", e)
             except Exception as e:
                 logger.warning("Background scan failed: %s", e)
 
@@ -262,34 +252,6 @@ def create_dashboard_app(
             return graph.to_dict()
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=500)
-
-    @app.post("/api/uc/register-all")
-    async def api_register_all(request: Request):
-        if not governance:
-            return JSONResponse({"error": "Governance service not available"}, status_code=503)
-        body = {}
-        try:
-            body = await request.json()
-        except Exception:
-            pass
-        schema = body.get("schema", "agents") if isinstance(body, dict) else "agents"
-        result = await governance.register_all_agents(schema=schema)
-        return result
-
-    @app.post("/api/uc/auto-register")
-    async def api_auto_register_toggle(request: Request):
-        """Toggle automatic UC registration of discovered agents."""
-        nonlocal auto_register_enabled
-        body = {}
-        try:
-            body = await request.json()
-        except Exception:
-            pass
-        if isinstance(body, dict) and "enabled" in body:
-            auto_register_enabled = bool(body["enabled"])
-        else:
-            auto_register_enabled = not auto_register_enabled
-        return {"auto_register": auto_register_enabled}
 
     @app.post("/api/lineage/observe")
     async def api_observe_trace(request: Request):

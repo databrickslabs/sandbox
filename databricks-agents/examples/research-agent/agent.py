@@ -1,12 +1,8 @@
 """
 Research Assistant - Unity Catalog Native with MLflow Tracking
 
-This version adds comprehensive performance tracking via MLflow:
-- Tool execution latency per call
-- Token usage and estimated costs
-- UC Function performance metrics
-- Error rates and types
-- End-to-end agent performance
+Uses SDK types (AgentRequest/AgentResponse) instead of mlflow.pyfunc.ResponsesAgent.
+MLflow is still used for observability (metrics, traces, artifacts) — just not for types.
 
 Key Value: Most organizations have ZERO visibility into agent performance.
 This shows how Databricks makes agents observable out of the box.
@@ -17,7 +13,6 @@ This shows how Databricks makes agents observable out of the box.
 # We must use OAuth-only to avoid "multiple auth methods" error
 import os
 if os.environ.get("DATABRICKS_CLIENT_ID"):  # Running in Databricks Apps
-    # Remove PAT token to force OAuth usage
     os.environ.pop("DATABRICKS_TOKEN", None)
 
 from uuid import uuid4
@@ -26,12 +21,8 @@ import time
 from contextlib import contextmanager
 import contextlib
 
-from mlflow.pyfunc import ResponsesAgent
-from mlflow.types.responses import (
-    ResponsesAgentRequest,
-    ResponsesAgentResponse,
-    ResponsesAgentStreamEvent,
-)
+from databricks_agents import AgentRequest, AgentResponse, StreamEvent, UserContext
+from databricks_agents.core.compat import to_langchain_messages
 from databricks_langchain import ChatDatabricks
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.config import Config
@@ -148,14 +139,7 @@ class PerformanceMetrics:
         }
 
     def _estimate_cost(self) -> float:
-        """
-        Estimate cost based on token usage.
-
-        This is a huge value-add: automatic cost tracking per agent call.
-        Most organizations have no idea what their agents cost.
-        """
-        # Example pricing for Claude Sonnet (adjust for actual model)
-        # Input: $3/M tokens, Output: $15/M tokens
+        """Estimate cost based on token usage."""
         input_cost = (self.prompt_tokens / 1_000_000) * 3.0
         output_cost = (self.completion_tokens / 1_000_000) * 15.0
         return round(input_cost + output_cost, 6)
@@ -180,7 +164,6 @@ class PerformanceMetrics:
             else:
                 breakdown[tool_name]["fail_count"] += 1
 
-        # Calculate averages
         for tool_name in breakdown:
             tool_data = breakdown[tool_name]
             tool_data["avg_latency_ms"] = tool_data["total_latency_ms"] / tool_data["call_count"]
@@ -189,17 +172,12 @@ class PerformanceMetrics:
         return breakdown
 
 
-class SGPResearchAgentWithTracking(ResponsesAgent):
+class SGPResearchAgent:
     """
     Research assistant with comprehensive MLflow performance tracking.
 
-    Key Differentiator: Shows exactly what agents are doing:
-    - How long each tool call takes
-    - How much each query costs
-    - Where bottlenecks are
-    - Reliability metrics
-
-    This is observability most organizations DON'T have.
+    Uses SDK types (AgentRequest/AgentResponse) — no mlflow.pyfunc inheritance.
+    MLflow is used purely for observability (metrics, traces, artifacts).
     """
 
     def __init__(self, config=None):
@@ -211,38 +189,30 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
         self.schema = self.config.get("schema", "agents")
 
         # Workspace client for UC Function execution
-        # Use Kasal's pattern: clean environment to prevent SDK conflicts
         import os
 
-        # Capture credentials BEFORE cleaning environment
         workspace_url = os.environ.get("DATABRICKS_HOST", "https://fevm-serverless-dxukih.cloud.databricks.com")
         is_databricks_app = os.environ.get("DATABRICKS_CLIENT_ID") is not None
         client_id = os.environ.get("DATABRICKS_CLIENT_ID")
         client_secret = os.environ.get("DATABRICKS_CLIENT_SECRET")
         token = os.environ.get("DATABRICKS_TOKEN")
 
-        # Clean environment and create clients with explicit credentials
-        # This prevents "more than one authorization method" errors
         with _clean_environment():
             if is_databricks_app:
-                # In Databricks Apps: Use OAuth (client credentials)
                 self.workspace = WorkspaceClient(
                     host=workspace_url,
                     client_id=client_id,
                     client_secret=client_secret
                 )
             else:
-                # Running locally: Use PAT token
                 if token:
                     self.workspace = WorkspaceClient(
                         host=workspace_url,
                         token=token
                     )
                 else:
-                    # Fallback to default SDK authentication
                     self.workspace = WorkspaceClient()
 
-            # Initialize Databricks Foundation Model (also needs clean env)
             self.llm = ChatDatabricks(
                 endpoint=self.config.get("endpoint", "databricks-claude-sonnet-4-5"),
                 temperature=self.config.get("temperature", 0.7),
@@ -251,6 +221,9 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
 
         # Performance tracking
         self.metrics = PerformanceMetrics()
+
+        # Per-request user context for user-scoped UC execution
+        self._current_user_context: UserContext | None = None
 
         # Cache warehouse ID to avoid repeated lookups
         self._warehouse_id_cache = None
@@ -266,19 +239,13 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
 
     @contextmanager
     def _track_tool_execution(self, tool_name: str):
-        """
-        Context manager to track tool execution time and status.
-
-        Usage:
-            with self._track_tool_execution("search_transcripts"):
-                result = execute_tool()
-        """
+        """Context manager to track tool execution time and status."""
         start_time = time.time()
         success = False
         result_size = 0
 
         try:
-            yield  # Execute the tool
+            yield
             success = True
         except Exception as e:
             self.metrics.add_error(type(e).__name__, str(e))
@@ -287,33 +254,35 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
             latency_ms = (time.time() - start_time) * 1000
             self.metrics.add_tool_call(tool_name, latency_ms, success, result_size)
 
-            # Log to MLflow in real-time
             if mlflow.active_run():
                 mlflow.log_metric(f"tool_{tool_name}_latency_ms", latency_ms)
                 mlflow.log_metric(f"tool_{tool_name}_success", 1 if success else 0)
 
     def _execute_uc_function(self, statement: str, parameters: list = None) -> Any:
-        """
-        Execute UC Function with performance tracking.
+        """Execute UC Function with performance tracking.
 
-        Key Insight: This is where we capture UC Function latency.
-        Most organizations have no idea how long their data operations take.
+        When user context is available, executes as the calling user so that
+        Unity Catalog row-level security and column masks apply per-user.
+        Falls back to service principal when no user auth is configured.
         """
         start_time = time.time()
 
+        # Use user-scoped client when available for UC governance enforcement
+        client = self.workspace
+        if self._current_user_context and self._current_user_context.is_authenticated:
+            client = self._current_user_context.get_workspace_client()
+
         try:
-            result = self.workspace.statement_execution.execute_statement(
+            result = client.statement_execution.execute_statement(
                 warehouse_id=self._get_warehouse_id(),
                 statement=statement,
                 parameters=parameters or [],
                 wait_timeout="30s"
             )
 
-            # Track UC Function performance
             latency_ms = (time.time() - start_time) * 1000
             self.metrics.add_uc_function_latency(latency_ms)
 
-            # Log to MLflow
             if mlflow.active_run():
                 mlflow.log_metric("uc_function_latency_ms", latency_ms)
 
@@ -334,15 +303,9 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
 
         @tool
         def search_transcripts(query: str, top_k: int = 10) -> str:
-            """
-            Search expert interview transcripts for insights on a topic.
-
-            This tool calls the Unity Catalog Function with full performance tracking.
-            Every call is logged to MLflow with latency, success/failure, and cost.
-            """
+            """Search expert interview transcripts for insights on a topic."""
             with self._track_tool_execution("search_transcripts"):
                 try:
-                    # Use parameterized query to prevent SQL injection
                     statement = f"""
                         SELECT * FROM TABLE({self.catalog}.{self.schema}.search_transcripts(
                             query => :query,
@@ -354,22 +317,17 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
                         {"name": "top_k", "value": str(top_k)}
                     ]
 
-                    # Execute with tracking
                     result = self._execute_uc_function(statement, parameters)
-
-                    # Format results
                     formatted = self._format_search_results(result)
 
-                    # Log result metadata
                     if mlflow.active_run():
-                        mlflow.log_param("search_query", query[:100])  # Truncate for logging
+                        mlflow.log_param("search_query", query[:100])
                         mlflow.log_metric("search_results_count", len(result.result.data_array) if result.result and result.result.data_array else 0)
 
                     return formatted
 
                 except Exception as e:
-                    error_msg = f"Error searching transcripts: {str(e)}\n\nNote: Ensure UC Function '{self.catalog}.{self.schema}.search_transcripts' is registered and you have EXECUTE permissions."
-                    return error_msg
+                    return f"Error searching transcripts: {str(e)}\n\nNote: Ensure UC Function '{self.catalog}.{self.schema}.search_transcripts' is registered and you have EXECUTE permissions."
 
         @tool
         def get_expert_profile(expert_id: str) -> str:
@@ -384,7 +342,6 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
                     parameters = [{"name": "expert_id", "value": expert_id}]
 
                     result = self._execute_uc_function(statement, parameters)
-
                     formatted = self._format_expert_profile(result)
 
                     if mlflow.active_run():
@@ -402,19 +359,16 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
         if self._warehouse_id_cache:
             return self._warehouse_id_cache
 
-        # Check config first
         if "warehouse_id" in self.config:
             self._warehouse_id_cache = self.config["warehouse_id"]
             return self._warehouse_id_cache
 
-        # Use serverless warehouse if available (recommended)
         warehouses = self.workspace.warehouses.list()
         for warehouse in warehouses:
             if warehouse.enable_serverless_compute:
                 self._warehouse_id_cache = warehouse.id
                 return self._warehouse_id_cache
 
-        # Fallback to first available warehouse
         first_warehouse = next(iter(warehouses), None)
         if first_warehouse:
             self._warehouse_id_cache = first_warehouse.id
@@ -431,7 +385,6 @@ class SGPResearchAgentWithTracking(ResponsesAgent):
         if len(rows) == 0:
             return "No transcripts found matching your query."
 
-        # Build formatted response
         formatted = f"Found {len(rows)} relevant transcripts:\n\n"
 
         for i, row in enumerate(rows, 1):
@@ -484,12 +437,6 @@ Your tools are Unity Catalog Functions registered in the {self.catalog}.{self.sc
 - search_transcripts: Semantic search over transcripts using Vector Search
 - get_expert_profile: Get detailed expert information
 
-Performance tracking is enabled - every tool call is logged to MLflow with:
-- Execution latency
-- Token usage and costs
-- Success/failure rates
-- Result quality metrics
-
 Your role:
 - Search transcripts to find relevant expert opinions and insights
 - Synthesize information across multiple interviews
@@ -504,12 +451,10 @@ When answering:
 5. Summarize themes across multiple interviews
 6. Be clear about confidence level in findings""")
 
-            # Track LLM invocation
             start_time = time.time()
             response = self.llm_with_tools.invoke([system_msg] + messages)
             llm_latency_ms = (time.time() - start_time) * 1000
 
-            # Extract token usage if available
             if hasattr(response, "response_metadata"):
                 usage = response.response_metadata.get("usage", {})
                 if usage:
@@ -518,13 +463,11 @@ When answering:
                         usage.get("completion_tokens", 0)
                     )
 
-            # Log LLM performance
             if mlflow.active_run():
                 mlflow.log_metric("llm_latency_ms", llm_latency_ms)
 
             return {"messages": [response]}
 
-        # Build graph
         workflow = StateGraph(MessagesState)
         workflow.add_node("agent", agent_node)
         workflow.add_node("tools", ToolNode(self.tools))
@@ -534,29 +477,23 @@ When answering:
 
         return workflow.compile()
 
-    def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
+    def predict(self, request: AgentRequest) -> AgentResponse:
         """Non-streaming prediction with comprehensive tracking."""
-        # Start tracking
-        self.metrics = PerformanceMetrics()  # Reset for this request
+        self._current_user_context = request.user_context
+        self.metrics = PerformanceMetrics()
         self.metrics.start_time = time.time()
 
-        # Start MLflow run
         with mlflow.start_run(nested=True):
-            # Log request metadata
             mlflow.log_param("catalog", self.catalog)
             mlflow.log_param("schema", self.schema)
             mlflow.log_param("model_endpoint", self.config.get("endpoint"))
 
-            # Convert request to LangChain messages
-            messages = self.prep_msgs_for_llm([i.model_dump() for i in request.input])
+            # Convert SDK request to LangChain messages
+            messages = to_langchain_messages(request)
 
-            # Invoke graph
             result = self.graph.invoke({"messages": messages})
-
-            # Extract final message
             final_message = result["messages"][-1]
 
-            # End tracking
             self.metrics.end_time = time.time()
 
             # Log all metrics to MLflow
@@ -565,130 +502,46 @@ When answering:
                 if isinstance(metric_value, (int, float)):
                     mlflow.log_metric(metric_name, metric_value)
                 elif isinstance(metric_value, dict):
-                    # Log nested metrics (tool breakdown)
                     for sub_key, sub_value in metric_value.items():
                         if isinstance(sub_value, dict):
                             for subsub_key, subsub_value in sub_value.items():
                                 if isinstance(subsub_value, (int, float)):
                                     mlflow.log_metric(f"{metric_name}_{sub_key}_{subsub_key}", subsub_value)
 
-            # Log summary as artifact
             import json
             with open("/tmp/agent_metrics.json", "w") as f:
                 json.dump(summary, f, indent=2)
             mlflow.log_artifact("/tmp/agent_metrics.json")
 
-            # Create response
-            output_item = self.create_text_output_item(
-                text=final_message.content,
-                id=str(uuid4())
-            )
+            return AgentResponse.text(final_message.content)
 
-            return ResponsesAgentResponse(output=[output_item])
-
-    def predict_stream(self, request: ResponsesAgentRequest) -> Generator[ResponsesAgentStreamEvent, None, None]:
+    def predict_stream(self, request: AgentRequest) -> Generator[StreamEvent, None, None]:
         """Streaming prediction with tracking."""
-        # Start tracking
+        self._current_user_context = request.user_context
         self.metrics = PerformanceMetrics()
         self.metrics.start_time = time.time()
 
-        # Start MLflow run
         with mlflow.start_run(nested=True):
             mlflow.log_param("catalog", self.catalog)
             mlflow.log_param("schema", self.schema)
             mlflow.log_param("streaming", True)
 
-            # Convert request to LangChain messages
-            messages = self.prep_msgs_for_llm([i.model_dump() for i in request.input])
+            messages = to_langchain_messages(request)
 
             item_id = str(uuid4())
             aggregated_content = ""
 
-            # Stream from graph
             for chunk in self.graph.stream({"messages": messages}, stream_mode="messages"):
                 if hasattr(chunk[0], "content") and chunk[0].content:
                     delta = chunk[0].content
                     aggregated_content += delta
-                    yield self.create_text_delta(delta=delta, item_id=item_id)
+                    yield StreamEvent.text_delta(delta, item_id=item_id)
 
-            # End tracking
             self.metrics.end_time = time.time()
 
-            # Log metrics
             summary = self.metrics.get_summary()
             for metric_name, metric_value in summary.items():
                 if isinstance(metric_value, (int, float)):
                     mlflow.log_metric(metric_name, metric_value)
 
-            # Send final done event
-            yield ResponsesAgentStreamEvent(
-                type="response.output_item.done",
-                item=self.create_text_output_item(text=aggregated_content, id=item_id),
-            )
-
-
-# Example: How to use with MLflow tracking
-if __name__ == "__main__":
-    """
-    Test the agent with MLflow tracking.
-
-    This demonstrates the observability value-add:
-    - Every metric logged automatically
-    - Cost tracking per query
-    - Performance bottleneck identification
-    - Reliability monitoring
-    """
-
-    # Set MLflow experiment
-    mlflow.set_experiment("/Users/your-name/agents-agent-tracking")
-
-    # Create agent
-    agent = SGPResearchAgentWithTracking({
-        "catalog": "main",
-        "schema": "agents",
-        "endpoint": "databricks-claude-sonnet-4-5"
-    })
-
-    # Create test request
-    from mlflow.types.responses import ResponsesAgentInputItem
-
-    request = ResponsesAgentRequest(
-        input=[
-            ResponsesAgentInputItem(
-                role="user",
-                content="What do healthcare experts say about AI adoption? Find at least 3 experts."
-            )
-        ]
-    )
-
-    # Execute with tracking
-    print("Testing agent with MLflow tracking...")
-    print("=" * 60)
-
-    response = agent.predict(request)
-
-    print("\nAgent Response:")
-    print("-" * 60)
-    print(response.output[0].text)
-    print("-" * 60)
-
-    # Print performance summary
-    print("\n📊 Performance Metrics:")
-    print("-" * 60)
-    summary = agent.metrics.get_summary()
-    print(f"Total Latency: {summary['total_latency_ms']:.0f}ms")
-    print(f"Tool Calls: {summary['total_tool_calls']}")
-    print(f"UC Function Avg Latency: {summary['avg_uc_function_latency_ms']:.0f}ms")
-    print(f"Total Tokens: {summary['total_tokens']:,}")
-    print(f"Estimated Cost: ${summary['estimated_cost_usd']:.6f}")
-    print(f"Error Rate: {summary['error_rate']:.2%}")
-    print("\nTool Breakdown:")
-    for tool_name, metrics in summary['tool_breakdown'].items():
-        print(f"  {tool_name}:")
-        print(f"    - Calls: {metrics['call_count']}")
-        print(f"    - Avg Latency: {metrics['avg_latency_ms']:.0f}ms")
-        print(f"    - Success Rate: {metrics['success_rate']:.2%}")
-    print("-" * 60)
-
-    print("\n✅ Check MLflow UI for detailed metrics and traces!")
-    print(f"   Experiment: /Users/your-name/agents-agent-tracking")
+            yield StreamEvent.done(aggregated_content, item_id=item_id)

@@ -24,7 +24,6 @@ nav:
     - Quick Start: getting-started/quickstart.md
     - Your First Agent: getting-started/first-agent.md
   - User Guide:
-    - Agent App: guide/agent-app.md
     - Tool Registration: guide/tools.md
     - Agent Discovery: guide/discovery.md
     - A2A Communication: guide/a2a-protocol.md
@@ -34,7 +33,6 @@ nav:
     - Multi-Agent System: examples/multi-agent.md
     - UC Integration: examples/uc-integration.md
   - API Reference:
-    - AgentApp: api/agent-app.md
     - AgentDiscovery: api/discovery.md
     - A2AClient: api/a2a-client.md
     - UCAgentRegistry: api/uc-registry.md

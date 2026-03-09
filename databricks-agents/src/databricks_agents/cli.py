@@ -3,6 +3,7 @@ Top-level CLI dispatcher for databricks-agents.
 
 Commands:
     databricks-agents deploy    Deploy agents from agents.yaml
+    databricks-agents validate  Validate agents.yaml without deploying
     databricks-agents status    Show deployment status
     databricks-agents destroy   Tear down deployed agents
     databricks-agents dashboard Launch the agent discovery dashboard locally
@@ -29,6 +30,16 @@ def main():
     deploy_cmd.add_argument("--profile", type=str, default=None, help="Databricks CLI profile")
     deploy_cmd.add_argument("--agent", type=str, default=None, help="Deploy a single agent by name")
     deploy_cmd.add_argument("--dry-run", action="store_true", help="Show plan without deploying")
+    deploy_cmd.add_argument(
+        "--mode", type=str, default="snapshot", choices=["snapshot", "auto_sync"],
+        help="Deployment mode: snapshot (default) or auto_sync (dev workflow)",
+    )
+
+    # ---- validate ----
+    validate_cmd = sub.add_parser("validate", help="Validate agents.yaml without deploying")
+    validate_cmd.add_argument(
+        "--config", type=str, default="agents.yaml", help="Path to agents.yaml (default: agents.yaml)"
+    )
 
     # ---- status ----
     status_cmd = sub.add_parser("status", help="Show deployment status")
@@ -75,6 +86,8 @@ def main():
         _run_dashboard(args)
     elif args.command == "deploy":
         _run_deploy(args)
+    elif args.command == "validate":
+        _run_validate(args)
     elif args.command == "status":
         _run_status(args)
     elif args.command == "destroy":
@@ -88,8 +101,43 @@ def _run_deploy(args):
     from .deploy.engine import DeployEngine
 
     config = DeployConfig.from_yaml(args.config)
-    engine = DeployEngine(config, profile=args.profile, dry_run=args.dry_run)
+    engine = DeployEngine(config, profile=args.profile, dry_run=args.dry_run, mode=args.mode)
     engine.deploy(agent_filter=args.agent)
+
+
+def _run_validate(args):
+    from .deploy.config import DeployConfig
+
+    try:
+        config = DeployConfig.from_yaml(args.config)
+    except Exception as e:
+        print(f"INVALID: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Config: {args.config}")
+    print(f"Project: {config.project.name}")
+    print(f"UC: {config.uc.catalog}.{config.uc.schema_}")
+    print(f"Warehouse: {config.warehouse.id}")
+    print(f"Agents: {len(config.agents)}")
+    for agent in config.agents:
+        deps = f" (depends: {', '.join(agent.depends_on)})" if agent.depends_on else ""
+        print(f"  {agent.name}: {len(agent.resources)} resource(s){deps}")
+        for r in agent.resources:
+            rtype = next(
+                (f for f in ("uc_securable", "sql_warehouse", "job", "secret", "serving_endpoint", "database")
+                 if getattr(r, f) is not None),
+                "unknown",
+            )
+            print(f"    - {r.name} ({rtype})")
+
+    # Validate topological ordering
+    try:
+        config.ordered_agents
+    except ValueError as e:
+        print(f"\nERROR: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\nVALID — {len(config.agents)} agent(s), deploy order: {', '.join(a.name for a in config.ordered_agents)}")
 
 
 def _run_status(args):

@@ -22,11 +22,6 @@ class UCFunctionAdapter:
     Usage:
         adapter = UCFunctionAdapter(profile="my-profile")
         tools = adapter.discover_functions(catalog="main", schema="functions")
-        
-        # Use with AgentApp
-        app = AgentApp(...)
-        for tool in tools:
-            app.register_uc_function(tool)
     """
     
     def __init__(self, profile: Optional[str] = None):

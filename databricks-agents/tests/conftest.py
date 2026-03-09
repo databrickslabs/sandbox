@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from databricks_agents import AgentApp, add_agent_card, add_mcp_endpoints
+from databricks_agents import add_agent_card, add_mcp_endpoints
 
 
-# --- Helper-based fixtures (new pattern) ---
+# --- Helper-based fixtures ---
 
 
 @pytest.fixture
@@ -65,27 +65,6 @@ def mcp_app(mcp_tool):
 def mcp_client(mcp_app):
     """TestClient for the MCP-enabled app."""
     return TestClient(mcp_app)
-
-
-# --- Legacy AgentApp fixtures (backward compat) ---
-
-
-@pytest.fixture
-def basic_app():
-    """AgentApp with no UC registration and no MCP (legacy)."""
-    return AgentApp(
-        name="test_agent",
-        description="Test agent",
-        capabilities=["test"],
-        auto_register=False,
-        enable_mcp=False,
-    )
-
-
-@pytest.fixture
-def legacy_client(basic_app):
-    """TestClient for the legacy AgentApp."""
-    return TestClient(basic_app.as_fastapi())
 
 
 @pytest.fixture

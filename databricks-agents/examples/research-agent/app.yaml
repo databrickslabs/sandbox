@@ -38,3 +38,23 @@ env:
   # Python path
   - name: PYTHONPATH
     value: /Workspace/Applications/${app_name}
+
+# ── User Authorization (on-behalf-of) ──────────────────────────────
+# To enable per-user UC governance (row-level security, column masks),
+# configure user authorization scopes on this app via the Databricks CLI:
+#
+#   databricks apps update <app-name> --json '{
+#     "resources": [{
+#       "name": "user-auth",
+#       "description": "On-behalf-of user authorization",
+#       "sql": { "permission": "CAN_USE" }
+#     }]
+#   }'
+#
+# Or use the Custom App Integration API to add OAuth scopes:
+#   POST /api/2.0/accounts/{account_id}/oauth2/custom-app-integrations
+#   scopes: ["sql", "iam.current-user:read"]
+#
+# When configured, the app receives X-Forwarded-Access-Token headers
+# and the @app_agent decorator populates request.user_context automatically.
+# See: https://docs.databricks.com/en/dev-tools/databricks-apps/app-development.html

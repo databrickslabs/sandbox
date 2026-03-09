@@ -1,10 +1,9 @@
-"""Tests for MCP server — works with plain FastAPI (no AgentApp required)."""
+"""Tests for MCP server — works with plain FastAPI."""
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from databricks_agents.mcp import MCPServerConfig, setup_mcp_server
-from databricks_agents.core.agent_app import ToolDefinition
 
 
 def _make_mcp_app():
@@ -14,14 +13,13 @@ def _make_mcp_app():
     async def echo(text: str) -> dict:
         return {"echo": text}
 
-    # Use ToolDefinition objects (the decoupled MCPServer handles both dicts and objects)
     tools = [
-        ToolDefinition(
-            name="echo",
-            description="Echo back the input",
-            parameters={"text": {"type": "string", "required": True}},
-            function=echo,
-        )
+        {
+            "name": "echo",
+            "description": "Echo back the input",
+            "parameters": {"text": {"type": "string", "required": True}},
+            "function": echo,
+        }
     ]
 
     config = MCPServerConfig(name="test_mcp", description="Test MCP server")
@@ -163,30 +161,3 @@ def test_mcp_tools_get_endpoint():
     tools = response.json()["tools"]
     assert len(tools) == 1
     assert tools[0]["name"] == "echo"
-
-
-# --- backward compat: MCPServer with AgentApp ---
-
-
-def test_mcp_with_legacy_agent_app():
-    """setup_mcp_server still works when passed an AgentApp instance."""
-    from databricks_agents import AgentApp
-
-    agent = AgentApp(
-        name="compat", description="Compat test", capabilities=["test"],
-        auto_register=False, enable_mcp=True,
-    )
-
-    @agent.tool(description="Ping")
-    async def ping(msg: str) -> dict:
-        return {"pong": msg}
-
-    client = TestClient(agent.as_fastapi())
-    response = client.post(
-        "/api/mcp",
-        json={"jsonrpc": "2.0", "method": "tools/list", "id": "1"},
-    )
-    assert response.status_code == 200
-    tools = response.json()["result"]["tools"]
-    assert len(tools) == 1
-    assert tools[0]["name"] == "ping"

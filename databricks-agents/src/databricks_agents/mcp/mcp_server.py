@@ -2,7 +2,7 @@
 MCP server implementation for agents.
 
 Provides an MCP server that exposes agent tools via the Model Context Protocol.
-Works with any FastAPI app — no AgentApp dependency required.
+Works with any FastAPI app.
 """
 
 import json
@@ -34,8 +34,7 @@ class MCPServer:
     """
     MCP server that exposes tools via JSON-RPC.
 
-    Accepts tools as a list of ToolDefinition objects (from core.agent_app)
-    or as raw dicts with name, description, parameters, function keys.
+    Accepts tools as dicts with name, description, parameters, function keys.
     """
 
     def __init__(self, tools, config: MCPServerConfig):
@@ -176,34 +175,22 @@ class MCPServer:
             raise
 
 
-def setup_mcp_server(agent_app_or_tools, config: Optional[MCPServerConfig] = None, fastapi_app=None):
+def setup_mcp_server(tools, config: Optional[MCPServerConfig] = None, fastapi_app=None):
     """
     Set up MCP server for an agent.
 
     Args:
-        agent_app_or_tools: AgentApp instance (backward compat) or list of tools
+        tools: List of tool dicts with name/description/parameters/function keys
         config: Optional MCP server configuration
-        fastapi_app: FastAPI app to add routes to
+        fastapi_app: FastAPI app to add routes to (required)
 
     Returns:
         MCPServer instance
     """
-    # Support both AgentApp (backward compat) and raw tool lists
-    if hasattr(agent_app_or_tools, "agent_metadata"):
-        tools = agent_app_or_tools.agent_metadata.tools
-        if config is None:
-            config = MCPServerConfig(
-                name=agent_app_or_tools.agent_metadata.name,
-                description=agent_app_or_tools.agent_metadata.description,
-            )
-    else:
-        tools = agent_app_or_tools
-
     if config is None:
         config = MCPServerConfig(name="mcp-server")
 
     server = MCPServer(tools, config)
-    target_app = fastapi_app or agent_app_or_tools
-    server.setup_routes(target_app)
+    server.setup_routes(fastapi_app)
 
     return server

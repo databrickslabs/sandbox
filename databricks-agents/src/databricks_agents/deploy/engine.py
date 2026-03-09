@@ -4,7 +4,7 @@ DeployEngine — orchestrates full multi-agent deployment sequence.
 Phases:
   0. Parse + validate config, load existing state
   1. Deploy each agent (create app, upload code, deploy, extract metadata)
-  2. Grant permissions (UC, warehouse, app-to-app)
+  2. Set app resources (uc_securable, warehouse, job, secret, serving_endpoint, database) + app-to-app grants
   3. Verify health (poll /health endpoints)
 """
 
@@ -19,13 +19,17 @@ from typing import Any
 
 import yaml
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.apps import App, AppDeployment, AppDeploymentMode
+from databricks.sdk.service.apps import (
+    App,
+    AppAccessControlRequest,
+    AppDeployment,
+    AppDeploymentMode,
+    AppPermissionLevel,
+)
 from databricks.sdk.service.workspace import ImportFormat
 
 from .config import AgentSpec, DeployConfig
-from .permissions import PermissionManager
 from .state import DeployState
-from ..registry.uc_registry import UCAgentRegistry, UCAgentSpec
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +43,12 @@ class DeployEngine:
         profile: str | None = None,
         state_path: str | Path = ".agents-deploy.json",
         dry_run: bool = False,
+        mode: str = "snapshot",
     ):
         self.config = config
         self.profile = profile
         self.dry_run = dry_run
+        self.deploy_mode = mode.upper()  # SNAPSHOT or AUTO_SYNC
         self.state_path = Path(state_path)
 
         self._w: WorkspaceClient | None = None
@@ -76,26 +82,14 @@ class DeployEngine:
         for agent in ordered:
             self._deploy_agent(agent)
 
-        # Phase 2: Grant permissions
-        pm = PermissionManager(
-            self.w,
-            catalog=self.config.uc.catalog,
-            schema=self.config.uc.schema_,
-            warehouse_id=self.config.warehouse.id,
-        )
-        for agent in ordered:
-            agent_state = self.state.get_agent(agent.name)
-            if not agent_state or not agent_state.sp_client_id:
-                logger.warning("No SP found for %s, skipping permission grants", agent.name)
-                continue
-            # Each agent's SP needs MANAGE on its own registered model (for UC registration)
-            pm.grant_agent_permissions(
-                agent_state.sp_client_id,
-                agent.tables,
-                models=[agent.name],
-            )
+        # Phase 2: Set app resources (uc_securable, warehouse) + app-to-app grants
+        print(f"\n{'='*60}")
+        print("App Resources & Permissions")
+        print(f"{'='*60}")
 
-        # Grant app-to-app for supervisor → sub-agents
+        for agent in ordered:
+            self._set_app_resources(agent)
+
         for agent in ordered:
             if not agent.depends_on:
                 continue
@@ -105,12 +99,9 @@ class DeployEngine:
             for dep_name in agent.depends_on:
                 dep_state = self.state.get_agent(dep_name)
                 if dep_state:
-                    pm.grant_app_to_app(agent_state.sp_client_id, dep_state.app_name)
+                    self._grant_app_to_app(agent_state.sp_client_id, dep_state.app_name)
 
-        # Phase 3: Register agents in UC (as the deploying user who owns the models)
-        self._register_agents_in_uc(ordered)
-
-        # Phase 4: Health checks
+        # Phase 3: Health checks
         self._verify_health(ordered)
 
         self.state.save(self.state_path)
@@ -330,11 +321,12 @@ class DeployEngine:
 
     def _deploy_app(self, app_name: str, workspace_path: str) -> None:
         """Deploy (or redeploy) the app. Env vars are already in app.yaml."""
-        print(f"  Deploying {app_name}...")
+        mode = getattr(AppDeploymentMode, self.deploy_mode, AppDeploymentMode.SNAPSHOT)
+        print(f"  Deploying {app_name} (mode={mode.value})...")
 
         deployment = AppDeployment(
             source_code_path=workspace_path,
-            mode=AppDeploymentMode.SNAPSHOT,
+            mode=mode,
         )
 
         result = self.w.apps.deploy_and_wait(app_name=app_name, app_deployment=deployment)
@@ -408,38 +400,93 @@ class DeployEngine:
             print(f"  {agent.name:<20} {status:<12} {agent_state.url}")
 
     # ------------------------------------------------------------------
-    # UC registration (done by deploying user, who owns the models)
+    # App resources — all types via REST API
     # ------------------------------------------------------------------
 
-    def _register_agents_in_uc(self, agents: list[AgentSpec]) -> None:
-        """Register each agent as a UC registered model (run as deploying user)."""
-        print(f"\n{'='*60}")
-        print("UC Agent Registration")
-        print(f"{'='*60}")
+    def _set_app_resources(self, agent: AgentSpec) -> None:
+        """Declare all resources on the app via REST API.
 
-        registry = UCAgentRegistry(profile=self.profile)
+        Uses the REST API directly rather than SDK enums because the SDK's
+        uc_securable type enum only covers VOLUME. TABLE, FUNCTION, and
+        CONNECTION require REST (same approach as the Terraform provider).
+        """
+        app_name = self.config.app_name(agent)
+        if not agent.resources:
+            return
 
-        for agent in agents:
-            agent_state = self.state.get_agent(agent.name)
-            url = agent_state.url if agent_state else ""
-            if not url:
-                print(f"  {agent.name:<20} SKIPPED (no URL)")
+        payload_resources = []
+        for r in agent.resources:
+            res: dict[str, Any] = {"name": r.name}
+            if r.description:
+                res["description"] = r.description
+
+            if r.uc_securable:
+                res["uc_securable"] = {
+                    "securable_full_name": r.uc_securable.securable_full_name,
+                    "securable_type": r.uc_securable.securable_type,
+                    "permission": r.uc_securable.permission,
+                }
+            elif r.sql_warehouse:
+                res["sql_warehouse"] = {
+                    "id": r.sql_warehouse.id,
+                    "permission": r.sql_warehouse.permission,
+                }
+            elif r.job:
+                res["job"] = {
+                    "id": r.job.id,
+                    "permission": r.job.permission,
+                }
+            elif r.secret:
+                res["secret"] = {
+                    "scope": r.secret.scope,
+                    "key": r.secret.key,
+                    "permission": r.secret.permission,
+                }
+            elif r.serving_endpoint:
+                res["serving_endpoint"] = {
+                    "name": r.serving_endpoint.name,
+                    "permission": r.serving_endpoint.permission,
+                }
+            elif r.database:
+                res["database"] = {
+                    "instance_name": r.database.instance_name,
+                    "database_name": r.database.database_name,
+                    "permission": r.database.permission,
+                }
+            else:
                 continue
 
-            spec = UCAgentSpec(
-                name=agent.name,
-                catalog=self.config.uc.catalog,
-                schema=self.config.uc.schema_,
-                endpoint_url=url,
-                description=f"{agent.name} agent ({self.config.project.name})",
-                capabilities=agent.depends_on if agent.depends_on else None,
-            )
+            payload_resources.append(res)
 
-            try:
-                registry.register_agent(spec)
-                print(f"  {agent.name:<20} REGISTERED")
-            except Exception as e:
-                print(f"  {agent.name:<20} FAILED ({e})")
+        if not payload_resources:
+            return
+
+        try:
+            self.w.api_client.do(
+                "PATCH",
+                f"/api/2.0/apps/{app_name}",
+                body={"name": app_name, "resources": payload_resources},
+            )
+            print(f"  {agent.name:<20} {len(payload_resources)} resource(s) set")
+        except Exception as e:
+            logger.warning("Failed to set resources on %s: %s", app_name, e)
+            print(f"  {agent.name:<20} FAILED setting resources ({e})")
+
+    def _grant_app_to_app(self, supervisor_sp_id: str, target_app_name: str) -> None:
+        """Grant CAN_USE on sub-agent app to the supervisor's service principal."""
+        try:
+            self.w.apps.update_permissions(
+                app_name=target_app_name,
+                access_control_list=[
+                    AppAccessControlRequest(
+                        service_principal_name=supervisor_sp_id,
+                        permission_level=AppPermissionLevel.CAN_USE,
+                    )
+                ],
+            )
+            logger.info("Granted CAN_USE on %s to %s", target_app_name, supervisor_sp_id)
+        except Exception as e:
+            logger.warning("App-to-app grant failed for %s → %s: %s", supervisor_sp_id, target_app_name, e)
 
     # ------------------------------------------------------------------
     # Dry run
@@ -449,16 +496,17 @@ class DeployEngine:
         """Print what would be deployed without executing."""
         print(f"\nDeployment Plan: {self.config.project.name}")
         print(f"Profile: {self.profile or 'default'}")
+        print(f"Mode: {self.deploy_mode}")
         print(f"UC: {self.config.uc.catalog}.{self.config.uc.schema_}")
         print(f"Warehouse: {self.config.warehouse.id}")
         print()
-        print(f"{'#':<4} {'Agent':<18} {'App Name':<35} {'Tables':<30} {'Deps'}")
+        print(f"{'#':<4} {'Agent':<18} {'App Name':<35} {'Resources':<16} {'Deps'}")
         print("-" * 100)
         for i, agent in enumerate(agents, 1):
             app_name = self.config.app_name(agent)
-            tables = ", ".join(agent.tables) or "—"
+            res_count = f"{len(agent.resources)} resource(s)" if agent.resources else "—"
             deps = ", ".join(agent.depends_on) or "—"
-            print(f"{i:<4} {agent.name:<18} {app_name:<35} {tables:<30} {deps}")
+            print(f"{i:<4} {agent.name:<18} {app_name:<35} {res_count:<16} {deps}")
 
         if self.dry_run:
             print("\n[DRY RUN] No changes will be made.")

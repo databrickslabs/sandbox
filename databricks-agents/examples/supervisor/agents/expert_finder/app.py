@@ -9,24 +9,9 @@ import time
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementParameterListItem
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-
-agent = AgentApp(
-    name="sub_expert_finder",
-    description="Find experts who have knowledge on specific topics",
-    capabilities=["expert_search", "expert_matching"],
-    uc_catalog=os.environ.get("UC_CATALOG", "main"),
-    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
-    auto_register=True,
-    enable_mcp=True,
-    version="1.0.0",
-)
 
 # ---------------------------------------------------------------------------
 # SQL helpers
@@ -141,10 +126,23 @@ def _demo_response(query: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Tool
+# Agent + Tool
 # ---------------------------------------------------------------------------
 
-@agent.tool(description="Find experts who have knowledge on specific topics")
+@app_agent(
+    name="sub_expert_finder",
+    description="Find experts who have knowledge on specific topics",
+    capabilities=["expert_search", "expert_matching"],
+    uc_catalog=os.environ.get("UC_CATALOG", "main"),
+    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
+    enable_mcp=True,
+)
+async def sub_expert_finder(request: AgentRequest) -> dict:
+    """Delegate to search tool."""
+    return await search(request.last_user_message)
+
+
+@sub_expert_finder.tool(description="Find experts who have knowledge on specific topics")
 async def search(query: str) -> dict:
     """
     Find experts by topic, specialty, or name.
@@ -210,5 +208,4 @@ async def search(query: str) -> dict:
         return _demo_response(query)
 
 
-# Build the FastAPI app with /invocations, A2A, MCP, and health endpoints
-app = agent.as_fastapi()
+app = sub_expert_finder.app

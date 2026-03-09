@@ -25,22 +25,24 @@ databricks-agents/
 ├── src/databricks_agents/
 │   ├── core/
 │   │   ├── __init__.py
-│   │   └── agent_app.py           # AgentApp class (FastAPI wrapper)
+│   │   ├── decorator.py            # @app_agent decorator
+│   │   ├── types.py                # AgentRequest, AgentResponse
+│   │   └── helpers.py              # add_agent_card() helper
 │   ├── discovery/
 │   │   ├── __init__.py
-│   │   ├── a2a_client.py          # A2A protocol client
-│   │   └── agent_discovery.py     # Workspace agent discovery
-│   ├── mcp/                        # (Future: MCP server support)
-│   ├── orchestration/              # (Future: Multi-agent patterns)
-│   └── registry/                   # (Future: UC integration)
+│   │   ├── a2a_client.py           # A2A protocol client
+│   │   └── agent_discovery.py      # Workspace agent discovery
+│   ├── mcp/                        # MCP server support
+│   ├── registry/                   # UC integration
+│   └── orchestration/              # Multi-agent patterns
 │
 ├── examples/
-│   ├── customer_research_agent.py  # Full agent example
+│   ├── customer_research_agent.py  # Full agent example using @app_agent
 │   ├── discover_agents.py          # Discovery client example
-│   └── communicate_with_agent.py   # A2A communication example
+│   └── plain_fastapi_agent.py      # Plain FastAPI + add_agent_card()
 │
 ├── tests/
-│   └── test_agent_app.py           # Core functionality tests
+│   └── test_decorator.py           # Core decorator tests
 │
 ├── README.md                       # Comprehensive documentation
 ├── CONTRIBUTING.md                 # Contribution guidelines
@@ -50,27 +52,27 @@ databricks-agents/
 
 ## Core Components
 
-### 1. AgentApp (core/agent_app.py)
+### 1. @app_agent Decorator (core/decorator.py)
 
-FastAPI wrapper that auto-generates:
+Python decorator that transforms an async function into an agent with auto-generated endpoints:
 - `/.well-known/agent.json` - A2A protocol agent card
+- `/invocations` - Standard Databricks protocol endpoint
 - `/.well-known/openid-configuration` - OIDC delegation
 - `/health` - Health check endpoint
-- `/api/tools/<tool_name>` - Tool endpoints
 
 **Usage:**
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-app = AgentApp(
+@app_agent(
     name="my_agent",
     description="Does useful things",
     capabilities=["search", "analysis"],
 )
+async def my_agent(request: AgentRequest) -> AgentResponse:
+    return AgentResponse.text(f"You said: {request.last_user_message}")
 
-@app.tool(description="Search for data")
-async def search(query: str) -> dict:
-    return {"results": [...]}
+app = my_agent.app  # FastAPI app
 ```
 
 ### 2. AgentDiscovery (discovery/agent_discovery.py)
@@ -110,7 +112,7 @@ async with A2AClient() as client:
 
 ## What Gets Auto-Generated
 
-When you create an `AgentApp`, the framework automatically provides:
+When you create an agent with `@app_agent`, the framework automatically provides:
 
 ### Agent Card (/.well-known/agent.json)
 ```json
@@ -120,35 +122,53 @@ When you create an `AgentApp`, the framework automatically provides:
   "description": "Does useful things",
   "capabilities": ["search", "analysis"],
   "endpoints": {
-    "mcp": "/api/mcp",
-    "invoke": "/api/invoke"
-  },
-  "tools": [...]
+    "invoke": "/invocations"
+  }
 }
 ```
+
+### Invocations Endpoint (/invocations)
+Standard Databricks protocol endpoint for agent communication
 
 ### OIDC Configuration (/.well-known/openid-configuration)
 Delegates to Databricks workspace OIDC provider for authentication
 
-### Tool Endpoints (/api/tools/<tool_name>)
-Each tool registered with `@app.tool()` gets a FastAPI endpoint
-
 ## Examples
 
-### Creating an Agent
+### Creating an Agent with @app_agent
 ```python
 # examples/customer_research_agent.py
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-app = AgentApp(
+@app_agent(
     name="customer_research",
     description="Research customer information",
     capabilities=["search", "analysis"],
 )
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    return AgentResponse.text(f"Processing: {request.last_user_message}")
 
-@app.tool(description="Search companies")
-async def search_companies(industry: str) -> dict:
-    return {"results": [...]}
+app = customer_research.app
+```
+
+### Plain FastAPI with Helpers
+```python
+# examples/plain_fastapi_agent.py
+from fastapi import FastAPI
+from databricks_agents import add_agent_card
+
+app = FastAPI()
+
+@app.post("/invocations")
+async def invocations(request):
+    return {"response": "Hello"}
+
+add_agent_card(
+    app,
+    name="my_agent",
+    description="My agent",
+    capabilities=["search"],
+)
 ```
 
 ### Discovering Agents
@@ -163,26 +183,19 @@ for agent in result.agents:
     print(f"Found: {agent.name}")
 ```
 
-### Communicating with Agents
-```python
-# examples/communicate_with_agent.py
-from databricks_agents.discovery import A2AClient
-
-async with A2AClient() as client:
-    card = await client.fetch_agent_card(agent_url)
-    response = await client.send_message(agent_url, "Hello")
-```
-
 ## Testing
 
 ```bash
 # Run tests
 pytest
 
-# Example test: test_agent_app.py
+# Example test: test_decorator.py
 def test_agent_card_endpoint():
-    app = AgentApp(name="test", description="Test", capabilities=[])
-    client = TestClient(app)
+    @app_agent(name="test", description="Test", capabilities=[])
+    async def test_agent(request: AgentRequest) -> AgentResponse:
+        return AgentResponse.text("OK")
+
+    client = TestClient(test_agent.app)
     response = client.get("/.well-known/agent.json")
     assert response.status_code == 200
     assert response.json()["name"] == "test"
@@ -202,13 +215,13 @@ This framework solves the gap in Databricks' agent ecosystem:
 
 **Before:**
 - No standard way to make apps discoverable as agents
-- Manual A2A protocol implementation required
+- Manual protocol implementation required
 - No workspace-level agent discovery
 - Agents tied to Model Serving endpoints
 
 **After:**
-- Single decorator: `AgentApp()` makes any app an agent
-- Auto-generated A2A protocol endpoints
+- Single decorator: `@app_agent` makes any function an agent
+- Auto-generated protocol endpoints
 - Built-in discovery across workspace
 - Agents can be full applications with custom logic
 

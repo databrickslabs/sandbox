@@ -99,44 +99,6 @@ class GovernanceService:
         self._cache.clear()
 
     # ------------------------------------------------------------------
-    # Batch UC registration
-    # ------------------------------------------------------------------
-
-    async def register_all_agents(self, schema: str = "agents") -> Dict[str, Any]:
-        """Register all discovered agents in UC."""
-        if not self._catalog:
-            return {"error": "No catalog configured", "registered": [], "failed": [], "total": 0}
-
-        registry = self._get_uc_registry()
-        if not registry:
-            return {"error": "UC registry unavailable", "registered": [], "failed": [], "total": 0}
-
-        all_agents = self._scanner.get_agents()
-        registered, failed = [], []
-
-        for agent in all_agents:
-            try:
-                from ..registry.uc_registry import UCAgentSpec
-                caps = None
-                if agent.capabilities:
-                    caps = [c.strip() for c in agent.capabilities.split(",") if c.strip()]
-                spec = UCAgentSpec(
-                    name=agent.name.replace("-", "_"),
-                    catalog=self._catalog,
-                    schema=schema,
-                    endpoint_url=agent.endpoint_url,
-                    description=agent.description,
-                    capabilities=caps,
-                )
-                result = registry.register_agent(spec)
-                registered.append(result)
-            except Exception as e:
-                failed.append({"name": agent.name, "error": str(e)})
-
-        self.invalidate_cache()
-        return {"registered": registered, "failed": failed, "total": len(all_agents)}
-
-    # ------------------------------------------------------------------
     # Runtime / observed lineage
     # ------------------------------------------------------------------
 
@@ -620,45 +582,50 @@ class GovernanceService:
     # ------------------------------------------------------------------
 
     async def get_governance_status(self, agent_name: str) -> Dict[str, Any]:
-        """UC registration status for an agent."""
+        """Governance status for an agent — based on Apps API and declared resources."""
         cached = self._cache_get(f"governance:{agent_name}")
         if cached:
             return cached
 
+        agent = self._scanner.get_agent_by_name(agent_name)
         status: Dict[str, Any] = {
-            "registered": False,
-            "full_name": None,
-            "catalog": None,
-            "schema": None,
-            "tags": {},
-            "endpoint_url": None,
+            "app_running": False,
+            "app_name": None,
+            "declared_resources": [],
+            "connected_tables": [],
+            "connected_table_count": 0,
         }
 
-        # Check UC registered models for this agent
-        try:
-            registry = self._get_uc_registry()
-            if registry and self._catalog:
-                uc_agents = registry.list_agents(catalog=self._catalog)
-                for uc_agent in uc_agents:
-                    uc_name = uc_agent.get("name", "")
-                    if uc_name == agent_name or uc_name.replace("_", "-") == agent_name:
-                        status = {
-                            "registered": True,
-                            "full_name": uc_agent.get("full_name"),
-                            "catalog": uc_agent.get("catalog"),
-                            "schema": uc_agent.get("schema"),
-                            "tags": uc_agent.get("properties", {}),
-                            "endpoint_url": uc_agent.get("endpoint_url"),
-                            "capabilities": uc_agent.get("capabilities"),
-                            "description": uc_agent.get("description"),
-                        }
-                        break
-        except Exception as e:
-            logger.debug("UC governance lookup failed for %s: %s", agent_name, e)
-
-        # Even if not registered, show UC tables this agent connects to
-        agent = self._scanner.get_agent_by_name(agent_name)
         if agent:
+            status["app_name"] = agent.app_name
+            status["app_running"] = True  # scanner only lists running apps
+
+            # Query Apps API for all declared resources
+            client = self._get_ws_client()
+            if client and agent.app_name:
+                try:
+                    app = client.apps.get(name=agent.app_name)
+                    resources = getattr(app, "resources", None) or []
+                    for r in resources:
+                        res_info: Dict[str, Any] = {"name": getattr(r, "name", "")}
+                        # Check each resource type
+                        for rtype in ("uc_securable", "sql_warehouse", "job", "secret", "serving_endpoint", "database"):
+                            obj = getattr(r, rtype, None)
+                            if obj:
+                                res_info["type"] = rtype
+                                # Extract all non-None fields from the resource object
+                                for field in dir(obj):
+                                    if field.startswith("_"):
+                                        continue
+                                    val = getattr(obj, field, None)
+                                    if val is not None and not callable(val):
+                                        res_info[field] = str(val)
+                                break
+                        status["declared_resources"].append(res_info)
+                except Exception as e:
+                    logger.debug("Could not fetch app resources for %s: %s", agent.app_name, e)
+
+            # UC table connections (heuristic matching)
             uc_tables = self._discover_uc_tables()
             if uc_tables:
                 tools = []
@@ -769,15 +736,6 @@ class GovernanceService:
                     target=other_id,
                     relationship="calls_agent",
                 ))
-
-    def _get_uc_registry(self):
-        """Get UCAgentRegistry instance, or None if unavailable."""
-        try:
-            from ..registry.uc_registry import UCAgentRegistry
-            return UCAgentRegistry(profile=self._profile)
-        except Exception as e:
-            logger.debug("UC registry not available: %s", e)
-            return None
 
     async def _enrich_with_system_tables(
         self, graph: LineageGraph, warehouse_id: str

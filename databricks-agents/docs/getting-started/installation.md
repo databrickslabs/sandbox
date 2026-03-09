@@ -27,7 +27,7 @@ The `[dev]` extra installs testing and linting tools: pytest, pytest-asyncio, py
 ## Verify the installation
 
 ```bash
-python -c "from databricks_agents import AgentApp; print('OK')"
+python -c "from databricks_agents import app_agent, AgentRequest, AgentResponse; print('OK')"
 ```
 
 You should see `OK` printed with no errors.
@@ -38,10 +38,10 @@ The SDK has a small dependency footprint:
 
 | Package | Purpose |
 |---|---|
-| `fastapi` | HTTP framework (AgentApp extends FastAPI) |
+| `fastapi` | HTTP framework for agent endpoints |
 | `uvicorn` | ASGI server for local development |
 | `pydantic` | Data validation and settings |
-| `httpx` | Async HTTP client for A2A communication |
+| `httpx` | Async HTTP client for agent communication |
 | `databricks-sdk` | Databricks workspace API client |
 
 ## Databricks CLI (optional)

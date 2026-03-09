@@ -2,8 +2,8 @@
 System Builder service — visual agent wiring and deployment.
 
 Manages system definitions (saved wiring configurations) and deploys
-them to the workspace: updates env vars, redeploys apps, grants
-app-to-app permissions, and optionally registers agents in UC.
+them to the workspace: updates env vars, redeploys apps, and grants
+app-to-app permissions.
 
 Storage: JSON file in the data directory (no DB needed).
 """
@@ -212,7 +212,6 @@ class SystemBuilderService:
           1. Resolve agent metadata from scanner
           2. Update env vars + redeploy target agents
           3. Grant app-to-app permissions
-          4. UC registration (if configured)
         """
         defn = self._systems.get(system_id)
         if not defn:
@@ -327,18 +326,6 @@ class SystemBuilderService:
                 step.agent = edge.target_agent
                 result.steps.append(step)
 
-        # 5. UC registration (if configured)
-        if defn.uc_catalog and defn.uc_schema:
-            for agent_name in defn.agents:
-                meta = agent_meta.get(agent_name)
-                if not meta:
-                    continue
-                step = await self._register_in_uc(
-                    agent_name, meta["endpoint_url"],
-                    defn.uc_catalog, defn.uc_schema,
-                )
-                result.steps.append(step)
-
         # Determine overall status
         statuses = {s.status for s in result.steps}
         if statuses == {"success"}:
@@ -367,10 +354,8 @@ class SystemBuilderService:
             )
 
         deploy_id = str(uuid.uuid4())[:8]
-        # Estimate total steps: resolve + env_update + permissions + UC
+        # Estimate total steps: resolve + env_update + permissions
         total = len(defn.agents) + len(defn.edges) * 2  # resolve + env + grant
-        if defn.uc_catalog and defn.uc_schema:
-            total += len(defn.agents)
 
         progress = DeployProgress(
             deploy_id=deploy_id,
@@ -502,35 +487,30 @@ class SystemBuilderService:
     ) -> DeployStepResult:
         """Grant caller's SP CAN_USE on the target app."""
         try:
-            # Get caller app's service principal
+            # Get caller app — service_principal_client_id is the UUID
+            # the permissions API expects (no extra SP lookup needed)
             caller_app = ws_client.apps.get(name=caller_app_name)
-            sp_id = getattr(caller_app, "service_principal_id", None)
-            if not sp_id:
+            sp_client_id = getattr(caller_app, "service_principal_client_id", None)
+            if not sp_client_id:
                 return DeployStepResult(
                     agent="", action="grant_permission", status="skipped",
-                    detail=f"No SP found for {caller_app_name}",
+                    detail=f"No SP client ID found for {caller_app_name}",
                 )
 
-            # Resolve SP application_id (UUID) — required by permissions API
-            sp = ws_client.service_principals.get(id=sp_id)
-            sp_uuid = sp.application_id
-
-            ws_client.api_client.do(
-                "PATCH",
-                f"/api/2.0/permissions/apps/{target_app_name}",
-                body={
-                    "access_control_list": [
-                        {
-                            "service_principal_name": sp_uuid,
-                            "permission_level": "CAN_USE",
-                        }
-                    ]
-                },
+            from databricks.sdk.service.apps import AppAccessControlRequest, AppPermissionLevel
+            ws_client.apps.update_permissions(
+                app_name=target_app_name,
+                access_control_list=[
+                    AppAccessControlRequest(
+                        service_principal_name=sp_client_id,
+                        permission_level=AppPermissionLevel.CAN_USE,
+                    )
+                ],
             )
 
             return DeployStepResult(
                 agent="", action="grant_permission", status="success",
-                detail=f"Granted {caller_app_name} SP ({sp_uuid}) CAN_USE on {target_app_name}",
+                detail=f"Granted {caller_app_name} SP ({sp_client_id}) CAN_USE on {target_app_name}",
             )
 
         except Exception as e:
@@ -539,34 +519,3 @@ class SystemBuilderService:
                 detail=str(e),
             )
 
-    async def _register_in_uc(
-        self,
-        agent_name: str,
-        endpoint_url: str,
-        catalog: str,
-        schema: str,
-    ) -> DeployStepResult:
-        """Register an agent in Unity Catalog."""
-        try:
-            from ..registry.uc_registry import UCAgentRegistry, UCAgentSpec
-
-            registry = UCAgentRegistry(profile=self._profile)
-            spec = UCAgentSpec(
-                name=agent_name.replace("-", "_"),
-                catalog=catalog,
-                schema=schema,
-                endpoint_url=endpoint_url,
-                description=f"{agent_name} agent",
-            )
-            registry.register_agent(spec)
-
-            return DeployStepResult(
-                agent=agent_name, action="uc_register", status="success",
-                detail=f"Registered as {catalog}.{schema}.{agent_name}",
-            )
-
-        except Exception as e:
-            return DeployStepResult(
-                agent=agent_name, action="uc_register", status="failed",
-                detail=str(e),
-            )

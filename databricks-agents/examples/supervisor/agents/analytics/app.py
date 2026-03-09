@@ -9,24 +9,9 @@ import time
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementParameterListItem
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-
-agent = AgentApp(
-    name="sub_analytics",
-    description="Query business metrics, usage data, and operational analytics",
-    capabilities=["analytics", "metrics", "reporting"],
-    uc_catalog=os.environ.get("UC_CATALOG", "main"),
-    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
-    auto_register=True,
-    enable_mcp=True,
-    version="1.0.0",
-)
 
 # ---------------------------------------------------------------------------
 # SQL helpers
@@ -123,10 +108,23 @@ Query: {query}
 
 
 # ---------------------------------------------------------------------------
-# Tool
+# Agent + Tool
 # ---------------------------------------------------------------------------
 
-@agent.tool(description="Query business metrics, usage data, and operational analytics")
+@app_agent(
+    name="sub_analytics",
+    description="Query business metrics, usage data, and operational analytics",
+    capabilities=["analytics", "metrics", "reporting"],
+    uc_catalog=os.environ.get("UC_CATALOG", "main"),
+    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
+    enable_mcp=True,
+)
+async def sub_analytics(request: AgentRequest) -> dict:
+    """Delegate to query tool."""
+    return await query(request.last_user_message)
+
+
+@sub_analytics.tool(description="Query business metrics, usage data, and operational analytics")
 async def query(query: str) -> dict:
     """
     Query call metrics and engagement summary data.
@@ -210,5 +208,4 @@ async def query(query: str) -> dict:
         return _demo_response(query)
 
 
-# Build the FastAPI app with /invocations, A2A, MCP, and health endpoints
-app = agent.as_fastapi()
+app = sub_analytics.app

@@ -42,38 +42,25 @@ pip install databricks-agents[dev]
 
 ## Quick Start
 
-### 1. Create an Agent App
+### 1. Create an Agent
 
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 # Create your agent with capabilities
-app = AgentApp(
+@app_agent(
     name="customer_research",
     description="Research customer information and market trends",
     capabilities=["search", "analysis", "research"],
 )
-
-# Register tools using the @app.tool decorator
-@app.tool(description="Search for companies by industry")
-async def search_companies(industry: str, limit: int = 10) -> dict:
-    return {
-        "industry": industry,
-        "results": [...],  # Your search logic here
-    }
-
-@app.tool(description="Analyze market trends")
-async def analyze_trends(sector: str, timeframe: str = "1y") -> dict:
-    return {
-        "sector": sector,
-        "trend": "positive",
-        "insights": [...],  # Your analysis logic here
-    }
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    # Your agent logic here
+    return AgentResponse.text(f"Processing: {request.last_user_message}")
 
 # Run the app
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(customer_research.app, host="0.0.0.0", port=8000)
 ```
 
 ### 2. Deploy to Databricks Apps
@@ -123,7 +110,7 @@ asyncio.run(main())
 
 ## What Gets Auto-Generated
 
-When you create an `AgentApp`, the framework automatically sets up:
+When you create an agent with `@app_agent`, the framework automatically sets up:
 
 ### `/.well-known/agent.json` (Agent Card)
 
@@ -228,48 +215,36 @@ async with A2AClient() as client:
 
 ## Tool Registration
 
-The `@app.tool()` decorator automatically:
+When building agents with `@app_agent`, you can define tools directly within your agent or use helper functions. Tools are automatically exposed through A2A protocol endpoints.
 
-1. Extracts function signature and type hints
-2. Registers the tool in the agent card
-3. Creates a FastAPI endpoint at `/api/tools/<tool_name>`
-4. Generates parameter schema from function signature
+For agents using plain FastAPI with the `add_agent_card()` helper, tools can be registered using the same pattern and will be included in the agent card.
 
-Example with explicit parameter schema:
+Example:
 
 ```python
-@app.tool(
-    description="Search for customers",
-    parameters={
-        "query": {"type": "string", "required": True, "description": "Search query"},
-        "limit": {"type": "integer", "required": False, "description": "Max results"},
-    }
+from databricks_agents import app_agent, AgentRequest, AgentResponse
+
+@app_agent(
+    name="customer_research",
+    description="Research customers",
+    capabilities=["search"],
 )
-async def search_customers(query: str, limit: int = 10) -> dict:
-    # Your search logic here
-    return {"results": [...]}
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    # Process customer queries with your custom logic
+    return AgentResponse.text(f"Result: {request.last_user_message}")
+
+app = customer_research.app  # FastAPI app with agent endpoints
 ```
 
 ## Unity Catalog Integration
 
 The framework integrates with Unity Catalog for agent registration and discovery:
 
-- Register agents as catalog objects with `auto_register=True`
-- Discover agents via Unity Catalog metadata
+- Agents are discoverable via workspace scanning
+- UC integration tracks agent metadata and lineage
 - Manage agent permissions through UC grants
 
-Configuration example:
-
-```python
-app = AgentApp(
-    name="customer_research",
-    description="Research agent",
-    capabilities=["search"],
-    uc_catalog="main",          # UC catalog for registration
-    uc_schema="agents",         # UC schema for registration
-    auto_register=True,         # Auto-register in UC on startup
-)
-```
+Agents using `@app_agent` are automatically discovered when deployed to Databricks Apps. The discovery service scans for agent cards at `/.well-known/agent.json` across all running apps.
 
 ## Architecture
 
@@ -282,9 +257,9 @@ app = AgentApp(
 │  │ (Customer      │         │ (Market        │             │
 │  │  Research)     │         │  Analysis)     │             │
 │  │                │         │                │             │
-│  │ AgentApp       │         │ AgentApp       │             │
-│  │ + tools        │         │ + tools        │             │
-│  │ + /.well-known/│         │ + /.well-known/│             │
+│  │ @app_agent     │         │ @app_agent     │             │
+│  │ + agent card   │         │ + agent card   │             │
+│  │ + /invocations │         │ + /invocations │             │
 │  └────────────────┘         └────────────────┘             │
 │         ▲                           ▲                        │
 │         │                           │                        │
@@ -294,8 +269,8 @@ app = AgentApp(
 │              │  Discovery   │                                │
 │              │  Service     │                                │
 │              │              │                                │
-│              │ AgentDiscovery                               │
-│              │ + A2AClient  │                                │
+│              │ Workspace    │                                │
+│              │ Scanning     │                                │
 │              └──────────────┘                                │
 └─────────────────────────────────────────────────────────────┘
 ```

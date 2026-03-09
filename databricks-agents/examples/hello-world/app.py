@@ -1,21 +1,24 @@
 """Minimal deployable agent -- one tool, MCP enabled, zero external deps."""
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-agent = AgentApp(
+
+@app_agent(
     name="hello",
     description="A minimal greeting agent",
     capabilities=["greetings"],
     auto_register=False,
     enable_mcp=True,
 )
+async def hello(request: AgentRequest) -> str:
+    return f"Hello, {request.last_user_message}!"
 
 
-@agent.tool(description="Say hello to someone by name")
+@hello.tool(description="Say hello to someone by name")
 async def greet(name: str) -> dict:
     return {"message": f"Hello, {name}!"}
 
 
-app = agent.as_fastapi()
+app = hello.app
 
 
 if __name__ == "__main__":

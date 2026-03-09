@@ -50,11 +50,17 @@ class A2AClient:
         if self._client:
             await self._client.aclose()
 
-    def _auth_headers(self, auth_token: Optional[str] = None) -> Dict[str, str]:
-        """Build authentication headers."""
+    def _auth_headers(
+        self,
+        auth_token: Optional[str] = None,
+        user_context: Optional["UserContext"] = None,
+    ) -> Dict[str, str]:
+        """Build authentication headers, optionally forwarding user identity."""
         headers = {"Content-Type": "application/json"}
         if auth_token:
             headers["Authorization"] = f"Bearer {auth_token}"
+        if user_context is not None:
+            headers.update(user_context.as_forwarded_headers())
         return headers
 
     async def fetch_agent_card(
@@ -120,6 +126,7 @@ class A2AClient:
         method: str,
         params: Dict[str, Any],
         auth_token: Optional[str] = None,
+        user_context: Optional["UserContext"] = None,
     ) -> Dict[str, Any]:
         """
         Send a JSON-RPC 2.0 request to an agent.
@@ -129,6 +136,7 @@ class A2AClient:
             method: JSON-RPC method name (e.g., "message/send")
             params: Method parameters
             auth_token: Optional authentication token
+            user_context: Optional user context to forward via X-Forwarded-* headers
 
         Returns:
             JSON-RPC result
@@ -150,7 +158,7 @@ class A2AClient:
             response = await self._client.post(
                 url,
                 json=payload,
-                headers=self._auth_headers(auth_token),
+                headers=self._auth_headers(auth_token, user_context),
             )
             response.raise_for_status()
             result = response.json()
@@ -179,6 +187,7 @@ class A2AClient:
         message: str,
         context_id: Optional[str] = None,
         auth_token: Optional[str] = None,
+        user_context: Optional["UserContext"] = None,
     ) -> Dict[str, Any]:
         """
         Send a message to a peer agent using A2A protocol.
@@ -188,6 +197,7 @@ class A2AClient:
             message: Text message to send
             context_id: Optional conversation context ID
             auth_token: Optional authentication token
+            user_context: Optional user context to forward via X-Forwarded-* headers
 
         Returns:
             Agent's response
@@ -196,7 +206,8 @@ class A2AClient:
             >>> async with A2AClient() as client:
             >>>     response = await client.send_message(
             >>>         "https://app.databricksapps.com/api/a2a",
-            >>>         "What are your capabilities?"
+            >>>         "What are your capabilities?",
+            >>>         user_context=request.user_context,
             >>>     )
         """
         params: Dict[str, Any] = {
@@ -210,7 +221,7 @@ class A2AClient:
             params["message"]["contextId"] = context_id
 
         return await self._jsonrpc_call(
-            agent_url, "message/send", params, auth_token
+            agent_url, "message/send", params, auth_token, user_context
         )
 
     async def send_streaming_message(
@@ -218,6 +229,7 @@ class A2AClient:
         agent_url: str,
         message: str,
         auth_token: Optional[str] = None,
+        user_context: Optional["UserContext"] = None,
     ) -> AsyncIterator[Dict[str, Any]]:
         """
         Send a streaming message and yield SSE events.
@@ -226,6 +238,7 @@ class A2AClient:
             agent_url: Agent's A2A endpoint URL
             message: Text message to send
             auth_token: Optional authentication token
+            user_context: Optional user context to forward via X-Forwarded-* headers
 
         Yields:
             SSE events from the agent's response stream
@@ -257,7 +270,7 @@ class A2AClient:
             "POST",
             stream_url,
             json=payload,
-            headers=self._auth_headers(auth_token),
+            headers=self._auth_headers(auth_token, user_context),
         ) as response:
             response.raise_for_status()
             async for line in response.aiter_lines():

@@ -14,7 +14,7 @@ This framework is ready for deployment to the [Databricks Labs Sandbox](https://
 ```
 databricks-agents/
 ├── src/databricks_agents/        # Core framework
-│   ├── core/                      # AgentApp, tool registration
+│   ├── core/                      # @app_agent decorator, agent request/response types
 │   ├── discovery/                 # Agent discovery, A2A client
 │   ├── mcp/                       # MCP server, UC Functions
 │   ├── registry/                  # Unity Catalog integration
@@ -33,10 +33,9 @@ databricks-agents/
 
 ### ✅ Completed
 
-- [x] Core framework implementation (AgentApp, discovery, A2A)
-- [x] Unity Catalog integration
-- [x] MCP server support
-- [x] UC Functions adapter
+- [x] Core framework implementation (@app_agent decorator, discovery)
+- [x] Agent card endpoints and protocol
+- [x] Workspace agent discovery
 - [x] Example applications
 - [x] Test suite foundation
 - [x] CI/CD workflows (test, publish, docs)
@@ -97,35 +96,34 @@ Adds `databricks-agents`, a lightweight Python framework for building discoverab
 
 ## What It Does
 
-- **5 lines to create an agent**: Simple `AgentApp()` wrapper around FastAPI
-- **Auto-generates A2A endpoints**: `/.well-known/agent.json`, OIDC config, health checks
-- **Unity Catalog integration**: Register agents as UC objects for centralized management
-- **MCP server support**: Expose tools via Model Context Protocol
-- **Agent discovery**: Find and communicate with agents across the workspace
+- **5 lines to create an agent**: Simple `@app_agent` decorator
+- **Auto-generates protocol endpoints**: `/.well-known/agent.json`, OIDC config, health checks
+- **Workspace discovery**: Find and communicate with agents across the workspace
+- **Plain FastAPI support**: Use `add_agent_card()` helper for full control
+- **Agent communication**: A2A protocol for standardized agent-to-agent interaction
 
 ## Key Files
 
-- `src/databricks_agents/core/agent_app.py` - Main AgentApp class
+- `src/databricks_agents/core/decorator.py` - @app_agent decorator
+- `src/databricks_agents/core/types.py` - AgentRequest, AgentResponse types
 - `src/databricks_agents/discovery/` - Agent discovery and A2A client
 - `src/databricks_agents/registry/` - Unity Catalog integration
-- `src/databricks_agents/mcp/` - MCP server and UC Functions
+- `src/databricks_agents/mcp/` - MCP server support
 - `examples/` - Complete working examples
 - `tests/` - Test suite
 
 ## Example Usage
 
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-app = AgentApp(
+@app_agent(
     name="customer_research",
     description="Research customers",
     capabilities=["search", "analysis"],
 )
-
-@app.tool(description="Search companies")
-async def search_companies(industry: str) -> dict:
-    return {"results": [...]}
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    return AgentResponse.text(f"Processing: {request.last_user_message}")
 ```
 
 ## Testing

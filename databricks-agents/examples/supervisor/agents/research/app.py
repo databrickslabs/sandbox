@@ -9,24 +9,9 @@ import time
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementParameterListItem
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-
-agent = AgentApp(
-    name="sub_research",
-    description="Search expert interview transcripts for insights and opinions",
-    capabilities=["research", "transcript_search"],
-    uc_catalog=os.environ.get("UC_CATALOG", "main"),
-    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
-    auto_register=True,
-    enable_mcp=True,
-    version="1.0.0",
-)
 
 # ---------------------------------------------------------------------------
 # SQL helpers
@@ -145,10 +130,23 @@ def _demo_response(query: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Tool
+# Agent + Tool
 # ---------------------------------------------------------------------------
 
-@agent.tool(description="Search expert interview transcripts for insights and opinions")
+@app_agent(
+    name="sub_research",
+    description="Search expert interview transcripts for insights and opinions",
+    capabilities=["research", "transcript_search"],
+    uc_catalog=os.environ.get("UC_CATALOG", "main"),
+    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
+    enable_mcp=True,
+)
+async def sub_research(request: AgentRequest) -> dict:
+    """Delegate to search tool."""
+    return await search(request.last_user_message)
+
+
+@sub_research.tool(description="Search expert interview transcripts for insights and opinions")
 async def search(query: str) -> dict:
     """
     Search expert transcripts by topic, sector, or keyword.
@@ -214,5 +212,4 @@ async def search(query: str) -> dict:
         return _demo_response(query)
 
 
-# Build the FastAPI app with /invocations, A2A, MCP, and health endpoints
-app = agent.as_fastapi()
+app = sub_research.app

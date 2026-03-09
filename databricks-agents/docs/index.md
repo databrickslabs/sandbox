@@ -15,13 +15,15 @@ A lightweight Python framework for building discoverable AI agents on Databricks
 
 :material-rocket-launch: **5 Lines to Create an Agent**
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
-app = AgentApp(
+@app_agent(
     name="my_agent",
     description="Does useful things",
     capabilities=["search", "analysis"],
 )
+async def my_agent(request: AgentRequest) -> AgentResponse:
+    return AgentResponse.text(f"You said: {request.last_user_message}")
 ```
 
 :material-magnify: **Automatic Discovery**  
@@ -36,21 +38,19 @@ Register agents as UC objects with built-in permission management
 ## Quick Example
 
 ```python
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 # Create your agent
-app = AgentApp(
+@app_agent(
     name="customer_research",
     description="Research customer information",
     capabilities=["search", "analysis"],
 )
-
-# Register tools
-@app.tool(description="Search companies by industry")
-async def search_companies(industry: str, limit: int = 10) -> dict:
-    return {"results": [...]}
+async def customer_research(request: AgentRequest) -> AgentResponse:
+    return AgentResponse.text(f"Researching: {request.last_user_message}")
 
 # Deploy to Databricks Apps - agent card auto-generated!
+app = customer_research.app
 ```
 
 ## Why databricks-agents?
@@ -64,9 +64,9 @@ async def search_companies(industry: str, limit: int = 10) -> dict:
 
 ### After
 
-- One decorator: `AgentApp()` makes any app an agent
+- One decorator: `@app_agent` makes any function an agent
 - Auto-generated discovery endpoints
-- Built-in workspace and UC discovery
+- Built-in workspace discovery
 - Agents can be full applications
 
 ## Agent = Databricks App
@@ -114,13 +114,13 @@ Choose your path:
 
     Complete API documentation
 
-    [:octicons-arrow-right-24: API Docs](api/agent-app.md)
+    [:octicons-arrow-right-24: API Docs](api/discovery.md)
 
 </div>
 
 ## What Gets Auto-Generated
 
-When you create an `AgentApp`, the framework automatically provides:
+When you create an agent with `@app_agent`, the framework automatically provides:
 
 ### `/.well-known/agent.json` (Agent Card)
 Your agent's capabilities, tools, and metadata in standard A2A format
@@ -143,14 +143,14 @@ FastAPI endpoints for each registered tool
 │  ┌────────────────┐         ┌────────────────┐             │
 │  │  Agent App 1   │         │  Agent App 2   │             │
 │  │                │         │                │             │
-│  │ AgentApp       │◄────────┤ AgentDiscovery │             │
-│  │ + A2A protocol │         │ + A2AClient    │             │
-│  │ + Tools        │         │                │             │
+│  │ @app_agent     │◄────────┤ Discovery      │             │
+│  │ + agent card   │         │ Service        │             │
+│  │ + /invocations │         │                │             │
 │  └────────────────┘         └────────────────┘             │
 │         │                                                    │
 │         ▼                                                    │
 │  ┌─────────────────────────────────────────┐               │
-│  │        Unity Catalog (main.agents)      │               │
+│  │        Workspace Agent Registry         │               │
 │  │  - customer_research                    │               │
 │  │  - market_analysis                      │               │
 │  │  - data_processor                       │               │

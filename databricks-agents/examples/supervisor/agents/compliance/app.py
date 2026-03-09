@@ -9,24 +9,9 @@ import time
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementParameterListItem
-from databricks_agents import AgentApp
+from databricks_agents import app_agent, AgentRequest, AgentResponse
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-
-agent = AgentApp(
-    name="sub_compliance",
-    description="Check engagements for compliance, conflicts of interest, and NDA status",
-    capabilities=["compliance", "conflict_check", "nda_status"],
-    uc_catalog=os.environ.get("UC_CATALOG", "main"),
-    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
-    auto_register=True,
-    enable_mcp=True,
-    version="1.0.0",
-)
 
 # ---------------------------------------------------------------------------
 # SQL helpers
@@ -141,10 +126,23 @@ Checks:
 
 
 # ---------------------------------------------------------------------------
-# Tool
+# Agent + Tool
 # ---------------------------------------------------------------------------
 
-@agent.tool(description="Check engagements for compliance, conflicts of interest, and NDA status")
+@app_agent(
+    name="sub_compliance",
+    description="Check engagements for compliance, conflicts of interest, and NDA status",
+    capabilities=["compliance", "conflict_check", "nda_status"],
+    uc_catalog=os.environ.get("UC_CATALOG", "main"),
+    uc_schema=os.environ.get("UC_SCHEMA", "agents"),
+    enable_mcp=True,
+)
+async def sub_compliance(request: AgentRequest) -> dict:
+    """Delegate to check tool."""
+    return await check(request.last_user_message)
+
+
+@sub_compliance.tool(description="Check engagements for compliance, conflicts of interest, and NDA status")
 async def check(query: str) -> dict:
     """
     Check restricted list and NDA registry for compliance issues.
@@ -258,5 +256,4 @@ async def check(query: str) -> dict:
         return _demo_response(query)
 
 
-# Build the FastAPI app with /invocations, A2A, MCP, and health endpoints
-app = agent.as_fastapi()
+app = sub_compliance.app
