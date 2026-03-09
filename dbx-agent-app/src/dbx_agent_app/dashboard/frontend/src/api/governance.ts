@@ -1,4 +1,4 @@
-import type { LineageGraph, GovernanceStatus, UCRegistrationResult } from "../types/lineage";
+import type { LineageGraph, GovernanceStatus } from "../types/lineage";
 import { apiFetch } from "./client";
 
 export function fetchAgentLineage(name: string): Promise<LineageGraph> {
@@ -18,13 +18,6 @@ export function fetchWorkspaceLineage(
 ): Promise<LineageGraph> {
   const params = warehouseId ? `?warehouse_id=${encodeURIComponent(warehouseId)}` : "";
   return apiFetch<LineageGraph>(`/api/lineage${params}`);
-}
-
-export function registerAllAgents(schema?: string): Promise<UCRegistrationResult> {
-  return apiFetch<UCRegistrationResult>("/api/uc/register-all", {
-    method: "POST",
-    body: JSON.stringify(schema ? { schema } : {}),
-  });
 }
 
 export function observeTrace(agentName: string, trace: Record<string, unknown>): void {

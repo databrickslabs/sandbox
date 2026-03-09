@@ -39,22 +39,28 @@ export interface ConnectedTable {
   relationship: string;
 }
 
-export interface UCRegistrationResult {
-  registered: Array<{ full_name: string; name: string }>;
-  failed: Array<{ name: string; error: string }>;
-  total: number;
-  error?: string;
+export type ResourceType =
+  | "uc_securable"
+  | "sql_warehouse"
+  | "job"
+  | "secret"
+  | "serving_endpoint"
+  | "database";
+
+export interface DeclaredResource {
+  name: string;
+  type: ResourceType;
+  securable_type?: string;
+  securable_full_name?: string;
+  permission?: string;
+  id?: string;
+  [key: string]: unknown;
 }
 
 export interface GovernanceStatus {
-  registered: boolean;
-  full_name: string | null;
-  catalog: string | null;
-  schema: string | null;
-  tags: Record<string, string>;
-  endpoint_url: string | null;
-  capabilities?: string[] | null;
-  description?: string | null;
-  connected_tables?: ConnectedTable[];
-  connected_table_count?: number;
+  app_running: boolean;
+  app_name: string | null;
+  declared_resources: DeclaredResource[];
+  connected_tables: ConnectedTable[];
+  connected_table_count: number;
 }

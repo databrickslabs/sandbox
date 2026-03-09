@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { useGovernance } from "../../hooks/useGovernance";
-import { useAgents } from "../../hooks/useAgents";
-import { registerAllAgents } from "../../api/governance";
-import type { UCRegistrationResult } from "../../types/lineage";
+import type { DeclaredResource } from "../../types/lineage";
 import { Badge } from "../common/Badge";
 import { Spinner } from "../common/Spinner";
 import { ErrorBanner } from "../common/ErrorBanner";
@@ -11,30 +8,36 @@ interface Props {
   agentName: string;
 }
 
-export function GovernanceTab({ agentName }: Props) {
-  const { status, loading, error, refetch } = useGovernance(agentName);
-  const { agents } = useAgents();
-  const [registering, setRegistering] = useState(false);
-  const [regResult, setRegResult] = useState<UCRegistrationResult | null>(null);
+function resourceDetail(r: DeclaredResource): string {
+  switch (r.type) {
+    case "uc_securable":
+      return r.securable_full_name ?? "—";
+    case "sql_warehouse":
+      return r.id ?? "—";
+    case "job":
+      return r.id ?? "—";
+    case "secret":
+      return [r.scope, r.key].filter(Boolean).join("/") || "—";
+    case "serving_endpoint":
+      return (r.name_value as string) ?? r.name ?? "—";
+    case "database":
+      return [r.instance_name, r.database_name].filter(Boolean).join("/") || "—";
+    default:
+      return "—";
+  }
+}
 
-  const handleRegisterAll = async () => {
-    setRegistering(true);
-    setRegResult(null);
-    try {
-      const result = await registerAllAgents();
-      setRegResult(result);
-      refetch();
-    } catch (e) {
-      setRegResult({
-        registered: [],
-        failed: [{ name: "all", error: e instanceof Error ? e.message : "Registration failed" }],
-        total: 0,
-        error: e instanceof Error ? e.message : "Registration failed",
-      });
-    } finally {
-      setRegistering(false);
-    }
-  };
+const TYPE_LABELS: Record<string, string> = {
+  uc_securable: "UC Securable",
+  sql_warehouse: "SQL Warehouse",
+  job: "Job",
+  secret: "Secret",
+  serving_endpoint: "Serving Endpoint",
+  database: "Database",
+};
+
+export function GovernanceTab({ agentName }: Props) {
+  const { status, loading, error } = useGovernance(agentName);
 
   if (loading) {
     return (
@@ -56,124 +59,74 @@ export function GovernanceTab({ agentName }: Props) {
     );
   }
 
-  const connectedTables = status.connected_tables;
-  const tableCount = status.connected_table_count;
+  const { declared_resources, connected_tables, connected_table_count } = status;
 
   return (
     <div>
-      {/* Registration status */}
+      {/* App status */}
       <div className="section">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3>UC Registration</h3>
-          {agents.length > 0 && (
-            <button
-              className="btn btn-outline btn-sm register-all-btn"
-              onClick={handleRegisterAll}
-              disabled={registering}
-            >
-              {registering ? <><span className="spinner" /> Registering...</> : "Register All in UC"}
-            </button>
-          )}
-        </div>
-
-        {/* Registration result banner */}
-        {regResult && (
-          <div className={`register-result-banner ${regResult.error ? "register-result-error" : regResult.failed.length > 0 ? "register-result-partial" : "register-result-success"}`}>
-            {regResult.error ? (
-              <span>{regResult.error}</span>
-            ) : (
-              <span>
-                Registered {regResult.registered.length}/{regResult.total} agents
-                {regResult.failed.length > 0 && (
-                  <span className="register-failures">
-                    {" — "}Failed: {regResult.failed.map((f) => `${f.name}: ${f.error}`).join(", ")}
-                  </span>
-                )}
-              </span>
-            )}
-          </div>
-        )}
-
+        <h3>App Status</h3>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
           <Badge
-            label={status.registered ? "Registered" : "Not Registered"}
-            variant={status.registered ? "green" : "blue"}
+            label={status.app_running ? "Running" : "Not Running"}
+            variant={status.app_running ? "green" : "red"}
           />
-          {status.registered && status.full_name && (
-            <code className="governance-path">{status.full_name}</code>
+          {status.app_name && (
+            <code className="governance-path">{status.app_name}</code>
           )}
         </div>
-
-        {!status.registered && (
-          <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
-            This agent is not registered in Unity Catalog. Register it to enable
-            governance, permissions, and lineage tracking across the workspace.
-          </p>
-        )}
       </div>
 
-      {/* Tags table */}
-      {status.registered && Object.keys(status.tags).length > 0 && (
-        <div className="section">
-          <h3>UC Tags</h3>
+      {/* Declared resources */}
+      <div className="section">
+        <h3>Declared Resources ({declared_resources.length})</h3>
+        {declared_resources.length > 0 ? (
           <table className="governance-table">
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Value</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Detail</th>
+                <th>Permission</th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(status.tags).map(([key, value]) => (
-                <tr key={key}>
+              {declared_resources.map((r) => (
+                <tr key={r.name}>
+                  <td><code>{r.name}</code></td>
                   <td>
-                    <code>{key}</code>
+                    <Badge label={TYPE_LABELS[r.type] ?? r.type} variant="blue" />
+                    {r.securable_type && (
+                      <span style={{ marginLeft: "0.5rem", fontSize: "0.8rem", color: "var(--muted)" }}>
+                        {r.securable_type}
+                      </span>
+                    )}
                   </td>
-                  <td>{value}</td>
+                  <td>
+                    <code style={{ fontSize: "0.8rem" }}>{resourceDetail(r)}</code>
+                  </td>
+                  <td>
+                    {r.permission ? (
+                      <Badge label={r.permission} />
+                    ) : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Registration details */}
-      {status.registered && (
-        <div className="section">
-          <h3>Details</h3>
-          <div className="governance-details">
-            <div className="governance-row">
-              <span className="governance-label">Catalog</span>
-              <span>{status.catalog ?? "—"}</span>
-            </div>
-            <div className="governance-row">
-              <span className="governance-label">Schema</span>
-              <span>{status.schema ?? "—"}</span>
-            </div>
-            <div className="governance-row">
-              <span className="governance-label">Endpoint</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>
-                {status.endpoint_url ?? "—"}
-              </span>
-            </div>
-            {status.capabilities && (
-              <div className="governance-row">
-                <span className="governance-label">Capabilities</span>
-                <span>
-                  {status.capabilities.map((cap) => (
-                    <Badge key={cap} label={cap} />
-                  ))}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        ) : (
+          <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
+            No resources declared on this app. Add resources in your{" "}
+            <code className="governance-path">agents.yaml</code> to declare UC tables,
+            warehouses, and other dependencies.
+          </p>
+        )}
+      </div>
 
       {/* Connected UC tables */}
-      {connectedTables && connectedTables.length > 0 && (
+      {connected_tables && connected_tables.length > 0 && (
         <div className="section">
-          <h3>Connected UC Tables ({tableCount})</h3>
+          <h3>Connected UC Tables ({connected_table_count})</h3>
           <table className="governance-table">
             <thead>
               <tr>
@@ -183,11 +136,9 @@ export function GovernanceTab({ agentName }: Props) {
               </tr>
             </thead>
             <tbody>
-              {connectedTables.map((tbl) => (
+              {connected_tables.map((tbl) => (
                 <tr key={tbl.full_name}>
-                  <td>
-                    <code>{tbl.full_name}</code>
-                  </td>
+                  <td><code>{tbl.full_name}</code></td>
                   <td>{tbl.schema}</td>
                   <td>
                     <Badge label={tbl.relationship.replace("_", " ")} variant="blue" />
@@ -199,8 +150,8 @@ export function GovernanceTab({ agentName }: Props) {
         </div>
       )}
 
-      {/* No UC assets message */}
-      {!status.registered && (!connectedTables || connectedTables.length === 0) && (
+      {/* No connections message */}
+      {declared_resources.length === 0 && (!connected_tables || connected_tables.length === 0) && (
         <div className="section">
           <h3>UC Asset Connections</h3>
           <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
