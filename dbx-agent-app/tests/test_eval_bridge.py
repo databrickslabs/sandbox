@@ -1,4 +1,4 @@
-"""Tests for the eval bridge — app_predict_fn()."""
+"""Tests for the eval bridge — app_predict_fn() and app_conversation_fn()."""
 
 import json
 
@@ -6,7 +6,7 @@ import httpx
 import pytest
 import respx
 
-from dbx_agent_app.bridge.eval import app_predict_fn
+from dbx_agent_app.bridge.eval import app_conversation_fn, app_predict_fn
 
 
 APP_URL = "https://my-agent.cloud.databricks.com"
@@ -240,3 +240,112 @@ def test_multi_turn_messages():
 
     request_body = json.loads(route.calls[0].request.content)
     assert request_body["input"] == messages
+
+
+# ===================================================================
+# app_conversation_fn — ConversationSimulator adapter
+# ===================================================================
+
+
+def test_conversation_fn_creates_callable():
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    assert callable(fn)
+
+
+def test_conversation_fn_raises_without_token(monkeypatch):
+    monkeypatch.delenv("DATABRICKS_TOKEN", raising=False)
+    with pytest.raises(ValueError, match="No auth token"):
+        app_conversation_fn(APP_URL)
+
+
+@respx.mock
+def test_conversation_fn_returns_string():
+    """ConversationSimulator requires str return, not dict."""
+    respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(200, json=AGENT_RESPONSE)
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    result = fn(input=[{"role": "user", "content": "Hi"}])
+
+    assert isinstance(result, str)
+    assert result == "Hello from agent!"
+
+
+@respx.mock
+def test_conversation_fn_sends_full_history():
+    """Verifies the full conversation history is forwarded as input."""
+    route = respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(200, json=AGENT_RESPONSE)
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    history = [
+        {"role": "user", "content": "What is MLflow?"},
+        {"role": "assistant", "content": "MLflow is..."},
+        {"role": "user", "content": "Tell me more"},
+    ]
+    fn(input=history)
+
+    request_body = json.loads(route.calls[0].request.content)
+    assert request_body == {"input": history}
+
+
+@respx.mock
+def test_conversation_fn_accepts_kwargs():
+    """ConversationSimulator passes mlflow_session_id and context as kwargs."""
+    respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(200, json=AGENT_RESPONSE)
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    result = fn(
+        input=[{"role": "user", "content": "Hi"}],
+        mlflow_session_id="sess-123",
+        context={"goal": "test agent"},
+    )
+    assert result == "Hello from agent!"
+
+
+@respx.mock
+def test_conversation_fn_multi_content():
+    """Multiple text blocks are joined."""
+    multi = {
+        "output": [
+            {
+                "type": "message",
+                "id": "1",
+                "content": [
+                    {"type": "output_text", "text": "Part A."},
+                    {"type": "output_text", "text": "Part B."},
+                ],
+            }
+        ]
+    }
+    respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(200, json=multi)
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    assert fn(input=[{"role": "user", "content": "Hi"}]) == "Part A.\nPart B."
+
+
+@respx.mock
+def test_conversation_fn_empty_output():
+    respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(200, json={"output": []})
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    assert fn(input=[{"role": "user", "content": "Hi"}]) == ""
+
+
+@respx.mock
+def test_conversation_fn_http_error():
+    respx.post(f"{APP_URL}/invocations").mock(
+        return_value=httpx.Response(500, text="Server Error")
+    )
+
+    fn = app_conversation_fn(APP_URL, token=TOKEN)
+    with pytest.raises(httpx.HTTPStatusError):
+        fn(input=[{"role": "user", "content": "Hi"}])

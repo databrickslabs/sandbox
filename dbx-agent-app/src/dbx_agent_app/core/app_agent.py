@@ -69,6 +69,7 @@ class AppAgent:
         capabilities: List[str],
         version: str = "1.0.0",
         enable_mcp: bool = True,
+        enable_tracing: bool = True,
     ):
         self._handler = handler
         self._is_async = inspect.iscoroutinefunction(handler)
@@ -79,6 +80,7 @@ class AppAgent:
         self.capabilities = capabilities
         self.version = version
         self.enable_mcp = enable_mcp
+        self.enable_tracing = enable_tracing
 
         self._tools: List[Dict[str, Any]] = []
         self._app: Optional[FastAPI] = None
@@ -146,6 +148,11 @@ class AppAgent:
     def _build_app(self) -> FastAPI:
         fastapi_app = FastAPI()
 
+        # Link traces to the registered LoggedModel (if mlflow is available)
+        if self.enable_tracing:
+            from .tracing import set_active_model
+            set_active_model(self.name)
+
         self._setup_invocations(fastapi_app)
         self._setup_agent_card(fastapi_app)
         self._setup_health(fastapi_app)
@@ -162,6 +169,20 @@ class AppAgent:
 
     def _setup_invocations(self, fastapi_app: FastAPI):
         agent = self
+
+        # Optionally wrap handler with MLflow tracing.
+        # mlflow.trace supports sync, async, generators, and async generators
+        # natively — one wrapper handles all paths.
+        if agent.enable_tracing:
+            from .tracing import trace_handler
+
+            traced = trace_handler(
+                agent._handler,
+                name=agent.name,
+                attributes={"agent.version": agent.version},
+            )
+        else:
+            traced = agent._handler
 
         @fastapi_app.post("/invocations")
         async def invocations(request: Request):
@@ -192,12 +213,12 @@ class AppAgent:
             # Handle async generator (streaming)
             if agent._is_generator:
                 return StreamingResponse(
-                    agent._stream_handler(agent_request),
+                    agent._stream_handler(agent_request, traced),
                     media_type="text/event-stream",
                 )
 
-            # Non-streaming: call handler and coerce response
-            result = agent._handler(agent_request)
+            # Non-streaming: call traced handler and coerce response
+            result = traced(agent_request)
             if inspect.isawaitable(result):
                 result = await result
 
@@ -244,7 +265,12 @@ class AppAgent:
 
     def _setup_tool_endpoints(self, fastapi_app: FastAPI):
         for tool_def in self._tools:
-            fastapi_app.post(f"/api/tools/{tool_def['name']}")(tool_def["function"])
+            func = tool_def["function"]
+            if self.enable_tracing:
+                from .tracing import trace_tool
+
+                func = trace_tool(func, name=tool_def["name"])
+            fastapi_app.post(f"/api/tools/{tool_def['name']}")(func)
 
     def _setup_mcp(self, fastapi_app: FastAPI):
         try:
@@ -273,9 +299,11 @@ class AppAgent:
     # Streaming
     # ------------------------------------------------------------------
 
-    async def _stream_handler(self, request: AgentRequest) -> AsyncGenerator[str, None]:
+    async def _stream_handler(
+        self, request: AgentRequest, handler: Callable
+    ) -> AsyncGenerator[str, None]:
         """Consume an async generator handler and yield SSE events."""
-        async for event in self._handler(request):
+        async for event in handler(request):
             if isinstance(event, StreamEvent):
                 yield event.to_sse()
             elif isinstance(event, str):
@@ -292,6 +320,7 @@ def app_agent(
     *,
     version: str = "1.0.0",
     enable_mcp: bool = True,
+    enable_tracing: bool = True,
 ) -> Callable[[Callable], AppAgent]:
     """
     Decorator to turn an async function into a discoverable Databricks Apps agent.
@@ -304,8 +333,9 @@ def app_agent(
 
     Returns an ``AppAgent`` instance. Access the FastAPI app via ``.app``.
 
-    Agent governance is handled via uc_securable resources declared in app.yaml
-    or agents.yaml — no runtime UC registration needed.
+    When ``enable_tracing=True`` (default) and MLflow 3 is installed, every
+    invocation is automatically traced via ``@mlflow.trace``.  Tracing is a
+    no-op when MLflow is not installed.
 
     Example:
         @app_agent(name="hello", description="Greeter", capabilities=["chat"])
@@ -323,6 +353,7 @@ def app_agent(
             capabilities=capabilities,
             version=version,
             enable_mcp=enable_mcp,
+            enable_tracing=enable_tracing,
         )
 
     return decorator

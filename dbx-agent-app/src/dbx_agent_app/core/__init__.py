@@ -2,6 +2,7 @@
 
 from .helpers import add_agent_card, add_mcp_endpoints
 from .app_agent import app_agent, AppAgent
+from .tracing import update_trace
 from .types import AgentRequest, AgentResponse, InputItem, OutputItem, OutputTextContent, StreamEvent, UserContext
 
 __all__ = [
@@ -16,6 +17,8 @@ __all__ = [
     "OutputTextContent",
     "StreamEvent",
     "UserContext",
+    # Tracing
+    "update_trace",
     # Helpers
     "add_agent_card",
     "add_mcp_endpoints",

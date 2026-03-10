@@ -306,6 +306,97 @@ def test_set_app_resources_no_scopes_in_body():
     assert "user_api_scopes" not in body
 
 
+# ===================================================================
+# register_models — MLflow LoggedModel registration
+# ===================================================================
+
+
+def test_register_models_creates_external_models():
+    agent = AgentSpec(name="research", source="/tmp/research")
+    config = _make_config([agent])
+    engine = _make_engine(config)
+
+    # Seed agent state (as if deploy already ran)
+    engine.state.set_agent(
+        "research", app_name="test-project-research",
+        url="https://research.cloud.databricks.com", sp_name="sp-1",
+    )
+
+    mock_mlflow = MagicMock()
+    mock_model = MagicMock()
+    mock_model.model_id = "model-abc-123"
+    mock_mlflow.create_external_model.return_value = mock_model
+
+    with patch.dict("sys.modules", {"mlflow": mock_mlflow}):
+        engine.register_models()
+
+    mock_mlflow.set_experiment.assert_called_once_with("/dbx-agent-app/test-project")
+    mock_mlflow.create_external_model.assert_called_once()
+    call_kwargs = mock_mlflow.create_external_model.call_args[1]
+    assert call_kwargs["name"] == "research"
+    assert call_kwargs["model_type"] == "databricks-app-agent"
+    assert call_kwargs["params"]["endpoint_url"] == "https://research.cloud.databricks.com"
+    assert call_kwargs["params"]["app_name"] == "test-project-research"
+    assert call_kwargs["tags"]["sdk"] == "dbx-agent-app"
+
+
+def test_register_models_no_mlflow(capsys):
+    """Gracefully skips when mlflow is not installed."""
+    agent = AgentSpec(name="research", source="/tmp")
+    engine = _make_engine(_make_config([agent]))
+    engine.state.set_agent("research", app_name="app")
+
+    with patch.dict("sys.modules", {"mlflow": None}):
+        engine.register_models()
+
+    output = capsys.readouterr().out
+    assert "mlflow not installed" in output
+
+
+def test_register_models_handles_failure(capsys):
+    """Individual registration failures don't crash the loop."""
+    agents = [
+        AgentSpec(name="a1", source="/tmp"),
+        AgentSpec(name="a2", source="/tmp"),
+    ]
+    config = _make_config(agents)
+    engine = _make_engine(config)
+    engine.state.set_agent("a1", app_name="app-a1", url="https://a1.com")
+    engine.state.set_agent("a2", app_name="app-a2", url="https://a2.com")
+
+    mock_mlflow = MagicMock()
+    mock_model = MagicMock()
+    mock_model.model_id = "ok"
+    mock_mlflow.create_external_model.side_effect = [
+        RuntimeError("quota exceeded"),
+        mock_model,
+    ]
+
+    with patch.dict("sys.modules", {"mlflow": mock_mlflow}):
+        engine.register_models()
+
+    output = capsys.readouterr().out
+    assert "registration failed" in output
+    assert "registered" in output
+
+
+def test_register_models_skips_undeployed_agents():
+    """Agents without state (not yet deployed) are skipped."""
+    agent = AgentSpec(name="not-deployed", source="/tmp")
+    engine = _make_engine(_make_config([agent]))
+
+    mock_mlflow = MagicMock()
+    with patch.dict("sys.modules", {"mlflow": mock_mlflow}):
+        engine.register_models()
+
+    mock_mlflow.create_external_model.assert_not_called()
+
+
+# ===================================================================
+# Dry run
+# ===================================================================
+
+
 def test_dry_run_skips_deployment():
     agent = AgentSpec(
         name="test",

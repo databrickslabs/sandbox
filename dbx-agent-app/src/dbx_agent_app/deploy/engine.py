@@ -500,6 +500,59 @@ class DeployEngine:
             logger.warning("App-to-app grant failed for %s → %s: %s", supervisor_sp_id, target_app_name, e)
 
     # ------------------------------------------------------------------
+    # LoggedModel registration (opt-in)
+    # ------------------------------------------------------------------
+
+    def register_models(self, agents: list[AgentSpec] | None = None) -> None:
+        """Register deployed agents as MLflow LoggedModels.
+
+        Creates an external model for each deployed agent so it appears in
+        the MLflow model lineage view, linked to traces and evaluations.
+
+        Requires ``mlflow>=3.0.0``.  Skips gracefully if mlflow is not installed.
+        """
+        try:
+            import mlflow
+        except ImportError:
+            print("  mlflow not installed — skipping model registration")
+            return
+
+        if agents is None:
+            agents = self.config.ordered_agents
+
+        experiment_name = f"/dbx-agent-app/{self.config.project.name}"
+        mlflow.set_experiment(experiment_name)
+
+        print(f"\n{'='*60}")
+        print("MLflow Model Registration")
+        print(f"{'='*60}")
+        print(f"  Experiment: {experiment_name}")
+
+        for agent in agents:
+            agent_state = self.state.get_agent(agent.name)
+            if not agent_state:
+                continue
+
+            try:
+                model = mlflow.create_external_model(
+                    name=agent.name,
+                    model_type="databricks-app-agent",
+                    params={
+                        "endpoint_url": agent_state.url or "",
+                        "app_name": agent_state.app_name,
+                        "source": agent.source,
+                    },
+                    tags={
+                        "deployed_at": agent_state.deployed_at or "",
+                        "profile": self.profile or "",
+                        "sdk": "dbx-agent-app",
+                    },
+                )
+                print(f"  {agent.name:<20} registered (model_id={model.model_id})")
+            except Exception as e:
+                print(f"  {agent.name:<20} registration failed — {e}")
+
+    # ------------------------------------------------------------------
     # Dry run
     # ------------------------------------------------------------------
 

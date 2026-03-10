@@ -34,6 +34,10 @@ def main():
         "--mode", type=str, default="snapshot", choices=["snapshot", "auto_sync"],
         help="Deployment mode: snapshot (default) or auto_sync (dev workflow)",
     )
+    deploy_cmd.add_argument(
+        "--register-models", action="store_true",
+        help="Register agents as MLflow LoggedModels after deploy",
+    )
 
     # ---- validate ----
     validate_cmd = sub.add_parser("validate", help="Validate agents.yaml without deploying")
@@ -103,6 +107,9 @@ def _run_deploy(args):
     config = DeployConfig.from_yaml(args.config)
     engine = DeployEngine(config, profile=args.profile, dry_run=args.dry_run, mode=args.mode)
     engine.deploy(agent_filter=args.agent)
+
+    if args.register_models and not args.dry_run:
+        engine.register_models()
 
 
 def _run_validate(args):

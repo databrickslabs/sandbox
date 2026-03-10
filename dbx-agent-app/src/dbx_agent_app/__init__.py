@@ -25,13 +25,14 @@ from .core import (
     OutputItem,
     OutputTextContent,
     StreamEvent,
+    update_trace,
     UserContext,
 )
 from .discovery import AgentDiscovery, DiscoveredAgent, AgentDiscoveryResult, A2AClient, A2AClientError
 from .mcp import MCPServerConfig, setup_mcp_server, UCFunctionAdapter
 from .dashboard import create_dashboard_app
 from .deploy import DeployConfig, DeployEngine
-from .bridge import app_predict_fn
+from .bridge import app_conversation_fn, app_predict_fn
 
 try:
     from importlib.metadata import version as _get_version
@@ -51,6 +52,8 @@ __all__ = [
     "OutputTextContent",
     "StreamEvent",
     "UserContext",
+    # Tracing
+    "update_trace",
     # Helpers
     "add_agent_card",
     "add_mcp_endpoints",
@@ -70,5 +73,6 @@ __all__ = [
     "DeployConfig",
     "DeployEngine",
     # Bridge (official dbx-agent-app interop)
+    "app_conversation_fn",
     "app_predict_fn",
 ]

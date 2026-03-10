@@ -116,3 +116,81 @@ def app_predict_fn(
         }
 
     return predict
+
+
+def app_conversation_fn(
+    app_url: str,
+    *,
+    token: Optional[str] = None,
+    timeout: float = 120.0,
+) -> Callable[..., str]:
+    """
+    Create a predict_fn for ``mlflow.genai.simulators.ConversationSimulator``.
+
+    Unlike :func:`app_predict_fn` (which returns a dict for single-turn eval),
+    this returns a plain string and accepts the ``input`` parameter that
+    ConversationSimulator passes (full conversation history as a list of
+    message dicts).
+
+    Usage::
+
+        from dbx_agent_app.bridge import app_conversation_fn
+        from mlflow.genai.simulators import ConversationSimulator
+
+        simulator = ConversationSimulator(test_cases=[...], max_turns=5)
+        results = mlflow.genai.evaluate(
+            data=simulator,
+            predict_fn=app_conversation_fn("https://my-app.cloud.databricks.com"),
+            scorers=[...],
+        )
+
+    Args:
+        app_url: Base URL of the deployed Databricks App.
+        token: Databricks PAT.  Falls back to ``DATABRICKS_TOKEN`` env var.
+        timeout: HTTP timeout in seconds (default: 120).
+
+    Returns:
+        A callable ``predict(input=[...], **kwargs) -> str``.
+    """
+    import os
+
+    import httpx
+
+    resolved_token = token or os.environ.get("DATABRICKS_TOKEN")
+    if not resolved_token:
+        raise ValueError(
+            "No auth token provided. Pass token= or set DATABRICKS_TOKEN env var."
+        )
+
+    base = app_url.rstrip("/")
+    url = f"{base}/invocations"
+
+    headers = {
+        "Authorization": f"Bearer {resolved_token}",
+        "Content-Type": "application/json",
+    }
+
+    client = httpx.Client(timeout=timeout, headers=headers)
+
+    def predict(input: List[Dict[str, str]], **kwargs: Any) -> str:
+        """
+        Call the app with full conversation history.
+
+        ConversationSimulator passes ``input`` (message list) and optional
+        ``mlflow_session_id`` / ``context`` kwargs.
+        """
+        payload = {"input": input}
+
+        response = client.post(url, json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+        # Extract text from output — same wire format as app_predict_fn
+        parts: List[str] = []
+        for item in data.get("output", []):
+            for block in item.get("content", []):
+                if "text" in block:
+                    parts.append(block["text"])
+        return "\n".join(parts)
+
+    return predict
