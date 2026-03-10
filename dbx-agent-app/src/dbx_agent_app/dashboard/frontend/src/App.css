@@ -1351,6 +1351,51 @@ textarea:focus {
   }
 }
 
+/* ========== Evaluate Tab ========== */
+.eval-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.eval-input {
+  min-height: 80px;
+}
+.eval-runs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.eval-run {
+  background: #111827;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+.eval-run-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.eval-run-query {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.eval-run-response {
+  font-size: 0.85rem;
+}
+.eval-run-error {
+  font-size: 0.85rem;
+  color: var(--red);
+}
+.eval-run-raw {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 /* ========== System Builder — Wizard Layout ========== */
 
 /* Break wizard out of .container max-width constraint */

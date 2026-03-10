@@ -10,6 +10,7 @@ import { ToolsTab } from "./ToolsTab";
 import { McpTab } from "./McpTab";
 import { LineageTab } from "./LineageTab";
 import { GovernanceTab } from "./GovernanceTab";
+import { EvaluateTab } from "./EvaluateTab";
 import { Badge } from "../common/Badge";
 
 const TABS = [
@@ -18,6 +19,7 @@ const TABS = [
   { id: "tools", label: "Tools" },
   { id: "lineage", label: "Lineage" },
   { id: "governance", label: "Governance" },
+  { id: "evaluate", label: "Evaluate" },
   { id: "mcp", label: "MCP" },
 ];
 
@@ -86,6 +88,7 @@ export function AgentDetail() {
       )}
       {activeTab === "lineage" && <LineageTab agentName={agent.name} />}
       {activeTab === "governance" && <GovernanceTab agentName={agent.name} />}
+      {activeTab === "evaluate" && <EvaluateTab agentName={agent.name} />}
       {activeTab === "mcp" && (
         <McpTab
           agentName={agent.name}
