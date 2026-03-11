@@ -1,0 +1,29 @@
+.message-input {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  align-items: flex-end;
+}
+
+.message-input textarea {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  background: white;
+}
+
+.message-input textarea:focus {
+  outline: none;
+  border-color: #0066cc;
+}
+
+.message-input textarea:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}

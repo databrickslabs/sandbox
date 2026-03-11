@@ -1,0 +1,58 @@
+.workspace-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.workspace-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.workspace-card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.workspace-host {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #0066cc;
+  word-break: break-all;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.workspace-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-auth-type,
+.workspace-username {
+  font-size: 13px;
+  color: #666;
+}
+
+.workspace-error {
+  margin: 0;
+  font-size: 12px;
+  color: #c62828;
+  background: #ffebee;
+  padding: 8px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+.workspace-card-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: auto;
+}

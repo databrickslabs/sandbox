@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation & Phase tracking (don't need in deployed app)
+PHASE_*.md
+QUICKSTART.md
+README.md
+*.md
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Local development
+.env
+.env.backup
+.env.local
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Deployment helpers (not needed in app)
+deploy.sh
+create_warehouse_tables.py
+add_missing_columns.py
+init_warehouse_schema.sql
+
+# Alembic (migrations run separately)
+alembic/
+alembic.ini
+
+# Tests (not needed in production)
+tests/
+test_*.py
+*_test.py
+pytest.ini
+conftest.py
+
+# Temporary files
+*.tmp
+*.log
+.cache/
