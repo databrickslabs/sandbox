@@ -149,6 +149,16 @@ def add_mcp_endpoints(
                 if not tool:
                     raise ValueError(f"Tool not found: {tool_name}")
 
+                # Validate arguments against declared schema
+                declared_params = set(tool.get("parameters", {}).keys())
+                if declared_params:
+                    unknown = set(arguments.keys()) - declared_params
+                    if unknown:
+                        raise ValueError(
+                            f"Unknown arguments for tool '{tool_name}': {', '.join(sorted(unknown))}. "
+                            f"Accepted: {', '.join(sorted(declared_params))}"
+                        )
+
                 result = await tool["function"](**arguments)
                 return {
                     "jsonrpc": "2.0",

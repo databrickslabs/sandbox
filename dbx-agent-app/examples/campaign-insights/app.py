@@ -5,8 +5,6 @@ Proves the plumbing: @app_agent → SQL warehouse → LLM → MCP tools → dash
 """
 
 import os
-if os.environ.get("DATABRICKS_CLIENT_ID"):
-    os.environ.pop("DATABRICKS_TOKEN", None)
 
 import json
 
@@ -137,7 +135,8 @@ async def get_pipeline(limit: int = 20) -> dict:
 async def query(sql: str) -> dict:
     if not sql.strip().upper().startswith("SELECT"):
         return {"error": "Only SELECT queries are allowed"}
-    return {"rows": _run_sql(sql), "count": len(_run_sql(sql))}
+    rows = _run_sql(sql)
+    return {"rows": rows, "count": len(rows)}
 
 
 @campaign_insights.tool(description="Send a question to the foundation model")

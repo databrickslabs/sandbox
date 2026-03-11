@@ -73,8 +73,6 @@ def app_predict_fn(
         "Content-Type": "application/json",
     }
 
-    client = httpx.Client(timeout=timeout, headers=headers)
-
     def predict(
         messages: Optional[List[Dict[str, str]]] = None,
         **kwargs: Any,
@@ -99,9 +97,10 @@ def app_predict_fn(
         # Translate to our wire format
         payload = {"input": messages}
 
-        response = client.post(url, json=payload)
-        response.raise_for_status()
-        data = response.json()
+        with httpx.Client(timeout=timeout, headers=headers) as client:
+            response = client.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
 
         # Extract text from our output format
         text_parts = []
@@ -170,8 +169,6 @@ def app_conversation_fn(
         "Content-Type": "application/json",
     }
 
-    client = httpx.Client(timeout=timeout, headers=headers)
-
     def predict(input: List[Dict[str, str]], **kwargs: Any) -> str:
         """
         Call the app with full conversation history.
@@ -181,9 +178,10 @@ def app_conversation_fn(
         """
         payload = {"input": input}
 
-        response = client.post(url, json=payload)
-        response.raise_for_status()
-        data = response.json()
+        with httpx.Client(timeout=timeout, headers=headers) as client:
+            response = client.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
 
         # Extract text from output — same wire format as app_predict_fn
         parts: List[str] = []

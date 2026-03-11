@@ -8,13 +8,12 @@ Key Value: Most organizations have ZERO visibility into agent performance.
 This shows how Databricks makes agents observable out of the box.
 """
 
-# IMPORTANT: Clean up auth environment BEFORE any Databricks SDK imports
-# In Databricks Apps, both OAuth and PAT token are present in environment
-# We must use OAuth-only to avoid "multiple auth methods" error
+# Auth cleanup is handled by _clean_environment() context manager below.
+# Do NOT pop env vars at module scope — it permanently mutates the process
+# environment and affects all code imported after this module.
 import os
-if os.environ.get("DATABRICKS_CLIENT_ID"):  # Running in Databricks Apps
-    os.environ.pop("DATABRICKS_TOKEN", None)
 
+import contextvars
 from uuid import uuid4
 from typing import Generator, Dict, Any, Optional
 import time
@@ -178,7 +177,18 @@ class SGPResearchAgent:
 
     Uses SDK types (AgentRequest/AgentResponse) — no mlflow.pyfunc inheritance.
     MLflow is used purely for observability (metrics, traces, artifacts).
+
+    Thread-safety: per-request state (user context, metrics) uses contextvars
+    so concurrent requests don't corrupt each other.
     """
+
+    # Per-request state via contextvars (thread/coroutine safe)
+    _request_ctx: contextvars.ContextVar[UserContext | None] = contextvars.ContextVar(
+        "_request_ctx", default=None
+    )
+    _request_metrics: contextvars.ContextVar[PerformanceMetrics | None] = contextvars.ContextVar(
+        "_request_metrics", default=None
+    )
 
     def __init__(self, config=None):
         """Initialize agent with UC Function tools and MLflow tracking."""
@@ -219,12 +229,6 @@ class SGPResearchAgent:
                 max_tokens=self.config.get("max_tokens", 4096),
             )
 
-        # Performance tracking
-        self.metrics = PerformanceMetrics()
-
-        # Per-request user context for user-scoped UC execution
-        self._current_user_context: UserContext | None = None
-
         # Cache warehouse ID to avoid repeated lookups
         self._warehouse_id_cache = None
 
@@ -236,6 +240,11 @@ class SGPResearchAgent:
 
         # Build LangGraph workflow
         self.graph = self._create_graph()
+
+    @property
+    def metrics(self) -> PerformanceMetrics:
+        """Get per-request metrics from contextvars, or a throwaway instance."""
+        return self._request_metrics.get(None) or PerformanceMetrics()
 
     @contextmanager
     def _track_tool_execution(self, tool_name: str):
@@ -269,8 +278,9 @@ class SGPResearchAgent:
 
         # Use user-scoped client when available for UC governance enforcement
         client = self.workspace
-        if self._current_user_context and self._current_user_context.is_authenticated:
-            client = self._current_user_context.get_workspace_client()
+        user_ctx = self._request_ctx.get(None)
+        if user_ctx and user_ctx.is_authenticated:
+            client = user_ctx.get_workspace_client()
 
         try:
             result = client.statement_execution.execute_statement(
@@ -479,69 +489,79 @@ When answering:
 
     def predict(self, request: AgentRequest) -> AgentResponse:
         """Non-streaming prediction with comprehensive tracking."""
-        self._current_user_context = request.user_context
-        self.metrics = PerformanceMetrics()
-        self.metrics.start_time = time.time()
+        ctx_token = self._request_ctx.set(request.user_context)
+        metrics = PerformanceMetrics()
+        self._request_metrics.set(metrics)
+        metrics.start_time = time.time()
 
-        with mlflow.start_run(nested=True):
-            mlflow.log_param("catalog", self.catalog)
-            mlflow.log_param("schema", self.schema)
-            mlflow.log_param("model_endpoint", self.config.get("endpoint"))
+        try:
+            with mlflow.start_run(nested=True):
+                mlflow.log_param("catalog", self.catalog)
+                mlflow.log_param("schema", self.schema)
+                mlflow.log_param("model_endpoint", self.config.get("endpoint"))
 
-            # Convert SDK request to LangChain messages
-            messages = to_langchain_messages(request)
+                # Convert SDK request to LangChain messages
+                messages = to_langchain_messages(request)
 
-            result = self.graph.invoke({"messages": messages})
-            final_message = result["messages"][-1]
+                result = self.graph.invoke({"messages": messages})
+                final_message = result["messages"][-1]
 
-            self.metrics.end_time = time.time()
+                metrics.end_time = time.time()
 
-            # Log all metrics to MLflow
-            summary = self.metrics.get_summary()
-            for metric_name, metric_value in summary.items():
-                if isinstance(metric_value, (int, float)):
-                    mlflow.log_metric(metric_name, metric_value)
-                elif isinstance(metric_value, dict):
-                    for sub_key, sub_value in metric_value.items():
-                        if isinstance(sub_value, dict):
-                            for subsub_key, subsub_value in sub_value.items():
-                                if isinstance(subsub_value, (int, float)):
-                                    mlflow.log_metric(f"{metric_name}_{sub_key}_{subsub_key}", subsub_value)
+                # Log all metrics to MLflow
+                summary = metrics.get_summary()
+                for metric_name, metric_value in summary.items():
+                    if isinstance(metric_value, (int, float)):
+                        mlflow.log_metric(metric_name, metric_value)
+                    elif isinstance(metric_value, dict):
+                        for sub_key, sub_value in metric_value.items():
+                            if isinstance(sub_value, dict):
+                                for subsub_key, subsub_value in sub_value.items():
+                                    if isinstance(subsub_value, (int, float)):
+                                        mlflow.log_metric(f"{metric_name}_{sub_key}_{subsub_key}", subsub_value)
 
-            import json
-            with open("/tmp/agent_metrics.json", "w") as f:
-                json.dump(summary, f, indent=2)
-            mlflow.log_artifact("/tmp/agent_metrics.json")
+                import json
+                with open("/tmp/agent_metrics.json", "w") as f:
+                    json.dump(summary, f, indent=2)
+                mlflow.log_artifact("/tmp/agent_metrics.json")
 
-            return AgentResponse.text(final_message.content)
+                return AgentResponse.text(final_message.content)
+        finally:
+            self._request_ctx.reset(ctx_token)
+            self._request_metrics.set(None)
 
     def predict_stream(self, request: AgentRequest) -> Generator[StreamEvent, None, None]:
         """Streaming prediction with tracking."""
-        self._current_user_context = request.user_context
-        self.metrics = PerformanceMetrics()
-        self.metrics.start_time = time.time()
+        ctx_token = self._request_ctx.set(request.user_context)
+        metrics = PerformanceMetrics()
+        self._request_metrics.set(metrics)
+        metrics.start_time = time.time()
 
-        with mlflow.start_run(nested=True):
-            mlflow.log_param("catalog", self.catalog)
-            mlflow.log_param("schema", self.schema)
-            mlflow.log_param("streaming", True)
+        try:
+            with mlflow.start_run(nested=True):
+                mlflow.log_param("catalog", self.catalog)
+                mlflow.log_param("schema", self.schema)
+                mlflow.log_param("streaming", True)
 
-            messages = to_langchain_messages(request)
+                messages = to_langchain_messages(request)
 
-            item_id = str(uuid4())
-            aggregated_content = ""
+                item_id = str(uuid4())
+                aggregated_content = ""
 
-            for chunk in self.graph.stream({"messages": messages}, stream_mode="messages"):
-                if hasattr(chunk[0], "content") and chunk[0].content:
-                    delta = chunk[0].content
-                    aggregated_content += delta
-                    yield StreamEvent.text_delta(delta, item_id=item_id)
+                for chunk in self.graph.stream({"messages": messages}, stream_mode="messages"):
+                    if hasattr(chunk[0], "content") and chunk[0].content:
+                        delta = chunk[0].content
+                        aggregated_content += delta
+                        yield StreamEvent.text_delta(delta, item_id=item_id)
 
-            self.metrics.end_time = time.time()
+                metrics.end_time = time.time()
 
-            summary = self.metrics.get_summary()
-            for metric_name, metric_value in summary.items():
-                if isinstance(metric_value, (int, float)):
-                    mlflow.log_metric(metric_name, metric_value)
+                summary = metrics.get_summary()
+                for metric_name, metric_value in summary.items():
+                    if isinstance(metric_value, (int, float)):
+                        mlflow.log_metric(metric_name, metric_value)
 
-            yield StreamEvent.done(aggregated_content, item_id=item_id)
+                yield StreamEvent.done(aggregated_content, item_id=item_id)
+        finally:
+            self._request_ctx.reset(ctx_token)
+            self._request_metrics.set(None)

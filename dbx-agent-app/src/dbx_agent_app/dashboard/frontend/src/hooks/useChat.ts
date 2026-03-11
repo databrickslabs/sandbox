@@ -364,10 +364,16 @@ export function useChat(agentName: string, options?: UseChatOptions): UseChatRes
     }
   }, [sessionStorage.activeSession?.id]);
 
+  // Clean up highlight timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    };
+  }, []);
+
   const selectTrace = useCallback((traceId: string | null) => {
     setSelectedTraceId(traceId);
     if (traceId) {
-      // Find the trace and highlight its user message
       setTraces((prev) => {
         const trace = prev.find((t) => t.id === traceId);
         if (trace) {
@@ -458,20 +464,18 @@ export function useChat(agentName: string, options?: UseChatOptions): UseChatRes
         // Extract artifacts from tool results
         const newArtifacts = extractArtifacts(newToolCalls, parts);
 
-        setMessages((prev) => {
-          const updated = [...prev, agentMsg];
-          setToolCalls((prevTc) => {
-            const updatedTc = [...prevTc, ...newToolCalls];
-            setTraces((prevTr) => {
-              const updatedTr = [...prevTr, trace];
-              // Save session after state updates
-              setTimeout(() => saveCurrentSession(updated, updatedTc, updatedTr), 0);
-              return updatedTr;
-            });
-            return updatedTc;
-          });
-          return updated;
-        });
+        // Update all state and save session — avoid nesting setState calls
+        setMessages((prev) => [...prev, agentMsg]);
+        setToolCalls((prev) => [...prev, ...newToolCalls]);
+        setTraces((prev) => [...prev, trace]);
+        // Save with the values we already have (no stale closures needed)
+        setTimeout(() => {
+          saveCurrentSession(
+            [...messages, userMsg, agentMsg],
+            [...toolCalls, ...newToolCalls],
+            [...traces, trace],
+          );
+        }, 0);
 
         if (newArtifacts.length > 0) {
           setArtifacts((prev) => [...prev, ...newArtifacts]);
@@ -497,7 +501,7 @@ export function useChat(agentName: string, options?: UseChatOptions): UseChatRes
         setSending(false);
       }
     },
-    [agentName, sessionStorage.activeSession?.id],
+    [agentName, sessionStorage.activeSession?.id, saveCurrentSession, messages, toolCalls, traces],
   );
 
   const clear = useCallback(() => {
@@ -536,7 +540,7 @@ export function useChat(agentName: string, options?: UseChatOptions): UseChatRes
     setError(null);
     setSelectedTraceId(null);
     contextIdRef.current = null;
-  }, [sessionStorage.activeSession?.id, messages, toolCalls, traces]);
+  }, [sessionStorage.activeSession?.id, messages, toolCalls, traces, saveCurrentSession]);
 
   const handleSwitchSession = useCallback((sessionId: string) => {
     // Save current before switching
@@ -548,7 +552,7 @@ export function useChat(agentName: string, options?: UseChatOptions): UseChatRes
     setSelectedTraceId(null);
     setHighlightedMessageId(null);
     setError(null);
-  }, [sessionStorage.activeSession?.id, messages, toolCalls, traces]);
+  }, [sessionStorage.activeSession?.id, messages, toolCalls, traces, saveCurrentSession]);
 
   return {
     messages,

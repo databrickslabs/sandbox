@@ -267,7 +267,7 @@ export function RoutingPanel({ traces }: Props) {
         <RoutingCard
           key={trace.id}
           routing={trace.routing!}
-          turnIndex={traces.indexOf(trace)}
+          turnIndex={traces.findIndex((t) => t.id === trace.id)}
         />
       ))}
     </div>

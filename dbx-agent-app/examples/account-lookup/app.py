@@ -3,8 +3,6 @@ Account Lookup Agent — search and retrieve account profiles from UC.
 """
 
 import os
-if os.environ.get("DATABRICKS_CLIENT_ID"):
-    os.environ.pop("DATABRICKS_TOKEN", None)
 
 import json
 

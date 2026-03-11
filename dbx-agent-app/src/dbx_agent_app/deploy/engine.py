@@ -310,13 +310,20 @@ class DeployEngine:
         print(f"  Uploaded {file_count} files")
 
     def _merge_app_yaml(self, app_yaml_path: Path, env_vars: dict[str, str]) -> bytes:
-        """Merge env vars from agents.yaml into the agent's app.yaml."""
+        """Merge env vars from agents.yaml into the agent's app.yaml.
+
+        Preserves any env vars already defined in the agent's app.yaml,
+        with agents.yaml values taking precedence on conflict.
+        """
         app_config = yaml.safe_load(app_yaml_path.read_text()) or {}
-        # Build env list in app.yaml format: [{name: X, value: Y}, ...]
-        env_list = [{"name": k, "value": v} for k, v in env_vars.items()]
-        app_config["env"] = env_list
+        # Start with existing env vars from the agent's app.yaml
+        existing = {e["name"]: e["value"] for e in app_config.get("env", []) if "name" in e}
+        # Merge — agents.yaml overrides on conflict
+        existing.update(env_vars)
+        app_config["env"] = [{"name": k, "value": v} for k, v in existing.items()]
         merged = yaml.dump(app_config, default_flow_style=False, sort_keys=False)
-        logger.info("Merged %d env vars into app.yaml", len(env_vars))
+        logger.info("Merged %d env vars into app.yaml (%d from agent, %d from config)",
+                     len(existing), len(app_config.get("env", [])) - len(env_vars), len(env_vars))
         return merged.encode()
 
     def _deploy_app(self, app_name: str, workspace_path: str) -> None:

@@ -4,10 +4,7 @@ Campaign Supervisor — routes to campaign_insights or account_lookup via /invoc
 Proves multi-agent: LLM picks the right sub-agent, calls it over HTTP, returns the result.
 """
 
-# Clean up auth environment for Databricks Apps (OAuth vs PAT conflict)
 import os
-if os.environ.get("DATABRICKS_CLIENT_ID"):
-    os.environ.pop("DATABRICKS_TOKEN", None)
 
 import json
 import time

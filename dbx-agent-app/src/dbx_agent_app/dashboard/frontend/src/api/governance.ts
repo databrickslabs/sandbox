@@ -45,5 +45,7 @@ export function observeTrace(agentName: string, trace: Record<string, unknown>):
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ agent_name: agentName, trace }),
-  }).catch(() => {});
+  }).catch((err) => {
+    console.warn("observeTrace failed:", err);
+  });
 }

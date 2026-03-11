@@ -86,15 +86,38 @@ class UserContext(BaseModel):
         )
         return WorkspaceClient(config=cfg)
 
-    def as_forwarded_headers(self) -> Dict[str, str]:
+    # Trusted URL patterns for forwarding user tokens.
+    # Only forward access tokens to Databricks-hosted endpoints.
+    TRUSTED_DOMAINS = (
+        ".cloud.databricks.com",
+        ".azuredatabricks.net",
+        ".databricks.azure.us",
+        ".databricks.azure.cn",
+        ".gcp.databricks.com",
+    )
+
+    def as_forwarded_headers(self, target_url: str | None = None) -> Dict[str, str]:
         """
         Build X-Forwarded-* headers for forwarding user identity to downstream agents.
+
+        Args:
+            target_url: The URL tokens will be sent to. If provided and the domain
+                is not a trusted Databricks domain, the access token is omitted
+                to prevent token exfiltration via spoofed agent URLs.
 
         Returns:
             Dict of headers to include in agent-to-agent HTTP calls.
         """
         headers = {}
-        if self.access_token:
+
+        # Only forward access token to trusted Databricks domains
+        send_token = True
+        if target_url and self.access_token:
+            from urllib.parse import urlparse
+            hostname = urlparse(target_url).hostname or ""
+            send_token = any(hostname.endswith(d) for d in self.TRUSTED_DOMAINS)
+
+        if self.access_token and send_token:
             headers["X-Forwarded-Access-Token"] = self.access_token
         if self.email:
             headers["X-Forwarded-Email"] = self.email
