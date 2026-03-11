@@ -1,4 +1,5 @@
 import { useGovernance } from "../../hooks/useGovernance";
+import { useObservedData } from "../../hooks/useChatObservability";
 import type { DeclaredResource } from "../../types/lineage";
 import { Badge } from "../common/Badge";
 import { Spinner } from "../common/Spinner";
@@ -41,6 +42,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function GovernanceTab({ agentName }: Props) {
   const { status, loading, error } = useGovernance(agentName);
+  const observed = useObservedData(agentName);
 
   if (loading) {
     return (
@@ -154,14 +156,87 @@ export function GovernanceTab({ agentName }: Props) {
       )}
 
       {/* No connections message */}
-      {declared_resources.length === 0 && (!connected_tables || connected_tables.length === 0) && (
+      {declared_resources.length === 0 && (!connected_tables || connected_tables.length === 0) && !observed?.turnCount && (
         <div className="section">
           <h3>UC Asset Connections</h3>
           <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
             No UC tables or functions connected to this agent. Start the dashboard
             with <code className="governance-path">--catalog your_catalog</code> to
-            enable UC asset discovery.
+            enable UC asset discovery, or chat with the agent to observe runtime connections.
           </p>
+        </div>
+      )}
+
+      {/* Observed at runtime from chat interactions */}
+      {observed && observed.turnCount > 0 && (
+        <div className="section">
+          <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            Observed at Runtime
+            <Badge label={`${observed.turnCount} turn${observed.turnCount > 1 ? "s" : ""}`} variant="blue" />
+          </h3>
+
+          {observed.tables.length > 0 && (
+            <div style={{ marginBottom: "1rem" }}>
+              <h4 style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
+                Tables Accessed
+              </h4>
+              <table className="governance-table">
+                <thead>
+                  <tr>
+                    <th>Table</th>
+                    <th>Relationship</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {observed.tables.map((t) => (
+                    <tr key={t}>
+                      <td><code>{t}</code></td>
+                      <td><Badge label="observed reads" variant="green" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {observed.agents.length > 0 && (
+            <div style={{ marginBottom: "1rem" }}>
+              <h4 style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
+                Sub-Agents Called
+              </h4>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                {observed.agents.map((a) => (
+                  <Badge key={a} label={a} variant="green" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {observed.sqlQueries.length > 0 && (
+            <div>
+              <h4 style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
+                SQL Queries ({observed.sqlQueries.length})
+              </h4>
+              {observed.sqlQueries.map((q, i) => (
+                <details key={i} style={{ marginBottom: "0.5rem" }}>
+                  <summary style={{ color: "var(--muted)", fontSize: "0.8rem", cursor: "pointer" }}>
+                    {q.row_count} rows · {q.duration_ms}ms · {q.warehouse_id?.slice(0, 8)}...
+                  </summary>
+                  <pre style={{
+                    marginTop: "0.25rem",
+                    padding: "0.5rem",
+                    background: "#0d1117",
+                    border: "1px solid var(--border)",
+                    borderRadius: "4px",
+                    fontSize: "0.75rem",
+                    overflow: "auto",
+                  }}>
+                    {q.statement}
+                  </pre>
+                </details>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

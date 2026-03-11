@@ -176,6 +176,7 @@ class AgentResponse(BaseModel):
     """
 
     output: List[OutputItem] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
     def text(cls, text: str, item_id: Optional[str] = None) -> AgentResponse:
@@ -204,8 +205,11 @@ class AgentResponse(BaseModel):
         return cls.text(text, item_id=item_id)
 
     def to_wire(self) -> Dict[str, Any]:
-        """Serialize to the wire protocol dict."""
-        return self.model_dump()
+        """Serialize to the wire protocol dict, including _metadata when present."""
+        wire = self.model_dump(exclude={"metadata"})
+        if self.metadata:
+            wire["_metadata"] = self.metadata
+        return wire
 
 
 # ---------------------------------------------------------------------------

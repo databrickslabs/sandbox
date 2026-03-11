@@ -6,7 +6,6 @@ from dbx_agent_app import app_agent, AgentRequest, AgentResponse
     name="hello",
     description="A minimal greeting agent",
     capabilities=["greetings"],
-    auto_register=False,
     enable_mcp=True,
 )
 async def hello(request: AgentRequest) -> str:

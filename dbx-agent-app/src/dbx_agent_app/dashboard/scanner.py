@@ -4,6 +4,7 @@ Dashboard scanner — wraps AgentDiscovery + A2AClient with caching and MCP prox
 
 import asyncio
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from typing import AsyncIterator, Dict, Any, List, Optional
@@ -68,21 +69,29 @@ class DashboardScanner:
                 endpoint_url, auth_token=self.workspace_token
             )
 
-    async def proxy_mcp(self, endpoint_url: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def proxy_mcp(
+        self,
+        endpoint_url: str,
+        payload: Dict[str, Any],
+        *,
+        auth_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Forward a JSON-RPC request to an agent's MCP endpoint.
 
         Args:
             endpoint_url: Agent base URL
             payload: Complete JSON-RPC 2.0 request body
+            auth_token: Override token (e.g. user's forwarded access token)
 
         Returns:
             JSON-RPC response from the agent
         """
         mcp_url = endpoint_url.rstrip("/") + "/api/mcp"
         headers = {"Content-Type": "application/json"}
-        if self.workspace_token:
-            headers["Authorization"] = f"Bearer {self.workspace_token}"
+        token = auth_token or self.workspace_token
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
 
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as http:
             response = await http.post(mcp_url, json=payload, headers=headers)
@@ -262,6 +271,43 @@ class DashboardScanner:
         resp["_trace"] = trace
         return resp
 
+    # Pattern: *Routed to **agent_name*** (123ms)
+    _ROUTING_RE = re.compile(
+        r"\*Routed to \*\*(\w+)\*\*\*\s*\((\d+)ms\)",
+    )
+
+    @staticmethod
+    def _extract_routing_from_text(parts: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Parse routing hints from supervisor-style response text."""
+        text = ""
+        for p in parts:
+            if isinstance(p, dict) and p.get("text"):
+                text = p["text"]
+                break
+        if not text:
+            return None
+
+        m = DashboardScanner._ROUTING_RE.search(text)
+        if not m:
+            return None
+
+        sub_agent = m.group(1)
+        subagent_ms = int(m.group(2))
+
+        # Extract UC-style table references (catalog.schema.table)
+        tables = list(dict.fromkeys(
+            re.findall(r"\b\w+\.\w+\.\w+\b", text)
+        ))
+        # Filter to likely UC tables (exclude common false positives)
+        tables = [t for t in tables if not t.startswith(("e.g.", "i.e."))]
+
+        return {
+            "sub_agent": sub_agent,
+            "tables_accessed": tables,
+            "timing": {"subagent_ms": subagent_ms},
+            "data_source": "text_parsed",
+        }
+
     async def call_invocations(
         self,
         endpoint_url: str,
@@ -302,17 +348,40 @@ class DashboardScanner:
             import json as _json
             parts = [{"text": _json.dumps(result, indent=2)}]
 
-        return {
-            "parts": parts,
-            "_trace": {
-                "request_sent_at": request_sent_at,
-                "response_received_at": datetime.now(timezone.utc).isoformat(),
-                "latency_ms": latency_ms,
-                "protocol": "invocations",
-                "request_payload": payload,
-                "response_payload": result,
-            },
+        trace: Dict[str, Any] = {
+            "request_sent_at": request_sent_at,
+            "response_received_at": datetime.now(timezone.utc).isoformat(),
+            "latency_ms": latency_ms,
+            "protocol": "invocations",
+            "request_payload": payload,
+            "response_payload": result,
         }
+
+        # Build routing from structured _metadata (from trace_sql/trace_table/trace_subagent)
+        agent_meta = result.get("_metadata", {})
+        routing: Dict[str, Any] = {}
+
+        if isinstance(agent_meta, dict) and agent_meta:
+            if agent_meta.get("tables_accessed"):
+                routing["tables_accessed"] = agent_meta["tables_accessed"]
+            if agent_meta.get("sub_agents"):
+                routing["sub_agent"] = agent_meta["sub_agents"][0]
+            if agent_meta.get("sql_queries"):
+                routing["sql_queries"] = agent_meta["sql_queries"]
+            if agent_meta.get("llm_calls"):
+                routing["llm_calls"] = agent_meta["llm_calls"]
+            routing["data_source"] = "agent_metadata"
+
+        # Fallback: parse routing hints from response text
+        if not routing:
+            text_routing = self._extract_routing_from_text(parts)
+            if text_routing:
+                routing = text_routing
+
+        if routing:
+            trace["routing"] = routing
+
+        return {"parts": parts, "_trace": trace}
 
     async def stream_a2a_message(
         self,

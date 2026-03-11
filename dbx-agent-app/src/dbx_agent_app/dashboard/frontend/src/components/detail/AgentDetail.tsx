@@ -12,6 +12,7 @@ import { LineageTab } from "./LineageTab";
 import { GovernanceTab } from "./GovernanceTab";
 import { EvaluateTab } from "./EvaluateTab";
 import { Badge } from "../common/Badge";
+import { ChatObservabilityProvider } from "../../hooks/useChatObservability";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -49,7 +50,7 @@ export function AgentDetail() {
     : [];
 
   return (
-    <>
+    <ChatObservabilityProvider>
       <div className="detail-header">
         <Link to="/">&larr; All agents</Link>
         <h2>{agent.name}</h2>
@@ -75,6 +76,7 @@ export function AgentDetail() {
           card={card}
           loading={cardLoading}
           error={cardError}
+          tools={mcp.tools}
         />
       )}
       {activeTab === "chat" && <ChatTab agentName={agent.name} />}
@@ -84,6 +86,7 @@ export function AgentDetail() {
           loading={mcp.toolsLoading}
           error={mcp.toolsError}
           onLoad={mcp.loadTools}
+          agentName={agent.name}
         />
       )}
       {activeTab === "lineage" && <LineageTab agentName={agent.name} />}
@@ -97,6 +100,6 @@ export function AgentDetail() {
           onSendRaw={mcp.sendRaw}
         />
       )}
-    </>
+    </ChatObservabilityProvider>
   );
 }

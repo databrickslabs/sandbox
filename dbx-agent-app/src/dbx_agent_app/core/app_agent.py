@@ -29,6 +29,7 @@ from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Union
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from .trace_context import reset_trace_context, collect_trace_metadata
 from .types import AgentRequest, AgentResponse, InputItem, StreamEvent, UserContext
 
 logger = logging.getLogger(__name__)
@@ -218,11 +219,18 @@ class AppAgent:
                 )
 
             # Non-streaming: call traced handler and coerce response
+            reset_trace_context()
             result = traced(agent_request)
             if inspect.isawaitable(result):
                 result = await result
 
             response = agent._coerce_response(result)
+
+            # Merge any trace_sql/trace_table/trace_subagent calls into metadata
+            trace_meta = collect_trace_metadata()
+            if trace_meta:
+                response.metadata.update(trace_meta)
+
             return response.to_wire()
 
     def _setup_agent_card(self, fastapi_app: FastAPI):

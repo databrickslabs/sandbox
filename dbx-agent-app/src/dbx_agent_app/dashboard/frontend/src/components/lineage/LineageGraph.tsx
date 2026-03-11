@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import type { LineageGraph as LineageGraphData, LineageNode, NodeType, RelationshipType } from "../../types/lineage";
 import { LineageLegend } from "./LineageLegend";
 
-/* Layout constants */
-const NODE_W = 180;
-const NODE_H = 48;
-const LAYER_GAP = 260;
-const NODE_GAP = 72;
-const PADDING = 60;
+/* Layout constants — vertical (top-down) orientation */
+const NODE_W = 140;
+const NODE_H = 44;
+const COL_ROW_H = 18;
+const LAYER_GAP = 100;
+const NODE_GAP = 160;
+const PADDING = 40;
 
 /* Color maps */
 const NODE_COLORS: Record<NodeType, string> = {
@@ -47,6 +48,7 @@ interface LayoutNode {
   node: LineageNode;
   x: number;
   y: number;
+  h: number;
 }
 
 interface Props {
@@ -54,8 +56,23 @@ interface Props {
   onNodeClick?: (nodeId: string) => void;
 }
 
+type ColumnInfo = Array<{ name: string; type: string }>;
+
+function getNodeColumns(node: LineageNode): ColumnInfo {
+  const cols = node.metadata?.columns;
+  if (!Array.isArray(cols)) return [];
+  return cols as ColumnInfo;
+}
+
+function getNodeHeight(node: LineageNode, expanded: Set<string>): number {
+  if (node.node_type !== "table" || !expanded.has(node.id)) return NODE_H;
+  const cols = getNodeColumns(node);
+  if (cols.length === 0) return NODE_H;
+  return NODE_H + cols.length * COL_ROW_H + 8;
+}
+
 /**
- * Assign depths via BFS from root (or leftmost agents if no root).
+ * Assign depths via BFS from root (or topmost agents if no root).
  * Returns a map of nodeId → depth.
  */
 function assignDepths(graph: LineageGraphData): Map<string, number> {
@@ -69,7 +86,6 @@ function assignDepths(graph: LineageGraphData): Map<string, number> {
     adj.get(e.source)!.push(e.target);
   }
 
-  // Depth priority: agent=-1 if connected from root, tools=1, uc_function=2, table=2, model=1
   const typeDepthHint: Record<NodeType, number> = {
     agent: -1,
     tool: 1,
@@ -78,14 +94,12 @@ function assignDepths(graph: LineageGraphData): Map<string, number> {
     model: 1,
   };
 
-  // Start BFS from root or all agents
   const queue: Array<{ id: string; depth: number }> = [];
 
   if (graph.root_id && nodeById.has(graph.root_id)) {
     queue.push({ id: graph.root_id, depth: 0 });
     depths.set(graph.root_id, 0);
   } else {
-    // No root — start from all agents at depth 0
     for (const n of graph.nodes) {
       if (n.node_type === "agent") {
         queue.push({ id: n.id, depth: 0 });
@@ -101,7 +115,6 @@ function assignDepths(graph: LineageGraphData): Map<string, number> {
       if (!depths.has(nid)) {
         const targetNode = nodeById.get(nid);
         const hint = targetNode ? typeDepthHint[targetNode.node_type] : 1;
-        // calls_agent goes to -1 from root, everything else goes right
         const isAgentCall = targetNode?.node_type === "agent";
         const nextDepth = isAgentCall ? depth - 1 : depth + Math.abs(hint);
         depths.set(nid, nextDepth);
@@ -110,7 +123,6 @@ function assignDepths(graph: LineageGraphData): Map<string, number> {
     }
   }
 
-  // Assign unvisited nodes at depth +3
   for (const n of graph.nodes) {
     if (!depths.has(n.id)) {
       depths.set(n.id, 3);
@@ -120,7 +132,10 @@ function assignDepths(graph: LineageGraphData): Map<string, number> {
   return depths;
 }
 
-function computeLayout(graph: LineageGraphData): LayoutNode[] {
+function computeLayout(
+  graph: LineageGraphData,
+  expanded: Set<string>,
+): LayoutNode[] {
   if (graph.nodes.length === 0) return [];
 
   const depths = assignDepths(graph);
@@ -133,26 +148,40 @@ function computeLayout(graph: LineageGraphData): LayoutNode[] {
     layers.get(d)!.push(n);
   }
 
-  // Sort depth keys
   const sortedDepths = [...layers.keys()].sort((a, b) => a - b);
-  const minDepth = sortedDepths[0] ?? 0;
 
   const result: LayoutNode[] = [];
 
+  // Find max layer width to center all layers consistently
+  let maxLayerWidth = 0;
+  for (const depth of sortedDepths) {
+    const count = layers.get(depth)!.length;
+    const w = count * NODE_W + (count - 1) * (NODE_GAP - NODE_W);
+    if (w > maxLayerWidth) maxLayerWidth = w;
+  }
+
+  // Accumulate y position per row, accounting for tallest node in previous rows
+  let currentY = PADDING;
   for (const depth of sortedDepths) {
     const nodesInLayer = layers.get(depth)!;
-    const col = depth - minDepth;
-    const x = PADDING + col * LAYER_GAP;
-    const totalHeight = nodesInLayer.length * NODE_H + (nodesInLayer.length - 1) * (NODE_GAP - NODE_H);
-    const startY = PADDING + (300 - totalHeight / 2); // center vertically around 300px
+    const totalWidth =
+      nodesInLayer.length * NODE_W +
+      (nodesInLayer.length - 1) * (NODE_GAP - NODE_W);
+    const startX = PADDING + (maxLayerWidth - totalWidth) / 2;
 
+    let maxH = NODE_H;
     nodesInLayer.forEach((node, i) => {
+      const h = getNodeHeight(node, expanded);
+      if (h > maxH) maxH = h;
       result.push({
         node,
-        x,
-        y: startY + i * NODE_GAP,
+        x: startX + i * NODE_GAP,
+        y: currentY,
+        h,
       });
     });
+
+    currentY += maxH + LAYER_GAP - NODE_H;
   }
 
   return result;
@@ -160,11 +189,16 @@ function computeLayout(graph: LineageGraphData): LayoutNode[] {
 
 export function LineageGraphView({ graph, onNodeClick }: Props) {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
-  const layout = useMemo(() => computeLayout(graph), [graph]);
+  const layout = useMemo(
+    () => computeLayout(graph, expandedNodes),
+    [graph, expandedNodes],
+  );
   const posMap = useMemo(
-    () => new Map(layout.map((l) => [l.node.id, { x: l.x, y: l.y }])),
+    () =>
+      new Map(layout.map((l) => [l.node.id, { x: l.x, y: l.y, h: l.h }])),
     [layout],
   );
 
@@ -178,10 +212,26 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
 
   // Compute viewBox
   const maxX = Math.max(...layout.map((l) => l.x)) + NODE_W + PADDING;
-  const maxY = Math.max(...layout.map((l) => l.y)) + NODE_H + PADDING;
+  const maxY = Math.max(...layout.map((l) => l.y + l.h)) + PADDING;
   const viewBox = `0 0 ${maxX} ${maxY}`;
 
-  const handleNodeClick = (nodeId: string, nodeType: NodeType) => {
+  const toggleExpand = (nodeId: string) => {
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  };
+
+  const handleNodeClick = (nodeId: string, nodeType: NodeType, hasColumns: boolean) => {
+    if (nodeType === "table" && hasColumns) {
+      toggleExpand(nodeId);
+      return;
+    }
     if (onNodeClick) {
       onNodeClick(nodeId);
       return;
@@ -197,7 +247,8 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
       <svg
         viewBox={viewBox}
         width="100%"
-        style={{ minHeight: 300, maxHeight: 600, background: "#111827", borderRadius: 8 }}
+        preserveAspectRatio="xMidYMin meet"
+        style={{ background: "#111827", borderRadius: 8 }}
       >
         {/* Arrow markers */}
         <defs>
@@ -223,21 +274,20 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
           const tgt = posMap.get(edge.target);
           if (!src || !tgt) return null;
 
-          const x1 = src.x + NODE_W;
-          const y1 = src.y + NODE_H / 2;
-          const x2 = tgt.x;
-          const y2 = tgt.y + NODE_H / 2;
+          // Vertical layout: edges go from bottom of source to top of target
+          const sx = src.x + NODE_W / 2;
+          const sy = src.y + src.h;
+          const tx = tgt.x + NODE_W / 2;
+          const ty = tgt.y;
 
-          // Handle left-going edges (when target is to the left)
-          const goingLeft = x2 < x1;
-          const sx = goingLeft ? src.x : x1;
-          const tx = goingLeft ? tgt.x + NODE_W : x2;
-          const sy = y1;
-          const ty = y2;
+          // Handle upward edges (when target is above source)
+          const goingUp = ty < sy;
+          const startY = goingUp ? src.y : sy;
+          const endY = goingUp ? tgt.y + tgt.h : ty;
 
-          const cpOffset = Math.abs(tx - sx) * 0.4;
-          const cp1x = goingLeft ? sx - cpOffset : sx + cpOffset;
-          const cp2x = goingLeft ? tx + cpOffset : tx - cpOffset;
+          const cpOffset = Math.abs(endY - startY) * 0.4;
+          const cp1y = goingUp ? startY - cpOffset : startY + cpOffset;
+          const cp2y = goingUp ? endY + cpOffset : endY - cpOffset;
 
           const color = EDGE_COLORS[edge.relationship] ?? "#6b7280";
           const dashed = EDGE_DASHED[edge.relationship];
@@ -250,7 +300,7 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
           return (
             <path
               key={i}
-              d={`M${sx},${sy} C${cp1x},${sy} ${cp2x},${ty} ${tx},${ty}`}
+              d={`M${sx},${startY} C${sx},${cp1y} ${tx},${cp2y} ${tx},${endY}`}
               fill="none"
               stroke={color}
               strokeWidth={isObserved ? 2 : 1.5}
@@ -264,10 +314,13 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
         })}
 
         {/* Nodes */}
-        {layout.map(({ node, x, y }) => {
+        {layout.map(({ node, x, y, h }) => {
           const color = NODE_COLORS[node.node_type] ?? "#6b7280";
           const isHovered = hoveredNode === node.id;
           const isRoot = node.id === graph.root_id;
+          const columns = getNodeColumns(node);
+          const hasColumns = columns.length > 0;
+          const isExpanded = expandedNodes.has(node.id);
 
           return (
             <g
@@ -275,25 +328,25 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
               transform={`translate(${x}, ${y})`}
               onMouseEnter={() => setHoveredNode(node.id)}
               onMouseLeave={() => setHoveredNode(null)}
-              onClick={() => handleNodeClick(node.id, node.node_type)}
-              style={{ cursor: node.node_type === "agent" ? "pointer" : "default" }}
+              onClick={() => handleNodeClick(node.id, node.node_type, hasColumns)}
+              style={{
+                cursor:
+                  hasColumns || node.node_type === "agent"
+                    ? "pointer"
+                    : "default",
+              }}
             >
               {/* Background rect */}
               <rect
                 width={NODE_W}
-                height={NODE_H}
+                height={h}
                 rx={6}
                 fill={isHovered ? "#1f2937" : "#111827"}
                 stroke={isRoot ? color : "#374151"}
                 strokeWidth={isRoot ? 2 : 1}
               />
               {/* Left color bar */}
-              <rect
-                width={4}
-                height={NODE_H}
-                rx={2}
-                fill={color}
-              />
+              <rect width={4} height={h} rx={2} fill={color} />
               {/* Type label */}
               <text
                 x={14}
@@ -313,17 +366,75 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
                 fill="#f3f4f6"
                 fontFamily="sans-serif"
               >
-                {node.name.length > 20 ? node.name.slice(0, 18) + "..." : node.name}
+                {node.name.length > 16
+                  ? node.name.slice(0, 14) + "..."
+                  : node.name}
               </text>
 
-              {/* Tooltip on hover */}
-              {isHovered && (
+              {/* Expand chevron for tables with columns */}
+              {hasColumns && (
+                <text
+                  x={NODE_W - 16}
+                  y={28}
+                  fontSize={12}
+                  fill="#6b7280"
+                  fontFamily="sans-serif"
+                  textAnchor="middle"
+                >
+                  {isExpanded ? "▾" : "▸"}
+                </text>
+              )}
+
+              {/* Column rows when expanded */}
+              {isExpanded &&
+                columns.map((col, ci) => {
+                  const cy = NODE_H + ci * COL_ROW_H + 4;
+                  return (
+                    <g key={col.name}>
+                      {/* Separator line above first column */}
+                      {ci === 0 && (
+                        <line
+                          x1={8}
+                          y1={NODE_H - 1}
+                          x2={NODE_W - 8}
+                          y2={NODE_H - 1}
+                          stroke="#374151"
+                          strokeWidth={0.5}
+                        />
+                      )}
+                      <text
+                        x={14}
+                        y={cy + 12}
+                        fontSize={9}
+                        fill="#d1d5db"
+                        fontFamily="monospace"
+                      >
+                        {col.name.length > 14
+                          ? col.name.slice(0, 12) + "…"
+                          : col.name}
+                      </text>
+                      <text
+                        x={NODE_W - 8}
+                        y={cy + 12}
+                        fontSize={8}
+                        fill="#6b7280"
+                        fontFamily="monospace"
+                        textAnchor="end"
+                      >
+                        {col.type}
+                      </text>
+                    </g>
+                  );
+                })}
+
+              {/* Tooltip on hover (only when collapsed) */}
+              {isHovered && !isExpanded && (
                 <g>
                   <rect
                     x={0}
                     y={NODE_H + 4}
                     width={Math.max(NODE_W, node.full_name.length * 7 + 16)}
-                    height={28}
+                    height={hasColumns ? 44 : 28}
                     rx={4}
                     fill="#1f2937"
                     stroke="#374151"
@@ -337,6 +448,17 @@ export function LineageGraphView({ graph, onNodeClick }: Props) {
                   >
                     {node.full_name}
                   </text>
+                  {hasColumns && (
+                    <text
+                      x={8}
+                      y={NODE_H + 38}
+                      fontSize={9}
+                      fill="#6b7280"
+                      fontFamily="sans-serif"
+                    >
+                      {columns.length} columns — click to expand
+                    </text>
+                  )}
                 </g>
               )}
             </g>

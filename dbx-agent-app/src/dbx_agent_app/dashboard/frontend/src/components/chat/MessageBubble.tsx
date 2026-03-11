@@ -1,3 +1,5 @@
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../../types";
 
 interface Props {
@@ -22,7 +24,15 @@ export function MessageBubble({ message, isHighlighted }: Props) {
     >
       <div className="role-label">{isUser ? "You" : "Agent"}</div>
       <div className="content">
-        {textContent && <div>{textContent}</div>}
+        {textContent && (
+          isUser ? (
+            <div>{textContent}</div>
+          ) : (
+            <div className="markdown-body">
+              <Markdown remarkPlugins={[remarkGfm]}>{textContent}</Markdown>
+            </div>
+          )
+        )}
         {toolCallParts.length > 0 && (
           <div style={{ marginTop: textContent ? "0.5rem" : 0 }}>
             {toolCallParts.map((p) => {

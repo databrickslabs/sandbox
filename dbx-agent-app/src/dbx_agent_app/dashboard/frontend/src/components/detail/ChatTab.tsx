@@ -1,4 +1,5 @@
 import { useChat } from "../../hooks/useChat";
+import { useChatObservability } from "../../hooks/useChatObservability";
 import { MessageList } from "../chat/MessageList";
 import { MessageInput } from "../chat/MessageInput";
 import { SessionBar } from "../chat/SessionBar";
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function ChatTab({ agentName }: Props) {
+  const { publish } = useChatObservability();
+
   const {
     messages,
     toolCalls,
@@ -27,7 +30,9 @@ export function ChatTab({ agentName }: Props) {
     switchSession,
     deleteSession,
     renameSession,
-  } = useChat(agentName);
+  } = useChat(agentName, {
+    onTrace: (trace, tcs) => publish(agentName, trace, tcs),
+  });
 
   return (
     <>
@@ -67,6 +72,7 @@ export function ChatTab({ agentName }: Props) {
           <MessageInput onSend={send} disabled={sending} />
         </div>
         <Inspector
+          agentName={agentName}
           toolCalls={toolCalls}
           traces={traces}
           artifacts={artifacts}

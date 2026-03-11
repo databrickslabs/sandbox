@@ -26,6 +26,10 @@ from .core import (
     OutputTextContent,
     StreamEvent,
     update_trace,
+    trace_sql,
+    trace_table,
+    trace_subagent,
+    trace_llm,
     UserContext,
 )
 from .discovery import AgentDiscovery, DiscoveredAgent, AgentDiscoveryResult, A2AClient, A2AClientError
@@ -54,6 +58,10 @@ __all__ = [
     "UserContext",
     # Tracing
     "update_trace",
+    "trace_sql",
+    "trace_table",
+    "trace_subagent",
+    "trace_llm",
     # Helpers
     "add_agent_card",
     "add_mcp_endpoints",

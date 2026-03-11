@@ -4,10 +4,12 @@ import { ToolTimeline } from "./ToolTimeline";
 import { TracePanel } from "./TracePanel";
 import { ArtifactsPanel } from "./ArtifactsPanel";
 import { RoutingPanel } from "./RoutingPanel";
+import { LineagePanel } from "./LineagePanel";
 
-type InspectorTab = "routing" | "trace" | "tools" | "artifacts";
+type InspectorTab = "lineage" | "routing" | "trace" | "tools" | "artifacts";
 
 interface Props {
+  agentName: string;
   toolCalls: ToolCallEntry[];
   traces: TraceTurn[];
   artifacts: Artifact[];
@@ -16,6 +18,7 @@ interface Props {
 }
 
 export function Inspector({
+  agentName,
   toolCalls,
   traces,
   artifacts,
@@ -23,11 +26,21 @@ export function Inspector({
   onSelectTrace,
 }: Props) {
   const routingCount = traces.filter((t) => t.routing).length;
-  const [tab, setTab] = useState<InspectorTab>(routingCount > 0 ? "routing" : "trace");
+  const hasLineage = traces.some((t) => t.routing);
+  const [tab, setTab] = useState<InspectorTab>(hasLineage ? "lineage" : "trace");
 
   return (
     <div className="inspector-panel">
       <div className="inspector-tabs">
+        <button
+          className={`inspector-tab ${tab === "lineage" ? "active" : ""}`}
+          onClick={() => setTab("lineage")}
+        >
+          Lineage
+          {hasLineage && (
+            <span className="inspector-badge">{routingCount}</span>
+          )}
+        </button>
         <button
           className={`inspector-tab ${tab === "routing" ? "active" : ""}`}
           onClick={() => setTab("routing")}
@@ -67,6 +80,7 @@ export function Inspector({
       </div>
 
       <div className="inspector-content">
+        {tab === "lineage" && <LineagePanel traces={traces} agentName={agentName} />}
         {tab === "routing" && <RoutingPanel traces={traces} />}
         {tab === "trace" && (
           <TracePanel

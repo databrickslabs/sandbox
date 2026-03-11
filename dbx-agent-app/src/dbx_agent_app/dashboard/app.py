@@ -74,12 +74,15 @@ def create_dashboard_app(
 
     @asynccontextmanager
     async def lifespan(app):
-        # Initial scan on startup
-        try:
-            agents = await scanner.scan()
-            logger.info("Startup scan found %d agent(s)", len(agents))
-        except Exception as e:
-            logger.warning("Startup scan failed: %s", e)
+        # Fire initial scan as a background task so the server starts immediately
+        async def _initial_scan():
+            try:
+                agents = await scanner.scan()
+                logger.info("Startup scan found %d agent(s)", len(agents))
+            except Exception as e:
+                logger.warning("Startup scan failed: %s", e)
+
+        init_task = asyncio.create_task(_initial_scan())
 
         # Start background scan task if interval > 0
         bg_task = None
@@ -89,12 +92,13 @@ def create_dashboard_app(
 
         yield
 
-        if bg_task:
-            bg_task.cancel()
-            try:
-                await bg_task
-            except asyncio.CancelledError:
-                pass
+        for task in [init_task, bg_task]:
+            if task and not task.done():
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
     app = FastAPI(
         title="Agent Platform",
@@ -144,7 +148,11 @@ def create_dashboard_app(
 
         try:
             payload = await request.json()
-            result = await scanner.proxy_mcp(agent.endpoint_url, payload)
+            # Prefer user's forwarded token for cross-app auth
+            user_token = request.headers.get("x-forwarded-access-token")
+            result = await scanner.proxy_mcp(
+                agent.endpoint_url, payload, auth_token=user_token,
+            )
             return result
         except Exception as e:
             return JSONResponse(

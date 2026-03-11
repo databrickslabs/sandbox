@@ -10,9 +10,11 @@ function formatMs(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function DataSourceBadge({ source }: { source: string }) {
+function DataSourceBadge({ source }: { source?: string }) {
   const colors: Record<string, { bg: string; fg: string; label: string }> = {
     live: { bg: "rgba(34, 197, 94, 0.15)", fg: "var(--green)", label: "LIVE" },
+    agent_metadata: { bg: "rgba(34, 197, 94, 0.15)", fg: "var(--green)", label: "AGENT TRACE" },
+    text_parsed: { bg: "rgba(234, 179, 8, 0.15)", fg: "var(--yellow)", label: "TEXT PARSED" },
     demo_fallback: {
       bg: "rgba(234, 179, 8, 0.15)",
       fg: "var(--yellow)",
@@ -24,7 +26,7 @@ function DataSourceBadge({ source }: { source: string }) {
       label: "LLM DIRECT",
     },
   };
-  const c = colors[source] ?? colors["live"];
+  const c = colors[source ?? "live"] ?? colors["live"];
   return (
     <span
       className="routing-badge"
@@ -35,7 +37,7 @@ function DataSourceBadge({ source }: { source: string }) {
   );
 }
 
-function TimingBar({ timing }: { timing: RoutingInfo["timing"] }) {
+function TimingBar({ timing }: { timing: NonNullable<RoutingInfo["timing"]> }) {
   const total = timing.total_ms || 1;
   const networkMs = timing.network_ms ?? 0;
   const routingPct = (timing.routing_ms / total) * 100;
@@ -112,9 +114,11 @@ function SqlQueryCard({ query, index }: { query: SqlQueryTrace; index: number })
           <span className="routing-sql-sep" />
           <span className="routing-sql-duration">{formatMs(query.duration_ms)}</span>
           <span className="routing-sql-sep" />
+          {query.warehouse_id && (
           <span className="routing-sql-wh" title={query.warehouse_id}>
             wh:{query.warehouse_id.slice(0, 8)}
           </span>
+          )}
         </div>
         <span className="routing-sql-expand">{expanded ? "▼" : "▶"}</span>
       </div>
@@ -123,7 +127,7 @@ function SqlQueryCard({ query, index }: { query: SqlQueryTrace; index: number })
         <div className="routing-sql-detail">
           <div className="routing-sql-statement">{query.statement}</div>
 
-          {query.parameters.length > 0 && (
+          {query.parameters && query.parameters.length > 0 && (
             <div className="routing-sql-params">
               <span className="routing-sql-params-label">Parameters:</span>
               {query.parameters.map((p, i) => (
@@ -136,7 +140,7 @@ function SqlQueryCard({ query, index }: { query: SqlQueryTrace; index: number })
             </div>
           )}
 
-          {query.columns.length > 0 && (
+          {query.columns && query.columns.length > 0 && (
             <div className="routing-sql-schema">
               <span className="routing-sql-params-label">Schema:</span>
               <div className="routing-sql-columns">
@@ -171,6 +175,7 @@ function RoutingCard({ routing, turnIndex }: { routing: RoutingInfo; turnIndex: 
       </div>
 
       {/* Routing decision */}
+      {routing.routing_decision && (
       <div className="routing-decision-row">
         <div className="routing-decision-model">
           <span className="routing-label">Model</span>
@@ -183,6 +188,7 @@ function RoutingCard({ routing, turnIndex }: { routing: RoutingInfo; turnIndex: 
           </span>
         </div>
       </div>
+      )}
 
       {/* Agent endpoint (MCP target) */}
       {routing.agent_endpoint && (
@@ -195,7 +201,7 @@ function RoutingCard({ routing, turnIndex }: { routing: RoutingInfo; turnIndex: 
       )}
 
       {/* Keywords */}
-      {routing.keywords_extracted.length > 0 && (
+      {routing.keywords_extracted && routing.keywords_extracted.length > 0 && (
         <div className="routing-keywords">
           <span className="routing-label">Keywords</span>
           <div className="routing-keyword-list">
@@ -207,7 +213,7 @@ function RoutingCard({ routing, turnIndex }: { routing: RoutingInfo; turnIndex: 
       )}
 
       {/* Tables accessed */}
-      {routing.tables_accessed.length > 0 && (
+      {routing.tables_accessed && routing.tables_accessed.length > 0 && (
         <div className="routing-tables">
           <span className="routing-label">Tables</span>
           <div className="routing-table-list">
@@ -222,7 +228,7 @@ function RoutingCard({ routing, turnIndex }: { routing: RoutingInfo; turnIndex: 
       {routing.timing && <TimingBar timing={routing.timing} />}
 
       {/* SQL queries (expandable) */}
-      {routing.sql_queries.length > 0 && (
+      {routing.sql_queries && routing.sql_queries.length > 0 && (
         <div className="routing-sql-section">
           <button
             className="routing-sql-toggle"

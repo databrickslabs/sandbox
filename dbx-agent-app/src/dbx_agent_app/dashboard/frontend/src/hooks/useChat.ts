@@ -87,6 +87,62 @@ function extractParts(
     parts.push({ type: "text", text: JSON.stringify(result, null, 2) });
   }
 
+  // Extract tool calls from _trace.routing metadata (agents report tool usage
+  // via _metadata in /invocations responses, which the backend maps to routing)
+  const trace = result._trace as Record<string, unknown> | undefined;
+  const routing = trace?.routing as Record<string, unknown> | undefined;
+  if (routing && toolCalls.length === 0) {
+    const sqlQueries = routing.sql_queries as Array<Record<string, unknown>> | undefined;
+    if (sqlQueries) {
+      for (const q of sqlQueries) {
+        const durationMs = (q.duration_ms as number) ?? 0;
+        const entry: ToolCallEntry = {
+          id: `sql-${crypto.randomUUID().slice(0, 8)}`,
+          toolName: "SQL Query",
+          args: { statement: q.statement as string, warehouse_id: q.warehouse_id as string },
+          result: { row_count: q.row_count, duration_ms: durationMs },
+          startTime: now - durationMs,
+          endTime: now,
+          status: q.error ? "error" : "success",
+        };
+        toolCalls.push(entry);
+      }
+    }
+
+    const llmCalls = routing.llm_calls as Array<Record<string, unknown>> | undefined;
+    if (llmCalls) {
+      for (const lc of llmCalls) {
+        const durationMs = (lc.duration_ms as number) ?? 0;
+        const entry: ToolCallEntry = {
+          id: `llm-${crypto.randomUUID().slice(0, 8)}`,
+          toolName: "LLM Call",
+          args: { model: lc.model as string },
+          result: {
+            prompt_tokens: lc.prompt_tokens,
+            completion_tokens: lc.completion_tokens,
+          },
+          startTime: now - durationMs,
+          endTime: now,
+          status: "success",
+        };
+        toolCalls.push(entry);
+      }
+    }
+
+    // Sub-agent call
+    if (routing.sub_agent) {
+      const timingMs = ((routing.timing as Record<string, unknown>)?.subagent_ms as number) ?? 0;
+      toolCalls.push({
+        id: `agent-${crypto.randomUUID().slice(0, 8)}`,
+        toolName: `Agent: ${routing.sub_agent}`,
+        args: {},
+        startTime: now - timingMs,
+        endTime: now,
+        status: "success",
+      });
+    }
+  }
+
   return { parts, toolCalls };
 }
 
@@ -279,7 +335,11 @@ function extractRouting(
   return undefined;
 }
 
-export function useChat(agentName: string): UseChatResult {
+export interface UseChatOptions {
+  onTrace?: (trace: TraceTurn, toolCalls: ToolCallEntry[]) => void;
+}
+
+export function useChat(agentName: string, options?: UseChatOptions): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [toolCalls, setToolCalls] = useState<ToolCallEntry[]>([]);
   const [traces, setTraces] = useState<TraceTurn[]>([]);
@@ -391,6 +451,9 @@ export function useChat(agentName: string): UseChatResult {
         if (serverTrace) {
           observeTrace(agentName, serverTrace);
         }
+
+        // Publish trace to observability context for cross-tab consumption
+        options?.onTrace?.(trace, newToolCalls);
 
         // Extract artifacts from tool results
         const newArtifacts = extractArtifacts(newToolCalls, parts);

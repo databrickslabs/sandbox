@@ -94,37 +94,38 @@ export interface ScanResult {
 
 export interface SqlQueryTrace {
   statement: string;
-  parameters: Array<{ name: string; value: string }>;
+  parameters?: Array<{ name: string; value: string }>;
   row_count: number;
-  columns: Array<{ name: string; type: string }>;
+  columns?: Array<{ name: string; type: string }>;
   duration_ms: number;
-  warehouse_id: string;
+  warehouse_id?: string;
   error?: string;
   fallback_reason?: string;
 }
 
 export interface RoutingInfo {
-  tool: string | null;
-  sub_agent: string | null;
-  timestamp: string;
-  data_source: "live" | "demo_fallback" | "llm_direct";
-  tables_accessed: string[];
-  keywords_extracted: string[];
-  routing_decision: {
+  tool?: string | null;
+  sub_agent?: string | null;
+  timestamp?: string;
+  data_source?: string;
+  tables_accessed?: string[];
+  keywords_extracted?: string[];
+  routing_decision?: {
     model: string;
     latency_ms: number;
     tool_selected: string | null;
     tool_args?: Record<string, unknown>;
     reason?: string;
   };
-  sql_queries: SqlQueryTrace[];
-  timing: {
+  sql_queries?: SqlQueryTrace[];
+  timing?: {
     routing_ms: number;
     network_ms: number;
     sql_total_ms: number;
     subagent_ms: number;
     total_ms: number;
   };
+  llm_calls?: Array<{ model: string; prompt_tokens?: number; completion_tokens?: number; duration_ms?: number }>;
   agent_endpoint?: string | null;
 }
 
@@ -205,4 +206,26 @@ export interface Artifact {
   preview?: string;
   url?: string;
   sizeBytes?: number;
+}
+
+/* ---------- Chat Observability Bridge ---------- */
+
+export interface ToolInvocation {
+  id: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  result?: unknown;
+  durationMs?: number;
+  timestamp: number;
+  turnId: string;
+  status: "success" | "error";
+}
+
+export interface ObservedRuntimeData {
+  tables: string[];
+  agents: string[];
+  tools: ToolInvocation[];
+  sqlQueries: SqlQueryTrace[];
+  lastUpdatedAt: number;
+  turnCount: number;
 }
