@@ -94,15 +94,6 @@ app.layout = html.Div([
             ], className="nav-center"),
             html.Div([
                 html.Div("Y", id="top-nav-avatar", className="user-avatar"),
-                html.A(
-                    html.Button(
-                        "Logout",
-                        id="logout-button",
-                        className="logout-button"
-                    ),
-                    href=f"{os.getenv('DATABRICKS_APP_URL')}",
-                    className="logout-link"
-                )
             ], className="nav-right")
         ], className="top-nav"),
         
