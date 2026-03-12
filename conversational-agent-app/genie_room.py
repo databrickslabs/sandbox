@@ -140,7 +140,7 @@ class GenieClient:
         response = self.client.genie.get_space(space_id=space_id)
         return response.as_dict()
     
-def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[str, Dict[str, Any]]:
+def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[str | None, Dict[str, Any]]:
     """
     Start a new conversation with Genie.
     Returns: (conversation_id, response_dict)
@@ -236,6 +236,7 @@ def process_genie_response(client, conversation_id, message_id, complete_message
     Process the response from Genie, collecting ALL available data.
     Returns a dict with keys:
         - text_response: str or None (text attachment content)
+        - follow_up_question: str or None (suggested follow-up question)
         - sql_query: str or None (generated SQL)
         - sql_description: str or None (description of the SQL query)
         - dataframe: pd.DataFrame or None (query result data)
@@ -243,6 +244,8 @@ def process_genie_response(client, conversation_id, message_id, complete_message
         - content: str or None (message content / summary)
         - status: str ("OK" or "ERROR")
         - error: str or None
+
+    Note: callers typically add a ``message_id`` key to the returned dict.
     """
     result = {
         "text_response": None,

@@ -427,7 +427,6 @@ def get_model_response(trigger_data, current_messages, chat_history):
         df = response.get("dataframe")
         data_summary = response.get("data_summary")
         msg_content = response.get("content")
-        error = response.get("error")
 
         # Build content sections list
         content_parts = []
