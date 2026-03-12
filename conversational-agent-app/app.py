@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc, Input, Output, State, callback, ALL, MATCH, callback_context, no_update, clientside_callback, dash_table
 import dash_bootstrap_components as dbc
 import json
-from genie_room import genie_query
+from genie_room import genie_query, send_feedback
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -422,12 +422,15 @@ def get_model_response(trigger_data, current_messages, chat_history):
         
         conversation_id, response = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
 
-        # Store the conversation_id in chat history
+        # Store the conversation_id and message_id in chat history
+        message_id = response.get("message_id")
         if chat_history and len(chat_history) > 0:
             chat_history[0]["conversation_id"] = conversation_id
+            chat_history[0]["last_message_id"] = message_id
 
         # Extract all parts of the response
         text_response = response.get("text_response")
+        follow_up_question = response.get("follow_up_question")
         sql_query = response.get("sql_query")
         sql_description = response.get("sql_description")
         df = response.get("dataframe")
@@ -563,7 +566,27 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 )
             )
 
-        # 6. Message content (only when it's not the echoed user question and no query data)
+        # 6. Thumbs up/down feedback buttons
+        if message_id and conversation_id:
+            feedback_id = f"{conversation_id}|{message_id}"
+            content_parts.append(
+                html.Div([
+                    html.Button(
+                        id={"type": "thumbs-up", "index": feedback_id},
+                        className="thumbs-up-button",
+                        n_clicks=0
+                    ),
+                    html.Button(
+                        id={"type": "thumbs-down", "index": feedback_id},
+                        className="thumbs-down-button",
+                        n_clicks=0
+                    ),
+                    html.Span("", id={"type": "feedback-status", "index": feedback_id},
+                              style={"fontSize": "12px", "color": "#5F7281", "marginLeft": "8px"})
+                ], className="message-actions")
+            )
+
+        # 7. Message content (only when it's not the echoed user question and no query data)
         if msg_content and msg_content != text_response and msg_content != user_input and df is None:
             content_parts.append(
                 dcc.Markdown(escape_md(msg_content), className="message-text", style={"marginTop": "10px"})
@@ -571,7 +594,7 @@ def get_model_response(trigger_data, current_messages, chat_history):
 
         # Fallback if nothing was extracted
         if not content_parts:
-            fallback = text_response or msg_content or "No response available"
+            fallback = text_response or follow_up_question or msg_content or "No response available"
             content_parts.append(
                 dcc.Markdown(escape_md(fallback), className="message-text")
             )
@@ -786,6 +809,50 @@ def generate_insights(n_clicks, btn_id, chat_history):
             dcc.Markdown(insights, className="insight-content")
         ], className="insight-body")
     ], className="insight-wrapper")
+
+
+# Callback for thumbs up feedback
+@app.callback(
+    Output({"type": "feedback-status", "index": MATCH}, "children", allow_duplicate=True),
+    Input({"type": "thumbs-up", "index": MATCH}, "n_clicks"),
+    State({"type": "thumbs-up", "index": MATCH}, "id"),
+    prevent_initial_call=True
+)
+def handle_thumbs_up(n_clicks, btn_id):
+    if not n_clicks:
+        return no_update
+    feedback_id = btn_id["index"]
+    conversation_id, message_id = feedback_id.split("|")
+    try:
+        headers = request.headers
+        user_token = headers.get('X-Forwarded-Access-Token')
+        success = send_feedback(conversation_id, message_id, "POSITIVE", user_token, GENIE_SPACE_ID)
+        return "Thanks for your feedback!" if success else "Failed to send feedback"
+    except Exception as e:
+        logger.error(f"Error sending positive feedback: {e}")
+        return "Failed to send feedback"
+
+
+# Callback for thumbs down feedback
+@app.callback(
+    Output({"type": "feedback-status", "index": MATCH}, "children", allow_duplicate=True),
+    Input({"type": "thumbs-down", "index": MATCH}, "n_clicks"),
+    State({"type": "thumbs-down", "index": MATCH}, "id"),
+    prevent_initial_call=True
+)
+def handle_thumbs_down(n_clicks, btn_id):
+    if not n_clicks:
+        return no_update
+    feedback_id = btn_id["index"]
+    conversation_id, message_id = feedback_id.split("|")
+    try:
+        headers = request.headers
+        user_token = headers.get('X-Forwarded-Access-Token')
+        success = send_feedback(conversation_id, message_id, "NEGATIVE", user_token, GENIE_SPACE_ID)
+        return "Thanks for your feedback!" if success else "Failed to send feedback"
+    except Exception as e:
+        logger.error(f"Error sending negative feedback: {e}")
+        return "Failed to send feedback"
 
 
 # Callback to fetch spaces on load

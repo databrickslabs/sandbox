@@ -6,6 +6,7 @@ from typing import Dict, Any, Tuple
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.core import Config
+from databricks.sdk.service.dashboards import GenieFeedbackRating
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -124,6 +125,16 @@ class GenieClient:
             
         raise TimeoutError(f"Message processing timed out after {timeout} seconds")
 
+    def send_feedback(self, conversation_id: str, message_id: str, rating: str) -> None:
+        """Send feedback (thumbs up/down) for a message."""
+        rating_enum = GenieFeedbackRating(rating)
+        self.client.genie.send_message_feedback(
+            space_id=self.space_id,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            rating=rating_enum
+        )
+
     def get_space(self, space_id: str) -> dict:
         """Get details of a specific Genie space."""
         response = self.client.genie.get_space(space_id=space_id)
@@ -151,6 +162,7 @@ def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[st
 
         # Process the response
         result = process_genie_response(client, conversation_id, message_id, complete_message)
+        result["message_id"] = message_id
 
         return conversation_id, result
 
@@ -160,6 +172,7 @@ def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[st
             "sql_query": None, "sql_description": None,
             "dataframe": None, "data_summary": None,
             "content": None, "status": "ERROR", "error": str(e),
+            "message_id": None,
         }
 
 def continue_conversation(conversation_id: str, question: str, token: str, space_id: str) -> Dict[str, Any]:
@@ -183,7 +196,9 @@ def continue_conversation(conversation_id: str, question: str, token: str, space
         complete_message = client.wait_for_message_completion(conversation_id, message_id)
 
         # Process the response
-        return process_genie_response(client, conversation_id, message_id, complete_message)
+        result = process_genie_response(client, conversation_id, message_id, complete_message)
+        result["message_id"] = message_id
+        return result
 
     except Exception as e:
         # Handle specific errors
@@ -199,6 +214,7 @@ def continue_conversation(conversation_id: str, question: str, token: str, space
             "sql_query": None, "sql_description": None,
             "dataframe": None, "data_summary": None,
             "content": None, "status": "ERROR", "error": str(e),
+            "message_id": None,
         }
 
 def _generate_data_summary(df: pd.DataFrame) -> str:
@@ -230,6 +246,7 @@ def process_genie_response(client, conversation_id, message_id, complete_message
     """
     result = {
         "text_response": None,
+        "follow_up_question": None,
         "sql_query": None,
         "sql_description": None,
         "dataframe": None,
@@ -253,9 +270,13 @@ def process_genie_response(client, conversation_id, message_id, complete_message
     for attachment in attachments:
         attachment_id = attachment.get("attachment_id")
 
-        # Text attachment
+        # Text attachment — separate follow-up questions from real summaries
         if "text" in attachment and "content" in attachment["text"]:
-            result["text_response"] = attachment["text"]["content"]
+            text_info = attachment["text"]
+            if text_info.get("purpose") == "FOLLOW_UP_QUESTION":
+                result["follow_up_question"] = text_info["content"]
+            else:
+                result["text_response"] = text_info["content"]
 
         # Query attachment
         if "query" in attachment:
@@ -289,7 +310,7 @@ def process_genie_response(client, conversation_id, message_id, complete_message
                     logger.warning(f"Could not fetch query result: {e}")
 
     # If nothing was populated, set a default text
-    if result["text_response"] is None and result["dataframe"] is None:
+    if result["text_response"] is None and result["follow_up_question"] is None and result["dataframe"] is None:
         result["text_response"] = "No response available"
 
     return result
@@ -314,5 +335,24 @@ def genie_query(question: str, token: str, space_id: str, conversation_id: str |
             "sql_query": None, "sql_description": None,
             "dataframe": None, "data_summary": None,
             "content": None, "status": "ERROR", "error": str(e),
+            "message_id": None,
         }
+
+def send_feedback(conversation_id: str, message_id: str, rating: str, token: str, space_id: str) -> bool:
+    """
+    Send thumbs up/down feedback for a Genie message.
+    rating: "POSITIVE" or "NEGATIVE"
+    Returns True on success, False on failure.
+    """
+    try:
+        client = GenieClient(
+            host=DATABRICKS_HOST,
+            space_id=space_id,
+            token=token
+        )
+        client.send_feedback(conversation_id, message_id, rating)
+        return True
+    except Exception as e:
+        logger.error(f"Error sending feedback: {str(e)}")
+        return False
 
