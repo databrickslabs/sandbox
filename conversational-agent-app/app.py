@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc, Input, Output, State, callback, ALL, MATCH, callback_context, no_update, clientside_callback, dash_table
 import dash_bootstrap_components as dbc
 import json
-from genie_room import genie_query
+from genie_room import genie_query, send_feedback
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -94,15 +94,6 @@ app.layout = html.Div([
             ], className="nav-center"),
             html.Div([
                 html.Div("Y", id="top-nav-avatar", className="user-avatar"),
-                html.A(
-                    html.Button(
-                        "Logout",
-                        id="logout-button",
-                        className="logout-button"
-                    ),
-                    href=f"{os.getenv('DATABRICKS_APP_URL')}",
-                    className="logout-link"
-                )
             ], className="nav-right")
         ], className="top-nav"),
         
@@ -420,49 +411,70 @@ def get_model_response(trigger_data, current_messages, chat_history):
         if chat_history and len(chat_history) > 0:
             conversation_id = chat_history[0].get("conversation_id")
         
-        conversation_id, response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
-        
-        # Store the conversation_id in chat history
+        conversation_id, response = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
+
+        # Store the conversation_id and message_id in chat history
+        message_id = response.get("message_id")
         if chat_history and len(chat_history) > 0:
             chat_history[0]["conversation_id"] = conversation_id
-        
-        if isinstance(response, str):
-            # Escape square brackets to prevent markdown auto-linking
-            import re
-            processed_response = response
-            
-            # Escape all square brackets to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('[', '\\[').replace(']', '\\]')
-            
-            # Escape parentheses to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('(', '\\(').replace(')', '\\)')
-            
-            # Escape angle brackets to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('<', '\\<').replace('>', '\\>')
-            
-            content = dcc.Markdown(processed_response, className="message-text")
-        else:
-            # Data table response
-            df = pd.DataFrame(response)
-            
-            # Store the DataFrame in chat_history for later retrieval by insight button
+            chat_history[0]["last_message_id"] = message_id
+
+        # Extract all parts of the response
+        text_response = response.get("text_response")
+        follow_up_question = response.get("follow_up_question")
+        sql_query = response.get("sql_query")
+        sql_description = response.get("sql_description")
+        df = response.get("dataframe")
+        data_summary = response.get("data_summary")
+        msg_content = response.get("content")
+
+        # Build content sections list
+        content_parts = []
+
+        # Helper to escape markdown special chars
+        def escape_md(text):
+            text = text.replace('[', '\\[').replace(']', '\\]')
+            text = text.replace('(', '\\(').replace(')', '\\)')
+            text = text.replace('<', '\\<').replace('>', '\\>')
+            return text
+
+        # 1. Text response from Genie (show at top only when there's no query data)
+        if text_response and df is None:
+            content_parts.append(
+                dcc.Markdown(escape_md(text_response), className="message-text")
+            )
+
+        # 2. SQL description / summary
+        if sql_description:
+            content_parts.append(
+                html.Div([
+                    html.Span("Summary: ", className="sql-description-label"),
+                    html.Span(sql_description)
+                ], className="sql-description")
+            )
+
+        # 2b. Genie text summary (shown below description box, above table)
+        if text_response and df is not None:
+            content_parts.append(
+                dcc.Markdown(escape_md(text_response), className="message-text")
+            )
+
+        # 3. Data table (if query returned results)
+        table_uuid = None
+        if df is not None and not df.empty:
+            table_uuid = str(uuid.uuid4())
+            # Store the DataFrame for insight generation
             if chat_history and len(chat_history) > 0:
-                table_uuid = str(uuid.uuid4())
                 chat_history[0].setdefault('dataframes', {})[table_uuid] = df.to_json(orient='split')
             else:
                 chat_history = [{"dataframes": {table_uuid: df.to_json(orient='split')}}]
-            
-            # Create the table with adjusted styles
+
             data_table = dash_table.DataTable(
                 id=f"table-{len(chat_history)}",
                 data=df.to_dict('records'),
                 columns=[{"name": i, "id": i} for i in df.columns],
-                
-                # Export configuration
                 export_format="csv",
                 export_headers="display",
-                
-                # Other table properties
                 page_size=10,
                 style_table={
                     'display': 'inline-block',
@@ -492,54 +504,92 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 page_current=0,
                 page_action='native'
             )
-
-            # Format SQL query if available
-            query_section = None
-            if query_text is not None:
-                formatted_sql = format_sql_query(query_text)
-                query_index = f"{len(chat_history)}-{len(current_messages)}"
-                
-                query_section = html.Div([
-                    html.Div([
-                        html.Button([
-                            html.Span("Show code", id={"type": "toggle-text", "index": query_index})
-                        ], 
-                        id={"type": "toggle-query", "index": query_index}, 
-                        className="toggle-query-button",
-                        n_clicks=0)
-                    ], className="toggle-query-container"),
-                    html.Div([
-                        html.Pre([
-                            html.Code(formatted_sql, className="sql-code")
-                        ], className="sql-pre")
-                    ], 
-                    id={"type": "query-code", "index": query_index}, 
-                    className="query-code-container hidden")
-                ], id={"type": "query-section", "index": query_index}, className="query-section")
-            
-            insight_button = html.Button(
-                "Generate Insights",
-                id={"type": "insight-button", "index": table_uuid},
-                className="insight-button",
-                style={"border": "none", "background": "#f0f0f0", "padding": "8px 16px", "borderRadius": "4px", "cursor": "pointer"}
-            )
-            insight_output = dcc.Loading(
-                id={"type": "insight-loading", "index": table_uuid},
-                type="circle",
-                color="#000000",
-                children=html.Div(id={"type": "insight-output", "index": table_uuid})
+            content_parts.append(
+                html.Div([data_table], style={'marginBottom': '20px', 'paddingRight': '5px'})
             )
 
-            # Create content with table and optional SQL section
-            content = html.Div([
-                html.Div([data_table], style={
-                    'marginBottom': '20px',
-                    'paddingRight': '5px'
-                }),
-                query_section if query_section else None,
-                insight_button,
-                insight_output,
-            ])
+        # 3b. Data summary (stats overview of the result)
+        if data_summary:
+            content_parts.append(
+                html.Pre(data_summary, className="data-summary")
+            )
+
+        # 4. SQL query toggle section
+        if sql_query:
+            formatted_sql = format_sql_query(sql_query)
+            query_index = f"{len(chat_history)}-{len(current_messages)}"
+
+            query_section = html.Div([
+                html.Div([
+                    html.Button([
+                        html.Span("Show code", id={"type": "toggle-text", "index": query_index})
+                    ],
+                    id={"type": "toggle-query", "index": query_index},
+                    className="toggle-query-button",
+                    n_clicks=0)
+                ], className="toggle-query-container"),
+                html.Div([
+                    html.Pre([
+                        html.Code(formatted_sql, className="sql-code")
+                    ], className="sql-pre")
+                ],
+                id={"type": "query-code", "index": query_index},
+                className="query-code-container hidden")
+            ], id={"type": "query-section", "index": query_index}, className="query-section")
+            content_parts.append(query_section)
+
+        # 5. Insight button (only if we have data)
+        if table_uuid:
+            content_parts.append(
+                html.Button(
+                    "Generate Insights",
+                    id={"type": "insight-button", "index": table_uuid},
+                    className="insight-button"
+                )
+            )
+            content_parts.append(
+                dcc.Loading(
+                    id={"type": "insight-loading", "index": table_uuid},
+                    type="circle",
+                    color="#000000",
+                    children=html.Div(id={"type": "insight-output", "index": table_uuid})
+                )
+            )
+
+        # 6. Thumbs up/down feedback buttons
+        if message_id and conversation_id:
+            feedback_id = f"{conversation_id}|{message_id}"
+            content_parts.append(
+                html.Div([
+                    html.Button(
+                        id={"type": "thumbs-up", "index": feedback_id},
+                        className="thumbs-up-button",
+                        n_clicks=0
+                    ),
+                    html.Button(
+                        id={"type": "thumbs-down", "index": feedback_id},
+                        className="thumbs-down-button",
+                        n_clicks=0
+                    ),
+                    html.Span("", id={"type": "feedback-status", "index": feedback_id},
+                              style={"fontSize": "12px", "color": "#5F7281", "marginLeft": "8px"})
+                ], className="message-actions")
+            )
+
+        # 7. Message content (only when it's not the echoed user question and no query data)
+        if msg_content and msg_content != text_response and msg_content != user_input and df is None:
+            content_parts.append(
+                dcc.Markdown(escape_md(msg_content), className="message-text", style={"marginTop": "10px"})
+            )
+
+        # Fallback if nothing was extracted
+        if not content_parts:
+            fallback = text_response or follow_up_question or msg_content or "No response available"
+            content_parts.append(
+                dcc.Markdown(escape_md(fallback), className="message-text")
+            )
+
+        content = html.Div(content_parts)
         
         # Create bot response
         bot_response = html.Div([
@@ -749,6 +799,43 @@ def generate_insights(n_clicks, btn_id, chat_history):
             dcc.Markdown(insights, className="insight-content")
         ], className="insight-body")
     ], className="insight-wrapper")
+
+
+# Callback for thumbs up/down feedback
+@app.callback(
+    [Output({"type": "feedback-status", "index": MATCH}, "children"),
+     Output({"type": "thumbs-up", "index": MATCH}, "className"),
+     Output({"type": "thumbs-down", "index": MATCH}, "className")],
+    [Input({"type": "thumbs-up", "index": MATCH}, "n_clicks"),
+     Input({"type": "thumbs-down", "index": MATCH}, "n_clicks")],
+    [State({"type": "thumbs-up", "index": MATCH}, "id")],
+    prevent_initial_call=True
+)
+def handle_feedback(thumbs_up_clicks, thumbs_down_clicks, btn_id):
+    ctx = callback_context
+    if not ctx.triggered:
+        return no_update, no_update, no_update
+
+    trigger_id = ctx.triggered[0]["prop_id"]
+    is_positive = "thumbs-up" in trigger_id
+
+    feedback_id = btn_id["index"]
+    conversation_id, message_id = feedback_id.split("|")
+    rating = "POSITIVE" if is_positive else "NEGATIVE"
+
+    try:
+        headers = request.headers
+        user_token = headers.get('X-Forwarded-Access-Token')
+        success = send_feedback(conversation_id, message_id, rating, user_token, GENIE_SPACE_ID)
+        if success:
+            if is_positive:
+                return "Thanks for your feedback!", "thumbs-up-button active", "thumbs-down-button"
+            else:
+                return "Thanks for your feedback!", "thumbs-up-button", "thumbs-down-button active"
+        return "Failed to send feedback", no_update, no_update
+    except Exception as e:
+        logger.error(f"Error sending feedback: {e}")
+        return "Failed to send feedback", no_update, no_update
 
 
 # Callback to fetch spaces on load

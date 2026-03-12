@@ -1003,23 +1003,6 @@ input:disabled, button:disabled {
 }
 
 /* SQL Query Display Styles */
-.toggle-query-container {
-    margin: 10px 0;
-    text-align: right;
-}
-
-.toggle-query-button {
-    background: none;
-    border: none;
-    color: #11171C;;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 4px 8px;
-}
-
-.toggle-query-button:hover {
-    text-decoration: underline;
-}
 
 .query-code-container {
     margin: 10px 0;
@@ -1479,4 +1462,97 @@ input:disabled, button:disabled {
 .insight-output strong, .insight-output b{
     color: #de2ba5; /* Pinkish-purple */
     font-weight: 600;
+}
+
+/* SQL description / summary label */
+.sql-description {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 8px 12px;
+    background-color: #f8f9fb;
+    border-left: 3px solid #4299E0;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 12px;
+    line-height: 1.5;
+    font-size: 13px;
+    color: #444;
+}
+
+.sql-description-label {
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+}
+
+/* Polished toggle-query button */
+.toggle-query-button {
+    background: none;
+    border: 1px solid #dce1e6;
+    color: #11171C;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.toggle-query-button:hover {
+    background-color: #f0f2f5;
+    border-color: #c0cdd8;
+    text-decoration: none;
+}
+
+/* Insight button polish */
+.insight-button {
+    border: 1px solid #dce1e6 !important;
+    background: #f8f9fb !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #11171C;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+}
+
+.insight-button:hover {
+    background-color: #eef1f5 !important;
+    border-color: #c0cdd8 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Spacing between response sections */
+.bot-message .message-content > div > .message-text {
+    margin-bottom: 8px;
+}
+
+.bot-message .message-content > div > .sql-description {
+    margin-top: 4px;
+}
+
+/* Query section spacing */
+.query-section {
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.toggle-query-container {
+    margin: 4px 0;
+    text-align: left;
+}
+
+/* Data summary (stats overview below table) */
+.data-summary {
+    background-color: #f8f9fb;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #444;
+    white-space: pre-wrap;
 }
