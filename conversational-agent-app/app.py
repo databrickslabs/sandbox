@@ -420,49 +420,61 @@ def get_model_response(trigger_data, current_messages, chat_history):
         if chat_history and len(chat_history) > 0:
             conversation_id = chat_history[0].get("conversation_id")
         
-        conversation_id, response, query_text = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
-        
+        conversation_id, response = genie_query(user_input, user_token, GENIE_SPACE_ID, conversation_id)
+
         # Store the conversation_id in chat history
         if chat_history and len(chat_history) > 0:
             chat_history[0]["conversation_id"] = conversation_id
-        
-        if isinstance(response, str):
-            # Escape square brackets to prevent markdown auto-linking
-            import re
-            processed_response = response
-            
-            # Escape all square brackets to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('[', '\\[').replace(']', '\\]')
-            
-            # Escape parentheses to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('(', '\\(').replace(')', '\\)')
-            
-            # Escape angle brackets to prevent markdown from interpreting them as links
-            processed_response = processed_response.replace('<', '\\<').replace('>', '\\>')
-            
-            content = dcc.Markdown(processed_response, className="message-text")
-        else:
-            # Data table response
-            df = pd.DataFrame(response)
-            
-            # Store the DataFrame in chat_history for later retrieval by insight button
+
+        # Extract all parts of the response
+        text_response = response.get("text_response")
+        sql_query = response.get("sql_query")
+        sql_description = response.get("sql_description")
+        df = response.get("dataframe")
+        msg_content = response.get("content")
+        error = response.get("error")
+
+        # Build content sections list
+        content_parts = []
+
+        # Helper to escape markdown special chars
+        def escape_md(text):
+            text = text.replace('[', '\\[').replace(']', '\\]')
+            text = text.replace('(', '\\(').replace(')', '\\)')
+            text = text.replace('<', '\\<').replace('>', '\\>')
+            return text
+
+        # 1. Text response from Genie
+        if text_response:
+            content_parts.append(
+                dcc.Markdown(escape_md(text_response), className="message-text")
+            )
+
+        # 2. SQL description / summary
+        if sql_description:
+            content_parts.append(
+                html.Div([
+                    html.Span("Summary: ", className="sql-description-label"),
+                    html.Span(sql_description)
+                ], className="sql-description")
+            )
+
+        # 3. Data table (if query returned results)
+        table_uuid = None
+        if df is not None and not df.empty:
+            table_uuid = str(uuid.uuid4())
+            # Store the DataFrame for insight generation
             if chat_history and len(chat_history) > 0:
-                table_uuid = str(uuid.uuid4())
                 chat_history[0].setdefault('dataframes', {})[table_uuid] = df.to_json(orient='split')
             else:
                 chat_history = [{"dataframes": {table_uuid: df.to_json(orient='split')}}]
-            
-            # Create the table with adjusted styles
+
             data_table = dash_table.DataTable(
                 id=f"table-{len(chat_history)}",
                 data=df.to_dict('records'),
                 columns=[{"name": i, "id": i} for i in df.columns],
-                
-                # Export configuration
                 export_format="csv",
                 export_headers="display",
-                
-                # Other table properties
                 page_size=10,
                 style_table={
                     'display': 'inline-block',
@@ -492,54 +504,66 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 page_current=0,
                 page_action='native'
             )
-
-            # Format SQL query if available
-            query_section = None
-            if query_text is not None:
-                formatted_sql = format_sql_query(query_text)
-                query_index = f"{len(chat_history)}-{len(current_messages)}"
-                
-                query_section = html.Div([
-                    html.Div([
-                        html.Button([
-                            html.Span("Show code", id={"type": "toggle-text", "index": query_index})
-                        ], 
-                        id={"type": "toggle-query", "index": query_index}, 
-                        className="toggle-query-button",
-                        n_clicks=0)
-                    ], className="toggle-query-container"),
-                    html.Div([
-                        html.Pre([
-                            html.Code(formatted_sql, className="sql-code")
-                        ], className="sql-pre")
-                    ], 
-                    id={"type": "query-code", "index": query_index}, 
-                    className="query-code-container hidden")
-                ], id={"type": "query-section", "index": query_index}, className="query-section")
-            
-            insight_button = html.Button(
-                "Generate Insights",
-                id={"type": "insight-button", "index": table_uuid},
-                className="insight-button",
-                style={"border": "none", "background": "#f0f0f0", "padding": "8px 16px", "borderRadius": "4px", "cursor": "pointer"}
-            )
-            insight_output = dcc.Loading(
-                id={"type": "insight-loading", "index": table_uuid},
-                type="circle",
-                color="#000000",
-                children=html.Div(id={"type": "insight-output", "index": table_uuid})
+            content_parts.append(
+                html.Div([data_table], style={'marginBottom': '20px', 'paddingRight': '5px'})
             )
 
-            # Create content with table and optional SQL section
-            content = html.Div([
-                html.Div([data_table], style={
-                    'marginBottom': '20px',
-                    'paddingRight': '5px'
-                }),
-                query_section if query_section else None,
-                insight_button,
-                insight_output,
-            ])
+        # 4. SQL query toggle section
+        if sql_query:
+            formatted_sql = format_sql_query(sql_query)
+            query_index = f"{len(chat_history)}-{len(current_messages)}"
+
+            query_section = html.Div([
+                html.Div([
+                    html.Button([
+                        html.Span("Show code", id={"type": "toggle-text", "index": query_index})
+                    ],
+                    id={"type": "toggle-query", "index": query_index},
+                    className="toggle-query-button",
+                    n_clicks=0)
+                ], className="toggle-query-container"),
+                html.Div([
+                    html.Pre([
+                        html.Code(formatted_sql, className="sql-code")
+                    ], className="sql-pre")
+                ],
+                id={"type": "query-code", "index": query_index},
+                className="query-code-container hidden")
+            ], id={"type": "query-section", "index": query_index}, className="query-section")
+            content_parts.append(query_section)
+
+        # 5. Insight button (only if we have data)
+        if table_uuid:
+            content_parts.append(
+                html.Button(
+                    "Generate Insights",
+                    id={"type": "insight-button", "index": table_uuid},
+                    className="insight-button"
+                )
+            )
+            content_parts.append(
+                dcc.Loading(
+                    id={"type": "insight-loading", "index": table_uuid},
+                    type="circle",
+                    color="#000000",
+                    children=html.Div(id={"type": "insight-output", "index": table_uuid})
+                )
+            )
+
+        # 6. Message content / summary (if not already shown as text_response)
+        if msg_content and msg_content != text_response:
+            content_parts.append(
+                dcc.Markdown(escape_md(msg_content), className="message-text", style={"marginTop": "10px"})
+            )
+
+        # Fallback if nothing was extracted
+        if not content_parts:
+            fallback = text_response or msg_content or "No response available"
+            content_parts.append(
+                dcc.Markdown(escape_md(fallback), className="message-text")
+            )
+
+        content = html.Div(content_parts)
         
         # Create bot response
         bot_response = html.Div([

@@ -2,7 +2,7 @@ import pandas as pd
 import time
 import os
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Dict, Any, Tuple
 import logging
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.core import Config
@@ -129,36 +129,42 @@ class GenieClient:
         response = self.client.genie.get_space(space_id=space_id)
         return response.as_dict()
     
-def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[str, Union[str, pd.DataFrame], Optional[str]]:
+def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[str, Dict[str, Any]]:
     """
     Start a new conversation with Genie.
+    Returns: (conversation_id, response_dict)
     """
     client = GenieClient(
         host=DATABRICKS_HOST,
         space_id=space_id,
         token=token
     )
-    
+
     try:
         # Start a new conversation
         response = client.start_conversation(question)
         conversation_id = response["conversation_id"]
         message_id = response["message_id"]
-        
+
         # Wait for the message to complete
         complete_message = client.wait_for_message_completion(conversation_id, message_id)
-        
-        # Process the response
-        result, query_text = process_genie_response(client, conversation_id, message_id, complete_message)
-        
-        return conversation_id, result, query_text
-        
-    except Exception as e:
-        return None, f"Sorry, an error occurred: {str(e)}. Please try again.", None
 
-def continue_conversation(conversation_id: str, question: str, token: str, space_id: str) -> Tuple[Union[str, pd.DataFrame], Optional[str]]:
+        # Process the response
+        result = process_genie_response(client, conversation_id, message_id, complete_message)
+
+        return conversation_id, result
+
+    except Exception as e:
+        return None, {
+            "text_response": f"Sorry, an error occurred: {str(e)}. Please try again.",
+            "sql_query": None, "sql_description": None,
+            "dataframe": None, "content": None, "error": str(e),
+        }
+
+def continue_conversation(conversation_id: str, question: str, token: str, space_id: str) -> Dict[str, Any]:
     """
     Send a follow-up message in an existing conversation.
+    Returns: response_dict
     """
     logger.info(f"Continuing conversation {conversation_id} with question: {question[:30]}...")
     client = GenieClient(
@@ -166,83 +172,110 @@ def continue_conversation(conversation_id: str, question: str, token: str, space
         space_id=space_id,
         token=token
     )
-    
+
     try:
         # Send follow-up message in existing conversation
         response = client.send_message(conversation_id, question)
         message_id = response["message_id"]
-        
+
         # Wait for the message to complete
         complete_message = client.wait_for_message_completion(conversation_id, message_id)
-        
+
         # Process the response
-        result, query_text = process_genie_response(client, conversation_id, message_id, complete_message)
-        
-        return result, query_text
-        
+        return process_genie_response(client, conversation_id, message_id, complete_message)
+
     except Exception as e:
         # Handle specific errors
         if "429" in str(e) or "Too Many Requests" in str(e):
-            return "Sorry, the system is currently experiencing high demand. Please try again in a few moments.", None
+            error_text = "Sorry, the system is currently experiencing high demand. Please try again in a few moments."
         elif "Conversation not found" in str(e):
-            return "Sorry, the previous conversation has expired. Please try your query again to start a new conversation.", None
+            error_text = "Sorry, the previous conversation has expired. Please try your query again to start a new conversation."
         else:
             logger.error(f"Error continuing conversation: {str(e)}")
-            return f"Sorry, an error occurred: {str(e)}", None
+            error_text = f"Sorry, an error occurred: {str(e)}"
+        return {
+            "text_response": error_text,
+            "sql_query": None, "sql_description": None,
+            "dataframe": None, "content": None, "error": str(e),
+        }
 
-def process_genie_response(client, conversation_id, message_id, complete_message) -> Tuple[Union[str, pd.DataFrame], Optional[str]]:
+def process_genie_response(client, conversation_id, message_id, complete_message) -> Dict[str, Any]:
     """
-    Process the response from Genie
+    Process the response from Genie and return all available data.
+    Returns a dict with keys:
+        - text_response: str or None (text attachment content)
+        - sql_query: str or None (generated SQL)
+        - sql_description: str or None (description of the SQL query)
+        - dataframe: pd.DataFrame or None (query result data)
+        - content: str or None (message content / summary)
+        - error: str or None
     """
-    # Check attachments first
+    result = {
+        "text_response": None,
+        "sql_query": None,
+        "sql_description": None,
+        "dataframe": None,
+        "content": None,
+        "error": None,
+    }
+
+    # Extract message-level content (summary / follow-up text)
+    if "content" in complete_message:
+        result["content"] = complete_message.get("content", "")
+
+    # Extract error if present
+    if "error" in complete_message:
+        result["error"] = str(complete_message.get("error", ""))
+
+    # Process all attachments to collect every piece of data
     attachments = complete_message.get("attachments", [])
     for attachment in attachments:
         attachment_id = attachment.get("attachment_id")
-        
-        # If there's text content in the attachment, return it
-        if "text" in attachment and "content" in attachment["text"]:
-            return attachment["text"]["content"], None
-        
-        # If there's a query, get the result
-        elif "query" in attachment:
-            query_text = attachment.get("query", {}).get("query", "")
-            query_result = client.get_query_result(conversation_id, message_id, attachment_id)
-           
-            data_array = query_result.get('data_array', [])
-            schema = query_result.get('schema', {})
-            columns = [col.get('name') for col in schema.get('columns', [])]
-            
-            # If we have data, return as DataFrame
-            if data_array:
-                # If no columns from schema, create generic ones
-                if not columns and data_array and len(data_array) > 0:
-                    columns = [f"column_{i}" for i in range(len(data_array[0]))]
-                
-                df = pd.DataFrame(data_array, columns=columns)
-                return df, query_text
-    
-    # If no attachments or no data in attachments, return text content
-    if 'content' in complete_message:
-        return complete_message.get('content', ''), None
-    
-    return "No response available", None
 
-def genie_query(question: str, token: str, space_id: str, conversation_id: str | None = None) -> Tuple[str | None, Union[str, pd.DataFrame], str | None]:
+        # Text attachment
+        if "text" in attachment and "content" in attachment["text"]:
+            result["text_response"] = attachment["text"]["content"]
+
+        # Query attachment
+        if "query" in attachment:
+            query_info = attachment.get("query", {})
+            result["sql_query"] = query_info.get("query")
+            result["sql_description"] = query_info.get("description")
+
+            if attachment_id and result["sql_query"]:
+                try:
+                    query_result = client.get_query_result(conversation_id, message_id, attachment_id)
+                    data_array = query_result.get("data_array", [])
+                    schema = query_result.get("schema", {})
+                    columns = [col.get("name") for col in schema.get("columns", [])]
+
+                    if data_array:
+                        if not columns and len(data_array) > 0:
+                            columns = [f"column_{i}" for i in range(len(data_array[0]))]
+                        result["dataframe"] = pd.DataFrame(data_array, columns=columns)
+                except Exception as e:
+                    logger.warning(f"Could not fetch query result: {e}")
+
+    return result
+
+def genie_query(question: str, token: str, space_id: str, conversation_id: str | None = None) -> Tuple[str | None, Dict[str, Any]]:
     """
     Main entry point for querying Genie.
-    Returns: (conversation_id, result, query_text)
+    Returns: (conversation_id, response_dict)
     """
     try:
         if conversation_id:
-            # Continue existing conversation
-            result, query_text = continue_conversation(conversation_id, question, token, space_id)
-            return conversation_id, result, query_text
+            result = continue_conversation(conversation_id, question, token, space_id)
+            return conversation_id, result
         else:
-            # Start a new conversation
-            conversation_id, result, query_text = start_new_conversation(question, token, space_id)
-            return conversation_id, result, query_text
-            
+            conversation_id, result = start_new_conversation(question, token, space_id)
+            return conversation_id, result
+
     except Exception as e:
         logger.error(f"Error in conversation: {str(e)}. Please try again.")
-        return None, f"Sorry, an error occurred: {str(e)}. Please try again.", None
+        return None, {
+            "text_response": f"Sorry, an error occurred: {str(e)}. Please try again.",
+            "sql_query": None, "sql_description": None,
+            "dataframe": None, "content": None, "error": str(e),
+        }
 
