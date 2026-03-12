@@ -158,7 +158,8 @@ def start_new_conversation(question: str, token: str, space_id: str) -> Tuple[st
         return None, {
             "text_response": f"Sorry, an error occurred: {str(e)}. Please try again.",
             "sql_query": None, "sql_description": None,
-            "dataframe": None, "content": None, "error": str(e),
+            "dataframe": None, "data_summary": None,
+            "content": None, "status": "ERROR", "error": str(e),
         }
 
 def continue_conversation(conversation_id: str, question: str, token: str, space_id: str) -> Dict[str, Any]:
@@ -196,18 +197,35 @@ def continue_conversation(conversation_id: str, question: str, token: str, space
         return {
             "text_response": error_text,
             "sql_query": None, "sql_description": None,
-            "dataframe": None, "content": None, "error": str(e),
+            "dataframe": None, "data_summary": None,
+            "content": None, "status": "ERROR", "error": str(e),
         }
+
+def _generate_data_summary(df: pd.DataFrame) -> str:
+    """Generate a brief summary of a DataFrame's contents."""
+    lines = [f"Rows: {len(df)}, Columns: {len(df.columns)}"]
+
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    for col in numeric_cols[:5]:
+        lines.append(f"  {col}: min={df[col].min()}, max={df[col].max()}, mean={df[col].mean():.2f}")
+
+    if len(numeric_cols) > 5:
+        lines.append(f"  ... and {len(numeric_cols) - 5} more numeric columns")
+
+    return "\n".join(lines)
+
 
 def process_genie_response(client, conversation_id, message_id, complete_message) -> Dict[str, Any]:
     """
-    Process the response from Genie and return all available data.
+    Process the response from Genie, collecting ALL available data.
     Returns a dict with keys:
         - text_response: str or None (text attachment content)
         - sql_query: str or None (generated SQL)
         - sql_description: str or None (description of the SQL query)
         - dataframe: pd.DataFrame or None (query result data)
+        - data_summary: str or None (brief stats summary of the data)
         - content: str or None (message content / summary)
+        - status: str ("OK" or "ERROR")
         - error: str or None
     """
     result = {
@@ -215,7 +233,9 @@ def process_genie_response(client, conversation_id, message_id, complete_message
         "sql_query": None,
         "sql_description": None,
         "dataframe": None,
+        "data_summary": None,
         "content": None,
+        "status": "OK",
         "error": None,
     }
 
@@ -226,6 +246,7 @@ def process_genie_response(client, conversation_id, message_id, complete_message
     # Extract error if present
     if "error" in complete_message:
         result["error"] = str(complete_message.get("error", ""))
+        result["status"] = "ERROR"
 
     # Process all attachments to collect every piece of data
     attachments = complete_message.get("attachments", [])
@@ -252,9 +273,24 @@ def process_genie_response(client, conversation_id, message_id, complete_message
                     if data_array:
                         if not columns and len(data_array) > 0:
                             columns = [f"column_{i}" for i in range(len(data_array[0]))]
-                        result["dataframe"] = pd.DataFrame(data_array, columns=columns)
+
+                        df = pd.DataFrame(data_array, columns=columns)
+
+                        # Try to convert numeric columns
+                        for col in df.columns:
+                            try:
+                                df[col] = pd.to_numeric(df[col])
+                            except (ValueError, TypeError):
+                                pass
+
+                        result["dataframe"] = df
+                        result["data_summary"] = _generate_data_summary(df)
                 except Exception as e:
                     logger.warning(f"Could not fetch query result: {e}")
+
+    # If nothing was populated, set a default text
+    if result["text_response"] is None and result["dataframe"] is None:
+        result["text_response"] = "No response available"
 
     return result
 
@@ -276,6 +312,7 @@ def genie_query(question: str, token: str, space_id: str, conversation_id: str |
         return None, {
             "text_response": f"Sorry, an error occurred: {str(e)}. Please try again.",
             "sql_query": None, "sql_description": None,
-            "dataframe": None, "content": None, "error": str(e),
+            "dataframe": None, "data_summary": None,
+            "content": None, "status": "ERROR", "error": str(e),
         }
 

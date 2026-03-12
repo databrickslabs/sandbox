@@ -1542,3 +1542,17 @@ input:disabled, button:disabled {
     margin: 4px 0;
     text-align: left;
 }
+
+/* Data summary (stats overview below table) */
+.data-summary {
+    background-color: #f8f9fb;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #444;
+    white-space: pre-wrap;
+}

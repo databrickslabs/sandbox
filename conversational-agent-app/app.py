@@ -431,6 +431,7 @@ def get_model_response(trigger_data, current_messages, chat_history):
         sql_query = response.get("sql_query")
         sql_description = response.get("sql_description")
         df = response.get("dataframe")
+        data_summary = response.get("data_summary")
         msg_content = response.get("content")
         error = response.get("error")
 
@@ -444,8 +445,8 @@ def get_model_response(trigger_data, current_messages, chat_history):
             text = text.replace('<', '\\<').replace('>', '\\>')
             return text
 
-        # 1. Text response from Genie
-        if text_response:
+        # 1. Text response from Genie (show at top only when there's no query data)
+        if text_response and df is None:
             content_parts.append(
                 dcc.Markdown(escape_md(text_response), className="message-text")
             )
@@ -508,6 +509,18 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 html.Div([data_table], style={'marginBottom': '20px', 'paddingRight': '5px'})
             )
 
+        # 3b. Data summary (stats overview of the result)
+        if data_summary:
+            content_parts.append(
+                html.Pre(data_summary, className="data-summary")
+            )
+
+        # 3c. Follow-up question from Genie (shown below data when query data exists)
+        if text_response and df is not None:
+            content_parts.append(
+                dcc.Markdown(escape_md(text_response), className="message-text")
+            )
+
         # 4. SQL query toggle section
         if sql_query:
             formatted_sql = format_sql_query(sql_query)
@@ -550,8 +563,8 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 )
             )
 
-        # 6. Message content / summary (if not already shown as text_response)
-        if msg_content and msg_content != text_response:
+        # 6. Message content (only when it's not the echoed user question and no query data)
+        if msg_content and msg_content != text_response and msg_content != user_input and df is None:
             content_parts.append(
                 dcc.Markdown(escape_md(msg_content), className="message-text", style={"marginTop": "10px"})
             )
