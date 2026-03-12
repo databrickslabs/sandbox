@@ -811,48 +811,41 @@ def generate_insights(n_clicks, btn_id, chat_history):
     ], className="insight-wrapper")
 
 
-# Callback for thumbs up feedback
+# Callback for thumbs up/down feedback
 @app.callback(
-    Output({"type": "feedback-status", "index": MATCH}, "children", allow_duplicate=True),
-    Input({"type": "thumbs-up", "index": MATCH}, "n_clicks"),
-    State({"type": "thumbs-up", "index": MATCH}, "id"),
+    [Output({"type": "feedback-status", "index": MATCH}, "children"),
+     Output({"type": "thumbs-up", "index": MATCH}, "className"),
+     Output({"type": "thumbs-down", "index": MATCH}, "className")],
+    [Input({"type": "thumbs-up", "index": MATCH}, "n_clicks"),
+     Input({"type": "thumbs-down", "index": MATCH}, "n_clicks")],
+    [State({"type": "thumbs-up", "index": MATCH}, "id")],
     prevent_initial_call=True
 )
-def handle_thumbs_up(n_clicks, btn_id):
-    if not n_clicks:
-        return no_update
+def handle_feedback(thumbs_up_clicks, thumbs_down_clicks, btn_id):
+    ctx = callback_context
+    if not ctx.triggered:
+        return no_update, no_update, no_update
+
+    trigger_id = ctx.triggered[0]["prop_id"]
+    is_positive = "thumbs-up" in trigger_id
+
     feedback_id = btn_id["index"]
     conversation_id, message_id = feedback_id.split("|")
+    rating = "POSITIVE" if is_positive else "NEGATIVE"
+
     try:
         headers = request.headers
         user_token = headers.get('X-Forwarded-Access-Token')
-        success = send_feedback(conversation_id, message_id, "POSITIVE", user_token, GENIE_SPACE_ID)
-        return "Thanks for your feedback!" if success else "Failed to send feedback"
+        success = send_feedback(conversation_id, message_id, rating, user_token, GENIE_SPACE_ID)
+        if success:
+            if is_positive:
+                return "Thanks for your feedback!", "thumbs-up-button active", "thumbs-down-button"
+            else:
+                return "Thanks for your feedback!", "thumbs-up-button", "thumbs-down-button active"
+        return "Failed to send feedback", no_update, no_update
     except Exception as e:
-        logger.error(f"Error sending positive feedback: {e}")
-        return "Failed to send feedback"
-
-
-# Callback for thumbs down feedback
-@app.callback(
-    Output({"type": "feedback-status", "index": MATCH}, "children", allow_duplicate=True),
-    Input({"type": "thumbs-down", "index": MATCH}, "n_clicks"),
-    State({"type": "thumbs-down", "index": MATCH}, "id"),
-    prevent_initial_call=True
-)
-def handle_thumbs_down(n_clicks, btn_id):
-    if not n_clicks:
-        return no_update
-    feedback_id = btn_id["index"]
-    conversation_id, message_id = feedback_id.split("|")
-    try:
-        headers = request.headers
-        user_token = headers.get('X-Forwarded-Access-Token')
-        success = send_feedback(conversation_id, message_id, "NEGATIVE", user_token, GENIE_SPACE_ID)
-        return "Thanks for your feedback!" if success else "Failed to send feedback"
-    except Exception as e:
-        logger.error(f"Error sending negative feedback: {e}")
-        return "Failed to send feedback"
+        logger.error(f"Error sending feedback: {e}")
+        return "Failed to send feedback", no_update, no_update
 
 
 # Callback to fetch spaces on load
