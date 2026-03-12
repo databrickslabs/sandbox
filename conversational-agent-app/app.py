@@ -460,6 +460,12 @@ def get_model_response(trigger_data, current_messages, chat_history):
                 ], className="sql-description")
             )
 
+        # 2b. Genie text summary (shown below description box, above table)
+        if text_response and df is not None:
+            content_parts.append(
+                dcc.Markdown(escape_md(text_response), className="message-text")
+            )
+
         # 3. Data table (if query returned results)
         table_uuid = None
         if df is not None and not df.empty:
@@ -513,12 +519,6 @@ def get_model_response(trigger_data, current_messages, chat_history):
         if data_summary:
             content_parts.append(
                 html.Pre(data_summary, className="data-summary")
-            )
-
-        # 3c. Follow-up question from Genie (shown below data when query data exists)
-        if text_response and df is not None:
-            content_parts.append(
-                dcc.Markdown(escape_md(text_response), className="message-text")
             )
 
         # 4. SQL query toggle section
