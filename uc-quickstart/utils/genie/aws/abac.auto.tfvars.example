@@ -1,0 +1,144 @@
+# ============================================================================
+# ABAC Terraform Module — Variable Skeleton (ABAC + Genie config)
+# ============================================================================
+# This file contains the ABAC configuration (groups, tags, policies)
+# and Genie Space config (title, description, questions, instructions,
+# benchmarks). Credentials go in auth.auto.tfvars; environment in env.auto.tfvars.
+#
+# Setup:
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (credentials — gitignored)
+#      cp env.auto.tfvars.example env.auto.tfvars     (tables + environment)
+#   2. cp abac.auto.tfvars.example abac.auto.tfvars    (fill in ABAC config)
+#   3. terraform apply   (loads both files automatically)
+#
+# For a complete working example see examples/finance/finance.tfvars.example.
+# ============================================================================
+
+# === Groups: one entry per access tier ===
+# Each key becomes a Databricks account-level group with consumer entitlements.
+groups = {
+  # "GroupName" = { description = "What this group can see" }
+}
+
+# === Tag policies: governance tags for ABAC matching ===
+# Each entry creates a databricks_tag_policy with the specified allowed values.
+tag_policies = [
+  # { key = "sensitivity", description = "Data sensitivity level", values = ["public", "confidential", "restricted"] }
+]
+
+# === Tag assignments: bind tags to your tables/columns ===
+# entity_type: "tables" or "columns"
+# entity_name must be fully qualified:
+#   Tables:  "catalog.schema.TableName"
+#   Columns: "catalog.schema.TableName.ColumnName"
+tag_assignments = [
+  # { entity_type = "columns", entity_name = "my_catalog.my_schema.Table.Column", tag_key = "sensitivity", tag_value = "confidential" }
+]
+
+# === FGAC policies: the access rules ===
+# policy_type: POLICY_TYPE_COLUMN_MASK or POLICY_TYPE_ROW_FILTER
+# catalog, function_catalog, function_schema are REQUIRED on each policy.
+# function_name is relative (just the function name, e.g. "mask_redact").
+fgac_policies = [
+  # Column mask example:
+  # {
+  #   name             = "mask_confidential"
+  #   policy_type      = "POLICY_TYPE_COLUMN_MASK"
+  #   catalog          = "my_catalog"
+  #   to_principals    = ["Restricted_Users"]
+  #   comment          = "Mask confidential columns"
+  #   match_condition  = "hasTagValue('sensitivity', 'confidential')"
+  #   match_alias      = "cols"
+  #   function_name    = "mask_redact"
+  #   function_catalog = "my_catalog"
+  #   function_schema  = "my_schema"
+  # }
+  #
+  # Row filter example:
+  # {
+  #   name             = "region_filter"
+  #   policy_type      = "POLICY_TYPE_ROW_FILTER"
+  #   catalog          = "my_catalog"
+  #   to_principals    = ["EU_Staff"]
+  #   comment          = "EU staff see EU data only"
+  #   when_condition   = "hasTagValue('data_region', 'scoped')"
+  #   function_name    = "filter_by_region_eu"
+  #   function_catalog = "my_catalog"
+  #   function_schema  = "my_schema"
+  # }
+]
+
+# === Group members (optional): account-level user IDs to add to groups ===
+# Get IDs from Account Console > Users or SCIM API.
+group_members = {
+  # "GroupName" = ["user_id_1", "user_id_2"]
+}
+
+# === Genie Space Config (AI-generated — tune as needed) ===
+# Title and description for the auto-created Genie Space.
+# genie_space_title       = "Financial & Clinical Analytics"
+# genie_space_description = "Explore transaction data, patient encounters, and compliance metrics with natural language."
+
+# Sample questions shown as conversation starters in the Genie Space UI.
+# genie_sample_questions = [
+#   "What is the total revenue by region for last quarter?",
+#   "Show the top 10 customers by transaction volume",
+#   "Which accounts have been flagged for AML review?",
+# ]
+
+# Domain-specific guidance for the Genie LLM (include business defaults).
+# genie_instructions = "When asked about 'customers' without a status qualifier, default to active customers (CustomerStatus = 'Active'). 'Last month' means the previous calendar month. Round monetary values to 2 decimal places."
+
+# Ground-truth SQL for evaluating Genie accuracy.
+# Each question must be unambiguous — include explicit qualifiers so question and SQL agree on scope.
+# genie_benchmarks = [
+#   {
+#     question = "What is the total amount of completed transactions?"
+#     sql      = "SELECT SUM(Amount) as total_amount FROM catalog.schema.transactions WHERE TransactionStatus = 'Completed'"
+#   },
+# ]
+
+# Default WHERE clauses that guide Genie's SQL generation.
+# genie_sql_filters = [
+#   {
+#     sql          = "customers.CustomerStatus = 'Active'"
+#     display_name = "active customers"
+#     comment      = "Only include customers with Active status"
+#     instruction  = "Apply when the user asks about customers without specifying a status"
+#   },
+# ]
+
+# Standard aggregate metrics for Genie to use.
+# genie_sql_measures = [
+#   {
+#     alias        = "total_revenue"
+#     sql          = "SUM(transactions.Amount)"
+#     display_name = "total revenue"
+#     comment      = "Sum of all transaction amounts"
+#     instruction  = "Use for revenue, total amount, or sales calculations"
+#   },
+# ]
+
+# Computed dimensions/columns for Genie to use.
+# genie_sql_expressions = [
+#   {
+#     alias        = "transaction_year"
+#     sql          = "YEAR(transactions.TransactionDate)"
+#     display_name = "transaction year"
+#     comment      = "Extracts year from transaction date"
+#     instruction  = "Use for year-over-year analysis of transactions"
+#   },
+# ]
+
+# Join relationships between tables.
+# genie_join_specs = [
+#   {
+#     left_table  = "catalog.schema.accounts"
+#     left_alias  = "accounts"
+#     right_table = "catalog.schema.customers"
+#     right_alias = "customers"
+#     sql         = "accounts.CustomerID = customers.CustomerID"
+#     comment     = "Join accounts to customers on CustomerID"
+#     instruction = "Use when you need customer details for account queries"
+#   },
+# ]
