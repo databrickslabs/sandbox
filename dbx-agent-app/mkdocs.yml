@@ -1,0 +1,60 @@
+site_name: dbx-agent-app
+site_description: Framework for building discoverable AI agents on Databricks Apps
+site_url: https://databricks-labs.github.io/dbx-agent-app
+repo_url: https://github.com/databricks-labs/dbx-agent-app
+repo_name: databricks-labs/dbx-agent-app
+
+theme:
+  name: material
+  palette:
+    primary: red
+    accent: orange
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Your First Agent: getting-started/first-agent.md
+  - User Guide:
+    - Tool Registration: guide/tools.md
+    - Agent Discovery: guide/discovery.md
+    - A2A Communication: guide/a2a-protocol.md
+    - Unity Catalog: guide/unity-catalog.md
+  - Examples:
+    - Customer Research Agent: examples/customer-research.md
+    - Multi-Agent System: examples/multi-agent.md
+    - UC Integration: examples/uc-integration.md
+  - API Reference:
+    - AgentDiscovery: api/discovery.md
+    - A2AClient: api/a2a-client.md
+    - UCAgentRegistry: api/uc-registry.md
+  - Contributing: contributing.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true

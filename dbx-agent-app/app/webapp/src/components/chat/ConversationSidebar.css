@@ -1,0 +1,117 @@
+.conversation-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-secondary, #f8f9fa);
+  border-right: 1px solid var(--border-color, #e0e0e0);
+}
+
+.conversation-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.conversation-sidebar-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #1a1a1a);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.new-chat-btn:hover {
+  background: var(--bg-hover, #f0f0f0);
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 2px;
+}
+
+.conversation-item:hover {
+  background: var(--bg-hover, #e8e8e8);
+}
+
+.conversation-item.active {
+  background: var(--bg-active, #e3f2fd);
+}
+
+.conversation-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #1a1a1a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.conversation-item-meta {
+  font-size: 11px;
+  color: var(--text-secondary, #6b7280);
+  display: flex;
+  gap: 8px;
+}
+
+.conversation-delete-btn {
+  opacity: 0;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.conversation-item:hover .conversation-delete-btn {
+  opacity: 1;
+}
+
+.conversation-delete-btn:hover {
+  color: var(--text-danger, #dc2626);
+  background: var(--bg-danger-subtle, #fef2f2);
+}
+
+.conversation-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-secondary, #6b7280);
+  font-size: 13px;
+}
