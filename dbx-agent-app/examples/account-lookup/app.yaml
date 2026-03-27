@@ -1,0 +1,19 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  - name: UC_CATALOG
+    value: ai_campaign_pipeline_catalog
+  - name: UC_SCHEMA
+    value: ai_campaign
+  - name: WAREHOUSE_ID
+    value: "9628673416acf780"
+  - name: MODEL_ENDPOINT
+    value: databricks-claude-sonnet-4-6

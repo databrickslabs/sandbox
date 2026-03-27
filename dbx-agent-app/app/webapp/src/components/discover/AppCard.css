@@ -1,0 +1,50 @@
+.app-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.app-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.app-card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+  word-break: break-word;
+}
+
+.app-owner {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.app-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.app-link {
+  font-size: 14px;
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.app-link:hover {
+  text-decoration: underline;
+}
+
+.app-card-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: auto;
+}
