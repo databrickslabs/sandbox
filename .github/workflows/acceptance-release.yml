@@ -1,9 +1,9 @@
 name: Release acceptance
 
-on:
-  push:
-    tags:
-      - 'acceptance/v*'
+on: {} # Temporary disabled
+  # push:
+  #   tags:
+  #     - 'acceptance/v*'
 
 jobs:
   publish:

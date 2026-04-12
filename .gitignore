@@ -121,7 +121,7 @@ ipython_config.py
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
-.python-version
+# .python-version is tracked for uv
 
 # pdm
 #   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
@@ -190,3 +190,4 @@ coverage.txt
 **/*.tfstate.*
 **/terraform.tfstate.d/**
 **/*.tfvars
+/llnotes/llnotes
