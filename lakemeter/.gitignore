@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build outputs
+# dist/ - Uncommenting to include frontend build in repo for Databricks deployment
+build/
+*.egg
+.next/
+
+# IDE & AI tools
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+.DS_Store
+
+# Databricks workspace metadata
+.databricks/
+
+# Harness (build agent artifacts)
+harness/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+test_results/
+test_screenshots/
+*_TEST_REPORT.md
+*_RESULTS.md
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Misc
+*.bak
+*.tmp
+
+scripts/app_source/backend/
+scripts/pricing_data/
