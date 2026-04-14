@@ -11,7 +11,7 @@ require (
 	github.com/databrickslabs/sandbox/go-libs v0.4.0 // Databricks License
 	github.com/nxadm/tail v1.4.11 // MIT
 	github.com/sethvargo/go-githubactions v1.2.0 // Apache 2.0
-	github.com/stretchr/testify v1.9.0 // MIT
+	github.com/stretchr/testify v1.11.1 // MIT
 	golang.org/x/oauth2 v0.20.0 // BSD
 )
 
