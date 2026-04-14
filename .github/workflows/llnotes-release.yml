@@ -1,9 +1,9 @@
 name: Release llnotes
 
-on:
-  push:
-    tags:
-      - 'llnotes/v*'
+on: {} # Temporary disabled
+  # push:
+  #   tags:
+  #     - 'llnotes/v*'
 
 jobs:
   publish:

@@ -1,9 +1,9 @@
 name: Release downstreams
 
-on:
-  push:
-    tags:
-      - 'downstreams/v*'
+on: {} # Temporary disabled
+  # push:
+  #   tags:
+  #     - 'downstreams/v*'
 
 jobs:
   publish:
