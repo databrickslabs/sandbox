@@ -8,7 +8,7 @@ require (
 	github.com/databrickslabs/sandbox/go-libs v0.4.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/yuin/goldmark v1.7.16
+	github.com/yuin/goldmark v1.8.2
 	github.com/yuin/goldmark-meta v1.1.0
 )
 
