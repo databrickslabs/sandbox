@@ -72,24 +72,17 @@ resources:
         - "vectorsearch.vector-search-indexes"
         - "catalog.connections"
 
-  # --- Installer job to persist Tavily key into a secret and write optional config ---
-  jobs:
-    install_app:
-      name: "${var.project_name} - Install/Configure"
-      tasks:
-        - task_key: configure_app
-          notebook_task:
-            notebook_path: "./notebooks/setup_app"   # create this notebook
-            base_parameters:
-              TAVILY_API_KEY: "${var.tavily_api_key}"
-              SECRET_SCOPE: "${var.secret_scope}"
-              SECRET_KEY: "${var.secret_key}"
-          # Add compute for your workspace (example placeholders):
-          # existing_cluster_id: "<your-cluster-id>"
-          # OR:
-          # job_clusters:
-          #   - job_cluster_key: "install_cluster"
-          #     new_cluster:
-          #       spark_version: "14.3.x-scala2.12"
-          #       node_type_id: "i3.xlarge"
-          #       num_workers: 0
+  # --- Installer job disabled until ./notebooks/setup_app exists; uncomment when ready ---
+  # jobs:
+  #   install_app:
+  #     name: "${var.project_name} - Install/Configure"
+  #     tasks:
+  #       - task_key: configure_app
+  #         notebook_task:
+  #           notebook_path: "./notebooks/setup_app"
+  #           base_parameters:
+  #             TAVILY_API_KEY: "${var.tavily_api_key}"
+  #             SECRET_SCOPE: "${var.secret_scope}"
+  #             SECRET_KEY: "${var.secret_key}"
+  #         # existing_cluster_id: "<your-cluster-id>"
+  #         # OR job_clusters with new_cluster (spark_version, node_type_id, num_workers: 0)
