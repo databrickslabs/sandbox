@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/common/environment"
-	"github.com/databricks/databricks-sdk-go/openapi/code"
 	"github.com/databrickslabs/sandbox/acceptance/ecosystem"
 	"github.com/databrickslabs/sandbox/go-libs/slack"
 )
@@ -34,10 +33,9 @@ func (n Notification) ToSlack(hook slack.Webhook) error {
 		if v.Pass && !v.Flaky {
 			continue
 		}
-		n := code.Named{Name: v.Name}
 		// in order to fit in mobile messages, we normalize the names
-		// of tests by tokeinizing them and turning into sentences.
-		sentence := n.TrimPrefix("test").TitleName()
+		// of tests by tokenizing them and turning into sentences.
+		sentence := humanizeTestName(v.Name)
 		msg := fmt.Sprintf("%s _(%s)_", sentence, v.Duration().Round(time.Second))
 		if v.Flaky {
 			flakes = append(flakes, msg)
