@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/metascan
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/adrg/frontmatter v0.2.0
