@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/databricks/databricks-sdk-go v0.127.0
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/google/go-querystring v1.2.0
 	github.com/nwidger/jsoncolor v0.3.2
 	github.com/sourcegraph/go-diff v0.7.0
@@ -33,7 +33,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
