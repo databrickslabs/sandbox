@@ -9,8 +9,8 @@ github.com/briandowns/spinner v1.23.2/go.mod h1:LaZeM4wm2Ywy6vO571mvhQNRcWfRUnXO
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
-github.com/databricks/databricks-sdk-go v0.127.0 h1:PMM9AVqH+YEMYu55MWg7CWjG/o8esP/4WqskAKxngiQ=
-github.com/databricks/databricks-sdk-go v0.127.0/go.mod h1:C5LNgGe6hGuRrTwoxFmuup3XtQQEaqtq0e+K8IFDIS4=
+github.com/databricks/databricks-sdk-go v0.128.0 h1:4aGI3KkSZHDkxNIgwQL6dn6q6zZKcgyckidcQZNDGGo=
+github.com/databricks/databricks-sdk-go v0.128.0/go.mod h1:C5LNgGe6hGuRrTwoxFmuup3XtQQEaqtq0e+K8IFDIS4=
 github.com/databrickslabs/sandbox/go-libs v0.4.1 h1:ZqqcP+ZF69LKvXILvSfZbD9+ssRNCdDb45ipXHdcvbk=
 github.com/databrickslabs/sandbox/go-libs v0.4.1/go.mod h1:R0jABegxKm1gv+ufyexdzQT2iC29uP0NtQRRG7Skbvc=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
