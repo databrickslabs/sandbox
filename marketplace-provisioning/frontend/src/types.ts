@@ -22,16 +22,6 @@ export interface Submission {
   evidence: EvidenceItem[];
 }
 
-export interface LeaderboardEntry {
-  nickname: string;
-  mystery: string;
-  score: number;
-  root_cause_score: number;
-  evidence_score: number;
-  recommendation_score: number;
-  submitted_at: string;
-}
-
 export interface ProvisioningEvent {
   step: string;
   message: string;

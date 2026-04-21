@@ -62,22 +62,4 @@ export const api = {
 
   getConfig: () =>
     request<{ workspace_host: string }>("/config"),
-
-  getLeaderboard: () =>
-    request<
-      {
-        player_name: string;
-        mystery: string;
-        score: number;
-        root_cause_score: number;
-        evidence_score: number;
-        recommendation_score: number;
-        submitted_at: string;
-      }[]
-    >("/leaderboard"),
-
-  clearScores: () =>
-    request<{ status: string; message: string }>("/clear-scores", {
-      method: "POST",
-    }),
 };
