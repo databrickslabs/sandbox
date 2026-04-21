@@ -71,7 +71,7 @@ func (l *loadedEnv) Cloud() environment.Cloud {
 	if err != nil {
 		return environment.CloudAWS
 	}
-	return cfg.Environment().Cloud
+	return environment.GetEnvironmentForHostname(cfg.CanonicalHostName()).Cloud
 }
 
 func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) {
@@ -80,7 +80,8 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 		return nil, nil, fmt.Errorf("config: %w", err)
 	}
 	srv := l.metadataServer(cfg)
-	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cfg.Environment().Cloud)))
+	cloud := environment.GetEnvironmentForHostname(cfg.CanonicalHostName()).Cloud
+	ctx = env.Set(ctx, "CLOUD_ENV", strings.ToLower(string(cloud)))
 	ctx = env.Set(ctx, "DATABRICKS_METADATA_SERVICE_URL", fmt.Sprintf("%s/%s", srv.URL, l.mpath))
 	ctx = env.Set(ctx, "DATABRICKS_AUTH_TYPE", "metadata-service")
 	isAuth := map[string]bool{}
@@ -104,7 +105,7 @@ func (l *loadedEnv) Start(ctx context.Context) (context.Context, func(), error) 
 }
 
 func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
-	accountHost := seed.Environment().DeploymentURL("accounts")
+	accountHost := environment.GetEnvironmentForHostname(seed.CanonicalHostName()).DeploymentURL("accounts")
 	configurations := map[string]*config.Config{
 		seed.CanonicalHostName(): seed,
 		accountHost: {
