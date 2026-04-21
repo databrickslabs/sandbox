@@ -151,6 +151,7 @@ func (l *loadedEnv) metadataServer(seed *config.Config) *httptest.Server {
 				ErrorCode: "BAD_REQUEST",
 				Message:   "Wrong Authorization header",
 			})
+			return
 		}
 		// try parse expiry date from JWT token
 		exp, err := l.parseExpiryDate(ctx, accessToken)
