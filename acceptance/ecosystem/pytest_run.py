@@ -49,7 +49,7 @@ class RunReport:
 
 if __name__ == '__main__':
     sys.exit(pytest.main([
-        '-n', os.environ.get('PYTEST_N', '10'),
+        '-n', (os.environ.get('PYTEST_N') or '').strip() or '10',
         "--log-disable", "urllib3.connectionpool",
         "--log-format", "%(asctime)s %(levelname)s [%(name)s] %(message)s",
         "--log-date-format", "%H:%M",
