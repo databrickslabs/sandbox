@@ -1,0 +1,801 @@
+employee_id,first_name,last_name,department,region,hire_date,manager_id,job_title,job_level,status
+EMP-0001,Cormac,Ly,Engineering,Southwest,2022-01-08,MGR-001,Senior Engineer,3,Resigned
+EMP-0002,Sakura,Wang,Engineering,Southwest,2022-04-21,MGR-001,Senior Engineer,3,Resigned
+EMP-0003,Rashid,Koroma,Engineering,Southwest,2023-12-08,MGR-001,Senior Engineer,3,Resigned
+EMP-0004,Griffin,Yamamoto,Engineering,Southwest,2021-09-26,MGR-001,Staff Engineer,4,Resigned
+EMP-0005,Kai,Sanchez,Engineering,Southwest,2023-02-03,MGR-001,Senior Engineer,3,Resigned
+EMP-0006,Bao,Matsuda,Engineering,Southwest,2022-07-16,MGR-001,Software Engineer,2,Resigned
+EMP-0007,Thandi,Kulkarni,Engineering,Southwest,2023-08-25,MGR-001,Senior Engineer,3,Resigned
+EMP-0008,Samir,Fischer,Engineering,Southwest,2021-12-08,MGR-001,Staff Engineer,4,Resigned
+EMP-0009,Karina,Ueda,Engineering,Southwest,2020-12-14,MGR-001,Senior Engineer,3,Resigned
+EMP-0010,Javier,Larsson,Engineering,Southwest,2020-04-04,MGR-001,Senior Engineer,3,Resigned
+EMP-0011,Miguel,Fujita,Engineering,Southwest,2021-09-29,MGR-001,Staff Engineer,4,Resigned
+EMP-0012,Priya,Estrada,Engineering,Southwest,2022-02-01,MGR-001,Staff Engineer,4,Active
+EMP-0013,Vivian,Guerrero,Engineering,Southwest,2022-02-24,MGR-001,Senior Engineer,3,Active
+EMP-0014,Tatiana,Torres,Engineering,Southwest,2020-02-17,MGR-001,Staff Engineer,4,Active
+EMP-0015,Viktor,Ono,Marketing,Southeast,2020-11-09,MGR-058,Senior Marketing Manager,3,Resigned
+EMP-0016,Viktor,Inoue,Sales,Southwest,2020-07-16,MGR-012,Sales Manager,4,Resigned
+EMP-0017,Oumar,Grant,Customer Success,West Coast,2018-02-16,MGR-052,Senior CS Manager,3,Resigned
+EMP-0018,Oumar,Chen,Engineering,West Coast,2018-06-02,MGR-036,Software Engineer,2,Resigned
+EMP-0019,Finn,Gutierrez,Sales,Southwest,2022-05-11,MGR-012,Account Executive,2,Resigned
+EMP-0020,Anya,Kobayashi,Sales,West Coast,2017-12-15,MGR-022,Regional Sales Director,5,Resigned
+EMP-0021,Camila,Pillai,Operations,Southeast,2020-05-02,MGR-040,VP of Operations,5,Resigned
+EMP-0022,Amira,Yoshida,Marketing,Southwest,2018-12-13,MGR-009,Marketing Specialist,2,Resigned
+EMP-0023,Dante,Nakamura,Sales,Midwest,2024-11-19,MGR-042,Sales Manager,4,Resigned
+EMP-0024,Eric,Eriksson,Operations,Southwest,2024-04-06,MGR-025,Senior Operations Manager,3,Resigned
+EMP-0025,Viktor,Navarro,Product,West Coast,2021-12-04,MGR-002,VP of Product,5,Resigned
+EMP-0026,Suresh,Ishikawa,Operations,Southeast,2017-06-13,MGR-040,Operations Analyst,1,Resigned
+EMP-0027,Divya,Grant,Engineering,Midwest,2018-12-19,MGR-036,Senior Engineer,3,Resigned
+EMP-0028,Yolanda,Ma,Product,Southeast,2022-04-10,MGR-047,VP of Product,5,Resigned
+EMP-0029,Felix,Traoré,Product,Southeast,2021-06-29,MGR-054,Product Manager,2,Resigned
+EMP-0030,Tatiana,Guo,Customer Success,Southwest,2023-02-01,MGR-046,Senior CS Manager,3,Resigned
+EMP-0031,Fernanda,Iyer,Customer Success,Southwest,2023-02-28,MGR-019,CS Manager,2,Resigned
+EMP-0032,Fatima,Ly,Customer Success,Northeast,2020-06-26,MGR-048,CS Director,4,Resigned
+EMP-0033,Lakshmi,Matsuda,Engineering,Northeast,2025-01-14,MGR-029,Senior Engineer,3,Resigned
+EMP-0034,Troy,Sanchez,Operations,West Coast,2019-02-20,MGR-025,Operations Analyst,1,Resigned
+EMP-0035,Jia,Camara,Marketing,Southwest,2020-05-07,MGR-058,Marketing Specialist,2,Resigned
+EMP-0036,Ayumi,Sakho,Operations,Southeast,2019-02-12,MGR-031,VP of Operations,5,Resigned
+EMP-0037,Xiomara,Xu,Product,Southeast,2024-06-11,MGR-013,Product Manager,2,Resigned
+EMP-0038,Felix,Mensah,Customer Success,Southeast,2022-02-15,MGR-005,CS Associate,1,Resigned
+EMP-0039,Ingrid,Lund,Customer Success,Midwest,2024-10-08,MGR-046,CS Manager,2,Resigned
+EMP-0040,Brigitte,Wu,Product,Southeast,2017-05-28,MGR-054,Group Product Manager,4,Resigned
+EMP-0041,Adaeze,Mensah,Customer Success,Southwest,2024-10-13,MGR-027,CS Manager,2,Resigned
+EMP-0042,Pia,Sow,Operations,Northeast,2021-08-15,MGR-025,Operations Specialist,2,Resigned
+EMP-0043,Lina,Salazar,Finance,Northeast,2024-02-26,MGR-026,Senior Financial Analyst,2,Resigned
+EMP-0044,Elsa,Sakho,Sales,Southwest,2020-11-16,MGR-045,Account Executive,2,Resigned
+EMP-0045,Marisol,Eriksson,Operations,Southeast,2021-04-12,MGR-034,Operations Analyst,1,Resigned
+EMP-0046,Esperanza,Olsen,Engineering,West Coast,2025-05-09,MGR-004,Staff Engineer,4,Resigned
+EMP-0047,Takeshi,Ly,Customer Success,Midwest,2019-02-18,MGR-048,CS Manager,2,Resigned
+EMP-0048,Oluwaseun,Koroma,Customer Success,Southeast,2021-02-03,MGR-051,CS Associate,1,Resigned
+EMP-0049,Yara,Gupta,Customer Success,West Coast,2021-02-07,MGR-048,CS Director,4,Resigned
+EMP-0050,Ruth,Bangura,Product,Midwest,2022-04-03,MGR-002,Group Product Manager,4,Resigned
+EMP-0051,Esperanza,Campos,Marketing,Southwest,2017-02-27,MGR-015,Marketing Director,4,Resigned
+EMP-0052,Rosa,Wade,Operations,Midwest,2019-08-16,MGR-056,Operations Analyst,1,Resigned
+EMP-0053,Tariq,Matsuda,Product,Midwest,2018-04-23,MGR-013,Senior Product Manager,3,Resigned
+EMP-0054,Yuki,Berg,Finance,Northeast,2021-02-28,MGR-055,Senior Financial Analyst,2,Resigned
+EMP-0055,Leo,Mensah,Customer Success,Southeast,2020-02-20,MGR-005,Senior CS Manager,3,Resigned
+EMP-0056,Chukwu,Mensah,Product,Midwest,2024-03-26,MGR-047,Senior Product Manager,3,Resigned
+EMP-0057,Julian,Sharma,Product,Northeast,2023-09-12,MGR-002,Senior Product Manager,3,Resigned
+EMP-0058,Obi,Ramírez,Engineering,West Coast,2019-06-04,MGR-018,Software Engineer,2,Resigned
+EMP-0059,Oumar,Reyes,Sales,West Coast,2018-12-16,MGR-012,Account Executive,2,Resigned
+EMP-0060,Rashid,Grant,Marketing,Southwest,2017-08-03,MGR-014,Marketing Specialist,2,Resigned
+EMP-0061,Chukwu,Guo,Finance,Southwest,2019-06-27,MGR-043,Finance Manager,3,Resigned
+EMP-0062,Jasmine,Aguilar,Customer Success,Southeast,2018-03-19,MGR-046,CS Manager,2,Resigned
+EMP-0063,Malaika,Reyes,Engineering,Northeast,2024-02-07,MGR-053,Software Engineer,2,Resigned
+EMP-0064,Natsumi,Roth,Finance,West Coast,2024-11-14,MGR-017,Senior Financial Analyst,2,Resigned
+EMP-0065,Sunita,Popov,Customer Success,Southeast,2025-03-08,MGR-005,CS Manager,2,Resigned
+EMP-0066,Celine,Xu,Engineering,Southwest,2018-01-17,MGR-032,Staff Engineer,4,Resigned
+EMP-0067,Eric,Kulkarni,Finance,Midwest,2021-08-10,MGR-028,Finance Manager,3,Resigned
+EMP-0068,Elsa,Dutta,Marketing,Midwest,2022-09-10,MGR-014,Marketing Coordinator,1,Resigned
+EMP-0069,Tarquin,Murakami,Engineering,Midwest,2021-10-24,MGR-038,Senior Engineer,3,Resigned
+EMP-0070,Chen,Santos,Sales,Midwest,2020-06-19,MGR-024,Sales Manager,4,Resigned
+EMP-0071,Kai,Hernández,Sales,Southwest,2022-12-13,MGR-022,Sales Associate,1,Resigned
+EMP-0072,Annika,Ndiaye,Finance,Southwest,2018-09-30,MGR-020,Finance Director,4,Resigned
+EMP-0073,Andre,Ueda,Finance,Southeast,2019-06-02,MGR-060,Senior Financial Analyst,2,Resigned
+EMP-0074,Naomi,Ueda,Finance,Midwest,2021-06-07,MGR-043,Financial Analyst,1,Resigned
+EMP-0075,Leila,Conteh,Marketing,Midwest,2022-07-31,MGR-058,Marketing Coordinator,1,Resigned
+EMP-0076,Beatriz,Nilsson,Engineering,Southeast,2017-06-23,MGR-032,Staff Engineer,4,Resigned
+EMP-0077,Maxwell,Bhat,Product,Southeast,2021-07-18,MGR-002,Product Manager,2,Resigned
+EMP-0078,Chukwu,López,Operations,Southwest,2023-08-10,MGR-040,Operations Specialist,2,Resigned
+EMP-0079,Kofi,Fofana,Customer Success,Northeast,2024-02-07,MGR-005,CS Associate,1,Resigned
+EMP-0080,Zara,Berg,Engineering,Northeast,2018-12-12,MGR-053,Software Engineer,2,Resigned
+EMP-0081,Wyatt,Matsuda,Customer Success,West Coast,2022-01-13,MGR-051,CS Director,4,Resigned
+EMP-0082,Ravi,Rojas,Engineering,Southeast,2020-05-25,MGR-029,Software Engineer,2,Resigned
+EMP-0083,Greta,Okafor,Engineering,Midwest,2017-11-11,MGR-006,Staff Engineer,4,Resigned
+EMP-0084,Oluwaseun,Sylla,Customer Success,West Coast,2020-08-09,MGR-048,Senior CS Manager,3,Resigned
+EMP-0085,Jia,Wang,Finance,Northeast,2024-12-08,MGR-039,Financial Analyst,1,Resigned
+EMP-0086,Linh,Hasegawa,Customer Success,Midwest,2017-08-03,MGR-052,Senior CS Manager,3,Resigned
+EMP-0087,Tunde,Rivera,Marketing,West Coast,2020-09-27,MGR-009,Marketing Director,4,Resigned
+EMP-0088,Ryan,Gupta,Finance,Southwest,2021-03-23,MGR-055,Senior Financial Analyst,2,Resigned
+EMP-0089,Elijah,Sharma,Product,Southeast,2017-03-16,MGR-047,Senior Product Manager,3,Resigned
+EMP-0090,Petra,Cruz,Sales,Northeast,2018-02-19,MGR-044,Sales Associate,1,Resigned
+EMP-0091,Desmond,Gupta,Finance,Southeast,2019-01-11,MGR-057,Senior Financial Analyst,2,Resigned
+EMP-0092,Marta,Berg,Operations,West Coast,2025-05-25,MGR-056,Operations Specialist,2,Resigned
+EMP-0093,Troy,Kamara,Marketing,West Coast,2022-03-07,MGR-015,VP of Marketing,5,Resigned
+EMP-0094,Yara,Sugiyama,Sales,Midwest,2022-05-23,MGR-024,Sales Associate,1,Resigned
+EMP-0095,Nadia,Rivera,Engineering,Northeast,2022-10-04,MGR-007,Software Engineer,2,Resigned
+EMP-0096,Greta,Mansaray,Engineering,Southeast,2022-08-19,MGR-030,Junior Engineer,1,Resigned
+EMP-0097,Svetlana,Fofana,Customer Success,Northeast,2020-03-21,MGR-052,CS Associate,1,Resigned
+EMP-0098,Padma,Patel,Engineering,Southwest,2018-09-05,MGR-038,Software Engineer,2,Resigned
+EMP-0099,Marisol,Liu,Engineering,Northeast,2023-12-27,MGR-036,Software Engineer,2,Resigned
+EMP-0100,Luciana,Estrada,Sales,Northeast,2017-01-07,MGR-045,Account Executive,2,Resigned
+EMP-0101,Elijah,Mendoza,Engineering,West Coast,2022-09-11,MGR-038,Senior Engineer,3,Resigned
+EMP-0102,Ines,Inoue,Product,Southwest,2017-10-04,MGR-047,Product Manager,2,Resigned
+EMP-0103,Thandiwe,Sato,Engineering,Midwest,2024-03-17,MGR-007,Senior Engineer,3,Resigned
+EMP-0104,Mateo,Sato,Engineering,Southeast,2019-04-06,MGR-004,Junior Engineer,1,Resigned
+EMP-0105,Esperanza,Sakho,Operations,Midwest,2024-04-03,MGR-031,Operations Analyst,1,Resigned
+EMP-0106,Nadia,Murakami,Operations,Southeast,2021-05-03,MGR-034,Operations Director,4,Resigned
+EMP-0107,Bao,Kimura,Customer Success,Southwest,2017-11-20,MGR-046,CS Director,4,Resigned
+EMP-0108,Chioma,Desai,Product,Midwest,2023-10-05,MGR-050,Product Manager,2,Resigned
+EMP-0109,Daniel,Romero,Operations,Midwest,2017-08-23,MGR-011,Senior Operations Manager,3,Resigned
+EMP-0110,Emeka,Santos,Sales,West Coast,2021-11-30,MGR-010,Senior Account Executive,3,Resigned
+EMP-0111,Tunde,Ndiaye,Engineering,West Coast,2022-01-17,MGR-030,Software Engineer,2,Resigned
+EMP-0112,Esperanza,Hansen,Product,Midwest,2018-04-10,MGR-002,Product Manager,2,Resigned
+EMP-0113,Gabriel,Castillo,Customer Success,Midwest,2019-05-29,MGR-048,CS Director,4,Resigned
+EMP-0114,Kenji,Sylla,Sales,Southeast,2024-08-25,MGR-024,Regional Sales Director,5,Resigned
+EMP-0115,Idris,Fischer,Product,Northeast,2022-09-15,MGR-013,Group Product Manager,4,Resigned
+EMP-0116,Wyatt,Müller,Marketing,West Coast,2022-03-30,MGR-014,Senior Marketing Manager,3,Resigned
+EMP-0117,Amir,Arai,Operations,Southeast,2017-10-30,MGR-025,Operations Director,4,Resigned
+EMP-0118,Esteban,Martínez,Customer Success,West Coast,2019-01-16,MGR-052,Senior CS Manager,3,Resigned
+EMP-0119,Nadia,Vega,Sales,Midwest,2020-08-14,MGR-059,Account Executive,2,Resigned
+EMP-0120,Ayumi,Olsen,Sales,Midwest,2018-01-18,MGR-044,Senior Account Executive,3,Resigned
+EMP-0121,Joaquin,Popov,Customer Success,West Coast,2017-04-27,MGR-005,CS Associate,1,Resigned
+EMP-0122,Leo,Saito,Product,Southwest,2024-01-13,MGR-054,Senior Product Manager,3,Resigned
+EMP-0123,Tatiana,Kováč,Operations,Southwest,2018-10-10,MGR-056,Senior Operations Manager,3,Resigned
+EMP-0124,Brendan,Wu,Product,Midwest,2018-06-20,MGR-047,VP of Product,5,Resigned
+EMP-0125,Chen,Sylla,Sales,Northeast,2020-04-03,MGR-035,Sales Associate,1,Resigned
+EMP-0126,Emeka,Desai,Finance,Midwest,2018-10-15,MGR-039,Senior Financial Analyst,2,Resigned
+EMP-0127,Priya,Sharma,Operations,West Coast,2019-09-14,MGR-031,Senior Operations Manager,3,Resigned
+EMP-0128,Troy,Rao,Finance,Southwest,2021-11-01,MGR-020,Finance Director,4,Resigned
+EMP-0129,Kai,Singh,Finance,West Coast,2023-03-17,MGR-026,Senior Financial Analyst,2,Resigned
+EMP-0130,Iris,Vogt,Engineering,Northeast,2021-06-02,MGR-030,Principal Engineer,5,Resigned
+EMP-0131,Björn,Eriksson,Finance,West Coast,2017-06-14,MGR-008,Senior Financial Analyst,2,Resigned
+EMP-0132,Ravi,Ly,Finance,Northeast,2023-11-17,MGR-028,Senior Financial Analyst,2,Resigned
+EMP-0133,Adam,Mayer,Operations,West Coast,2017-03-10,MGR-034,Operations Specialist,2,Resigned
+EMP-0134,Liam,Navarro,Operations,Midwest,2023-06-28,MGR-031,VP of Operations,5,Resigned
+EMP-0135,Desmond,Vargas,Sales,Northeast,2024-11-09,MGR-012,Sales Associate,1,Resigned
+EMP-0136,Nikolai,Traoré,Finance,West Coast,2025-04-02,MGR-057,VP of Finance,5,Resigned
+EMP-0137,Rohan,Hansen,Sales,Southeast,2020-11-03,MGR-044,Regional Sales Director,5,Resigned
+EMP-0138,Suki,Huang,Finance,Midwest,2020-05-04,MGR-060,Senior Financial Analyst,2,Resigned
+EMP-0139,Amir,Mansaray,Finance,Midwest,2023-06-07,MGR-055,Senior Financial Analyst,2,Resigned
+EMP-0140,Zara,Hayashi,Engineering,Midwest,2017-11-20,MGR-030,Principal Engineer,5,Resigned
+EMP-0141,Sana,Sesay,Finance,Midwest,2023-11-27,MGR-057,Financial Analyst,1,Resigned
+EMP-0142,Camila,Bah,Engineering,Southwest,2025-01-17,MGR-036,Software Engineer,2,Resigned
+EMP-0143,Emeka,Hasegawa,Product,Southeast,2019-03-28,MGR-047,Senior Product Manager,3,Resigned
+EMP-0144,Maxwell,Bah,Finance,Southwest,2018-12-19,MGR-037,VP of Finance,5,Terminated
+EMP-0145,Esperanza,Braun,Sales,Midwest,2017-02-07,MGR-023,Sales Manager,4,Terminated
+EMP-0146,Julian,Sakho,Finance,Southeast,2018-07-04,MGR-041,Finance Director,4,Terminated
+EMP-0147,Ximena,Conteh,Product,Northeast,2020-10-12,MGR-047,Associate Product Manager,1,Terminated
+EMP-0148,Tatiana,Cissé,Finance,Midwest,2024-07-04,MGR-017,Financial Analyst,1,Terminated
+EMP-0149,Maria,Svoboda,Operations,Northeast,2019-12-30,MGR-034,Operations Specialist,2,Terminated
+EMP-0150,Rashid,Adeyemi,Product,Southwest,2018-10-17,MGR-050,Senior Product Manager,3,Terminated
+EMP-0151,Natsumi,Murakami,Finance,Northeast,2018-07-02,MGR-039,Senior Financial Analyst,2,Terminated
+EMP-0152,Troy,Guerrero,Customer Success,Northeast,2024-08-18,MGR-052,CS Director,4,Terminated
+EMP-0153,Chukwu,Osei,Finance,Southwest,2023-02-22,MGR-041,Financial Analyst,1,Terminated
+EMP-0154,Catalina,Boateng,Product,Northeast,2022-06-26,MGR-002,Group Product Manager,4,Terminated
+EMP-0155,Luciana,Németh,Operations,West Coast,2022-03-09,MGR-033,Operations Analyst,1,Terminated
+EMP-0156,Devi,Ono,Engineering,Southwest,2024-11-08,MGR-006,Software Engineer,2,Terminated
+EMP-0157,Troy,Nakamura,Marketing,Southeast,2018-07-09,MGR-058,Marketing Specialist,2,Terminated
+EMP-0158,Rohan,Lukić,Engineering,West Coast,2020-11-25,MGR-006,Junior Engineer,1,Terminated
+EMP-0159,Camila,Smith,Customer Success,Southwest,2022-03-12,MGR-051,VP of Customer Success,5,Active
+EMP-0160,Suki,Delgado,Marketing,Northeast,2025-02-17,MGR-009,Marketing Specialist,2,Active
+EMP-0161,Carlos,Yang,Sales,Southwest,2017-05-18,MGR-042,Sales Associate,1,Active
+EMP-0162,Finn,Bah,Finance,Northeast,2017-08-20,MGR-020,Finance Director,4,Active
+EMP-0163,Divya,Wu,Finance,West Coast,2020-08-06,MGR-021,Finance Director,4,Active
+EMP-0164,Sunita,Kováč,Marketing,Southwest,2023-08-21,MGR-014,Senior Marketing Manager,3,Active
+EMP-0165,Esteban,Vargas,Customer Success,West Coast,2021-09-02,MGR-046,CS Manager,2,Active
+EMP-0166,Lina,Cruz,Marketing,Northeast,2017-08-25,MGR-058,Marketing Director,4,Active
+EMP-0167,Felix,Larsson,Operations,Midwest,2025-02-15,MGR-031,Operations Analyst,1,Active
+EMP-0168,Kenji,Ito,Customer Success,West Coast,2023-04-09,MGR-019,CS Director,4,Active
+EMP-0169,Lukas,Ito,Product,Southwest,2022-05-16,MGR-013,Group Product Manager,4,Active
+EMP-0170,Yusuf,Rivera,Operations,Southeast,2021-01-11,MGR-033,Senior Operations Manager,3,Active
+EMP-0171,Troy,Wu,Sales,Midwest,2017-07-07,MGR-045,Account Executive,2,Active
+EMP-0172,Yolanda,Ono,Product,Southeast,2019-03-15,MGR-047,Product Manager,2,Active
+EMP-0173,Marco,Conteh,Customer Success,Southeast,2024-03-13,MGR-051,VP of Customer Success,5,Active
+EMP-0174,Leila,Sakho,Operations,Northeast,2023-01-30,MGR-003,VP of Operations,5,Active
+EMP-0175,Maria,Traoré,Sales,Northeast,2018-09-11,MGR-010,Sales Associate,1,Active
+EMP-0176,Padma,Menon,Product,Southeast,2022-12-20,MGR-054,Associate Product Manager,1,Active
+EMP-0177,Elsa,Kim,Finance,Southeast,2019-01-05,MGR-017,Finance Director,4,Active
+EMP-0178,Enrique,Nilsson,Marketing,Southeast,2021-07-22,MGR-058,Marketing Coordinator,1,Active
+EMP-0179,Chioma,Nakamura,Engineering,Southeast,2023-03-14,MGR-036,Software Engineer,2,Active
+EMP-0180,Adaeze,Fujita,Finance,Southwest,2017-06-24,MGR-021,Finance Director,4,Active
+EMP-0181,Valentina,Sakho,Finance,Southwest,2020-07-12,MGR-008,Senior Financial Analyst,2,Active
+EMP-0182,Esperanza,Osei,Marketing,Northeast,2023-05-11,MGR-058,Senior Marketing Manager,3,Active
+EMP-0183,Chioma,Morita,Product,Midwest,2021-11-26,MGR-013,Associate Product Manager,1,Active
+EMP-0184,Winston,Sun,Customer Success,Midwest,2020-01-25,MGR-052,CS Associate,1,Active
+EMP-0185,Rohan,Dahl,Sales,West Coast,2017-12-18,MGR-045,Senior Account Executive,3,Active
+EMP-0186,Celine,Vargas,Product,Northeast,2020-07-21,MGR-047,Group Product Manager,4,Active
+EMP-0187,Kaia,Ivanov,Sales,Southwest,2022-01-13,MGR-044,Account Executive,2,Active
+EMP-0188,Ayumi,Sharma,Finance,West Coast,2021-04-27,MGR-008,Finance Director,4,Active
+EMP-0189,Beatriz,Sanchez,Finance,West Coast,2021-04-09,MGR-020,Senior Financial Analyst,2,Active
+EMP-0190,Andrei,Ma,Marketing,Southeast,2017-11-12,MGR-015,Marketing Specialist,2,Active
+EMP-0191,Padma,Eriksson,Operations,Southwest,2017-01-28,MGR-040,Operations Analyst,1,Active
+EMP-0192,Thandiwe,Dahl,Customer Success,West Coast,2020-08-06,MGR-048,CS Associate,1,Active
+EMP-0193,Esperanza,Wu,Marketing,Southeast,2019-09-20,MGR-015,VP of Marketing,5,Active
+EMP-0194,Yara,Lin,Finance,Northeast,2023-03-04,MGR-008,Finance Manager,3,Active
+EMP-0195,Dante,Hernández,Customer Success,Southeast,2018-07-25,MGR-051,Senior CS Manager,3,Active
+EMP-0196,Rohan,Yamamoto,Operations,West Coast,2021-06-30,MGR-040,Senior Operations Manager,3,Active
+EMP-0197,Winston,Wang,Engineering,Northeast,2020-12-25,MGR-007,Senior Engineer,3,Active
+EMP-0198,Kai,Fujita,Customer Success,Southeast,2018-02-08,MGR-027,CS Associate,1,Active
+EMP-0199,Eric,Morita,Sales,Midwest,2022-06-01,MGR-012,Regional Sales Director,5,Active
+EMP-0200,Björn,Mansaray,Marketing,Midwest,2019-04-28,MGR-058,Senior Marketing Manager,3,Active
+EMP-0201,Xiomara,Hernández,Marketing,Southwest,2018-04-17,MGR-009,Marketing Director,4,Active
+EMP-0202,Patrick,Vega,Sales,West Coast,2023-04-13,MGR-035,Account Executive,2,Active
+EMP-0203,Aiko,Dahl,Operations,Southwest,2019-03-20,MGR-056,Operations Director,4,Active
+EMP-0204,Valentina,Petrov,Finance,Southwest,2023-01-09,MGR-020,Finance Director,4,Active
+EMP-0205,Nkechi,Diop,Product,Midwest,2023-11-09,MGR-050,Senior Product Manager,3,Active
+EMP-0206,Omar,Kováč,Finance,West Coast,2018-07-03,MGR-028,Financial Analyst,1,Active
+EMP-0207,Björn,Haugen,Operations,Southeast,2023-06-13,MGR-040,Senior Operations Manager,3,Active
+EMP-0208,Omar,Campos,Sales,Southeast,2019-02-06,MGR-024,Account Executive,2,Active
+EMP-0209,Cedric,Sato,Sales,Southeast,2022-09-02,MGR-049,Regional Sales Director,5,Active
+EMP-0210,Nkechi,Torres,Engineering,West Coast,2019-06-23,MGR-029,Junior Engineer,1,Active
+EMP-0211,Ximena,Maeda,Product,Southeast,2018-04-09,MGR-054,Senior Product Manager,3,Active
+EMP-0212,Finn,Sakho,Sales,Southeast,2024-05-01,MGR-022,Sales Associate,1,Active
+EMP-0213,Isabella,Rojas,Customer Success,Southwest,2019-08-29,MGR-019,CS Director,4,Active
+EMP-0214,Hina,Torres,Finance,Northeast,2019-04-28,MGR-060,Finance Director,4,Active
+EMP-0215,Sakura,Ortiz,Product,Midwest,2020-01-01,MGR-054,Product Manager,2,Active
+EMP-0216,Sunita,Adeyemi,Marketing,Northeast,2018-06-28,MGR-014,Marketing Director,4,Active
+EMP-0217,Ryan,Barry,Sales,West Coast,2024-01-16,MGR-035,Senior Account Executive,3,Active
+EMP-0218,Mohammed,Bhat,Finance,Midwest,2021-02-20,MGR-039,Finance Manager,3,Active
+EMP-0219,Mohammed,Delgado,Product,Midwest,2022-12-30,MGR-050,Group Product Manager,4,Active
+EMP-0220,Marco,Holm,Finance,Northeast,2022-06-11,MGR-060,Finance Manager,3,Active
+EMP-0221,Ximena,Kim,Engineering,Northeast,2017-01-03,MGR-032,Software Engineer,2,Active
+EMP-0222,Oumar,Sharma,Product,Midwest,2021-03-04,MGR-013,Product Manager,2,Active
+EMP-0223,Hina,Sharma,Product,Southwest,2022-05-08,MGR-002,Associate Product Manager,1,Active
+EMP-0224,Wei,Gutierrez,Customer Success,Southwest,2021-09-26,MGR-051,VP of Customer Success,5,Active
+EMP-0225,Diego,Ivanov,Marketing,Midwest,2018-07-16,MGR-058,Marketing Director,4,Active
+EMP-0226,Sofia,Diop,Finance,Southwest,2018-11-04,MGR-039,Finance Manager,3,Active
+EMP-0227,Sunita,Romero,Product,Southeast,2017-12-22,MGR-002,Group Product Manager,4,Active
+EMP-0228,Hina,Hansen,Customer Success,Northeast,2024-03-25,MGR-005,CS Manager,2,Active
+EMP-0229,Marisol,Ramírez,Finance,West Coast,2025-05-22,MGR-037,Finance Manager,3,Active
+EMP-0230,Lina,Braun,Operations,Southwest,2024-02-27,MGR-011,Operations Specialist,2,Active
+EMP-0231,Hana,Jalloh,Customer Success,West Coast,2023-02-16,MGR-051,CS Manager,2,Active
+EMP-0232,Carlos,Grant,Engineering,Southwest,2017-06-13,MGR-004,Software Engineer,2,Active
+EMP-0233,Suresh,Németh,Operations,Southeast,2023-01-07,MGR-025,Operations Analyst,1,Active
+EMP-0234,Celine,Guerrero,Marketing,Southeast,2024-04-15,MGR-009,Senior Marketing Manager,3,Active
+EMP-0235,Dmitri,Sanchez,Engineering,Southeast,2023-11-13,MGR-053,Junior Engineer,1,Active
+EMP-0236,Wei,Zhang,Operations,Midwest,2025-01-31,MGR-033,Senior Operations Manager,3,Active
+EMP-0237,Gabriel,Santos,Marketing,Southeast,2017-09-19,MGR-015,Marketing Specialist,2,Active
+EMP-0238,Dmitri,Salazar,Customer Success,West Coast,2018-10-07,MGR-027,CS Manager,2,Active
+EMP-0239,Mei,Nguyen,Sales,Southwest,2021-04-18,MGR-016,Senior Account Executive,3,Active
+EMP-0240,Vivian,Cruz,Marketing,Northeast,2025-01-29,MGR-015,Marketing Specialist,2,Active
+EMP-0241,Anya,Diallo,Sales,West Coast,2021-07-01,MGR-012,Regional Sales Director,5,Active
+EMP-0242,Isabella,Hu,Operations,Southwest,2020-04-09,MGR-033,Operations Specialist,2,Active
+EMP-0243,Wyatt,Eriksson,Product,West Coast,2019-10-02,MGR-013,Group Product Manager,4,Active
+EMP-0244,Wei,Fofana,Engineering,Southeast,2025-02-26,MGR-029,Staff Engineer,4,Active
+EMP-0245,Björn,Huang,Engineering,Southwest,2022-10-30,MGR-032,Principal Engineer,5,Active
+EMP-0246,Cormac,Watanabe,Finance,Northeast,2021-06-04,MGR-017,Finance Manager,3,Active
+EMP-0247,Rashid,Hayashi,Marketing,Midwest,2021-05-29,MGR-015,VP of Marketing,5,Active
+EMP-0248,Kwame,Wade,Engineering,Northeast,2022-01-16,MGR-036,Junior Engineer,1,Active
+EMP-0249,Amira,Sylla,Marketing,Southeast,2018-05-07,MGR-009,Marketing Specialist,2,Active
+EMP-0250,Oluwaseun,Touré,Customer Success,Midwest,2024-12-22,MGR-019,CS Associate,1,Active
+EMP-0251,Jabari,Takahashi,Engineering,Southeast,2023-03-28,MGR-038,Staff Engineer,4,Active
+EMP-0252,Nadia,Nguyen,Engineering,Northeast,2021-06-29,MGR-030,Junior Engineer,1,Active
+EMP-0253,Ingrid,O'Brien,Engineering,Northeast,2021-12-22,MGR-007,Principal Engineer,5,Active
+EMP-0254,Alejandro,Reddy,Finance,Southeast,2021-06-06,MGR-039,Finance Director,4,Active
+EMP-0255,Aiko,Olsen,Marketing,Southeast,2017-05-22,MGR-014,Marketing Director,4,Active
+EMP-0256,Jasmine,López,Marketing,Southeast,2019-03-28,MGR-014,Marketing Coordinator,1,Active
+EMP-0257,Pia,Aguilar,Finance,Southeast,2023-05-06,MGR-041,Senior Financial Analyst,2,Active
+EMP-0258,Kofi,Santos,Customer Success,Midwest,2022-04-17,MGR-048,CS Associate,1,Active
+EMP-0259,Lina,Kimura,Finance,Southwest,2019-06-18,MGR-043,Finance Director,4,Active
+EMP-0260,Omar,Diallo,Sales,West Coast,2025-04-12,MGR-059,Account Executive,2,Active
+EMP-0261,Helga,Maeda,Sales,West Coast,2022-07-10,MGR-044,Regional Sales Director,5,Active
+EMP-0262,Joaquin,Horváth,Engineering,West Coast,2020-09-20,MGR-053,Senior Engineer,3,Active
+EMP-0263,Yusuf,Adeyemi,Engineering,Northeast,2018-08-04,MGR-006,Senior Engineer,3,Active
+EMP-0264,Esperanza,Grant,Engineering,Midwest,2018-07-13,MGR-007,Software Engineer,2,Active
+EMP-0265,Xiomara,Takahashi,Product,West Coast,2023-11-19,MGR-047,Senior Product Manager,3,Active
+EMP-0266,Natsumi,Martínez,Sales,Southwest,2023-06-05,MGR-035,Regional Sales Director,5,Active
+EMP-0267,Griffin,Horváth,Product,West Coast,2022-07-26,MGR-013,Associate Product Manager,1,Active
+EMP-0268,Andrei,López,Customer Success,Midwest,2019-12-23,MGR-019,CS Manager,2,Active
+EMP-0269,James,Rodriguez,Operations,Southeast,2018-11-13,MGR-040,Operations Director,4,Active
+EMP-0270,Amir,Estrada,Product,Northeast,2017-10-29,MGR-002,Product Manager,2,Active
+EMP-0271,Jia,Reddy,Operations,Northeast,2023-02-19,MGR-011,Operations Director,4,Active
+EMP-0272,Andrei,Ly,Operations,Northeast,2020-09-18,MGR-031,Operations Analyst,1,Active
+EMP-0273,Javier,Castillo,Product,Midwest,2018-01-28,MGR-002,Product Manager,2,Active
+EMP-0274,Hina,López,Marketing,West Coast,2018-02-02,MGR-009,Senior Marketing Manager,3,Active
+EMP-0275,Lakshmi,Shimizu,Customer Success,Southeast,2024-05-31,MGR-027,Senior CS Manager,3,Active
+EMP-0276,Seiji,Flores,Operations,Southwest,2022-03-20,MGR-033,Operations Specialist,2,Active
+EMP-0277,Yuki,Wang,Product,Midwest,2021-08-23,MGR-054,Group Product Manager,4,Active
+EMP-0278,Paloma,Weber,Sales,Southeast,2021-06-06,MGR-059,Account Executive,2,Active
+EMP-0279,Omar,Torres,Sales,Northeast,2021-10-01,MGR-012,Sales Associate,1,Active
+EMP-0280,Zara,Navarro,Marketing,Midwest,2017-10-02,MGR-009,VP of Marketing,5,Active
+EMP-0281,Karina,Delgado,Customer Success,Southwest,2023-12-28,MGR-048,CS Director,4,Active
+EMP-0282,Helga,Grant,Finance,Southwest,2023-04-24,MGR-060,VP of Finance,5,Active
+EMP-0283,Sunita,Castillo,Operations,Southeast,2022-04-22,MGR-003,Senior Operations Manager,3,Active
+EMP-0284,Kai,Okafor,Operations,Midwest,2017-07-21,MGR-056,Senior Operations Manager,3,Active
+EMP-0285,Marisol,Koroma,Marketing,Southeast,2024-09-06,MGR-009,Marketing Director,4,Active
+EMP-0286,Catalina,Ortiz,Marketing,Southeast,2018-01-01,MGR-014,Senior Marketing Manager,3,Active
+EMP-0287,Ines,Tanaka,Finance,Northeast,2024-12-16,MGR-041,Financial Analyst,1,Active
+EMP-0288,Yara,Tanaka,Sales,Southwest,2021-01-16,MGR-059,Senior Account Executive,3,Active
+EMP-0289,Nadia,Santos,Sales,Midwest,2022-01-02,MGR-016,Senior Account Executive,3,Active
+EMP-0290,Mina,Svoboda,Product,Southwest,2021-05-03,MGR-002,Product Manager,2,Active
+EMP-0291,Nikolai,Kimura,Product,Southeast,2024-08-26,MGR-002,Senior Product Manager,3,Active
+EMP-0292,Wei,Cruz,Marketing,West Coast,2020-06-05,MGR-015,Marketing Director,4,Active
+EMP-0293,Devi,Keita,Marketing,West Coast,2021-06-15,MGR-009,Marketing Director,4,Active
+EMP-0294,Arjun,Kováč,Product,Southwest,2020-10-09,MGR-047,Senior Product Manager,3,Active
+EMP-0295,Idris,Ito,Sales,West Coast,2017-08-21,MGR-045,Sales Manager,4,Active
+EMP-0296,Fernanda,Bangura,Marketing,Southeast,2025-04-06,MGR-009,Marketing Specialist,2,Active
+EMP-0297,Hugo,Xu,Product,Midwest,2018-11-28,MGR-054,Senior Product Manager,3,Active
+EMP-0298,Beatriz,Novak,Product,Midwest,2019-06-30,MGR-047,Senior Product Manager,3,Active
+EMP-0299,Ines,Svoboda,Finance,Midwest,2018-04-28,MGR-039,Finance Manager,3,Active
+EMP-0300,Gabriel,Vargas,Finance,Midwest,2018-09-10,MGR-020,Senior Financial Analyst,2,Active
+EMP-0301,Brendan,Novak,Customer Success,Southwest,2024-01-29,MGR-019,Senior CS Manager,3,Active
+EMP-0302,Sakura,Estrada,Customer Success,Northeast,2017-12-27,MGR-019,Senior CS Manager,3,Active
+EMP-0303,Tunde,Patel,Engineering,West Coast,2021-03-09,MGR-004,Software Engineer,2,Active
+EMP-0304,Suki,Cruz,Product,Midwest,2018-02-25,MGR-050,Product Manager,2,Active
+EMP-0305,Idris,Hayashi,Operations,West Coast,2020-10-15,MGR-040,Senior Operations Manager,3,Active
+EMP-0306,Pia,Ito,Sales,Southeast,2019-07-08,MGR-059,Sales Associate,1,Active
+EMP-0307,Sakura,Liu,Marketing,Southwest,2024-03-07,MGR-015,Marketing Specialist,2,Active
+EMP-0308,Amara,O'Brien,Engineering,Southwest,2021-04-07,MGR-006,Software Engineer,2,Active
+EMP-0309,Wei,Moreno,Operations,Southwest,2020-01-11,MGR-025,Senior Operations Manager,3,Active
+EMP-0310,Arjun,Boateng,Customer Success,Southwest,2023-10-31,MGR-019,Senior CS Manager,3,Active
+EMP-0311,Mina,Johansson,Finance,Southeast,2024-09-19,MGR-039,VP of Finance,5,Active
+EMP-0312,Sven,Weber,Product,Southeast,2018-01-04,MGR-054,Associate Product Manager,1,Active
+EMP-0313,Julian,Bangura,Marketing,Southeast,2018-12-17,MGR-009,Marketing Coordinator,1,Active
+EMP-0314,Lakshmi,Watanabe,Customer Success,Southwest,2018-07-21,MGR-051,CS Associate,1,Active
+EMP-0315,Iris,Kimura,Product,Southwest,2020-11-04,MGR-013,Product Manager,2,Active
+EMP-0316,Tunde,Aguilar,Customer Success,Southeast,2018-11-15,MGR-005,Senior CS Manager,3,Active
+EMP-0317,Diego,Németh,Finance,Southeast,2024-08-10,MGR-039,Finance Director,4,Active
+EMP-0318,Hana,Menon,Operations,Southwest,2021-12-11,MGR-003,Operations Director,4,Active
+EMP-0319,Elijah,Estrada,Product,West Coast,2024-07-06,MGR-047,Product Manager,2,Active
+EMP-0320,Ruth,Ogawa,Product,Southeast,2023-04-06,MGR-054,Associate Product Manager,1,Active
+EMP-0321,Wyatt,Torres,Engineering,Southeast,2020-09-17,MGR-029,Software Engineer,2,Active
+EMP-0322,Rashid,Larsson,Operations,Southeast,2022-01-10,MGR-011,Operations Director,4,Active
+EMP-0323,Carlos,Ivanov,Operations,Southeast,2023-02-28,MGR-003,Operations Analyst,1,Active
+EMP-0324,Julian,Gutierrez,Marketing,Southwest,2022-02-05,MGR-015,Marketing Director,4,Active
+EMP-0325,Greta,Boateng,Engineering,Northeast,2020-12-25,MGR-029,Junior Engineer,1,Active
+EMP-0326,Andrei,Braun,Sales,Southeast,2023-11-08,MGR-022,Sales Associate,1,Active
+EMP-0327,Hassan,Popov,Engineering,Southeast,2024-02-07,MGR-053,Junior Engineer,1,Active
+EMP-0328,Dagny,Sato,Operations,Southwest,2017-07-18,MGR-040,Senior Operations Manager,3,Active
+EMP-0329,Freya,Ono,Sales,Northeast,2024-05-17,MGR-045,Sales Associate,1,Active
+EMP-0330,Malaika,Joshi,Marketing,Southeast,2020-04-19,MGR-058,VP of Marketing,5,Active
+EMP-0331,Luciana,Kováč,Customer Success,West Coast,2024-12-25,MGR-051,CS Director,4,Active
+EMP-0332,Dante,Ogawa,Product,Northeast,2024-04-16,MGR-013,VP of Product,5,Active
+EMP-0333,Beatriz,Aguilar,Finance,West Coast,2024-12-18,MGR-037,VP of Finance,5,Active
+EMP-0334,Aisha,Pillai,Engineering,Southwest,2017-08-06,MGR-004,Software Engineer,2,Active
+EMP-0335,Zara,Adeyemi,Product,Midwest,2023-01-26,MGR-002,Product Manager,2,Active
+EMP-0336,Beatriz,Cruz,Product,West Coast,2022-09-24,MGR-047,Product Manager,2,Active
+EMP-0337,Brendan,Hu,Engineering,Southwest,2019-04-12,MGR-053,Staff Engineer,4,Active
+EMP-0338,Seiji,Grant,Finance,West Coast,2025-02-17,MGR-021,Senior Financial Analyst,2,Active
+EMP-0339,Omar,Guo,Engineering,Southeast,2020-02-18,MGR-038,Junior Engineer,1,Active
+EMP-0340,Felix,Keita,Product,Northeast,2020-08-14,MGR-054,Associate Product Manager,1,Active
+EMP-0341,Pia,Yamamoto,Customer Success,Midwest,2019-01-24,MGR-048,Senior CS Manager,3,Active
+EMP-0342,Tatiana,Sharma,Marketing,Northeast,2024-06-10,MGR-015,Marketing Director,4,Active
+EMP-0343,Thandi,Xu,Finance,Southwest,2020-11-18,MGR-039,Financial Analyst,1,Active
+EMP-0344,Yusuf,Vargas,Customer Success,Southwest,2023-01-22,MGR-051,CS Manager,2,Active
+EMP-0345,Cedric,Chen,Marketing,Northeast,2017-12-04,MGR-009,Marketing Specialist,2,Active
+EMP-0346,Lukas,Nishimura,Customer Success,Southwest,2024-11-18,MGR-051,CS Manager,2,Active
+EMP-0347,Ximena,Fujita,Engineering,Southwest,2018-12-31,MGR-029,Junior Engineer,1,Active
+EMP-0348,Greta,Bhat,Operations,Midwest,2024-07-20,MGR-011,Operations Analyst,1,Active
+EMP-0349,Kenji,Zhao,Finance,Southwest,2024-09-10,MGR-026,Senior Financial Analyst,2,Active
+EMP-0350,Esperanza,Santos,Operations,Northeast,2018-07-13,MGR-040,Senior Operations Manager,3,Active
+EMP-0351,Ines,García,Finance,West Coast,2017-06-21,MGR-008,Financial Analyst,1,Active
+EMP-0352,Viktor,Nair,Product,Midwest,2024-03-30,MGR-054,Product Manager,2,Active
+EMP-0353,Petra,Boateng,Sales,West Coast,2023-02-27,MGR-042,Sales Manager,4,Active
+EMP-0354,Svetlana,Eriksson,Product,West Coast,2020-09-17,MGR-047,Senior Product Manager,3,Active
+EMP-0355,Petra,Wu,Operations,Southeast,2024-05-24,MGR-033,Operations Specialist,2,Active
+EMP-0356,Brendan,Cissé,Sales,Southwest,2019-06-27,MGR-059,Account Executive,2,Active
+EMP-0357,Felix,Aguilar,Operations,Southeast,2020-06-05,MGR-056,Operations Specialist,2,Active
+EMP-0358,Valentina,Asante,Finance,Northeast,2024-01-11,MGR-017,Senior Financial Analyst,2,Active
+EMP-0359,Cormac,Ono,Operations,West Coast,2017-05-31,MGR-033,Operations Specialist,2,Active
+EMP-0360,Ryan,Cruz,Customer Success,West Coast,2020-04-06,MGR-019,CS Director,4,Active
+EMP-0361,Lina,Romero,Product,Northeast,2018-07-29,MGR-050,Group Product Manager,4,Active
+EMP-0362,Pia,Johansson,Sales,Southeast,2019-12-19,MGR-024,Account Executive,2,Active
+EMP-0363,Linh,Lund,Operations,Southwest,2024-04-10,MGR-034,Operations Analyst,1,Active
+EMP-0364,Mireille,Ndiaye,Sales,Southeast,2021-02-05,MGR-045,Senior Account Executive,3,Active
+EMP-0365,Camila,Vega,Operations,Midwest,2020-11-14,MGR-056,Operations Director,4,Active
+EMP-0366,Andrei,Matsumoto,Engineering,West Coast,2019-05-17,MGR-007,Senior Engineer,3,Active
+EMP-0367,Takeshi,Németh,Customer Success,Midwest,2022-05-27,MGR-051,CS Director,4,Active
+EMP-0368,Sunita,O'Brien,Sales,Southwest,2023-08-24,MGR-016,Sales Associate,1,Active
+EMP-0369,Andrei,Svoboda,Sales,West Coast,2023-09-21,MGR-045,Regional Sales Director,5,Active
+EMP-0370,Malaika,Lund,Customer Success,Southeast,2021-08-10,MGR-048,CS Manager,2,Active
+EMP-0371,Andrei,Gutierrez,Operations,West Coast,2019-07-31,MGR-040,Senior Operations Manager,3,Active
+EMP-0372,Dagny,Medina,Customer Success,Northeast,2018-12-28,MGR-046,Senior CS Manager,3,Active
+EMP-0373,Gabriel,Sharma,Operations,Northeast,2023-01-18,MGR-003,VP of Operations,5,Active
+EMP-0374,Mei,Diop,Operations,Northeast,2022-05-29,MGR-040,VP of Operations,5,Active
+EMP-0375,Astrid,Wang,Marketing,West Coast,2021-08-01,MGR-015,Marketing Director,4,Active
+EMP-0376,Maria,Lukić,Product,Northeast,2020-07-17,MGR-050,Senior Product Manager,3,Active
+EMP-0377,Jabari,Guerrero,Operations,West Coast,2020-02-03,MGR-040,Operations Specialist,2,Active
+EMP-0378,Freya,Murakami,Finance,West Coast,2020-06-10,MGR-043,Finance Manager,3,Active
+EMP-0379,Gabriel,Matsumoto,Operations,Northeast,2022-09-14,MGR-040,Operations Analyst,1,Active
+EMP-0380,Maria,Sharma,Customer Success,Northeast,2023-09-25,MGR-046,Senior CS Manager,3,Active
+EMP-0381,Elena,Endo,Operations,West Coast,2020-03-19,MGR-003,Senior Operations Manager,3,Active
+EMP-0382,Yara,Vega,Marketing,Northeast,2023-09-22,MGR-014,Marketing Coordinator,1,Active
+EMP-0383,Emeka,López,Marketing,Southeast,2021-06-07,MGR-058,Marketing Specialist,2,Active
+EMP-0384,Mohammed,Holm,Marketing,West Coast,2020-11-26,MGR-015,VP of Marketing,5,Active
+EMP-0385,Julian,Bhat,Finance,Southwest,2021-07-26,MGR-041,Senior Financial Analyst,2,Active
+EMP-0386,Lakshmi,Guo,Marketing,West Coast,2023-06-13,MGR-015,Marketing Director,4,Active
+EMP-0387,Marco,Delgado,Product,Southeast,2017-04-23,MGR-050,Group Product Manager,4,Active
+EMP-0388,Kofi,Matsumoto,Customer Success,Midwest,2020-12-17,MGR-048,CS Manager,2,Active
+EMP-0389,Jia,Osei,Finance,Northeast,2020-12-19,MGR-021,Finance Manager,3,Active
+EMP-0390,Hassan,Salazar,Product,Northeast,2019-09-19,MGR-047,Product Manager,2,Active
+EMP-0391,Pia,Owusu,Customer Success,Southwest,2017-11-18,MGR-051,CS Associate,1,Active
+EMP-0392,Javier,Johansson,Customer Success,Southeast,2020-07-15,MGR-046,CS Manager,2,Active
+EMP-0393,Adam,Huang,Operations,Northeast,2018-06-10,MGR-003,Operations Director,4,Active
+EMP-0394,Suresh,Ogawa,Operations,Northeast,2018-05-09,MGR-056,Senior Operations Manager,3,Active
+EMP-0395,Cormac,Mensah,Marketing,Midwest,2019-11-30,MGR-014,Senior Marketing Manager,3,Active
+EMP-0396,Jia,Kapoor,Sales,Southeast,2021-09-13,MGR-059,Account Executive,2,Active
+EMP-0397,Mateo,Weber,Sales,West Coast,2018-02-14,MGR-059,Senior Account Executive,3,Active
+EMP-0398,Samuel,Reyes,Customer Success,Northeast,2017-02-09,MGR-019,Senior CS Manager,3,Active
+EMP-0399,Bao,Mayer,Product,Midwest,2020-05-13,MGR-047,Group Product Manager,4,Active
+EMP-0400,Jasmine,Touré,Customer Success,Midwest,2024-01-24,MGR-005,Senior CS Manager,3,Active
+EMP-0401,Tarquin,Conteh,Marketing,Southwest,2020-12-09,MGR-014,Marketing Specialist,2,Active
+EMP-0402,Annika,Haugen,Operations,Southeast,2021-04-10,MGR-033,Operations Director,4,Active
+EMP-0403,Marco,Medina,Product,West Coast,2017-10-20,MGR-002,Senior Product Manager,3,Active
+EMP-0404,Chen,Sugiyama,Product,Southeast,2021-12-28,MGR-047,Product Manager,2,Active
+EMP-0405,Priya,Martínez,Product,Northeast,2025-05-05,MGR-002,Senior Product Manager,3,Active
+EMP-0406,Paloma,Holm,Engineering,Southwest,2022-11-17,MGR-006,Staff Engineer,4,Active
+EMP-0407,Linh,Koroma,Sales,Northeast,2021-12-21,MGR-049,Sales Manager,4,Active
+EMP-0408,Annika,Xu,Operations,West Coast,2023-02-25,MGR-056,VP of Operations,5,Active
+EMP-0409,Obi,Ma,Finance,West Coast,2020-11-23,MGR-039,Senior Financial Analyst,2,Active
+EMP-0410,Jabari,Owusu,Marketing,Southwest,2018-07-13,MGR-015,Marketing Coordinator,1,Active
+EMP-0411,Amir,Kováč,Engineering,Southeast,2023-09-12,MGR-018,Staff Engineer,4,Active
+EMP-0412,Adaeze,Sun,Sales,Northeast,2024-03-30,MGR-035,Sales Manager,4,Active
+EMP-0413,Lina,Vega,Customer Success,West Coast,2024-09-05,MGR-027,CS Director,4,Active
+EMP-0414,Dante,Suzuki,Product,Southeast,2020-01-20,MGR-054,Senior Product Manager,3,Active
+EMP-0415,Hugo,O'Brien,Sales,Southwest,2018-05-28,MGR-059,Account Executive,2,Active
+EMP-0416,Wyatt,Touré,Marketing,Southeast,2022-08-04,MGR-015,Marketing Specialist,2,Active
+EMP-0417,Zara,Tanaka,Marketing,Southeast,2022-04-10,MGR-014,Marketing Coordinator,1,Active
+EMP-0418,Nadia,Joshi,Operations,Southeast,2017-05-18,MGR-031,Operations Specialist,2,Active
+EMP-0419,Paloma,Jalloh,Product,Midwest,2018-10-12,MGR-002,VP of Product,5,Active
+EMP-0420,Samuel,Mendoza,Engineering,Northeast,2019-08-25,MGR-032,Principal Engineer,5,Active
+EMP-0421,Esperanza,Sanchez,Engineering,Southwest,2024-09-30,MGR-036,Senior Engineer,3,Active
+EMP-0422,Emeka,Salazar,Engineering,West Coast,2024-01-05,MGR-004,Software Engineer,2,Active
+EMP-0423,Tomás,Ueda,Sales,Midwest,2024-03-25,MGR-024,Regional Sales Director,5,Active
+EMP-0424,Rohan,Zhao,Product,Northeast,2017-06-11,MGR-050,Product Manager,2,Active
+EMP-0425,Helga,Flores,Finance,Midwest,2022-04-03,MGR-026,Senior Financial Analyst,2,Active
+EMP-0426,Natsumi,Castillo,Finance,Midwest,2024-02-27,MGR-041,Finance Manager,3,Active
+EMP-0427,Marta,Saito,Sales,Midwest,2024-05-20,MGR-044,Sales Manager,4,Active
+EMP-0428,Ayumi,Owusu,Finance,Midwest,2024-03-10,MGR-028,Senior Financial Analyst,2,Active
+EMP-0429,Freya,Nakamura,Sales,Southwest,2018-02-09,MGR-010,Senior Account Executive,3,Active
+EMP-0430,Naomi,Conteh,Engineering,Midwest,2025-01-19,MGR-006,Software Engineer,2,Active
+EMP-0431,Chioma,Keita,Customer Success,Southwest,2025-05-04,MGR-046,CS Manager,2,Active
+EMP-0432,Oluwaseun,Yamamoto,Customer Success,Midwest,2019-06-04,MGR-048,CS Associate,1,Active
+EMP-0433,Elijah,Joshi,Finance,Northeast,2023-04-06,MGR-037,Finance Manager,3,Active
+EMP-0434,Hina,Ivanov,Sales,Northeast,2022-08-30,MGR-024,Senior Account Executive,3,Active
+EMP-0435,Sean,Desai,Customer Success,Midwest,2024-02-07,MGR-046,CS Manager,2,Active
+EMP-0436,Lukas,Lukić,Customer Success,West Coast,2019-11-07,MGR-027,VP of Customer Success,5,Active
+EMP-0437,Hiroshi,Rivera,Finance,Southwest,2020-05-21,MGR-008,Finance Manager,3,Active
+EMP-0438,Oumar,Hu,Finance,West Coast,2023-05-31,MGR-020,Finance Manager,3,Active
+EMP-0439,Marta,Wade,Sales,Northeast,2020-05-15,MGR-012,Account Executive,2,Active
+EMP-0440,Ruth,Takahashi,Operations,West Coast,2018-01-26,MGR-033,Operations Director,4,Active
+EMP-0441,Thandiwe,Mansaray,Customer Success,Southeast,2018-05-09,MGR-052,CS Manager,2,Active
+EMP-0442,Anya,Shimizu,Finance,Southwest,2023-05-03,MGR-020,Senior Financial Analyst,2,Active
+EMP-0443,Ryan,Kondo,Customer Success,West Coast,2018-01-04,MGR-019,Senior CS Manager,3,Active
+EMP-0444,Alejandro,Holm,Operations,Midwest,2022-08-18,MGR-040,Operations Analyst,1,Active
+EMP-0445,Samuel,Ueda,Operations,West Coast,2023-11-29,MGR-031,Operations Specialist,2,Active
+EMP-0446,Divya,López,Engineering,Southeast,2020-11-27,MGR-018,Software Engineer,2,Active
+EMP-0447,Noor,Romero,Customer Success,Southeast,2021-12-10,MGR-005,Senior CS Manager,3,Active
+EMP-0448,Raj,Suzuki,Product,Southwest,2023-12-19,MGR-013,Product Manager,2,Active
+EMP-0449,Sven,Shimizu,Operations,Southeast,2019-05-07,MGR-031,Operations Analyst,1,Active
+EMP-0450,Björn,Kim,Operations,West Coast,2022-11-28,MGR-003,VP of Operations,5,Active
+EMP-0451,Desmond,Sesay,Engineering,Southeast,2017-02-04,MGR-006,Senior Engineer,3,Active
+EMP-0452,Chukwu,Morales,Engineering,Midwest,2024-04-13,MGR-032,Staff Engineer,4,Active
+EMP-0453,Brendan,Ueda,Customer Success,West Coast,2019-02-03,MGR-019,Senior CS Manager,3,Active
+EMP-0454,Oluwaseun,Joshi,Finance,Midwest,2021-05-31,MGR-057,Senior Financial Analyst,2,Active
+EMP-0455,Marisol,Berg,Finance,Midwest,2024-01-08,MGR-026,Finance Director,4,Active
+EMP-0456,Camila,Kobayashi,Marketing,Southeast,2017-12-26,MGR-058,Senior Marketing Manager,3,Active
+EMP-0457,Hina,Koroma,Finance,Midwest,2018-06-24,MGR-021,Senior Financial Analyst,2,Active
+EMP-0458,Elijah,Sato,Operations,Northeast,2023-05-03,MGR-025,Senior Operations Manager,3,Active
+EMP-0459,Zara,Santos,Customer Success,Midwest,2021-08-23,MGR-046,CS Director,4,Active
+EMP-0460,Hana,Flores,Engineering,West Coast,2023-10-17,MGR-053,Senior Engineer,3,Active
+EMP-0461,Chioma,Aguilar,Sales,West Coast,2022-04-05,MGR-059,Sales Manager,4,Active
+EMP-0462,Leila,Zhang,Sales,Northeast,2017-03-03,MGR-023,Sales Associate,1,Active
+EMP-0463,Nikolai,Petrov,Sales,Southeast,2022-06-30,MGR-059,Sales Manager,4,Active
+EMP-0464,Oluwaseun,Ly,Product,Southeast,2021-06-03,MGR-054,Group Product Manager,4,Active
+EMP-0465,Oluwaseun,Sanchez,Finance,West Coast,2025-03-31,MGR-008,Senior Financial Analyst,2,Active
+EMP-0466,Marisol,Rao,Operations,Northeast,2023-11-17,MGR-003,Operations Specialist,2,Active
+EMP-0467,Mohammed,Morita,Engineering,Northeast,2024-10-22,MGR-038,Staff Engineer,4,Active
+EMP-0468,Julian,Lin,Product,Northeast,2018-01-05,MGR-047,Group Product Manager,4,Active
+EMP-0469,Lakshmi,Sylla,Product,Midwest,2024-12-07,MGR-050,Associate Product Manager,1,Active
+EMP-0470,Sakura,Fofana,Finance,Northeast,2018-08-16,MGR-020,Senior Financial Analyst,2,Active
+EMP-0471,Samir,Rao,Product,Northeast,2018-06-23,MGR-013,Associate Product Manager,1,Active
+EMP-0472,Fernanda,Sakho,Customer Success,Southwest,2022-07-15,MGR-019,Senior CS Manager,3,Active
+EMP-0473,Rena,Dutta,Engineering,Northeast,2020-02-14,MGR-053,Staff Engineer,4,Active
+EMP-0474,Noor,Okafor,Sales,Southwest,2023-10-08,MGR-023,Senior Account Executive,3,Active
+EMP-0475,Freya,Zhang,Product,Midwest,2024-10-03,MGR-054,Senior Product Manager,3,Active
+EMP-0476,Chukwu,Okafor,Engineering,Midwest,2021-04-02,MGR-006,Software Engineer,2,Active
+EMP-0477,Oumar,Fujita,Finance,Southeast,2024-10-21,MGR-021,Finance Manager,3,Active
+EMP-0478,Thandi,López,Operations,West Coast,2024-12-05,MGR-033,VP of Operations,5,Active
+EMP-0479,Iris,Nilsson,Sales,West Coast,2022-10-30,MGR-059,Senior Account Executive,3,Active
+EMP-0480,Astrid,Hayashi,Sales,Southwest,2022-03-20,MGR-049,Sales Associate,1,Active
+EMP-0481,Sunita,Chen,Marketing,Midwest,2024-02-25,MGR-014,Senior Marketing Manager,3,Active
+EMP-0482,Sofia,Shimizu,Marketing,West Coast,2017-01-26,MGR-009,Senior Marketing Manager,3,Active
+EMP-0483,Fatima,Takahashi,Sales,Midwest,2024-07-17,MGR-042,Sales Manager,4,Active
+EMP-0484,Thandiwe,Matsuda,Customer Success,Southeast,2017-08-18,MGR-052,VP of Customer Success,5,Active
+EMP-0485,Divya,Fujita,Customer Success,Midwest,2018-09-04,MGR-027,CS Associate,1,Active
+EMP-0486,Andrei,Weber,Finance,Southeast,2018-04-24,MGR-060,Senior Financial Analyst,2,Active
+EMP-0487,Isabella,Salazar,Sales,Midwest,2020-05-24,MGR-022,Senior Account Executive,3,Active
+EMP-0488,Yara,Sharma,Operations,West Coast,2022-05-31,MGR-025,Operations Analyst,1,Active
+EMP-0489,Annika,Kowalski,Customer Success,Southwest,2022-10-16,MGR-051,CS Director,4,Active
+EMP-0490,Karina,Boateng,Engineering,Midwest,2024-09-15,MGR-053,Principal Engineer,5,Active
+EMP-0491,Karina,Koroma,Engineering,West Coast,2024-03-01,MGR-018,Staff Engineer,4,Active
+EMP-0492,Finn,Andersen,Marketing,Northeast,2018-04-14,MGR-009,Marketing Specialist,2,Active
+EMP-0493,Xiomara,Sesay,Sales,Midwest,2018-12-03,MGR-012,Senior Account Executive,3,Active
+EMP-0494,Fatima,Lund,Product,Southwest,2017-08-09,MGR-002,Associate Product Manager,1,Active
+EMP-0495,Samir,Romero,Marketing,Midwest,2019-03-23,MGR-009,Marketing Specialist,2,Active
+EMP-0496,Sienna,Watanabe,Operations,Midwest,2024-12-19,MGR-056,Senior Operations Manager,3,Active
+EMP-0497,Jabari,Kapoor,Operations,Northeast,2024-06-17,MGR-034,Senior Operations Manager,3,Active
+EMP-0498,Paloma,Suzuki,Marketing,Southeast,2018-12-01,MGR-015,Senior Marketing Manager,3,Active
+EMP-0499,Amara,Desai,Finance,Southwest,2022-12-23,MGR-039,Finance Director,4,Active
+EMP-0500,Emeka,Menon,Operations,Southwest,2024-10-13,MGR-040,Operations Specialist,2,Active
+EMP-0501,Rashid,Takahashi,Product,Southwest,2024-12-25,MGR-054,Group Product Manager,4,Active
+EMP-0502,Tarquin,Watanabe,Customer Success,Southeast,2021-07-21,MGR-005,CS Manager,2,Active
+EMP-0503,Jasmine,Sharma,Sales,Northeast,2024-02-19,MGR-010,Sales Manager,4,Active
+EMP-0504,Padma,Estrada,Operations,Northeast,2020-07-20,MGR-033,Operations Specialist,2,Active
+EMP-0505,Esteban,López,Finance,Southwest,2022-09-22,MGR-037,Finance Manager,3,Active
+EMP-0506,Anya,Smith,Product,West Coast,2021-01-11,MGR-002,Group Product Manager,4,Active
+EMP-0507,Ryan,Wu,Product,Southeast,2021-11-18,MGR-054,Product Manager,2,Active
+EMP-0508,Tunde,Mendoza,Customer Success,Southeast,2024-07-07,MGR-019,CS Manager,2,Active
+EMP-0509,Cedric,Ma,Sales,Southwest,2021-08-31,MGR-042,Sales Associate,1,Active
+EMP-0510,Andre,Hu,Customer Success,Southeast,2019-07-14,MGR-019,CS Manager,2,Active
+EMP-0511,Rashid,Morita,Marketing,Southeast,2023-06-19,MGR-015,VP of Marketing,5,Active
+EMP-0512,Sven,Ono,Operations,Southwest,2025-03-15,MGR-033,Operations Analyst,1,Active
+EMP-0513,Patrick,Lund,Product,Southwest,2023-01-18,MGR-054,Senior Product Manager,3,Active
+EMP-0514,Wei,Lund,Operations,West Coast,2023-06-09,MGR-034,VP of Operations,5,Active
+EMP-0515,Winston,Moreno,Product,West Coast,2024-01-22,MGR-050,Product Manager,2,Active
+EMP-0516,Iris,Müller,Marketing,Southeast,2022-09-02,MGR-009,Marketing Coordinator,1,Active
+EMP-0517,Oumar,Conteh,Engineering,Southwest,2023-08-21,MGR-007,Senior Engineer,3,Active
+EMP-0518,Rashid,Ueda,Sales,West Coast,2020-11-05,MGR-012,Sales Manager,4,Active
+EMP-0519,Sunita,Endo,Sales,Southeast,2018-11-17,MGR-022,Sales Manager,4,Active
+EMP-0520,Lakshmi,Singh,Sales,Southeast,2020-05-19,MGR-042,Account Executive,2,Active
+EMP-0521,Paloma,Castillo,Sales,West Coast,2017-02-18,MGR-023,Sales Manager,4,Active
+EMP-0522,Thandi,Johansson,Engineering,West Coast,2021-11-04,MGR-053,Senior Engineer,3,Active
+EMP-0523,Svetlana,Conteh,Product,West Coast,2024-07-28,MGR-013,Product Manager,2,Active
+EMP-0524,Mateo,Hansen,Finance,Southwest,2017-10-06,MGR-008,Finance Manager,3,Active
+EMP-0525,Arjun,Inoue,Sales,Southwest,2018-01-12,MGR-010,Sales Associate,1,Active
+EMP-0526,Gabriel,López,Customer Success,West Coast,2024-05-12,MGR-052,CS Associate,1,Active
+EMP-0527,Enrique,Bangura,Operations,Southwest,2020-02-07,MGR-040,Senior Operations Manager,3,Active
+EMP-0528,Oumar,Adeyemi,Operations,Southeast,2017-09-04,MGR-033,Operations Specialist,2,Active
+EMP-0529,Yara,Vogt,Operations,Northeast,2018-03-21,MGR-025,Senior Operations Manager,3,Active
+EMP-0530,Catalina,Svoboda,Engineering,Southwest,2023-05-30,MGR-029,Junior Engineer,1,Active
+EMP-0531,James,Okafor,Product,Southeast,2024-11-07,MGR-047,Product Manager,2,Active
+EMP-0532,Nkechi,Aguilar,Operations,Southeast,2017-10-15,MGR-031,Operations Director,4,Active
+EMP-0533,Pia,Fofana,Product,Midwest,2024-02-03,MGR-002,Product Manager,2,Active
+EMP-0534,Dante,Li,Sales,West Coast,2021-04-23,MGR-049,Sales Associate,1,Active
+EMP-0535,Pia,Ueda,Engineering,Southeast,2018-07-28,MGR-004,Staff Engineer,4,Active
+EMP-0536,Javier,Shimizu,Operations,West Coast,2022-01-15,MGR-003,VP of Operations,5,Active
+EMP-0537,Tatiana,Andersen,Sales,West Coast,2024-08-09,MGR-044,Senior Account Executive,3,Active
+EMP-0538,Björn,Barry,Product,Southwest,2023-12-08,MGR-002,Senior Product Manager,3,Active
+EMP-0539,Viktor,Watanabe,Operations,West Coast,2023-08-18,MGR-011,Operations Specialist,2,Active
+EMP-0540,Padma,Horváth,Engineering,Northeast,2025-04-11,MGR-032,Software Engineer,2,Active
+EMP-0541,Lukas,Chen,Finance,Northeast,2018-05-10,MGR-026,Senior Financial Analyst,2,Active
+EMP-0542,Andrei,Rojas,Sales,West Coast,2018-02-14,MGR-049,Sales Associate,1,Active
+EMP-0543,Maria,Patel,Sales,Southwest,2023-08-29,MGR-023,Sales Manager,4,Active
+EMP-0544,Kaia,Pillai,Operations,Southeast,2018-12-16,MGR-003,Operations Specialist,2,Active
+EMP-0545,Marisol,Mansaray,Operations,Southwest,2019-02-26,MGR-011,Senior Operations Manager,3,Active
+EMP-0546,Javier,Camara,Sales,Southeast,2024-05-24,MGR-022,Sales Manager,4,Active
+EMP-0547,Paloma,Salazar,Sales,Northeast,2017-06-26,MGR-010,Senior Account Executive,3,Active
+EMP-0548,Padma,Roth,Engineering,Southwest,2023-01-11,MGR-007,Staff Engineer,4,Active
+EMP-0549,Rashid,Iyer,Finance,West Coast,2019-03-26,MGR-057,Senior Financial Analyst,2,Active
+EMP-0550,Takeshi,Mensah,Sales,Southeast,2021-03-19,MGR-022,Sales Manager,4,Active
+EMP-0551,Devi,Vogt,Operations,Northeast,2018-07-13,MGR-056,Operations Specialist,2,Active
+EMP-0552,Tomás,Nakamura,Product,West Coast,2018-07-14,MGR-002,Associate Product Manager,1,Active
+EMP-0553,Kofi,Bangura,Finance,Northeast,2024-02-27,MGR-043,Finance Director,4,Active
+EMP-0554,Nkechi,Touré,Finance,Southeast,2020-02-18,MGR-008,Finance Director,4,Active
+EMP-0555,Kofi,Lin,Sales,West Coast,2021-09-08,MGR-010,Sales Manager,4,Active
+EMP-0556,Andre,Diop,Operations,Southeast,2024-10-24,MGR-011,Operations Director,4,Active
+EMP-0557,Miguel,Touré,Sales,Midwest,2024-04-06,MGR-012,Account Executive,2,Active
+EMP-0558,Maxwell,Wade,Engineering,Southeast,2018-07-22,MGR-032,Senior Engineer,3,Active
+EMP-0559,James,Yamamoto,Operations,Midwest,2020-04-29,MGR-040,Senior Operations Manager,3,Active
+EMP-0560,Thandiwe,Tanaka,Finance,Midwest,2018-03-31,MGR-037,Finance Director,4,Active
+EMP-0561,Beatriz,Hernández,Finance,Northeast,2020-10-03,MGR-021,Financial Analyst,1,Active
+EMP-0562,Amira,Cruz,Marketing,Midwest,2022-08-25,MGR-058,Marketing Director,4,Active
+EMP-0563,Suresh,Arai,Customer Success,Southwest,2022-12-19,MGR-051,Senior CS Manager,3,Active
+EMP-0564,Tariq,Ito,Operations,Southwest,2019-01-03,MGR-033,Operations Analyst,1,Active
+EMP-0565,Zara,Salazar,Sales,Northeast,2024-01-14,MGR-010,Senior Account Executive,3,Active
+EMP-0566,Priya,Hayashi,Sales,Southwest,2019-08-10,MGR-044,Sales Associate,1,Active
+EMP-0567,Annika,Ueda,Finance,West Coast,2021-12-29,MGR-039,Finance Director,4,Active
+EMP-0568,Jabari,Matsumoto,Operations,Midwest,2017-07-13,MGR-025,VP of Operations,5,Active
+EMP-0569,Mina,Guerrero,Marketing,Northeast,2024-12-10,MGR-014,VP of Marketing,5,Active
+EMP-0570,Tomás,Rojas,Marketing,Midwest,2023-04-23,MGR-009,Marketing Specialist,2,Active
+EMP-0571,Mina,Mayer,Marketing,Southwest,2021-07-16,MGR-058,VP of Marketing,5,Active
+EMP-0572,Mireille,Camara,Marketing,Midwest,2020-04-02,MGR-014,Senior Marketing Manager,3,Active
+EMP-0573,Amir,Johansson,Sales,West Coast,2017-04-12,MGR-035,Sales Associate,1,Active
+EMP-0574,Dmitri,Ly,Product,Northeast,2019-06-29,MGR-047,Senior Product Manager,3,Active
+EMP-0575,Isabella,Guo,Operations,Northeast,2023-10-07,MGR-003,Senior Operations Manager,3,Active
+EMP-0576,Hina,Murakami,Operations,Midwest,2020-11-13,MGR-034,Operations Analyst,1,Active
+EMP-0577,Catalina,Németh,Customer Success,Southeast,2025-03-01,MGR-046,CS Manager,2,Active
+EMP-0578,Isabella,Kowalski,Sales,Midwest,2022-11-22,MGR-024,Senior Account Executive,3,Active
+EMP-0579,Kaia,Németh,Sales,West Coast,2023-05-16,MGR-016,Senior Account Executive,3,Active
+EMP-0580,Marisol,Wade,Marketing,Southeast,2022-03-14,MGR-014,Senior Marketing Manager,3,Active
+EMP-0581,Troy,Liu,Product,Midwest,2022-07-08,MGR-013,Product Manager,2,Active
+EMP-0582,Rena,Mendoza,Finance,Southeast,2019-11-23,MGR-055,Finance Manager,3,Active
+EMP-0583,Carlos,Svoboda,Sales,West Coast,2020-08-02,MGR-042,Sales Associate,1,Active
+EMP-0584,Chukwu,Medina,Product,Midwest,2020-04-09,MGR-054,Associate Product Manager,1,Active
+EMP-0585,Mateo,Watanabe,Finance,Northeast,2020-07-19,MGR-055,Finance Manager,3,Active
+EMP-0586,Yuki,Mayer,Finance,Midwest,2017-02-22,MGR-020,Finance Director,4,Active
+EMP-0587,Mina,Ivanov,Sales,Northeast,2019-02-11,MGR-044,Senior Account Executive,3,Active
+EMP-0588,Lakshmi,Gupta,Engineering,Southeast,2024-10-01,MGR-030,Software Engineer,2,Active
+EMP-0589,Jia,Takahashi,Product,Midwest,2018-05-01,MGR-013,Associate Product Manager,1,Active
+EMP-0590,Amira,Gupta,Engineering,Southeast,2018-04-03,MGR-006,Senior Engineer,3,Active
+EMP-0591,Amara,Nakamura,Customer Success,West Coast,2022-04-06,MGR-005,Senior CS Manager,3,Active
+EMP-0592,Yuki,Liu,Finance,Northeast,2019-03-31,MGR-020,Finance Manager,3,Active
+EMP-0593,Valentina,Ono,Marketing,Midwest,2022-08-13,MGR-014,Marketing Specialist,2,Active
+EMP-0594,Aisha,Diop,Sales,Northeast,2018-12-05,MGR-044,Regional Sales Director,5,Active
+EMP-0595,Paloma,Kapoor,Product,West Coast,2024-07-21,MGR-002,Product Manager,2,Active
+EMP-0596,Luciana,Matsumoto,Operations,Southwest,2020-07-11,MGR-011,Operations Director,4,Active
+EMP-0597,Elsa,Campos,Product,Southwest,2022-07-16,MGR-002,Associate Product Manager,1,Active
+EMP-0598,Catalina,Cruz,Finance,Southeast,2021-10-19,MGR-021,Senior Financial Analyst,2,Active
+EMP-0599,Aisha,Barry,Product,Southwest,2022-11-11,MGR-002,Product Manager,2,Active
+EMP-0600,Diego,Reddy,Engineering,Midwest,2020-10-19,MGR-018,Principal Engineer,5,Active
+EMP-0601,Fernanda,Huang,Customer Success,West Coast,2024-03-22,MGR-046,Senior CS Manager,3,Active
+EMP-0602,Zara,Roth,Engineering,Southwest,2022-07-30,MGR-018,Software Engineer,2,Active
+EMP-0603,Sofia,Salazar,Product,Southwest,2021-04-17,MGR-054,VP of Product,5,Active
+EMP-0604,Ingrid,Pillai,Customer Success,Southeast,2019-04-08,MGR-027,CS Director,4,Active
+EMP-0605,Javier,Sakho,Engineering,Southwest,2018-05-03,MGR-032,Principal Engineer,5,Active
+EMP-0606,Freya,Campos,Product,Midwest,2018-11-04,MGR-050,Group Product Manager,4,Active
+EMP-0607,Sven,Ndiaye,Product,Southeast,2024-09-08,MGR-054,Senior Product Manager,3,Active
+EMP-0608,Dmitri,Bakker,Marketing,Southeast,2021-03-28,MGR-015,Senior Marketing Manager,3,Active
+EMP-0609,Mei,Martínez,Customer Success,Midwest,2025-04-28,MGR-048,CS Manager,2,Active
+EMP-0610,Pia,Traoré,Marketing,Southwest,2019-10-12,MGR-014,Senior Marketing Manager,3,Active
+EMP-0611,Viktor,Boateng,Marketing,Northeast,2020-08-28,MGR-009,Marketing Coordinator,1,Active
+EMP-0612,Chen,O'Brien,Product,Southeast,2020-07-20,MGR-050,Senior Product Manager,3,Active
+EMP-0613,Svetlana,Ramírez,Marketing,Southeast,2024-06-26,MGR-015,Senior Marketing Manager,3,Active
+EMP-0614,Fernanda,Osei,Customer Success,West Coast,2019-12-23,MGR-005,CS Manager,2,Active
+EMP-0615,Mohammed,Ono,Engineering,West Coast,2017-10-03,MGR-053,Software Engineer,2,Active
+EMP-0616,Ingrid,Moreno,Finance,Midwest,2023-01-21,MGR-028,Senior Financial Analyst,2,Active
+EMP-0617,Sean,Novak,Engineering,West Coast,2023-06-21,MGR-036,Staff Engineer,4,Active
+EMP-0618,Padma,Ma,Finance,Southwest,2021-02-01,MGR-039,Finance Manager,3,Active
+EMP-0619,Adaeze,Traoré,Marketing,Southwest,2021-08-17,MGR-015,Senior Marketing Manager,3,Active
+EMP-0620,Tatiana,Yang,Engineering,Northeast,2019-10-03,MGR-029,Software Engineer,2,Active
+EMP-0621,Yara,Fischer,Marketing,Northeast,2020-02-12,MGR-014,Marketing Coordinator,1,Active
+EMP-0622,Priya,Tanaka,Customer Success,Southwest,2020-05-05,MGR-052,CS Manager,2,Active
+EMP-0623,Mohammed,Sun,Customer Success,Northeast,2023-05-28,MGR-051,CS Manager,2,Active
+EMP-0624,Elijah,Inoue,Operations,Southwest,2018-05-16,MGR-034,Operations Specialist,2,Active
+EMP-0625,Andre,Touré,Sales,Southwest,2020-01-30,MGR-042,Account Executive,2,Active
+EMP-0626,Sven,Wu,Finance,Southeast,2019-10-07,MGR-026,Finance Manager,3,Active
+EMP-0627,Viktor,O'Brien,Product,West Coast,2025-04-17,MGR-002,Associate Product Manager,1,Active
+EMP-0628,Chukwu,Liu,Finance,Northeast,2021-05-11,MGR-008,Finance Director,4,Active
+EMP-0629,Marisol,Sharma,Customer Success,Northeast,2018-10-19,MGR-046,CS Manager,2,Active
+EMP-0630,Chioma,Barry,Operations,Southeast,2020-09-24,MGR-040,VP of Operations,5,Active
+EMP-0631,Dagny,Petrov,Marketing,Southeast,2023-02-22,MGR-015,Senior Marketing Manager,3,Active
+EMP-0632,Aiko,Iyer,Customer Success,Northeast,2019-03-31,MGR-051,CS Associate,1,Active
+EMP-0633,Hana,Navarro,Product,Southeast,2020-08-01,MGR-050,Group Product Manager,4,Active
+EMP-0634,Annika,Rivera,Sales,Southwest,2019-01-16,MGR-035,Account Executive,2,Active
+EMP-0635,Tarquin,Vogt,Product,Northeast,2022-03-10,MGR-013,VP of Product,5,Active
+EMP-0636,Rena,Svoboda,Sales,Southwest,2018-11-28,MGR-045,Regional Sales Director,5,Active
+EMP-0637,Wyatt,Andersen,Sales,Northeast,2019-12-27,MGR-023,Account Executive,2,Active
+EMP-0638,Rena,Touré,Customer Success,Midwest,2019-02-15,MGR-046,CS Director,4,Active
+EMP-0639,Rashid,Saito,Operations,Northeast,2024-09-03,MGR-056,Operations Specialist,2,Active
+EMP-0640,Esperanza,Yoshida,Product,Southeast,2025-04-04,MGR-054,Group Product Manager,4,Active
+EMP-0641,Rashid,Lund,Marketing,West Coast,2023-09-17,MGR-009,VP of Marketing,5,Active
+EMP-0642,Esperanza,Murakami,Sales,West Coast,2019-01-05,MGR-023,Sales Associate,1,Active
+EMP-0643,Hana,López,Marketing,West Coast,2019-12-03,MGR-009,Marketing Specialist,2,Active
+EMP-0644,Valentina,Mendoza,Operations,Midwest,2019-12-15,MGR-033,VP of Operations,5,Active
+EMP-0645,Nkechi,Kobayashi,Finance,Southeast,2018-09-01,MGR-008,Financial Analyst,1,Active
+EMP-0646,Sienna,Ma,Engineering,Southeast,2020-12-31,MGR-038,Junior Engineer,1,Active
+EMP-0647,Zara,Liu,Marketing,Southwest,2020-03-09,MGR-014,Marketing Specialist,2,Active
+EMP-0648,Lukas,Wade,Engineering,West Coast,2019-01-10,MGR-032,Staff Engineer,4,Active
+EMP-0649,Felix,Müller,Marketing,Southwest,2023-08-16,MGR-009,Marketing Specialist,2,Active
+EMP-0650,Amir,Roth,Product,Midwest,2017-01-24,MGR-047,Senior Product Manager,3,Active
+EMP-0651,Helga,Gupta,Sales,Southwest,2020-03-04,MGR-024,Sales Manager,4,Active
+EMP-0652,Mohammed,Peña,Marketing,Northeast,2021-06-22,MGR-009,Marketing Specialist,2,Active
+EMP-0653,Arjun,Owusu,Engineering,Midwest,2021-11-06,MGR-029,Senior Engineer,3,Active
+EMP-0654,Seiji,Guo,Sales,Southeast,2021-05-09,MGR-042,Account Executive,2,Active
+EMP-0655,Seiji,Romero,Sales,Southeast,2018-01-16,MGR-010,Senior Account Executive,3,Active
+EMP-0656,Celine,Braun,Finance,West Coast,2022-04-02,MGR-037,Financial Analyst,1,Active
+EMP-0657,Idris,Joshi,Finance,Southeast,2017-07-15,MGR-041,Senior Financial Analyst,2,Active
+EMP-0658,Sunita,Watanabe,Operations,West Coast,2020-12-26,MGR-033,Operations Director,4,Active
+EMP-0659,Daisuke,Diallo,Customer Success,Northeast,2017-07-05,MGR-005,CS Director,4,Active
+EMP-0660,Greta,Tall,Customer Success,Midwest,2019-02-06,MGR-019,CS Manager,2,Active
+EMP-0661,Hugo,Kim,Engineering,Southeast,2018-12-05,MGR-036,Junior Engineer,1,Active
+EMP-0662,Joaquin,Ueda,Marketing,West Coast,2023-12-02,MGR-015,Marketing Director,4,Active
+EMP-0663,Kwame,Nguyen,Sales,Southwest,2024-10-21,MGR-022,Sales Manager,4,Active
+EMP-0664,Lina,Ma,Customer Success,West Coast,2020-05-17,MGR-052,CS Manager,2,Active
+EMP-0665,Celine,Iyer,Operations,Southeast,2022-01-16,MGR-031,Operations Analyst,1,Active
+EMP-0666,Nathan,Németh,Customer Success,Southeast,2023-09-07,MGR-051,CS Director,4,Active
+EMP-0667,Luciana,Lin,Product,West Coast,2022-06-22,MGR-013,VP of Product,5,Active
+EMP-0668,Tariq,Kimura,Product,Southeast,2018-04-24,MGR-050,Group Product Manager,4,Active
+EMP-0669,Mina,Rao,Product,Northeast,2021-11-30,MGR-013,Senior Product Manager,3,Active
+EMP-0670,Sienna,Gupta,Marketing,Southeast,2024-07-20,MGR-015,VP of Marketing,5,Active
+EMP-0671,Isabella,Menon,Sales,Northeast,2023-10-18,MGR-042,Account Executive,2,Active
+EMP-0672,Rashid,Nair,Finance,Southwest,2021-01-09,MGR-026,VP of Finance,5,Active
+EMP-0673,Suresh,Nakamura,Customer Success,Southwest,2018-04-12,MGR-048,CS Manager,2,Active
+EMP-0674,Daniel,Chen,Customer Success,West Coast,2018-09-12,MGR-052,CS Manager,2,Active
+EMP-0675,Finn,Delgado,Customer Success,Southwest,2023-11-06,MGR-048,VP of Customer Success,5,Active
+EMP-0676,Diego,Torres,Product,Southwest,2021-01-21,MGR-013,Group Product Manager,4,Active
+EMP-0677,Svetlana,Owusu,Product,Midwest,2018-07-19,MGR-002,Product Manager,2,Active
+EMP-0678,Maria,Sanchez,Customer Success,Southeast,2022-08-31,MGR-019,CS Manager,2,Active
+EMP-0679,Patrick,Kobayashi,Customer Success,West Coast,2019-07-24,MGR-019,CS Manager,2,Active
+EMP-0680,Bao,Mendoza,Engineering,Southeast,2017-02-10,MGR-038,Junior Engineer,1,Active
+EMP-0681,Jasmine,Bakker,Customer Success,Southwest,2024-03-12,MGR-019,Senior CS Manager,3,Active
+EMP-0682,Karina,Bangura,Operations,Southeast,2024-11-10,MGR-033,Operations Director,4,Active
+EMP-0683,Valentina,Diop,Finance,Northeast,2022-01-02,MGR-055,Finance Director,4,Active
+EMP-0684,Tatiana,Eriksson,Marketing,Southwest,2020-10-02,MGR-058,Marketing Coordinator,1,Active
+EMP-0685,Lukas,Sharma,Finance,West Coast,2020-10-27,MGR-060,Senior Financial Analyst,2,Active
+EMP-0686,Naomi,Svoboda,Sales,Midwest,2022-09-01,MGR-012,Sales Manager,4,Active
+EMP-0687,Nadia,Rodriguez,Customer Success,Southwest,2023-06-03,MGR-051,CS Manager,2,Active
+EMP-0688,Cormac,Maeda,Product,West Coast,2019-08-16,MGR-047,Group Product Manager,4,Active
+EMP-0689,Suki,Ivanov,Marketing,West Coast,2021-01-19,MGR-058,Senior Marketing Manager,3,Active
+EMP-0690,Jasmine,Nishimura,Sales,Southeast,2017-11-16,MGR-024,Account Executive,2,Active
+EMP-0691,Esperanza,Castillo,Finance,Southeast,2021-12-08,MGR-057,Finance Manager,3,Active
+EMP-0692,Mina,Kowalski,Finance,Northeast,2022-02-18,MGR-020,Finance Manager,3,Active
+EMP-0693,Hiroshi,Fischer,Finance,Midwest,2018-05-02,MGR-043,VP of Finance,5,Active
+EMP-0694,Oluwaseun,Pillai,Sales,Southwest,2021-03-14,MGR-023,Account Executive,2,Active
+EMP-0695,Eric,Medina,Engineering,Midwest,2019-06-03,MGR-007,Staff Engineer,4,Active
+EMP-0696,Sofia,Chen,Operations,Southeast,2023-05-07,MGR-056,Senior Operations Manager,3,Active
+EMP-0697,Malaika,Gupta,Customer Success,Northeast,2022-03-03,MGR-052,Senior CS Manager,3,Active
+EMP-0698,Isabella,Tall,Product,West Coast,2019-08-12,MGR-050,Product Manager,2,Active
+EMP-0699,Valentina,López,Customer Success,Northeast,2023-06-01,MGR-051,CS Director,4,Active
+EMP-0700,Beatriz,Wang,Sales,West Coast,2017-08-05,MGR-045,Senior Account Executive,3,Active
+EMP-0701,Hugo,Novak,Engineering,Midwest,2019-10-02,MGR-053,Staff Engineer,4,Active
+EMP-0702,Priya,Gutierrez,Operations,Northeast,2022-12-03,MGR-034,Operations Specialist,2,Active
+EMP-0703,Sakura,Rao,Sales,Northeast,2018-01-03,MGR-016,Account Executive,2,Active
+EMP-0704,Annika,Novak,Engineering,Southwest,2018-02-09,MGR-030,Software Engineer,2,Active
+EMP-0705,Gabriel,Singh,Sales,Northeast,2023-07-29,MGR-022,Sales Manager,4,Active
+EMP-0706,Jasmine,Wu,Operations,West Coast,2022-06-07,MGR-003,Operations Specialist,2,Active
+EMP-0707,Ayumi,Grant,Product,Southwest,2023-03-23,MGR-013,Product Manager,2,Active
+EMP-0708,Suresh,Ramírez,Customer Success,Northeast,2018-11-20,MGR-052,CS Manager,2,Active
+EMP-0709,Oluwaseun,Smith,Customer Success,Southeast,2023-12-18,MGR-027,VP of Customer Success,5,Active
+EMP-0710,Ruth,Sesay,Finance,Midwest,2021-04-07,MGR-028,Finance Director,4,Active
+EMP-0711,Mei,Zhang,Product,West Coast,2020-05-16,MGR-002,Senior Product Manager,3,Active
+EMP-0712,Valentina,Dahl,Sales,West Coast,2020-07-27,MGR-049,Senior Account Executive,3,Active
+EMP-0713,Kaia,Sanchez,Product,Midwest,2022-02-27,MGR-054,Product Manager,2,Active
+EMP-0714,Paloma,Patel,Engineering,Northeast,2024-10-23,MGR-036,Software Engineer,2,Active
+EMP-0715,Ingrid,Guerrero,Engineering,Southeast,2020-12-16,MGR-032,Senior Engineer,3,Active
+EMP-0716,Wei,Liu,Operations,Midwest,2021-12-26,MGR-003,VP of Operations,5,Active
+EMP-0717,Pia,Kamara,Engineering,West Coast,2025-01-19,MGR-018,Senior Engineer,3,Active
+EMP-0718,Wyatt,Ly,Sales,Southwest,2024-02-29,MGR-035,Account Executive,2,Active
+EMP-0719,Ayumi,Kamara,Product,West Coast,2023-10-06,MGR-054,Senior Product Manager,3,Active
+EMP-0720,Helga,Matsumoto,Finance,Midwest,2024-08-09,MGR-008,Senior Financial Analyst,2,Active
+EMP-0721,James,Cissé,Product,Southwest,2020-08-16,MGR-050,Group Product Manager,4,Active
+EMP-0722,Sienna,Braun,Marketing,West Coast,2025-02-02,MGR-014,Marketing Director,4,Active
+EMP-0723,Ryan,Kamara,Marketing,Southwest,2017-04-14,MGR-014,Marketing Director,4,Active
+EMP-0724,Samuel,Torres,Marketing,Midwest,2024-01-06,MGR-009,Marketing Coordinator,1,Active
+EMP-0725,Thandiwe,Inoue,Sales,Southwest,2020-10-27,MGR-010,Senior Account Executive,3,Active
+EMP-0726,Desmond,Rojas,Customer Success,Southwest,2023-06-30,MGR-005,Senior CS Manager,3,Active
+EMP-0727,Tariq,Martínez,Engineering,Southeast,2023-11-07,MGR-032,Junior Engineer,1,Active
+EMP-0728,Brigitte,Peña,Engineering,West Coast,2019-08-13,MGR-053,Staff Engineer,4,Active
+EMP-0729,Hina,Saito,Finance,Southwest,2024-07-30,MGR-060,Senior Financial Analyst,2,Active
+EMP-0730,Aisha,Navarro,Product,Southwest,2019-03-05,MGR-054,Senior Product Manager,3,Active
+EMP-0731,Desmond,Iyer,Sales,Northeast,2017-06-30,MGR-010,Sales Associate,1,Active
+EMP-0732,Pia,Koroma,Finance,West Coast,2018-08-27,MGR-039,Finance Director,4,Active
+EMP-0733,Bao,Grant,Product,Northeast,2022-09-09,MGR-054,Associate Product Manager,1,Active
+EMP-0734,Yara,Hernández,Marketing,Northeast,2024-10-16,MGR-058,Senior Marketing Manager,3,Active
+EMP-0735,Thandiwe,Romero,Marketing,Southeast,2018-03-06,MGR-058,Marketing Specialist,2,Active
+EMP-0736,Camila,Matsumoto,Operations,West Coast,2022-05-24,MGR-034,Operations Specialist,2,Active
+EMP-0737,Maria,Mendoza,Engineering,Southwest,2023-03-23,MGR-006,Software Engineer,2,Active
+EMP-0738,Chukwu,Chen,Engineering,Northeast,2018-12-15,MGR-018,Software Engineer,2,Active
+EMP-0739,Freya,Eriksson,Engineering,Northeast,2018-02-19,MGR-004,Staff Engineer,4,Active
+EMP-0740,Sven,Popov,Sales,Midwest,2021-02-23,MGR-024,Senior Account Executive,3,Active
+EMP-0741,Björn,Gupta,Customer Success,Northeast,2021-03-30,MGR-051,CS Manager,2,Active
+EMP-0742,Mei,Romero,Finance,Northeast,2020-04-19,MGR-060,Finance Director,4,Active
+EMP-0743,Tomás,Haugen,Finance,Southeast,2017-11-30,MGR-060,Senior Financial Analyst,2,Active
+EMP-0744,Adam,Sow,Operations,West Coast,2020-08-11,MGR-034,Senior Operations Manager,3,Active
+EMP-0745,Chen,Ono,Operations,West Coast,2019-04-29,MGR-031,Senior Operations Manager,3,Active
+EMP-0746,Viktor,Nishimura,Operations,West Coast,2021-03-13,MGR-033,Operations Specialist,2,Active
+EMP-0747,Bao,Nilsson,Sales,West Coast,2022-09-30,MGR-045,Sales Associate,1,Active
+EMP-0748,Fernanda,Wu,Marketing,Southeast,2021-12-15,MGR-014,Marketing Coordinator,1,Active
+EMP-0749,Suresh,Guo,Finance,Southwest,2019-07-22,MGR-017,Finance Director,4,Active
+EMP-0750,Samuel,Fujita,Marketing,Midwest,2024-08-31,MGR-015,Marketing Director,4,Active
+EMP-0751,Mireille,Svoboda,Engineering,Midwest,2020-11-20,MGR-032,Software Engineer,2,Active
+EMP-0752,Ravi,Sun,Sales,Northeast,2019-05-10,MGR-042,Sales Manager,4,Active
+EMP-0753,Raj,Hansen,Customer Success,Northeast,2024-10-29,MGR-046,CS Manager,2,Active
+EMP-0754,Leila,Estrada,Customer Success,Northeast,2025-04-11,MGR-005,CS Manager,2,Active
+EMP-0755,Tatiana,Guerrero,Marketing,Midwest,2023-05-14,MGR-009,Senior Marketing Manager,3,Active
+EMP-0756,Helga,Sugiyama,Finance,West Coast,2021-04-11,MGR-021,Finance Director,4,Active
+EMP-0757,Amara,Fujita,Finance,Southeast,2020-06-01,MGR-017,Finance Manager,3,Active
+EMP-0758,Nkechi,Müller,Sales,Northeast,2021-04-30,MGR-023,Sales Associate,1,Active
+EMP-0759,Dmitri,Murakami,Finance,Southwest,2021-08-10,MGR-037,Senior Financial Analyst,2,Active
+EMP-0760,Sofia,Jalloh,Customer Success,Northeast,2019-04-23,MGR-027,CS Associate,1,Active
+EMP-0761,Aaliyah,Grant,Sales,West Coast,2022-02-23,MGR-023,Sales Manager,4,Active
+EMP-0762,Joaquin,Joshi,Finance,Midwest,2022-07-04,MGR-039,VP of Finance,5,Active
+EMP-0763,Julian,Ogawa,Product,Midwest,2018-12-19,MGR-050,Product Manager,2,Active
+EMP-0764,Mateo,Ndiaye,Engineering,Southeast,2017-06-28,MGR-018,Senior Engineer,3,Active
+EMP-0765,Devi,Braun,Operations,West Coast,2021-02-19,MGR-011,Operations Analyst,1,Active
+EMP-0766,Greta,Torres,Marketing,Northeast,2022-03-09,MGR-009,Senior Marketing Manager,3,Active
+EMP-0767,Petra,Sun,Engineering,Southwest,2024-12-14,MGR-007,Software Engineer,2,Active
+EMP-0768,Sean,Sanchez,Product,Southeast,2020-02-18,MGR-013,Associate Product Manager,1,Active
+EMP-0769,Nadia,Mayer,Product,Southeast,2024-07-13,MGR-002,Product Manager,2,Active
+EMP-0770,Hiroshi,Mayer,Sales,Southeast,2024-02-14,MGR-044,Senior Account Executive,3,Active
+EMP-0771,Anya,Dutta,Engineering,Southwest,2019-04-07,MGR-018,Staff Engineer,4,Active
+EMP-0772,Fatima,Nguyen,Marketing,Northeast,2017-09-16,MGR-014,Senior Marketing Manager,3,Active
+EMP-0773,Andrei,Torres,Engineering,Southeast,2020-09-01,MGR-030,Senior Engineer,3,Active
+EMP-0774,Esperanza,Cissé,Engineering,Northeast,2020-12-31,MGR-030,Software Engineer,2,Active
+EMP-0775,Lukas,Delgado,Sales,Southwest,2020-02-15,MGR-049,Senior Account Executive,3,Active
+EMP-0776,Marisol,Dutta,Operations,Southwest,2023-05-21,MGR-025,Operations Director,4,Active
+EMP-0777,Linh,Sato,Marketing,Northeast,2024-09-17,MGR-015,Senior Marketing Manager,3,Active
+EMP-0778,Yolanda,Kondo,Operations,West Coast,2019-08-11,MGR-003,Senior Operations Manager,3,Active
+EMP-0779,Patrick,Saito,Engineering,Southwest,2022-08-05,MGR-029,Junior Engineer,1,Active
+EMP-0780,Rena,Iyer,Product,Midwest,2020-07-24,MGR-002,Associate Product Manager,1,Active
+EMP-0781,Liam,Matsumoto,Customer Success,Midwest,2019-04-24,MGR-048,CS Manager,2,Active
+EMP-0782,Kofi,Ly,Customer Success,Southeast,2019-01-22,MGR-046,Senior CS Manager,3,Active
+EMP-0783,Petra,Singh,Product,Northeast,2018-05-30,MGR-002,VP of Product,5,Active
+EMP-0784,Sienna,Koroma,Sales,Northeast,2018-12-24,MGR-045,Account Executive,2,Active
+EMP-0785,Yara,Sesay,Customer Success,Southeast,2021-01-12,MGR-046,CS Associate,1,Active
+EMP-0786,Nathan,Owusu,Customer Success,Southeast,2021-04-12,MGR-046,CS Associate,1,Active
+EMP-0787,Omar,Conteh,Operations,Southeast,2020-03-06,MGR-040,Operations Specialist,2,Active
+EMP-0788,Troy,Eriksson,Sales,Northeast,2022-08-13,MGR-059,Sales Associate,1,Active
+EMP-0789,Esperanza,Sow,Operations,Southeast,2023-08-07,MGR-011,Operations Specialist,2,Active
+EMP-0790,Obi,Zhang,Sales,Southeast,2025-02-06,MGR-024,Regional Sales Director,5,Active
+EMP-0791,Dmitri,Endo,Operations,Northeast,2017-05-22,MGR-034,Operations Specialist,2,Active
+EMP-0792,Jabari,Sugiyama,Operations,Northeast,2023-10-03,MGR-025,Operations Specialist,2,Active
+EMP-0793,Chioma,Vega,Sales,Southeast,2021-10-15,MGR-023,Account Executive,2,Active
+EMP-0794,Brigitte,Grant,Marketing,Southeast,2025-02-28,MGR-009,Marketing Director,4,Active
+EMP-0795,Amira,Sun,Product,Midwest,2018-11-21,MGR-050,Associate Product Manager,1,Active
+EMP-0796,Leo,Rao,Product,Southeast,2021-03-15,MGR-013,Product Manager,2,Active
+EMP-0797,Sven,Sylla,Finance,Northeast,2017-08-30,MGR-057,Senior Financial Analyst,2,Active
+EMP-0798,Miguel,Rojas,Product,West Coast,2024-02-20,MGR-013,Associate Product Manager,1,Active
+EMP-0799,Jia,Santos,Finance,Northeast,2024-07-18,MGR-060,Finance Manager,3,Active
+EMP-0800,Yolanda,Johansson,Engineering,Northeast,2017-01-30,MGR-032,Senior Engineer,3,Active

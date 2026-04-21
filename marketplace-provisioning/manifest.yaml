@@ -1,0 +1,15 @@
+version: 1
+name: "marketplace-provisioning"
+description: >
+  Provisions Genie spaces and Unity Catalog datasets for Marketplace and
+  Free Edition users. Players pick a business mystery scenario; the app
+  creates a catalog, tables, volumes, and a configured Genie space in the
+  user's workspace, then scores submitted solutions against expected
+  evidence. No external network calls, no PAT storage — uses the app
+  service principal for all Databricks operations.
+user_api_scopes:
+  - sql
+  - dashboards.genie
+  - iam.access-control
+  - iam.current-user
+  - files.files

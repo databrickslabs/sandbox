@@ -1,0 +1,41 @@
+campaign_id,campaign_name,channel,target_audience,target_geography,start_date,end_date,budget_allocated,status
+CAMP-001,Brand Awareness - LinkedIn Q3,Social,"25-44, B2B Decision Makers","US-East, US-West",2025-07-01,2025-09-30,45000,Active
+CAMP-002,Retargeting - Meta August,Social,"25-44, Past Site Visitors","US-East, US-West, US-Central",2025-08-01,2025-08-31,32000,Completed
+CAMP-003,Display Prospecting - Q3,Display,"30-50, Enterprise IT Buyers","US-East, US-West",2025-07-01,2025-09-30,28000,Active
+CAMP-004,Email Nurture - July Webinar,Email,"25-54, Marketing Leads","US-East, US-West, US-Central",2025-07-05,2025-07-31,5000,Completed
+CAMP-005,Video Explainer - YouTube Q3,Video,"25-44, SaaS Evaluators","US-East, US-West",2025-07-15,2025-09-30,38000,Active
+CAMP-006,Paid Search - Branded Terms,Paid Search,"25-44, High-Intent Searchers","US-East, US-West, US-Central",2025-07-01,2025-09-30,42000,Active
+CAMP-007,Q3 Growth Blitz - Paid Search,Paid Search,All Ages,Global,2025-07-01,2025-09-30,180000,Active
+CAMP-008,Social Proof - Meta Q3,Social,"25-44, US Decision Makers","US-East, US-West",2025-07-01,2025-09-30,30000,Active
+CAMP-009,Display Retarget - Google Q3,Display,"25-54, Demo Requesters","US-East, US-West, US-Central",2025-08-15,2025-09-30,18000,Active
+CAMP-010,Email Drip - Free Trial Leads,Email,"25-44, Trial Sign-Ups","US-East, US-West",2025-07-01,2025-09-30,4500,Active
+CAMP-011,LinkedIn Thought Leadership,Social,"30-50, C-Suite","US-East, US-West",2025-07-01,2025-09-15,22000,Completed
+CAMP-012,TikTok Brand Test - August,Social,"25-34, SMB Owners","US-East, US-West",2025-08-01,2025-08-31,15000,Completed
+CAMP-013,Paid Search - Competitor Terms,Paid Search,"25-44, Competitor Evaluators","US-East, US-West, US-Central",2025-07-01,2025-09-30,35000,Active
+CAMP-014,Display Awareness - UK Expansion,Display,"25-44, UK IT Buyers",UK,2025-08-01,2025-09-30,20000,Active
+CAMP-015,Video Testimonials - YouTube Aug,Video,"30-50, Mid-Market","US-East, US-West",2025-08-01,2025-08-31,12000,Completed
+CAMP-016,Email Re-engagement - Lapsed,Email,"25-54, Lapsed Users","US-East, US-West, US-Central",2025-09-01,2025-09-30,3500,Active
+CAMP-017,Retargeting - Google Display Sept,Display,"25-44, Cart Abandoners","US-East, US-West",2025-09-01,2025-09-30,16000,Active
+CAMP-018,Paid Search - Long Tail Q3,Paid Search,"25-54, Niche Searchers","US-East, US-West",2025-07-15,2025-09-30,25000,Active
+CAMP-019,Social Engagement - LinkedIn Sept,Social,"30-50, B2B Decision Makers","US-East, US-West",2025-09-01,2025-09-30,18000,Active
+CAMP-020,Display Contextual - Trade Pubs,Display,"30-50, Industry Readers","US-East, US-West, US-Central",2025-07-01,2025-08-31,14000,Completed
+CAMP-021,Video Pre-Roll - YouTube Sept,Video,"25-44, SaaS Evaluators","US-East, US-West",2025-09-01,2025-09-30,20000,Active
+CAMP-022,Email Product Update - August,Email,"25-54, Current Customers","US-East, US-West, US-Central",2025-08-01,2025-08-15,2500,Completed
+CAMP-023,Meta Lookalike - Q3,Social,"25-44, Lookalike Audience","US-East, US-West",2025-07-01,2025-09-30,27000,Active
+CAMP-024,Paid Search - Product Features,Paid Search,"25-44, Feature Searchers","US-East, US-West",2025-07-01,2025-09-30,30000,Active
+CAMP-025,Display Remarketing - July,Display,"25-54, Recent Visitors","US-East, US-West, US-Central",2025-07-01,2025-07-31,11000,Completed
+CAMP-026,Social Video - TikTok Sept,Social,"25-34, SMB Owners","US-East, US-West",2025-09-01,2025-09-30,10000,Active
+CAMP-027,Email Onboarding - New Trials,Email,"25-44, New Trial Users","US-East, US-West",2025-07-01,2025-09-30,3000,Active
+CAMP-028,LinkedIn Sponsored Content - Aug,Social,"30-50, VP+ Titles","US-East, US-West",2025-08-01,2025-08-31,19000,Completed
+CAMP-029,Display Programmatic - Q3,Display,"25-44, In-Market Buyers","US-East, US-West, US-Central",2025-07-01,2025-09-30,24000,Active
+CAMP-030,Paid Search - How-To Queries,Paid Search,"25-54, Educational Intent","US-East, US-West",2025-08-01,2025-09-30,15000,Active
+CAMP-031,Video Case Study - YouTube Q3,Video,"30-50, Enterprise Buyers","US-East, US-West",2025-07-01,2025-09-30,17000,Active
+CAMP-032,Meta Conversion - August,Social,"25-44, Warm Leads","US-East, US-West, US-Central",2025-08-01,2025-08-31,21000,Completed
+CAMP-033,Email Winback - September,Email,"25-54, Churned Accounts","US-East, US-West, US-Central",2025-09-01,2025-09-30,4000,Active
+CAMP-034,Display Native - Content Syndication,Display,"30-50, Content Consumers","US-East, US-West",2025-07-15,2025-09-15,13000,Completed
+CAMP-035,Paid Search - Pricing Queries,Paid Search,"25-44, Purchase Intent","US-East, US-West, US-Central",2025-07-01,2025-09-30,28000,Active
+CAMP-036,Social Carousel - LinkedIn Q3,Social,"30-50, B2B Managers","US-East, US-West",2025-07-01,2025-09-30,16000,Active
+CAMP-037,Video Shorts - YouTube Aug,Video,"25-34, Tech Enthusiasts","US-East, US-West",2025-08-01,2025-08-31,9000,Completed
+CAMP-038,Display Interstitial - Mobile Q3,Display,"25-44, Mobile Users","US-East, US-West",2025-07-01,2025-09-30,11000,Active
+CAMP-039,Email Event Invite - Sept Conference,Email,"30-50, Conference Attendees","US-East, US-West, US-Central",2025-09-01,2025-09-15,2000,Completed
+CAMP-040,Meta Stories - Brand Q3,Social,"25-34, Social Engagers","US-East, US-West",2025-07-01,2025-09-30,12000,Active

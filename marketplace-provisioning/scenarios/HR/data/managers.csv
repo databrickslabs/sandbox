@@ -1,0 +1,61 @@
+manager_id,manager_name,department,region,team_size,start_date,end_date,performance_rating
+MGR-001,Jordan Rivera,Engineering,Southwest,14,2019-03-10,2025-07-15,4.8
+MGR-002,Sven Müller,Product,Midwest,9,2018-09-30,,2.9
+MGR-003,Isabella Lin,Operations,Southwest,11,2016-05-02,,2.4
+MGR-004,Dagny Sugiyama,Engineering,West Coast,16,2018-03-25,,2.9
+MGR-005,Valentina Patel,Customer Success,Northeast,10,2020-09-27,,3.8
+MGR-006,Devi Popov,Engineering,Southwest,13,2020-04-05,,2.6
+MGR-007,Ximena Guerrero,Engineering,Southeast,18,2016-11-18,,2.8
+MGR-008,Desmond Mendoza,Finance,Northeast,12,2016-10-11,2025-04-27,4.7
+MGR-009,Svetlana Vargas,Marketing,Southeast,10,2023-02-16,,3.4
+MGR-010,Seiji Nilsson,Sales,Midwest,18,2023-04-08,,4.0
+MGR-011,Mina Matsuda,Operations,Midwest,11,2023-03-06,,4.4
+MGR-012,Annika Tanaka,Sales,Southwest,9,2019-07-16,,3.8
+MGR-013,Brendan Yoshida,Product,Southeast,18,2020-06-08,,4.9
+MGR-014,Ximena Kowalski,Marketing,Northeast,16,2018-10-07,,3.4
+MGR-015,Yolanda Peña,Marketing,Northeast,9,2017-07-20,,4.3
+MGR-016,Alejandro Suzuki,Sales,Northeast,14,2020-09-25,,2.0
+MGR-017,Thandi Inoue,Finance,Southwest,16,2017-04-14,,4.9
+MGR-018,Chen Gutierrez,Engineering,Midwest,8,2020-11-15,,4.7
+MGR-019,Rosa Morita,Customer Success,Northeast,18,2021-09-10,,3.1
+MGR-020,Idris Camara,Finance,Northeast,10,2017-09-18,,2.5
+MGR-021,Thandi Smith,Finance,Midwest,12,2021-06-24,2025-07-05,3.2
+MGR-022,Lina Tanaka,Sales,West Coast,15,2016-11-18,,4.2
+MGR-023,Hugo Martínez,Sales,Southeast,16,2022-03-01,,2.0
+MGR-024,Malaika Nishimura,Sales,West Coast,14,2018-04-03,,4.4
+MGR-025,Finn Vega,Operations,Southwest,13,2018-10-12,,3.5
+MGR-026,Priya Grant,Finance,Northeast,9,2022-08-07,,3.4
+MGR-027,Sofia Nakamura,Customer Success,Midwest,12,2016-10-17,,3.3
+MGR-028,Cedric Yoshida,Finance,Northeast,11,2022-05-27,,3.7
+MGR-029,Hassan Watanabe,Engineering,Southeast,15,2019-12-22,,2.4
+MGR-030,Anya Mensah,Engineering,Southeast,9,2019-10-21,,3.5
+MGR-031,Samir Asante,Operations,Northeast,9,2019-02-14,,3.9
+MGR-032,Catalina Holm,Engineering,Southwest,8,2023-04-25,,4.8
+MGR-033,Rashid Torres,Operations,Southeast,14,2021-05-25,,3.2
+MGR-034,Jasmine Torres,Operations,Southwest,15,2020-05-18,,3.3
+MGR-035,Tarquin Ueda,Sales,Northeast,8,2019-04-30,,4.4
+MGR-036,Cormac Ishikawa,Engineering,Midwest,15,2016-08-22,,2.3
+MGR-037,Emeka Tanaka,Finance,Southwest,9,2018-01-31,,3.5
+MGR-038,Rashid Bhat,Engineering,West Coast,8,2018-10-05,,3.0
+MGR-039,Yolanda Maeda,Finance,Midwest,13,2018-12-04,,3.1
+MGR-040,Lina Castillo,Operations,Northeast,13,2023-03-28,,4.8
+MGR-041,Wei Delgado,Finance,West Coast,11,2017-02-13,,2.9
+MGR-042,Dagny Castillo,Sales,Midwest,13,2016-10-08,,3.4
+MGR-043,Mireille Moreno,Finance,West Coast,16,2016-02-02,,4.1
+MGR-044,Idris Ivanov,Sales,Midwest,16,2017-04-17,,3.8
+MGR-045,Amira Gutierrez,Sales,Midwest,8,2021-09-01,,3.9
+MGR-046,Mohammed Nishimura,Customer Success,Midwest,10,2016-06-29,2026-01-30,3.2
+MGR-047,Catalina Hu,Product,Southeast,10,2022-04-16,2025-02-08,3.1
+MGR-048,Mireille Okafor,Customer Success,Midwest,14,2022-07-13,,3.9
+MGR-049,Oluwaseun Zhao,Sales,Northeast,16,2017-02-25,,3.9
+MGR-050,Miguel Saito,Product,Northeast,10,2018-08-27,,3.6
+MGR-051,Thandiwe Traoré,Customer Success,Northeast,9,2018-12-28,,3.4
+MGR-052,Brigitte Okafor,Customer Success,Southeast,15,2018-06-30,,2.8
+MGR-053,Takeshi Cruz,Engineering,Northeast,9,2020-06-20,,4.4
+MGR-054,Valentina Mansaray,Product,West Coast,16,2020-06-25,,3.4
+MGR-055,Jabari Diallo,Finance,Midwest,14,2016-06-05,,3.6
+MGR-056,Esteban Hansen,Operations,West Coast,17,2021-09-25,,3.6
+MGR-057,Adaeze Smith,Finance,West Coast,9,2018-03-18,,3.7
+MGR-058,Felix Tall,Marketing,Southwest,18,2019-05-15,,3.0
+MGR-059,Natsumi Hu,Sales,Northeast,14,2020-09-18,,3.8
+MGR-060,Omar Romero,Finance,Midwest,8,2020-07-21,,3.4

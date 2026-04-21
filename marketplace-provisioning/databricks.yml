@@ -1,0 +1,13 @@
+bundle:
+  name: data-detective
+
+targets:
+  dev:
+    default: true
+
+resources:
+  apps:
+    data_detective:
+      name: data-detective
+      description: "Data Detective — investigate business mysteries using Genie AI spaces"
+      source_code_path: .
