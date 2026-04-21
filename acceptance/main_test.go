@@ -12,6 +12,7 @@ func TestXxx(t *testing.T) {
 	t.Skip()
 	ctx := context.Background()
 	ctx = env.Set(ctx, "INPUT_DIRECTORY", "../go-libs")
+	ctx = env.Set(ctx, "INPUT_N", "4")
 	err := run(ctx)
 	assert.NoError(t, err)
 }
