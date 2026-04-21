@@ -191,3 +191,5 @@ coverage.txt
 **/terraform.tfstate.d/**
 **/*.tfvars
 /llnotes/llnotes
+/llnotes/main
+/metascan/main
