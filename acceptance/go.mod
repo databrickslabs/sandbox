@@ -12,7 +12,7 @@ require (
 	github.com/nxadm/tail v1.4.11 // MIT
 	github.com/sethvargo/go-githubactions v1.2.0 // Apache 2.0
 	github.com/stretchr/testify v1.11.1 // MIT
-	golang.org/x/oauth2 v0.34.0 // BSD
+	golang.org/x/oauth2 v0.36.0 // BSD
 )
 
 require golang.org/x/text v0.36.0
