@@ -1,0 +1,19 @@
+bundle:
+  name: data-detective
+
+targets:
+  dev:
+    default: true
+
+resources:
+  apps:
+    data_detective:
+      name: data-detective
+      description: "Data Detective — investigate business mysteries using Genie AI spaces"
+      source_code_path: .
+
+      resources:
+        - name: scoring-llm
+          serving_endpoint:
+            name: databricks-claude-sonnet-4-5
+            permission: CAN_QUERY

@@ -1,0 +1,146 @@
+{
+  "space_title": "Operations \u2014 The Late Shipments",
+  "space_description": "Investigate an 18-point drop in customer satisfaction scores in Q2. Explore orders, shipments, fulfillment partners, products, and CSAT survey responses to find the root cause.",
+  "warehouse_id": "b5bf862089d69e1c",
+  "catalog_name": "ops_shipments",
+  "schema_name": "default",
+  "sample_questions": [
+    "What is the on-time delivery rate by fulfillment partner?",
+    "Which partners have the most late deliveries?",
+    "How do CSAT scores differ by fulfillment partner?",
+    "What product categories are most affected by late shipments?",
+    "Show me the late delivery rate for heavy and oversized items",
+    "What are the top complaint categories in CSAT responses?"
+  ],
+  "tables": [
+    {
+      "identifier": "ops_shipments.default.orders",
+      "column_configs": [
+        { "column_name": "order_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique order identifier" },
+        { "column_name": "customer_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Customer who placed the order" },
+        { "column_name": "order_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the order was placed" },
+        { "column_name": "product_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Product ordered — join to products table" },
+        { "column_name": "quantity", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Quantity ordered" },
+        { "column_name": "order_total_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Total order amount in USD" },
+        { "column_name": "shipping_method", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Shipping method (Express, Standard, Economy, Freight)" },
+        { "column_name": "region", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Delivery region" }
+      ]
+    },
+    {
+      "identifier": "ops_shipments.default.shipments",
+      "column_configs": [
+        { "column_name": "shipment_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique shipment identifier" },
+        { "column_name": "order_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Order this shipment fulfills — join to orders table" },
+        { "column_name": "fulfillment_partner_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "3PL partner handling the shipment — join to fulfillment_partners table" },
+        { "column_name": "ship_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the package was shipped" },
+        { "column_name": "promised_delivery_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Promised delivery date" },
+        { "column_name": "actual_delivery_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Actual delivery date" },
+        { "column_name": "delivery_status", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Delivery status: On Time, Late, or Early" },
+        { "column_name": "package_weight_lbs", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Package weight in pounds" },
+        { "column_name": "package_dimensions", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Package dimensions (LxWxH in inches)" }
+      ]
+    },
+    {
+      "identifier": "ops_shipments.default.products",
+      "column_configs": [
+        { "column_name": "product_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique product identifier — primary key" },
+        { "column_name": "product_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Product display name" },
+        { "column_name": "category", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Product category (Electronics, Furniture, Clothing, Appliances, etc.)" },
+        { "column_name": "weight_class", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Weight classification: Light, Medium, Heavy, or Oversized" },
+        { "column_name": "unit_price", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Unit price in USD" }
+      ]
+    },
+    {
+      "identifier": "ops_shipments.default.fulfillment_partners",
+      "column_configs": [
+        { "column_name": "partner_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique fulfillment partner identifier — primary key" },
+        { "column_name": "partner_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Partner company name" },
+        { "column_name": "specialization", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Partner specialization (Express, Regional, Heavy/Oversized, National, Economy)" },
+        { "column_name": "regions_served", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Semicolon-separated list of regions served" },
+        { "column_name": "avg_transit_days", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Average transit time in days" },
+        { "column_name": "contract_sla_pct", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Contractual SLA target for on-time delivery percentage" }
+      ]
+    },
+    {
+      "identifier": "ops_shipments.default.csat_responses",
+      "column_configs": [
+        { "column_name": "response_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique CSAT response identifier" },
+        { "column_name": "order_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Order this response relates to — join to orders and shipments tables" },
+        { "column_name": "customer_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Customer who responded" },
+        { "column_name": "response_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the survey response was submitted" },
+        { "column_name": "satisfaction_score", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Satisfaction score (1-10, higher is more satisfied)" },
+        { "column_name": "complaint_category", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Complaint category (Late Delivery, Damaged, Wrong Item, None, Other)" },
+        { "column_name": "free_text_comment", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Free-text customer comment" }
+      ]
+    }
+  ],
+  "table_joins": [
+    {
+      "left_table_identifier": "ops_shipments.default.orders",
+      "right_table_identifier": "ops_shipments.default.shipments",
+      "join_columns": [
+        { "left_column": "order_id", "right_column": "order_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "ops_shipments.default.orders",
+      "right_table_identifier": "ops_shipments.default.products",
+      "join_columns": [
+        { "left_column": "product_id", "right_column": "product_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "ops_shipments.default.shipments",
+      "right_table_identifier": "ops_shipments.default.fulfillment_partners",
+      "join_columns": [
+        { "left_column": "fulfillment_partner_id", "right_column": "partner_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "ops_shipments.default.orders",
+      "right_table_identifier": "ops_shipments.default.csat_responses",
+      "join_columns": [
+        { "left_column": "order_id", "right_column": "order_id" }
+      ]
+    }
+  ],
+  "text_instructions": [
+    "This space is designed to investigate an 18-point drop in customer satisfaction scores during Q2 2025. Use it to explore delivery performance by fulfillment partner, product weight class, and region.",
+    "Data covers Q2 2025 (April 1 – June 30, 2025).",
+    "Round all currency values to 2 decimal places and all percentages to 2 decimal places.",
+    "When users ask about delivery performance without specifying a partner, show all partners. When they mention a product category without specifying which one, ask: 'Which product category would you like to focus on?'",
+    "Glossary: 3PL = Third-Party Logistics partner. CSAT = Customer Satisfaction. SLA = Service-Level Agreement. On-time = actual_delivery_date <= promised_delivery_date. Late = actual_delivery_date > promised_delivery_date. COO = Chief Operating Officer."
+  ],
+  "example_question_sqls": [
+    {
+      "question": "What is the on-time delivery rate by fulfillment partner?",
+      "sql": "SELECT\n  fp.partner_id,\n  fp.partner_name,\n  fp.specialization,\n  COUNT(*) AS total_shipments,\n  SUM(CASE WHEN s.delivery_status = 'Late' THEN 1 ELSE 0 END) AS late_count,\n  ROUND(SUM(CASE WHEN s.delivery_status != 'Late' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS on_time_pct,\n  fp.contract_sla_pct\nFROM ops_shipments.`default`.shipments s\nJOIN ops_shipments.`default`.fulfillment_partners fp ON s.fulfillment_partner_id = fp.partner_id\nGROUP BY fp.partner_id, fp.partner_name, fp.specialization, fp.contract_sla_pct\nORDER BY on_time_pct ASC"
+    },
+    {
+      "question": "How do CSAT scores correlate with delivery status?",
+      "sql": "SELECT\n  s.delivery_status,\n  ROUND(AVG(cs.satisfaction_score), 2) AS avg_csat,\n  COUNT(*) AS response_count\nFROM ops_shipments.`default`.csat_responses cs\nJOIN ops_shipments.`default`.shipments s ON cs.order_id = s.order_id\nGROUP BY s.delivery_status\nORDER BY avg_csat"
+    },
+    {
+      "question": "What is the late delivery rate by product weight class?",
+      "sql": "SELECT\n  p.weight_class,\n  COUNT(*) AS total_shipments,\n  SUM(CASE WHEN s.delivery_status = 'Late' THEN 1 ELSE 0 END) AS late_count,\n  ROUND(SUM(CASE WHEN s.delivery_status = 'Late' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS late_rate_pct\nFROM ops_shipments.`default`.shipments s\nJOIN ops_shipments.`default`.orders o ON s.order_id = o.order_id\nJOIN ops_shipments.`default`.products p ON o.product_id = p.product_id\nGROUP BY p.weight_class\nORDER BY late_rate_pct DESC"
+    },
+    {
+      "question": "What share of low-CSAT complaints come from FP-004?",
+      "sql": "SELECT\n  fp.partner_id,\n  fp.partner_name,\n  COUNT(*) AS low_csat_responses,\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_of_all_low_csat\nFROM ops_shipments.`default`.csat_responses cs\nJOIN ops_shipments.`default`.shipments s ON cs.order_id = s.order_id\nJOIN ops_shipments.`default`.fulfillment_partners fp ON s.fulfillment_partner_id = fp.partner_id\nWHERE cs.satisfaction_score <= 5\nGROUP BY fp.partner_id, fp.partner_name\nORDER BY low_csat_responses DESC"
+    }
+  ],
+  "sql_snippets": {
+    "filters": [
+      { "display_name": "Late Deliveries Only", "sql": "ops_shipments.`default`.shipments.delivery_status = 'Late'" },
+      { "display_name": "Partner FP-004", "sql": "ops_shipments.`default`.shipments.fulfillment_partner_id = 'FP-004'" },
+      { "display_name": "Heavy/Oversized Products", "sql": "ops_shipments.`default`.products.weight_class IN ('Heavy', 'Oversized')" },
+      { "display_name": "Low CSAT (score <= 5)", "sql": "ops_shipments.`default`.csat_responses.satisfaction_score <= 5" }
+    ],
+    "measures": [
+      { "display_name": "On-Time %", "sql": "ROUND(SUM(CASE WHEN ops_shipments.`default`.shipments.delivery_status != 'Late' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2)" },
+      { "display_name": "Avg CSAT Score", "sql": "ROUND(AVG(ops_shipments.`default`.csat_responses.satisfaction_score), 2)" },
+      { "display_name": "Late Delivery Count", "sql": "SUM(CASE WHEN ops_shipments.`default`.shipments.delivery_status = 'Late' THEN 1 ELSE 0 END)" },
+      { "display_name": "Total Orders", "sql": "COUNT(DISTINCT ops_shipments.`default`.orders.order_id)" }
+    ]
+  }
+}
