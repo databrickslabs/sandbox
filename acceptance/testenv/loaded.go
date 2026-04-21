@@ -47,6 +47,9 @@ func (l *loadedEnv) Configure(cfg *config.Config) error {
 		}
 	}
 	if cfg.IsAzure() {
+		if l.v == nil {
+			return fmt.Errorf("azure credentials provider is not configured")
+		}
 		cfg.Credentials = l.v.creds
 	}
 	return nil
