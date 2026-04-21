@@ -1,3 +1,17 @@
+---
+title: "Marketplace Provisioning App"
+language: python
+author: "Michelle McSweeney"
+date: 2026-04-20
+
+tags:
+- marketplace
+- genie
+- databricks-apps
+- free-edition
+- provisioning
+---
+
 # Marketplace Provisioning App
 
 ## Goal
