@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -72,10 +71,7 @@ func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) 
 	// set codegen path file used for configuring the acceptance tests
 	codegenPath := a.Action.GetInput("codegen_path")
 	ctx = env.Set(ctx, "codegen_path", codegenPath)
-	if n := strings.TrimSpace(a.Action.GetInput("n")); n != "" {
-		if v, err := strconv.Atoi(n); err != nil || v < 1 {
-			return nil, fmt.Errorf("invalid n %q: expected positive integer", n)
-		}
+	if n := a.Action.GetInput("n"); n != "" {
 		ctx = env.Set(ctx, "PYTEST_N", n)
 	}
 	redact := loaded.Redaction()
