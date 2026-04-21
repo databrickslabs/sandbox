@@ -73,10 +73,8 @@ func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) 
 	codegenPath := a.Action.GetInput("codegen_path")
 	ctx = env.Set(ctx, "codegen_path", codegenPath)
 	if n := strings.TrimSpace(a.Action.GetInput("n")); n != "" {
-		if n != "auto" {
-			if v, err := strconv.Atoi(n); err != nil || v < 1 {
-				return nil, fmt.Errorf("invalid n %q: expected positive integer or \"auto\"", n)
-			}
+		if v, err := strconv.Atoi(n); err != nil || v < 1 {
+			return nil, fmt.Errorf("invalid n %q: expected positive integer", n)
 		}
 		ctx = env.Set(ctx, "PYTEST_N", n)
 	}
