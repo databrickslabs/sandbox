@@ -73,7 +73,7 @@ func (cpf *credentialsProviderFunc) SetHeaders(r *http.Request) error {
 
 // Configure implements credentials provider for Databricks SDK
 func (c *ghOidcCreds) Configure(ctx context.Context, cfg *config.Config) (credentials.CredentialsProvider, error) {
-	ts, err := c.oidcTokenSource(ctx, cfg.Environment().AzureApplicationID)
+	ts, err := c.oidcTokenSource(ctx, environment.GetEnvironmentForHostname(cfg.CanonicalHostName()).AzureApplicationID)
 	if err != nil {
 		return nil, fmt.Errorf("oidc: %w", err)
 	}
