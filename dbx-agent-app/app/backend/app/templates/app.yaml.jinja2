@@ -1,0 +1,52 @@
+# Databricks App Configuration
+# Supervisor: {{ collection_name }}
+# Generated: {{ generated_at }}
+
+# Application metadata
+name: {{ app_name }}
+description: "Code-first supervisor for {{ collection_name }} collection (Pattern 3)"
+
+# Runtime configuration
+command:
+  - "uvicorn"
+  - "supervisor:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+# Environment variables
+env:
+  # Databricks Foundation Model API
+  - name: DATABRICKS_HOST
+    value: "{{ databricks_host }}"
+  - name: DATABRICKS_TOKEN
+    value: "{{ '{{secrets/databricks/token}}' }}"
+
+  # LLM endpoint
+  - name: LLM_ENDPOINT
+    value: "{{ llm_endpoint }}"
+
+  # MCP Server URLs (comma-separated)
+  - name: MCP_SERVER_URLS
+    value: "{{ mcp_server_urls }}"
+
+  # MLflow tracking
+  - name: MLFLOW_TRACKING_URI
+    value: "databricks"
+  - name: MLFLOW_EXPERIMENT_NAME
+    value: "/Shared/supervisors/{{ collection_name }}"
+
+# Resource limits
+resources:
+  cpu: "2"
+  memory: "4Gi"
+
+# Health check
+health_check:
+  path: "/health"
+  interval: 30
+  timeout: 10
+
+# Port configuration
+port: 8000

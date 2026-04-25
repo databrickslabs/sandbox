@@ -1,0 +1,60 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # Unity Catalog configuration
+  - name: UC_CATALOG
+    value: main
+
+  - name: UC_SCHEMA
+    value: agents
+
+  # Model endpoint
+  - name: MODEL_ENDPOINT
+    value: databricks-claude-sonnet-4-5
+
+  # Model parameters
+  - name: TEMPERATURE
+    value: "0.7"
+
+  - name: MAX_TOKENS
+    value: "4096"
+
+  # SQL Warehouse ID (optional - will auto-detect serverless if not provided)
+  # - name: WAREHOUSE_ID
+  #   value: your-warehouse-id
+
+  # MLflow tracking
+  - name: MLFLOW_EXPERIMENT_NAME
+    value: /Users/databricks/agent-tracking
+
+  # Python path
+  - name: PYTHONPATH
+    value: /Workspace/Applications/${app_name}
+
+# ── User Authorization (on-behalf-of) ──────────────────────────────
+# To enable per-user UC governance (row-level security, column masks),
+# configure user authorization scopes on this app via the Databricks CLI:
+#
+#   databricks apps update <app-name> --json '{
+#     "resources": [{
+#       "name": "user-auth",
+#       "description": "On-behalf-of user authorization",
+#       "sql": { "permission": "CAN_USE" }
+#     }]
+#   }'
+#
+# Or use the Custom App Integration API to add OAuth scopes:
+#   POST /api/2.0/accounts/{account_id}/oauth2/custom-app-integrations
+#   scopes: ["sql", "iam.current-user:read"]
+#
+# When configured, the app receives X-Forwarded-Access-Token headers
+# and the @app_agent decorator populates request.user_context automatically.
+# See: https://docs.databricks.com/en/dev-tools/databricks-apps/app-development.html

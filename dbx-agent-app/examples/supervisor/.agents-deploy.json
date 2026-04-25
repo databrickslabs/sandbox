@@ -1,0 +1,41 @@
+{
+  "project": "sgp-multi-agent",
+  "profile": "fe-vm-serverless-dxukih",
+  "agents": {
+    "research": {
+      "app_name": "sgp-multi-agent-research",
+      "url": "https://sgp-multi-agent-research-7474660127789418.aws.databricksapps.com",
+      "sp_name": "app-1u9g0g sgp-multi-agent-research",
+      "sp_client_id": "a1a48594-9a8c-4521-b72d-68b412a3aec2",
+      "deployed_at": "2026-03-03T21:35:06.712359+00:00"
+    },
+    "expert-finder": {
+      "app_name": "sgp-multi-agent-expert-finder",
+      "url": "https://sgp-multi-agent-expert-finder-7474660127789418.aws.databricksapps.com",
+      "sp_name": "app-1u9g0g sgp-multi-agent-expert-finder",
+      "sp_client_id": "2645d39b-79b0-48f1-854f-794c3782df1f",
+      "deployed_at": "2026-03-03T21:35:27.839714+00:00"
+    },
+    "analytics": {
+      "app_name": "sgp-multi-agent-analytics",
+      "url": "https://sgp-multi-agent-analytics-7474660127789418.aws.databricksapps.com",
+      "sp_name": "app-1u9g0g sgp-multi-agent-analytics",
+      "sp_client_id": "b80e3c25-4349-46e2-bf6c-12a3a1e0a240",
+      "deployed_at": "2026-03-03T21:35:49.013649+00:00"
+    },
+    "compliance": {
+      "app_name": "sgp-multi-agent-compliance",
+      "url": "https://sgp-multi-agent-compliance-7474660127789418.aws.databricksapps.com",
+      "sp_name": "app-1u9g0g sgp-multi-agent-compliance",
+      "sp_client_id": "c4cbc638-57a8-4d50-ace3-821ea520f171",
+      "deployed_at": "2026-03-03T21:36:17.396805+00:00"
+    },
+    "supervisor": {
+      "app_name": "sgp-multi-agent-supervisor",
+      "url": "https://sgp-multi-agent-supervisor-7474660127789418.aws.databricksapps.com",
+      "sp_name": "app-1u9g0g sgp-multi-agent-supervisor",
+      "sp_client_id": "3bb99bd2-fcdb-4c08-9dea-87acdc79d313",
+      "deployed_at": "2026-03-03T21:37:38.072701+00:00"
+    }
+  }
+}
