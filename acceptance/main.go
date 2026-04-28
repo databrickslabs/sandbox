@@ -71,6 +71,9 @@ func (a *acceptance) trigger(ctx context.Context) (*notify.Notification, error) 
 	// set codegen path file used for configuring the acceptance tests
 	codegenPath := a.Action.GetInput("codegen_path")
 	ctx = env.Set(ctx, "codegen_path", codegenPath)
+	if n := a.Action.GetInput("n"); n != "" {
+		ctx = env.Set(ctx, "PYTEST_N", n)
+	}
 	redact := loaded.Redaction()
 	report, err := a.runWithTimeout(ctx, redact, directory)
 	if err != nil {
