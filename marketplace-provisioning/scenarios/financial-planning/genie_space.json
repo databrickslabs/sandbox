@@ -1,7 +1,6 @@
 {
   "space_title": "Financial Planning \u2014 The Budget Overrun",
   "space_description": "Investigate an 18% Q3 operating expense budget overrun that no individual department can explain. Every department head reports finishing on or under target, yet company-level opex is $7M+ over plan. Explore budgets, cost centers, GL transactions, exception approvals, and headcount data to find the root cause.",
-  "warehouse_id": "b5bf862089d69e1c",
   "catalog_name": "finplan_budget",
   "schema_name": "default",
   "sample_questions": [
@@ -17,72 +16,348 @@
     {
       "identifier": "finplan_budget.default.budget_vs_actual",
       "column_configs": [
-        { "column_name": "budget_line_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique budget line identifier" },
-        { "column_name": "fiscal_month", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Month of the budget period (e.g. 2025-07)" },
-        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter (e.g. Q3 2025)" },
-        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year (e.g. FY2025)" },
-        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department name (Engineering, Sales, Marketing, Finance, HR, Legal, Product, Operations, IT, Executive)" },
-        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center code \u2014 join to cost_center_master for classification" },
-        { "column_name": "budget_category", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Expense category (Compensation, Benefits, Travel, Software, Facilities, Professional Services, Equipment, Training)" },
-        { "column_name": "budget_amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Budgeted amount in USD for the period" },
-        { "column_name": "actual_amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Actual spend in USD for the period" }
+        {
+          "column_name": "budget_line_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique budget line identifier"
+        },
+        {
+          "column_name": "fiscal_month",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Month of the budget period (e.g. 2025-07)"
+        },
+        {
+          "column_name": "fiscal_quarter",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal quarter (e.g. Q3 2025)"
+        },
+        {
+          "column_name": "fiscal_year",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal year (e.g. FY2025)"
+        },
+        {
+          "column_name": "department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Department name (Engineering, Sales, Marketing, Finance, HR, Legal, Product, Operations, IT, Executive)"
+        },
+        {
+          "column_name": "cost_center_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Cost center code \u2014 join to cost_center_master for classification"
+        },
+        {
+          "column_name": "budget_category",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Expense category (Compensation, Benefits, Travel, Software, Facilities, Professional Services, Equipment, Training)"
+        },
+        {
+          "column_name": "budget_amount_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Budgeted amount in USD for the period"
+        },
+        {
+          "column_name": "actual_amount_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Actual spend in USD for the period"
+        }
       ]
     },
     {
       "identifier": "finplan_budget.default.cost_center_master",
       "column_configs": [
-        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center code \u2014 primary key" },
-        { "column_name": "cost_center_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Descriptive name of the cost center" },
-        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Owning department (empty for shared/corporate cost centers)" },
-        { "column_name": "cost_center_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Type: Departmental, Shared, or Corporate" },
-        { "column_name": "is_active", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Whether the cost center is active (Y/N)" }
+        {
+          "column_name": "cost_center_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Cost center code \u2014 primary key"
+        },
+        {
+          "column_name": "cost_center_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Descriptive name of the cost center"
+        },
+        {
+          "column_name": "department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Owning department (empty for shared/corporate cost centers)"
+        },
+        {
+          "column_name": "cost_center_type",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Type: Departmental, Shared, or Corporate"
+        },
+        {
+          "column_name": "is_active",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Whether the cost center is active (Y/N)"
+        }
       ]
     },
     {
       "identifier": "finplan_budget.default.gl_transactions",
       "column_configs": [
-        { "column_name": "transaction_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique GL transaction identifier" },
-        { "column_name": "posting_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the transaction was posted" },
-        { "column_name": "gl_account_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "General Ledger account code" },
-        { "column_name": "gl_account_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "GL account description" },
-        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the transaction is posted to \u2014 join to cost_center_master" },
-        { "column_name": "vendor", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Vendor or payee name" },
-        { "column_name": "description", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Transaction description" },
-        { "column_name": "amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Transaction amount in USD" },
-        { "column_name": "expense_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Expense classification: Recurring or One-Time" },
-        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter" },
-        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year" }
+        {
+          "column_name": "transaction_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique GL transaction identifier"
+        },
+        {
+          "column_name": "posting_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the transaction was posted"
+        },
+        {
+          "column_name": "gl_account_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "General Ledger account code"
+        },
+        {
+          "column_name": "gl_account_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "GL account description"
+        },
+        {
+          "column_name": "cost_center_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Cost center the transaction is posted to \u2014 join to cost_center_master"
+        },
+        {
+          "column_name": "vendor",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Vendor or payee name"
+        },
+        {
+          "column_name": "description",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Transaction description"
+        },
+        {
+          "column_name": "amount_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Transaction amount in USD"
+        },
+        {
+          "column_name": "expense_type",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Expense classification: Recurring or One-Time"
+        },
+        {
+          "column_name": "fiscal_quarter",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal quarter"
+        },
+        {
+          "column_name": "fiscal_year",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal year"
+        }
       ]
     },
     {
       "identifier": "finplan_budget.default.exception_approvals",
       "column_configs": [
-        { "column_name": "approval_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique approval record identifier" },
-        { "column_name": "request_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the exception was requested" },
-        { "column_name": "approval_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the exception was approved" },
-        { "column_name": "requestor", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the person who submitted the request" },
-        { "column_name": "approving_manager", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the approving manager" },
-        { "column_name": "originating_department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department that originated the request \u2014 compare to posting_cost_center to find mismatches" },
-        { "column_name": "posting_cost_center", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the charge was actually posted to \u2014 join to cost_center_master" },
-        { "column_name": "project_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the project or initiative" },
-        { "column_name": "amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Approved amount in USD" },
-        { "column_name": "justification", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Free-text justification for the exception" },
-        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter" },
-        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year" }
+        {
+          "column_name": "approval_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique approval record identifier"
+        },
+        {
+          "column_name": "request_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the exception was requested"
+        },
+        {
+          "column_name": "approval_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the exception was approved"
+        },
+        {
+          "column_name": "requestor",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Name of the person who submitted the request"
+        },
+        {
+          "column_name": "approving_manager",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Name of the approving manager"
+        },
+        {
+          "column_name": "originating_department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Department that originated the request \u2014 compare to posting_cost_center to find mismatches"
+        },
+        {
+          "column_name": "posting_cost_center",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Cost center the charge was actually posted to \u2014 join to cost_center_master"
+        },
+        {
+          "column_name": "project_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Name of the project or initiative"
+        },
+        {
+          "column_name": "amount_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Approved amount in USD"
+        },
+        {
+          "column_name": "justification",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Free-text justification for the exception"
+        },
+        {
+          "column_name": "fiscal_quarter",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal quarter"
+        },
+        {
+          "column_name": "fiscal_year",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Fiscal year"
+        }
       ]
     },
     {
       "identifier": "finplan_budget.default.headcount",
       "column_configs": [
-        { "column_name": "employee_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique employee identifier" },
-        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department the employee belongs to" },
-        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the employee is assigned to" },
-        { "column_name": "hire_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Employee hire date" },
-        { "column_name": "termination_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Termination date (empty if still active)" },
-        { "column_name": "job_title", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Job title" },
-        { "column_name": "job_level", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Job level (1-6)" },
-        { "column_name": "annual_salary_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Annual base salary in USD" },
-        { "column_name": "status", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Employment status (Active, Terminated)" }
+        {
+          "column_name": "employee_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique employee identifier"
+        },
+        {
+          "column_name": "department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Department the employee belongs to"
+        },
+        {
+          "column_name": "cost_center_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Cost center the employee is assigned to"
+        },
+        {
+          "column_name": "hire_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Employee hire date"
+        },
+        {
+          "column_name": "termination_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Termination date (empty if still active)"
+        },
+        {
+          "column_name": "job_title",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Job title"
+        },
+        {
+          "column_name": "job_level",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Job level (1-6)"
+        },
+        {
+          "column_name": "annual_salary_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Annual base salary in USD"
+        },
+        {
+          "column_name": "status",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employment status (Active, Terminated)"
+        }
       ]
     }
   ],
@@ -91,28 +366,40 @@
       "left_table_identifier": "finplan_budget.default.budget_vs_actual",
       "right_table_identifier": "finplan_budget.default.cost_center_master",
       "join_columns": [
-        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+        {
+          "left_column": "cost_center_id",
+          "right_column": "cost_center_id"
+        }
       ]
     },
     {
       "left_table_identifier": "finplan_budget.default.gl_transactions",
       "right_table_identifier": "finplan_budget.default.cost_center_master",
       "join_columns": [
-        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+        {
+          "left_column": "cost_center_id",
+          "right_column": "cost_center_id"
+        }
       ]
     },
     {
       "left_table_identifier": "finplan_budget.default.exception_approvals",
       "right_table_identifier": "finplan_budget.default.cost_center_master",
       "join_columns": [
-        { "left_column": "posting_cost_center", "right_column": "cost_center_id" }
+        {
+          "left_column": "posting_cost_center",
+          "right_column": "cost_center_id"
+        }
       ]
     },
     {
       "left_table_identifier": "finplan_budget.default.headcount",
       "right_table_identifier": "finplan_budget.default.cost_center_master",
       "join_columns": [
-        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+        {
+          "left_column": "cost_center_id",
+          "right_column": "cost_center_id"
+        }
       ]
     }
   ],
@@ -152,24 +439,60 @@
     }
   ],
   "trusted_assets": [
-    { "function_name": "finplan_budget.default.budget_summary" },
-    { "function_name": "finplan_budget.default.cost_center_variance" },
-    { "function_name": "finplan_budget.default.exception_summary" }
+    {
+      "function_name": "finplan_budget.default.budget_summary"
+    },
+    {
+      "function_name": "finplan_budget.default.cost_center_variance"
+    },
+    {
+      "function_name": "finplan_budget.default.exception_summary"
+    }
   ],
   "sql_snippets": {
     "filters": [
-      { "display_name": "Q3 2025 Only", "sql": "fiscal_quarter = 'Q3 2025'" },
-      { "display_name": "FY2025 Only", "sql": "fiscal_year = 'FY2025'" },
-      { "display_name": "FY2026 Only", "sql": "fiscal_year = 'FY2026'" },
-      { "display_name": "Shared Cost Centers", "sql": "cost_center_type = 'Shared'" },
-      { "display_name": "Departmental Cost Centers", "sql": "cost_center_type = 'Departmental'" },
-      { "display_name": "One-Time Expenses", "sql": "expense_type = 'One-Time'" }
+      {
+        "display_name": "Q3 2025 Only",
+        "sql": "fiscal_quarter = 'Q3 2025'"
+      },
+      {
+        "display_name": "FY2025 Only",
+        "sql": "fiscal_year = 'FY2025'"
+      },
+      {
+        "display_name": "FY2026 Only",
+        "sql": "fiscal_year = 'FY2026'"
+      },
+      {
+        "display_name": "Shared Cost Centers",
+        "sql": "cost_center_type = 'Shared'"
+      },
+      {
+        "display_name": "Departmental Cost Centers",
+        "sql": "cost_center_type = 'Departmental'"
+      },
+      {
+        "display_name": "One-Time Expenses",
+        "sql": "expense_type = 'One-Time'"
+      }
     ],
     "measures": [
-      { "display_name": "Total Budget", "sql": "ROUND(SUM(budget_amount_usd), 2)" },
-      { "display_name": "Total Actual", "sql": "ROUND(SUM(actual_amount_usd), 2)" },
-      { "display_name": "Budget Variance", "sql": "ROUND(SUM(actual_amount_usd) - SUM(budget_amount_usd), 2)" },
-      { "display_name": "Variance %", "sql": "ROUND((SUM(actual_amount_usd) - SUM(budget_amount_usd)) / SUM(budget_amount_usd) * 100, 2)" }
+      {
+        "display_name": "Total Budget",
+        "sql": "ROUND(SUM(budget_amount_usd), 2)"
+      },
+      {
+        "display_name": "Total Actual",
+        "sql": "ROUND(SUM(actual_amount_usd), 2)"
+      },
+      {
+        "display_name": "Budget Variance",
+        "sql": "ROUND(SUM(actual_amount_usd) - SUM(budget_amount_usd), 2)"
+      },
+      {
+        "display_name": "Variance %",
+        "sql": "ROUND((SUM(actual_amount_usd) - SUM(budget_amount_usd)) / SUM(budget_amount_usd) * 100, 2)"
+      }
     ]
   }
 }

@@ -72,22 +72,6 @@ def get_db():
 
 def init_db():
     with get_db() as conn:
-        # Migrate: drop any UNIQUE constraint on nickname
-        row = conn.execute(
-            "SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'"
-        ).fetchone()
-        if row and "UNIQUE" in (row["sql"] or ""):
-            conn.executescript("""
-                CREATE TABLE IF NOT EXISTS accounts_new (
-                    id TEXT PRIMARY KEY, nickname TEXT NOT NULL,
-                    mystery TEXT NOT NULL DEFAULT '', genie_url TEXT NOT NULL DEFAULT '',
-                    created_at TEXT NOT NULL
-                );
-                INSERT OR IGNORE INTO accounts_new SELECT * FROM accounts;
-                DROP TABLE accounts;
-                ALTER TABLE accounts_new RENAME TO accounts;
-            """)
-
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS accounts (
                 id          TEXT PRIMARY KEY,
@@ -134,12 +118,16 @@ init_db()
 # Provisioning state (in-memory, transient)
 # ---------------------------------------------------------------------------
 
+_MAX_STATUS_ENTRIES = 1000
 _provisioning_status: dict[str, dict] = {}
 _provisioning_status_lock = threading.Lock()
 
 
 def _set_provisioning_status(account_id: str, status: dict):
     with _provisioning_status_lock:
+        # Cap dict size; drop oldest insertion (dicts preserve insertion order in 3.7+).
+        while len(_provisioning_status) >= _MAX_STATUS_ENTRIES and account_id not in _provisioning_status:
+            _provisioning_status.pop(next(iter(_provisioning_status)))
         _provisioning_status[account_id] = status
 
 
@@ -205,16 +193,11 @@ _PROFANE_WORDS = {
 
 
 def _contains_profanity(text: str) -> bool:
+    # Word-boundary match only — substring matching produced false positives
+    # like "hello" → "hell" or "class" → "ass".
     normalized = _re.sub(r"[^a-z]", " ", text.lower())
     words = normalized.split()
-    for w in words:
-        if w in _PROFANE_WORDS:
-            return True
-    compressed = _re.sub(r"[^a-z]", "", text.lower())
-    for p in _PROFANE_WORDS:
-        if p in compressed:
-            return True
-    return False
+    return any(w in _PROFANE_WORDS for w in words)
 
 
 
@@ -293,10 +276,10 @@ def _run_provisioning(account_id: str, mystery: str):
         })
 
     except Exception as e:
-        log.error(f"Provisioning failed for {account_id}: {e}")
+        log.exception(f"Provisioning failed for {account_id}")
         _set_provisioning_status(account_id, {
             "step": "error",
-            "message": str(e),
+            "message": "Provisioning failed. Check the app logs for details.",
             "progress": 0,
             "total": 8,
             "error": True,

@@ -15,7 +15,7 @@ running inside a Databricks App (service principal auth via SDK).
 
 import json
 import logging
-import os
+import re
 import threading
 import time
 import uuid
@@ -27,6 +27,19 @@ import requests
 log = logging.getLogger("provisioner")
 
 SCENARIOS_DIR = Path(__file__).parent / "scenarios"
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _check_ident(name: str, kind: str) -> str:
+    """Reject identifiers that aren't safe to interpolate into SQL.
+
+    Inputs come from trusted JSON config under scenarios/, but we validate
+    anyway so a bad config file cannot become a SQL injection vector.
+    """
+    if not isinstance(name, str) or not _IDENT_RE.match(name):
+        raise ValueError(f"Invalid {kind} identifier: {name!r}")
+    return name
 
 # Per-scenario locks to prevent duplicate concurrent provisioning
 _provisioning_locks: dict[str, threading.Lock] = {}
@@ -45,26 +58,21 @@ def _get_lock(scenario_key: str) -> threading.Lock:
 # ---------------------------------------------------------------------------
 
 def get_auth() -> tuple[str, dict[str, str]]:
-    """Get host and auth headers using the Databricks SDK (service principal)."""
-    try:
-        from databricks.sdk import WorkspaceClient
-        w = WorkspaceClient()
-        host = w.config.host.rstrip("/")
-        token = w.config.authenticate().get("Authorization", "").replace("Bearer ", "")
-        if not host or not token:
-            raise ValueError("No credentials from SDK")
-    except Exception:
-        host = os.environ.get("DATABRICKS_HOST", "")
-        if host and not host.startswith("http"):
-            host = f"https://{host}"
-        host = host.rstrip("/")
-        token = os.environ.get("DATABRICKS_TOKEN", "")
+    """Get host and auth headers using the Databricks SDK default auth chain.
 
-    if not host or not token:
-        raise RuntimeError("No Databricks credentials available")
+    Inside a Databricks App this resolves to the app's service principal
+    credentials (OAuth). No PAT env var fallback — the app must never
+    prompt for, read, or store a user PAT.
+    """
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
+    host = (w.config.host or "").rstrip("/")
+    auth_header = w.config.authenticate().get("Authorization", "")
+    if not host or not auth_header:
+        raise RuntimeError("No Databricks credentials available from SDK")
 
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": auth_header,
         "Content-Type": "application/json",
     }
     return host, headers
@@ -250,6 +258,12 @@ def build_serialized_space(config: dict) -> dict:
     return space
 
 
+def _check_dotted_ident(name: str, kind: str) -> str:
+    for part in name.split("."):
+        _check_ident(part, f"{kind} part")
+    return name
+
+
 def add_table_constraints(host: str, headers: dict, warehouse_id: str,
                           genie_config: dict):
     """Add PK/FK constraints to tables so Genie auto-detects join relationships.
@@ -260,6 +274,14 @@ def add_table_constraints(host: str, headers: dict, warehouse_id: str,
     table_joins = genie_config.get("table_joins", [])
     if not table_joins:
         return
+
+    # Validate every identifier from config before any SQL interpolation.
+    for tj in table_joins:
+        _check_dotted_ident(tj["left_table_identifier"], "left_table_identifier")
+        _check_dotted_ident(tj["right_table_identifier"], "right_table_identifier")
+        for jc in tj["join_columns"]:
+            _check_ident(jc["left_column"], "left_column")
+            _check_ident(jc["right_column"], "right_column")
 
     # Collect all PK columns: any column that appears as a join target
     pk_columns: dict[str, str] = {}  # table_identifier -> column_name
@@ -339,16 +361,6 @@ def check_catalog_exists(host: str, headers: dict, warehouse_id: str, catalog_na
 
 
 # ---------------------------------------------------------------------------
-# Current user
-# ---------------------------------------------------------------------------
-
-def get_current_user(host: str, headers: dict) -> str:
-    """Get the current user's username."""
-    resp = api_request("GET", f"{host}/api/2.0/preview/scim/v2/Me", headers=headers)
-    return resp.json().get("userName", resp.json().get("displayName", "unknown"))
-
-
-# ---------------------------------------------------------------------------
 # Main provisioning function
 # ---------------------------------------------------------------------------
 
@@ -376,12 +388,14 @@ def provision_scenario(
         if progress_callback:
             progress_callback(step, message, progress, total_steps)
 
+    _check_ident(scenario_key, "scenario_key")
+
     lock = _get_lock(scenario_key)
     with lock:
         # Load scenario config
         scenario_dir = SCENARIOS_DIR / scenario_key
         genie_config = json.loads((scenario_dir / "genie_space.json").read_text())
-        catalog_name = genie_config["catalog_name"]
+        catalog_name = _check_ident(genie_config["catalog_name"], "catalog_name")
         space_title = genie_config["space_title"]
         space_description = genie_config["space_description"]
         data_dir = scenario_dir / "data"
@@ -389,7 +403,6 @@ def provision_scenario(
         # Authenticate
         report("auth", "Connecting to workspace...", 1)
         host, headers = get_auth()
-        username = get_current_user(host, headers)
 
         # Find warehouse
         report("warehouse", "Finding SQL warehouse...", 2)
@@ -441,7 +454,7 @@ def provision_scenario(
         # Create tables from CSVs
         report("tables", "Cataloging the evidence...", 5)
         for csv_file in csv_files:
-            table_name = csv_file.stem.lower().replace("-", "_")
+            table_name = _check_ident(csv_file.stem.lower().replace("-", "_"), "table_name")
             file_path = f"/Volumes/{catalog_name}/default/{volume_name}/{csv_file.name}"
             log.info(f"[{scenario_key}] Creating table: {catalog_name}.default.{table_name}")
             execute_sql(host, headers, warehouse_id, f"""

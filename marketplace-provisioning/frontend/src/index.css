@@ -197,37 +197,6 @@ button:disabled {
   border: 1px solid #524a68;
 }
 
-/* Leaderboard */
-.leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.leaderboard-table th,
-.leaderboard-table td {
-  padding: 10px 12px;
-  text-align: left;
-  border-bottom: 1px solid #3a3250;
-}
-
-.leaderboard-table th {
-  background: #1e1a30;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #d4a853;
-}
-
-.leaderboard-table tr:nth-child(even) {
-  background: rgba(58, 50, 80, 0.3);
-}
-
-.leaderboard-table td:first-child {
-  color: #d4a853;
-  font-weight: 600;
-}
-
 /* Status badges */
 .badge {
   display: inline-block;

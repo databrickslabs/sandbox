@@ -1,7 +1,6 @@
 {
   "space_title": "Marketing \u2014 The Budget Drain",
   "space_description": "Investigate a 40% increase in digital ad spend with flat customer acquisition. Explore campaigns, ad spend, clicks, and conversions to find where the budget went.",
-  "warehouse_id": "b5bf862089d69e1c",
   "catalog_name": "mkt_budget",
   "schema_name": "default",
   "sample_questions": [
@@ -16,50 +15,224 @@
     {
       "identifier": "mkt_budget.default.campaigns",
       "column_configs": [
-        { "column_name": "campaign_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique campaign identifier" },
-        { "column_name": "campaign_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Human-readable campaign name" },
-        { "column_name": "channel", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Marketing channel (Social, Search, Display, Email, Content)" },
-        { "column_name": "target_audience", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Intended audience targeting definition" },
-        { "column_name": "target_geography", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Intended geographic targeting" },
-        { "column_name": "start_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Campaign start date" },
-        { "column_name": "end_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Campaign end date" },
-        { "column_name": "budget_allocated", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Budget allocated to the campaign in USD" },
-        { "column_name": "status", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Campaign status (Active, Completed, Paused)" }
+        {
+          "column_name": "campaign_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Unique campaign identifier"
+        },
+        {
+          "column_name": "campaign_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Human-readable campaign name"
+        },
+        {
+          "column_name": "channel",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Marketing channel (Social, Search, Display, Email, Content)"
+        },
+        {
+          "column_name": "target_audience",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Intended audience targeting definition"
+        },
+        {
+          "column_name": "target_geography",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Intended geographic targeting"
+        },
+        {
+          "column_name": "start_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Campaign start date"
+        },
+        {
+          "column_name": "end_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Campaign end date"
+        },
+        {
+          "column_name": "budget_allocated",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Budget allocated to the campaign in USD"
+        },
+        {
+          "column_name": "status",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Campaign status (Active, Completed, Paused)"
+        }
       ]
     },
     {
       "identifier": "mkt_budget.default.ad_spend",
       "column_configs": [
-        { "column_name": "spend_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique spend record identifier" },
-        { "column_name": "campaign_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Campaign this spend belongs to — join to campaigns table" },
-        { "column_name": "spend_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the spend was recorded" },
-        { "column_name": "amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Spend amount in USD" },
-        { "column_name": "impressions", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Number of ad impressions" },
-        { "column_name": "cpm", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Cost per thousand impressions (CPM) in USD" },
-        { "column_name": "platform", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Ad platform (Google Ads, Meta, LinkedIn, YouTube, etc.)" }
+        {
+          "column_name": "spend_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique spend record identifier"
+        },
+        {
+          "column_name": "campaign_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Campaign this spend belongs to \u2014 join to campaigns table"
+        },
+        {
+          "column_name": "spend_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the spend was recorded"
+        },
+        {
+          "column_name": "amount_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Spend amount in USD"
+        },
+        {
+          "column_name": "impressions",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Number of ad impressions"
+        },
+        {
+          "column_name": "cpm",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Cost per thousand impressions (CPM) in USD"
+        },
+        {
+          "column_name": "platform",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Ad platform (Google Ads, Meta, LinkedIn, YouTube, etc.)"
+        }
       ]
     },
     {
       "identifier": "mkt_budget.default.clicks",
       "column_configs": [
-        { "column_name": "click_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Unique click event identifier" },
-        { "column_name": "campaign_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Campaign that generated this click" },
-        { "column_name": "click_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date of the click event" },
-        { "column_name": "user_age_group", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Age group of the user who clicked (18-24, 25-34, 35-44, 45-54, 55-64, 65+)" },
-        { "column_name": "user_geography", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Geographic location of the user who clicked" },
-        { "column_name": "device_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Device type (Desktop, Mobile, Tablet)" },
-        { "column_name": "landing_page", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Landing page URL path" }
+        {
+          "column_name": "click_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Unique click event identifier"
+        },
+        {
+          "column_name": "campaign_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Campaign that generated this click"
+        },
+        {
+          "column_name": "click_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date of the click event"
+        },
+        {
+          "column_name": "user_age_group",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Age group of the user who clicked (18-24, 25-34, 35-44, 45-54, 55-64, 65+)"
+        },
+        {
+          "column_name": "user_geography",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Geographic location of the user who clicked"
+        },
+        {
+          "column_name": "device_type",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Device type (Desktop, Mobile, Tablet)"
+        },
+        {
+          "column_name": "landing_page",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Landing page URL path"
+        }
       ]
     },
     {
       "identifier": "mkt_budget.default.conversions",
       "column_configs": [
-        { "column_name": "conversion_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique conversion record identifier" },
-        { "column_name": "click_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Click that led to this conversion — join to clicks table" },
-        { "column_name": "campaign_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Campaign that generated this conversion" },
-        { "column_name": "conversion_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the conversion occurred" },
-        { "column_name": "conversion_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Type of conversion (Demo Request, Free Trial, Newsletter, Purchase, Webinar)" },
-        { "column_name": "revenue_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Revenue attributed to this conversion in USD (0.0 for non-revenue events)" }
+        {
+          "column_name": "conversion_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": true,
+          "description": "Unique conversion record identifier"
+        },
+        {
+          "column_name": "click_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Click that led to this conversion \u2014 join to clicks table"
+        },
+        {
+          "column_name": "campaign_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Campaign that generated this conversion"
+        },
+        {
+          "column_name": "conversion_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the conversion occurred"
+        },
+        {
+          "column_name": "conversion_type",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Type of conversion (Demo Request, Free Trial, Newsletter, Purchase, Webinar)"
+        },
+        {
+          "column_name": "revenue_usd",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Revenue attributed to this conversion in USD (0.0 for non-revenue events)"
+        }
       ]
     }
   ],
@@ -68,34 +241,46 @@
       "left_table_identifier": "mkt_budget.default.campaigns",
       "right_table_identifier": "mkt_budget.default.ad_spend",
       "join_columns": [
-        { "left_column": "campaign_id", "right_column": "campaign_id" }
+        {
+          "left_column": "campaign_id",
+          "right_column": "campaign_id"
+        }
       ]
     },
     {
       "left_table_identifier": "mkt_budget.default.campaigns",
       "right_table_identifier": "mkt_budget.default.clicks",
       "join_columns": [
-        { "left_column": "campaign_id", "right_column": "campaign_id" }
+        {
+          "left_column": "campaign_id",
+          "right_column": "campaign_id"
+        }
       ]
     },
     {
       "left_table_identifier": "mkt_budget.default.clicks",
       "right_table_identifier": "mkt_budget.default.conversions",
       "join_columns": [
-        { "left_column": "click_id", "right_column": "click_id" }
+        {
+          "left_column": "click_id",
+          "right_column": "click_id"
+        }
       ]
     },
     {
       "left_table_identifier": "mkt_budget.default.campaigns",
       "right_table_identifier": "mkt_budget.default.conversions",
       "join_columns": [
-        { "left_column": "campaign_id", "right_column": "campaign_id" }
+        {
+          "left_column": "campaign_id",
+          "right_column": "campaign_id"
+        }
       ]
     }
   ],
   "text_instructions": [
     "This space is designed to investigate a 40% quarter-over-quarter increase in digital ad spend with flat net new customer acquisition. Use it to explore campaign performance, audience targeting, and spend efficiency.",
-    "Data covers Q3 2025 (July 1 – September 30, 2025).",
+    "Data covers Q3 2025 (July 1 \u2013 September 30, 2025).",
     "Round all currency values to 2 decimal places and all percentages to 2 decimal places. Use USD formatting for monetary amounts.",
     "When users ask about a campaign without specifying which one, ask: 'Which campaign would you like to focus on?' When users ask about performance without specifying a metric, default to click-to-conversion rate.",
     "Glossary: CPM = Cost Per Thousand impressions. CPC = Cost Per Click. CTR = Click-Through Rate. ICP = Ideal Customer Profile. Conversion rate = conversions / clicks * 100. ROAS = Return On Ad Spend."
@@ -120,16 +305,40 @@
   ],
   "sql_snippets": {
     "filters": [
-      { "display_name": "CAMP-007 Only", "sql": "campaign_id = 'CAMP-007'" },
-      { "display_name": "Paid Search Campaigns", "sql": "mkt_budget.`default`.campaigns.channel = 'Search'" },
-      { "display_name": "US Geography Clicks", "sql": "mkt_budget.`default`.clicks.user_geography LIKE 'US%'" },
-      { "display_name": "ICP Age Group (25-44)", "sql": "mkt_budget.`default`.clicks.user_age_group IN ('25-34', '35-44')" }
+      {
+        "display_name": "CAMP-007 Only",
+        "sql": "campaign_id = 'CAMP-007'"
+      },
+      {
+        "display_name": "Paid Search Campaigns",
+        "sql": "mkt_budget.`default`.campaigns.channel = 'Search'"
+      },
+      {
+        "display_name": "US Geography Clicks",
+        "sql": "mkt_budget.`default`.clicks.user_geography LIKE 'US%'"
+      },
+      {
+        "display_name": "ICP Age Group (25-44)",
+        "sql": "mkt_budget.`default`.clicks.user_age_group IN ('25-34', '35-44')"
+      }
     ],
     "measures": [
-      { "display_name": "Total Spend", "sql": "ROUND(SUM(mkt_budget.`default`.ad_spend.amount_usd), 2)" },
-      { "display_name": "Total Conversions", "sql": "COUNT(DISTINCT mkt_budget.`default`.conversions.conversion_id)" },
-      { "display_name": "Avg CPM", "sql": "ROUND(AVG(mkt_budget.`default`.ad_spend.cpm), 2)" },
-      { "display_name": "Click-to-Conversion %", "sql": "ROUND(COUNT(DISTINCT mkt_budget.`default`.conversions.conversion_id) * 100.0 / NULLIF(COUNT(DISTINCT mkt_budget.`default`.clicks.click_id), 0), 2)" }
+      {
+        "display_name": "Total Spend",
+        "sql": "ROUND(SUM(mkt_budget.`default`.ad_spend.amount_usd), 2)"
+      },
+      {
+        "display_name": "Total Conversions",
+        "sql": "COUNT(DISTINCT mkt_budget.`default`.conversions.conversion_id)"
+      },
+      {
+        "display_name": "Avg CPM",
+        "sql": "ROUND(AVG(mkt_budget.`default`.ad_spend.cpm), 2)"
+      },
+      {
+        "display_name": "Click-to-Conversion %",
+        "sql": "ROUND(COUNT(DISTINCT mkt_budget.`default`.conversions.conversion_id) * 100.0 / NULLIF(COUNT(DISTINCT mkt_budget.`default`.clicks.click_id), 0), 2)"
+      }
     ]
   }
 }
