@@ -1,0 +1,175 @@
+{
+  "space_title": "Financial Planning \u2014 The Budget Overrun",
+  "space_description": "Investigate an 18% Q3 operating expense budget overrun that no individual department can explain. Every department head reports finishing on or under target, yet company-level opex is $7M+ over plan. Explore budgets, cost centers, GL transactions, exception approvals, and headcount data to find the root cause.",
+  "warehouse_id": "b5bf862089d69e1c",
+  "catalog_name": "finplan_budget",
+  "schema_name": "default",
+  "sample_questions": [
+    "What is the total opex budget vs. actual by quarter?",
+    "Which departments are over budget in Q3 2025?",
+    "Show me the cost centers with the largest budget variance in Q3",
+    "What is the shared overhead cost center spend by quarter?",
+    "How many exception approvals were there in Q3 and what did they total?",
+    "What is the headcount growth by quarter and department?",
+    "Show GL transactions posted to shared overhead in Q3 2025"
+  ],
+  "tables": [
+    {
+      "identifier": "finplan_budget.default.budget_vs_actual",
+      "column_configs": [
+        { "column_name": "budget_line_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique budget line identifier" },
+        { "column_name": "fiscal_month", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Month of the budget period (e.g. 2025-07)" },
+        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter (e.g. Q3 2025)" },
+        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year (e.g. FY2025)" },
+        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department name (Engineering, Sales, Marketing, Finance, HR, Legal, Product, Operations, IT, Executive)" },
+        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center code \u2014 join to cost_center_master for classification" },
+        { "column_name": "budget_category", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Expense category (Compensation, Benefits, Travel, Software, Facilities, Professional Services, Equipment, Training)" },
+        { "column_name": "budget_amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Budgeted amount in USD for the period" },
+        { "column_name": "actual_amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Actual spend in USD for the period" }
+      ]
+    },
+    {
+      "identifier": "finplan_budget.default.cost_center_master",
+      "column_configs": [
+        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center code \u2014 primary key" },
+        { "column_name": "cost_center_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Descriptive name of the cost center" },
+        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Owning department (empty for shared/corporate cost centers)" },
+        { "column_name": "cost_center_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Type: Departmental, Shared, or Corporate" },
+        { "column_name": "is_active", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Whether the cost center is active (Y/N)" }
+      ]
+    },
+    {
+      "identifier": "finplan_budget.default.gl_transactions",
+      "column_configs": [
+        { "column_name": "transaction_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique GL transaction identifier" },
+        { "column_name": "posting_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the transaction was posted" },
+        { "column_name": "gl_account_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "General Ledger account code" },
+        { "column_name": "gl_account_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "GL account description" },
+        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the transaction is posted to \u2014 join to cost_center_master" },
+        { "column_name": "vendor", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Vendor or payee name" },
+        { "column_name": "description", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Transaction description" },
+        { "column_name": "amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Transaction amount in USD" },
+        { "column_name": "expense_type", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Expense classification: Recurring or One-Time" },
+        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter" },
+        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year" }
+      ]
+    },
+    {
+      "identifier": "finplan_budget.default.exception_approvals",
+      "column_configs": [
+        { "column_name": "approval_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique approval record identifier" },
+        { "column_name": "request_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the exception was requested" },
+        { "column_name": "approval_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Date the exception was approved" },
+        { "column_name": "requestor", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the person who submitted the request" },
+        { "column_name": "approving_manager", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the approving manager" },
+        { "column_name": "originating_department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department that originated the request \u2014 compare to posting_cost_center to find mismatches" },
+        { "column_name": "posting_cost_center", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the charge was actually posted to \u2014 join to cost_center_master" },
+        { "column_name": "project_name", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Name of the project or initiative" },
+        { "column_name": "amount_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Approved amount in USD" },
+        { "column_name": "justification", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Free-text justification for the exception" },
+        { "column_name": "fiscal_quarter", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal quarter" },
+        { "column_name": "fiscal_year", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Fiscal year" }
+      ]
+    },
+    {
+      "identifier": "finplan_budget.default.headcount",
+      "column_configs": [
+        { "column_name": "employee_id", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": true, "description": "Unique employee identifier" },
+        { "column_name": "department", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Department the employee belongs to" },
+        { "column_name": "cost_center_id", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Cost center the employee is assigned to" },
+        { "column_name": "hire_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Employee hire date" },
+        { "column_name": "termination_date", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Termination date (empty if still active)" },
+        { "column_name": "job_title", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Job title" },
+        { "column_name": "job_level", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Job level (1-6)" },
+        { "column_name": "annual_salary_usd", "enable_format_assistance": true, "enable_entity_matching": false, "hidden": false, "description": "Annual base salary in USD" },
+        { "column_name": "status", "enable_format_assistance": true, "enable_entity_matching": true, "hidden": false, "description": "Employment status (Active, Terminated)" }
+      ]
+    }
+  ],
+  "table_joins": [
+    {
+      "left_table_identifier": "finplan_budget.default.budget_vs_actual",
+      "right_table_identifier": "finplan_budget.default.cost_center_master",
+      "join_columns": [
+        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "finplan_budget.default.gl_transactions",
+      "right_table_identifier": "finplan_budget.default.cost_center_master",
+      "join_columns": [
+        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "finplan_budget.default.exception_approvals",
+      "right_table_identifier": "finplan_budget.default.cost_center_master",
+      "join_columns": [
+        { "left_column": "posting_cost_center", "right_column": "cost_center_id" }
+      ]
+    },
+    {
+      "left_table_identifier": "finplan_budget.default.headcount",
+      "right_table_identifier": "finplan_budget.default.cost_center_master",
+      "join_columns": [
+        { "left_column": "cost_center_id", "right_column": "cost_center_id" }
+      ]
+    }
+  ],
+  "text_instructions": [
+    "This space covers financial planning data for investigating a Q3 operating expense budget overrun. It includes budget vs. actual reports, cost center definitions, general ledger transactions, exception approval records, and headcount data.",
+    "All data covers the period from January 1, 2025 through May 31, 2026. Fiscal years are labeled FY2025 and FY2026. Fiscal quarters follow calendar quarters (Q1 = Jan-Mar, Q2 = Apr-Jun, Q3 = Jul-Sep, Q4 = Oct-Dec).",
+    "Round all currency values to 2 decimal places and all percentages to 2 decimal places. Use USD formatting for monetary amounts.",
+    "When users ask about budget variance but do not specify a quarter, ask: 'Which quarter would you like to analyze \u2014 Q1 through Q4 2025, or Q1 2026?' When users ask about departments but do not specify which, ask: 'Would you like to see all departments or a specific one?'",
+    "Cost centers with type 'Shared' are corporate overhead centers not owned by any single department. Cost centers with type 'Departmental' belong to a specific department. Always join to cost_center_master to resolve cost center ownership and type.",
+    "Budget variance is calculated as: Variance = Actual - Budget. Positive variance means over budget. Variance % = (Actual - Budget) / Budget * 100. When computing company-level totals, include ALL cost centers (Departmental, Shared, and Corporate).",
+    "CRITICAL RULES FOR QUERYING:\n1. The budget_vs_actual table contains both departmental and shared overhead cost centers. When computing company-level budget vs. actual, include ALL rows.\n2. When users ask about 'department budget performance', filter to cost_center_type = 'Departmental' to see only department-owned budget lines.\n3. To find the source of the company-level overage that departments don't see, compare company-level totals (all cost centers) vs. departmental totals (only Departmental type).\n4. The exception_approvals table has an originating_department column and a posting_cost_center column. When these differ, costs from one department were posted to a different cost center.\n5. The headcount table does NOT directly link to budget_vs_actual or gl_transactions \u2014 use it for context on hiring trends, not for financial totals.\n6. GL transactions with expense_type = 'One-Time' are non-recurring project costs."
+  ],
+  "example_question_sqls": [
+    {
+      "question": "What is the total opex budget vs. actual by quarter?",
+      "sql": "SELECT fiscal_quarter,\n       ROUND(SUM(budget_amount_usd), 2) AS total_budget,\n       ROUND(SUM(actual_amount_usd), 2) AS total_actual,\n       ROUND(SUM(actual_amount_usd) - SUM(budget_amount_usd), 2) AS variance,\n       ROUND((SUM(actual_amount_usd) - SUM(budget_amount_usd)) / SUM(budget_amount_usd) * 100, 2) AS variance_pct\nFROM finplan_budget.`default`.budget_vs_actual\nGROUP BY fiscal_quarter\nORDER BY fiscal_quarter"
+    },
+    {
+      "question": "Which cost centers are over budget in Q3 2025?",
+      "sql": "SELECT b.cost_center_id,\n       c.cost_center_name,\n       c.cost_center_type,\n       c.department,\n       ROUND(SUM(b.budget_amount_usd), 2) AS total_budget,\n       ROUND(SUM(b.actual_amount_usd), 2) AS total_actual,\n       ROUND(SUM(b.actual_amount_usd) - SUM(b.budget_amount_usd), 2) AS variance\nFROM finplan_budget.`default`.budget_vs_actual b\nJOIN finplan_budget.`default`.cost_center_master c\n  ON b.cost_center_id = c.cost_center_id\nWHERE b.fiscal_quarter = 'Q3 2025'\nGROUP BY b.cost_center_id, c.cost_center_name, c.cost_center_type, c.department\nHAVING SUM(b.actual_amount_usd) > SUM(b.budget_amount_usd)\nORDER BY variance DESC"
+    },
+    {
+      "question": "What are the GL transactions posted to shared overhead in Q3?",
+      "sql": "SELECT g.posting_date,\n       g.gl_account_name,\n       g.vendor,\n       g.description,\n       g.amount_usd,\n       g.expense_type,\n       c.cost_center_name\nFROM finplan_budget.`default`.gl_transactions g\nJOIN finplan_budget.`default`.cost_center_master c\n  ON g.cost_center_id = c.cost_center_id\nWHERE c.cost_center_type = 'Shared'\n  AND g.fiscal_quarter = 'Q3 2025'\nORDER BY g.amount_usd DESC"
+    },
+    {
+      "question": "Which departments originated the exception approvals posted to shared overhead?",
+      "sql": "SELECT e.originating_department,\n       c.cost_center_name,\n       COUNT(*) AS approval_count,\n       ROUND(SUM(e.amount_usd), 2) AS total_amount\nFROM finplan_budget.`default`.exception_approvals e\nJOIN finplan_budget.`default`.cost_center_master c\n  ON e.posting_cost_center = c.cost_center_id\nWHERE c.cost_center_type = 'Shared'\nGROUP BY e.originating_department, c.cost_center_name\nORDER BY total_amount DESC"
+    },
+    {
+      "question": "How has headcount changed by quarter and department?",
+      "sql": "SELECT department,\n       CONCAT('Q', QUARTER(hire_date), ' ', YEAR(hire_date)) AS hire_quarter,\n       COUNT(*) AS new_hires\nFROM finplan_budget.`default`.headcount\nWHERE hire_date >= '2025-01-01'\nGROUP BY department, CONCAT('Q', QUARTER(hire_date), ' ', YEAR(hire_date))\nORDER BY hire_quarter, new_hires DESC"
+    },
+    {
+      "question": "What is the department-level budget vs. actual for Q3 2025 (excluding shared overhead)?",
+      "sql": "SELECT b.department,\n       ROUND(SUM(b.budget_amount_usd), 2) AS total_budget,\n       ROUND(SUM(b.actual_amount_usd), 2) AS total_actual,\n       ROUND((SUM(b.actual_amount_usd) - SUM(b.budget_amount_usd)) / SUM(b.budget_amount_usd) * 100, 2) AS variance_pct\nFROM finplan_budget.`default`.budget_vs_actual b\nJOIN finplan_budget.`default`.cost_center_master c\n  ON b.cost_center_id = c.cost_center_id\nWHERE b.fiscal_quarter = 'Q3 2025'\n  AND c.cost_center_type = 'Departmental'\nGROUP BY b.department\nORDER BY variance_pct DESC"
+    }
+  ],
+  "trusted_assets": [
+    { "function_name": "finplan_budget.default.budget_summary" },
+    { "function_name": "finplan_budget.default.cost_center_variance" },
+    { "function_name": "finplan_budget.default.exception_summary" }
+  ],
+  "sql_snippets": {
+    "filters": [
+      { "display_name": "Q3 2025 Only", "sql": "fiscal_quarter = 'Q3 2025'" },
+      { "display_name": "FY2025 Only", "sql": "fiscal_year = 'FY2025'" },
+      { "display_name": "FY2026 Only", "sql": "fiscal_year = 'FY2026'" },
+      { "display_name": "Shared Cost Centers", "sql": "cost_center_type = 'Shared'" },
+      { "display_name": "Departmental Cost Centers", "sql": "cost_center_type = 'Departmental'" },
+      { "display_name": "One-Time Expenses", "sql": "expense_type = 'One-Time'" }
+    ],
+    "measures": [
+      { "display_name": "Total Budget", "sql": "ROUND(SUM(budget_amount_usd), 2)" },
+      { "display_name": "Total Actual", "sql": "ROUND(SUM(actual_amount_usd), 2)" },
+      { "display_name": "Budget Variance", "sql": "ROUND(SUM(actual_amount_usd) - SUM(budget_amount_usd), 2)" },
+      { "display_name": "Variance %", "sql": "ROUND((SUM(actual_amount_usd) - SUM(budget_amount_usd)) / SUM(budget_amount_usd) * 100, 2)" }
+    ]
+  }
+}

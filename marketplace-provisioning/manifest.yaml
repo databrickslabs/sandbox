@@ -1,0 +1,23 @@
+name: databricks-detective-series
+display_name: "Databricks Detective Series"
+description: >
+  A gamified SQL learning experience where players solve fictional business mysteries
+  by querying synthetic Delta Lake datasets through AI/BI Genie spaces. Demonstrates
+  Databricks SQL warehouses, Unity Catalog, and AI/BI Genie in a hands-on, competitive
+  format. Designed for Databricks Free Edition workspaces.
+version: "1.0.0"
+source_code_path: .
+min_databricks_connect_version: "15.0"
+author:
+  name: Michelle McSweeney
+  email: michelle.mcsweeney@databricks.com
+  organization: Databricks Field Engineering
+tags:
+  - sql
+  - learning
+  - gamification
+  - unity-catalog
+  - genie
+  - free-edition
+  - ai-bi
+  - business-intelligence
