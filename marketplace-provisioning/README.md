@@ -47,13 +47,13 @@ Marketplace Apps are first-party only (must be in `databricks` or `databricks-la
 - **Python SDK**: `w.genie.create_space(warehouse_id, serialized_space, title, parent_path)`
 - **Key payload**: `serialized_space` JSON string containing tables, instructions, sample questions, example SQL, join specs
 - **Limits**: Max 30 tables/space, 100 instructions, 100 example SQL queries
-- **Permissions after creation**: Must use `PUT /api/2.0/permissions/genie/spaces/{space_id}` (Genie API has no built-in permissions management)
+- **Permissions after creation**: Must use `PUT /api/2.0/permissions/genie/{space_id}` (Genie API has no built-in permissions management)
 
 #### Serialized Space Structure
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "config": {
     "sample_questions": [{"id": "<32-char-hex>", "question": ["..."]}]
   },
@@ -144,7 +144,7 @@ No formal JSON schema exists — reverse-engineer by exporting a prototype dashb
 After creating objects, the app must grant access:
 
 - **Dashboards**: `PUT /api/2.0/permissions/dashboards/{workspace_object_id}`
-- **Genie spaces**: `PUT /api/2.0/permissions/genie/spaces/{space_id}`
+- **Genie spaces**: `PUT /api/2.0/permissions/genie/{space_id}`
 
 The service principal is the owner by default — other users have no access until explicitly granted.
 

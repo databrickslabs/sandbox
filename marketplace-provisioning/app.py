@@ -8,8 +8,8 @@ data tables and Genie space into their workspace automatically.
 
 Scoring (max 500):
   - Clues & evidence (max 5 × 30): +150
-  - Root cause deduction (LLM-judged): up to +100
-  - Business recommendation (LLM-judged): up to +250
+  - Root cause deduction (keyword-overlap scored): up to +100
+  - Business recommendation (keyword-overlap scored): up to +250
 """
 
 import json
@@ -46,6 +46,15 @@ SCORED_EVIDENCE = 5
 POINTS_ROOT_CAUSE = 100
 POINTS_PER_EVIDENCE = 30
 POINTS_RECOMMENDATION_MAX = 250
+
+MAX_EVIDENCE_ITEM_BYTES = 1_500_000   # ~1.5MB per item; fits a base64-encoded image
+MAX_SUBMISSION_TOTAL_BYTES = 6_000_000  # ~6MB total per submission
+MAX_TEXT_FIELD_LEN = 5000             # solution / recommendation
+LEADERBOARD_FORM_URL = os.environ.get("LEADERBOARD_FORM_URL", "").strip()
+PRE_PROVISION_ALL = os.environ.get("PRE_PROVISION_ALL", "").lower() in ("1", "true", "yes")
+
+# Total provisioning steps as reported by provisioner.provision_scenario
+TOTAL_STEPS = 8
 
 
 # ---------------------------------------------------------------------------
@@ -213,13 +222,13 @@ class CreateAccount(BaseModel):
 class EvidenceItemModel(BaseModel):
     field_order: int = Field(..., ge=1, le=MAX_EVIDENCE)
     type: str = Field(..., pattern="^(text|image|csv)$")
-    content: str = ""
+    content: str = Field(default="", max_length=MAX_EVIDENCE_ITEM_BYTES)
 
 
 class CreateSubmission(BaseModel):
     account_id: str
-    solution: str = ""
-    recommendation: str = ""
+    solution: str = Field(default="", max_length=MAX_TEXT_FIELD_LEN)
+    recommendation: str = Field(default="", max_length=MAX_TEXT_FIELD_LEN)
     evidence: list[EvidenceItemModel] = []
 
 
@@ -235,7 +244,7 @@ def _run_provisioning(account_id: str, mystery: str):
             "step": "error",
             "message": f"Unknown scenario: {mystery}",
             "progress": 0,
-            "total": 8,
+            "total": TOTAL_STEPS,
             "error": True,
         })
         return
@@ -270,8 +279,8 @@ def _run_provisioning(account_id: str, mystery: str):
         _set_provisioning_status(account_id, {
             "step": "done",
             "message": "Your case is ready!",
-            "progress": 8,
-            "total": 8,
+            "progress": TOTAL_STEPS,
+            "total": TOTAL_STEPS,
             "genie_url": result["genie_url"],
         })
 
@@ -281,7 +290,7 @@ def _run_provisioning(account_id: str, mystery: str):
             "step": "error",
             "message": "Provisioning failed. Check the app logs for details.",
             "progress": 0,
-            "total": 8,
+            "total": TOTAL_STEPS,
             "error": True,
         })
 
@@ -301,7 +310,10 @@ def get_config():
     host = os.environ.get("DATABRICKS_HOST", "")
     if host and not host.startswith("http"):
         host = f"https://{host}"
-    return {"workspace_host": host}
+    return {
+        "workspace_host": host,
+        "leaderboard_form_url": LEADERBOARD_FORM_URL,
+    }
 
 
 # -- Accounts ---------------------------------------------------------------
@@ -338,7 +350,7 @@ def create_account(body: CreateAccount):
             "step": "pending",
             "message": "Preparing your investigation...",
             "progress": 0,
-            "total": 8,
+            "total": TOTAL_STEPS,
         })
         t = threading.Thread(target=_run_provisioning, args=(account_id, body.mystery), daemon=True)
         t.start()
@@ -392,7 +404,15 @@ def provisioning_status_sse(account_id: str):
                     return
             _time.sleep(1)
             elapsed += 1
-        yield f"data: {json.dumps({'step': 'error', 'message': 'Provisioning timed out', 'error': True})}\n\n"
+        last = _get_provisioning_status(account_id) or {}
+        timeout_event = {
+            "step": "error",
+            "message": "Provisioning timed out",
+            "progress": last.get("progress", 0),
+            "total": last.get("total", TOTAL_STEPS),
+            "error": True,
+        }
+        yield f"data: {json.dumps(timeout_event)}\n\n"
 
     return StreamingResponse(
         event_stream(),
@@ -422,7 +442,7 @@ def provisioning_status_poll(account_id: str):
                 "step": "done",
                 "message": "Your case is ready!",
                 "progress": 8,
-                "total": 8,
+                "total": TOTAL_STEPS,
                 "genie_url": acct["genie_url"],
             }
         raise HTTPException(404, "No provisioning status found")
@@ -441,6 +461,14 @@ def create_submission(body: CreateSubmission):
 
         if len(body.evidence) > MAX_EVIDENCE:
             raise HTTPException(400, f"Maximum {MAX_EVIDENCE} evidence fields allowed")
+
+        total_evidence_bytes = sum(len(e.content) for e in body.evidence)
+        if total_evidence_bytes > MAX_SUBMISSION_TOTAL_BYTES:
+            raise HTTPException(
+                413,
+                f"Submission too large: {total_evidence_bytes} bytes "
+                f"exceeds limit of {MAX_SUBMISSION_TOTAL_BYTES} bytes",
+            )
 
         submission_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
@@ -573,11 +601,11 @@ def get_answer(mystery: str):
 
 
 # ---------------------------------------------------------------------------
-# Startup: pre-provision all scenarios
+# Startup: optional pre-provisioning
 # ---------------------------------------------------------------------------
 
 def _provision_all_at_startup():
-    """Provision every scenario on app startup so data is ready when users arrive."""
+    """Provision every scenario on app startup. Opt-in only (PRE_PROVISION_ALL)."""
     for mystery_name, scenario in SCENARIOS.items():
         key = scenario["key"]
         try:
@@ -598,8 +626,12 @@ def _provision_all_at_startup():
 
 @asynccontextmanager
 async def lifespan(app):
-    t = threading.Thread(target=_provision_all_at_startup, daemon=True)
-    t.start()
+    if PRE_PROVISION_ALL:
+        log.info("PRE_PROVISION_ALL=true — pre-provisioning every scenario at startup")
+        t = threading.Thread(target=_provision_all_at_startup, daemon=True)
+        t.start()
+    else:
+        log.info("Default mode: scenarios are provisioned on-demand when a player picks one")
     yield
 
 

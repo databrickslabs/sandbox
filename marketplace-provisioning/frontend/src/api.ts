@@ -61,5 +61,5 @@ export const api = {
     }>(`/answer/${encodeURIComponent(mystery)}`),
 
   getConfig: () =>
-    request<{ workspace_host: string }>("/config"),
+    request<{ workspace_host: string; leaderboard_form_url: string }>("/config"),
 };

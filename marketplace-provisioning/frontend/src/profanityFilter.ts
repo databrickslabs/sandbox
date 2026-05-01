@@ -13,23 +13,12 @@ const PROFANE_WORDS = new Set([
 
 /**
  * Returns true if the input contains profanity.
- * Checks whole words (case-insensitive) and also catches
- * attempts to embed profanity inside longer strings.
+ * Word-boundary match only — substring matching produced false positives
+ * (e.g. "hello" matching "hell", "class" matching "ass") and diverged
+ * from the backend's word-boundary check.
  */
 export function containsProfanity(input: string): boolean {
   const normalized = input.toLowerCase().replace(/[^a-z]/g, " ");
   const words = normalized.split(/\s+/).filter(Boolean);
-
-  // Check each word
-  for (const word of words) {
-    if (PROFANE_WORDS.has(word)) return true;
-  }
-
-  // Also check if any profane word appears as a substring in the full input
-  const compressed = input.toLowerCase().replace(/[^a-z]/g, "");
-  for (const profane of PROFANE_WORDS) {
-    if (compressed.includes(profane)) return true;
-  }
-
-  return false;
+  return words.some((word) => PROFANE_WORDS.has(word));
 }

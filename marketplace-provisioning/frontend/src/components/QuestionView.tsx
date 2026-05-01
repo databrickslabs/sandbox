@@ -66,6 +66,7 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
   const [answer, setAnswer] = useState<AnswerData | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [workspaceHost, setWorkspaceHost] = useState("");
+  const [leaderboardFormUrl, setLeaderboardFormUrl] = useState("");
 
   // Auto-save draft to localStorage on every change (keyed by mystery)
   useEffect(() => {
@@ -104,9 +105,12 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
     }).catch(() => {});
   }, [accountId]);
 
-  // Fetch workspace host for leaderboard form
+  // Fetch workspace host and (optional) leaderboard form URL
   useEffect(() => {
-    api.getConfig().then((cfg) => setWorkspaceHost(cfg.workspace_host)).catch(() => {});
+    api.getConfig().then((cfg) => {
+      setWorkspaceHost(cfg.workspace_host);
+      setLeaderboardFormUrl(cfg.leaderboard_form_url || "");
+    }).catch(() => {});
   }, []);
 
   function addEvidence() {
@@ -185,15 +189,15 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
     } catch {}
   }, [mystery]);
 
-  function buildFormUrl(score: number) {
-    const base = "https://docs.google.com/forms/d/e/1FAIpQLSeGD-4oP9__ssCtqNSaD-Us2NfaXDWL4siIimDoKuwtBlFCSQ/viewform";
+  function buildFormUrl(score: number): string | null {
+    if (!leaderboardFormUrl) return null;
     const params = new URLSearchParams({
       "usp": "pp_url",
       "entry.38613187": nickname,
       "entry.444755536": String(score),
       "entry.1289628757": workspaceHost,
     });
-    return `${base}?${params.toString()}`;
+    return `${leaderboardFormUrl}?${params.toString()}`;
   }
 
   const hasScreenshot = evidence.some((e) =>
@@ -250,14 +254,14 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #3a3250" }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>Root Cause Deduction</div>
-                  <div className="text-muted" style={{ fontSize: "0.8rem" }}>AI-judged match to correct answer</div>
+                  <div className="text-muted" style={{ fontSize: "0.8rem" }}>Keyword match to correct answer</div>
                 </div>
                 <span style={{ color: "#d4a853", fontWeight: 600, whiteSpace: "nowrap" }}>up to 100 pts</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #3a3250" }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>Business Recommendation</div>
-                  <div className="text-muted" style={{ fontSize: "0.8rem" }}>Relevance, actionability, business value</div>
+                  <div className="text-muted" style={{ fontSize: "0.8rem" }}>Keyword match to root cause + scoring context</div>
                 </div>
                 <span style={{ color: "#d4a853", fontWeight: 600, whiteSpace: "nowrap" }}>up to 250 pts</span>
               </div>
@@ -398,15 +402,17 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
             <p style={{ fontSize: "2.2rem", fontFamily: "'Playfair Display', Georgia, serif", color: "#d4a853", margin: 0 }}>
               {lastScore} <span style={{ fontSize: "1rem", color: "#8a7e6a" }}>/ 500</span>
             </p>
-            <a
-              href={buildFormUrl(lastScore)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-genie"
-              style={{ display: "inline-block", marginTop: 12, fontSize: "0.9rem", padding: "8px 24px" }}
-            >
-              Submit to Leaderboard
-            </a>
+            {buildFormUrl(lastScore) && (
+              <a
+                href={buildFormUrl(lastScore)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-genie"
+                style={{ display: "inline-block", marginTop: 12, fontSize: "0.9rem", padding: "8px 24px" }}
+              >
+                Submit to Leaderboard
+              </a>
+            )}
           </div>
         )}
         {message && (
@@ -500,15 +506,17 @@ export default function QuestionView({ accountId, nickname, mystery, genieUrl }:
               <p style={{ fontSize: "2rem", fontFamily: "'Playfair Display', Georgia, serif", color: "#d4a853", margin: 0 }}>
                 {lastScore} <span style={{ fontSize: "1rem", color: "#8a7e6a" }}>/ 500</span>
               </p>
-              <a
-                href={buildFormUrl(lastScore)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-genie"
-                style={{ display: "inline-block", marginTop: 12, fontSize: "0.9rem", padding: "8px 24px" }}
-              >
-                Submit to Leaderboard
-              </a>
+              {buildFormUrl(lastScore) && (
+                <a
+                  href={buildFormUrl(lastScore)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-genie"
+                  style={{ display: "inline-block", marginTop: 12, fontSize: "0.9rem", padding: "8px 24px" }}
+                >
+                  Submit to Leaderboard
+                </a>
+              )}
             </div>
           )}
         </div>

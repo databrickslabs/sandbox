@@ -29,6 +29,7 @@ log = logging.getLogger("provisioner")
 SCENARIOS_DIR = Path(__file__).parent / "scenarios"
 
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_PATH_IDENT_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _check_ident(name: str, kind: str) -> str:
@@ -39,6 +40,17 @@ def _check_ident(name: str, kind: str) -> str:
     """
     if not isinstance(name, str) or not _IDENT_RE.match(name):
         raise ValueError(f"Invalid {kind} identifier: {name!r}")
+    return name
+
+
+def _check_path_ident(name: str, kind: str) -> str:
+    """Reject path components that aren't safe to use as filesystem/lock keys.
+
+    Allows hyphens (unlike SQL identifiers) but still rejects path traversal,
+    spaces, and other unsafe characters.
+    """
+    if not isinstance(name, str) or not _PATH_IDENT_RE.match(name):
+        raise ValueError(f"Invalid {kind}: {name!r}")
     return name
 
 # Per-scenario locks to prevent duplicate concurrent provisioning
@@ -82,8 +94,16 @@ def get_auth() -> tuple[str, dict[str, str]]:
 # HTTP helper with retry
 # ---------------------------------------------------------------------------
 
+DEFAULT_REQUEST_TIMEOUT = 60  # seconds
+
+
 def api_request(method: str, url: str, headers: dict, max_retries: int = 5, **kwargs) -> requests.Response:
-    """Make an API request with exponential backoff retry on 429/5xx."""
+    """Make an API request with exponential backoff retry on 429/5xx.
+
+    A default timeout is applied so a stalled network can't hang provisioning
+    threads indefinitely. Callers can override via kwargs.
+    """
+    kwargs.setdefault("timeout", DEFAULT_REQUEST_TIMEOUT)
     for attempt in range(max_retries):
         resp = requests.request(method, url, headers=headers, **kwargs)
         if resp.status_code in (200, 201, 204):
@@ -169,12 +189,14 @@ def upload_file_to_volume(host: str, headers: dict, local_path: str, volume_path
         url,
         headers={"Authorization": headers["Authorization"]},
         data=content,
+        timeout=DEFAULT_REQUEST_TIMEOUT,
     )
     if resp.status_code not in (200, 201, 204):
         resp = requests.put(
             url,
             headers={"Authorization": headers["Authorization"], "Overwrite": "true"},
             data=content,
+            timeout=DEFAULT_REQUEST_TIMEOUT,
         )
         if resp.status_code not in (200, 201, 204):
             raise RuntimeError(f"Upload failed ({resp.status_code}): {resp.text[:300]}")
@@ -381,14 +403,14 @@ def provision_scenario(
     Returns:
         {"genie_space_id": ..., "genie_url": ..., "catalog_name": ...}
     """
-    total_steps = 9
+    total_steps = 8
 
     def report(step: str, message: str, progress: int):
         log.info(f"[{scenario_key}] Step {progress}/{total_steps}: {message}")
         if progress_callback:
             progress_callback(step, message, progress, total_steps)
 
-    _check_ident(scenario_key, "scenario_key")
+    _check_path_ident(scenario_key, "scenario_key")
 
     lock = _get_lock(scenario_key)
     with lock:
@@ -467,14 +489,14 @@ def provision_scenario(
                 )
             """)
 
-        # Grant access on catalog
+        # Grant access on catalog and default schema
         report("grants", "Securing access...", 6)
         execute_sql(host, headers, warehouse_id,
                     f"GRANT USE CATALOG ON CATALOG {catalog_name} TO `account users`")
         execute_sql(host, headers, warehouse_id,
-                    f"GRANT USE SCHEMA ON CATALOG {catalog_name} TO `account users`")
+                    f"GRANT USE SCHEMA ON SCHEMA {catalog_name}.`default` TO `account users`")
         execute_sql(host, headers, warehouse_id,
-                    f"GRANT SELECT ON CATALOG {catalog_name} TO `account users`")
+                    f"GRANT SELECT ON SCHEMA {catalog_name}.`default` TO `account users`")
 
         # Add PK/FK constraints so Genie auto-detects joins
         report("constraints", "Setting up table relationships...", 7)
