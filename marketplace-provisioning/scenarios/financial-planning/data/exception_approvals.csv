@@ -1,0 +1,151 @@
+approval_id,request_date,approval_date,requestor,approving_manager,originating_department,posting_cost_center,project_name,amount_usd,justification,fiscal_quarter,fiscal_year
+EXC-0001,2025-06-24,2025-06-26,Avery Brooks,Robert Johnson,Executive,CC-901,Revenue Recognition Replatform,38369.7,Unplanned but necessary spend for revenue recognition replatform remediation,Q2 2025,FY2025
+EXC-0002,2025-08-11,2025-08-16,Morgan Lee,Jennifer Adams,HR,CC-901,Revenue Recognition Replatform,20898.46,One-time cost for revenue recognition replatform — no recurring commitment,Q3 2025,FY2025
+EXC-0003,2025-07-07,2025-07-08,Morgan Lee,Michael Torres,Sales,CC-901,Security Audit Remediation,22543.9,Unplanned but necessary spend for security audit remediation remediation,Q3 2025,FY2025
+EXC-0004,2025-09-08,2025-09-13,Rowan Mitchell,David Lee,Sales,CC-906,Revenue Recognition Replatform,43705.22,Vendor engagement for revenue recognition replatform phase completion,Q3 2025,FY2025
+EXC-0005,2025-06-23,2025-06-27,Phoenix Scott,Robert Johnson,Engineering,CC-905,Disaster Recovery Setup,79171.84,Urgent disaster recovery setup work required to meet regulatory deadline,Q2 2025,FY2025
+EXC-0006,2025-09-05,2025-09-06,Cameron Walsh,James Wright,Product,CC-901,Office Relocation — Floor 3,34507.86,Critical dependency for office relocation — floor 3 — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0007,2025-07-01,2025-07-05,Phoenix Scott,Jennifer Adams,Legal,CC-901,Warehouse Management Overhaul,54270.0,Time-sensitive opportunity for warehouse management overhaul — competitive pressure,Q3 2025,FY2025
+EXC-0008,2025-06-23,2025-06-26,Rowan Mitchell,Thomas Brown,Operations,CC-901,Data Center Consolidation,17313.65,Vendor engagement for data center consolidation phase completion,Q2 2025,FY2025
+EXC-0009,2025-08-20,2025-08-24,Phoenix Scott,Thomas Brown,Operations,CC-901,Revenue Recognition Replatform,48274.52,Vendor engagement for revenue recognition replatform phase completion,Q3 2025,FY2025
+EXC-0010,2025-09-02,2025-09-06,Cameron Walsh,Lisa Kim,Finance,CC-901,Zero Trust Network Implementation,36205.66,Executive-sponsored initiative — zero trust network implementation acceleration,Q3 2025,FY2025
+EXC-0011,2025-06-30,2025-07-05,Emery Zhou,Priya Patel,IT,CC-902,Customer Portal Redesign,41147.53,Time-sensitive opportunity for customer portal redesign — competitive pressure,Q2 2025,FY2025
+EXC-0012,2025-08-21,2025-08-23,Taylor Swift-Chen,Robert Johnson,Product,CC-901,Office Relocation — Floor 3,44817.98,Executive-sponsored initiative — office relocation — floor 3 acceleration,Q3 2025,FY2025
+EXC-0013,2025-09-01,2025-09-06,Rowan Mitchell,Jennifer Adams,Legal,CC-901,AI/ML Platform Build,41207.94,Unplanned but necessary spend for ai/ml platform build remediation,Q3 2025,FY2025
+EXC-0014,2025-09-29,2025-10-03,Casey Morgan,David Lee,Sales,CC-901,Disaster Recovery Setup,24677.51,Vendor engagement for disaster recovery setup phase completion,Q3 2025,FY2025
+EXC-0015,2025-08-27,2025-08-29,Sam Nguyen,Maria Garcia,Sales,CC-901,Compliance Automation,19541.54,Time-sensitive opportunity for compliance automation — competitive pressure,Q3 2025,FY2025
+EXC-0016,2025-06-23,2025-06-28,Taylor Swift-Chen,Sarah Chen,Product,CC-901,Cloud Migration Sprint,57394.32,Critical dependency for cloud migration sprint — delay would impact Q4 delivery,Q2 2025,FY2025
+EXC-0017,2025-09-25,2025-09-26,Drew Martinez,Thomas Brown,Engineering,CC-901,AI/ML Platform Build,29896.59,Cross-functional project cost — ai/ml platform build shared resources,Q3 2025,FY2025
+EXC-0018,2025-09-22,2025-09-27,Pat O'Brien,Michael Torres,Legal,CC-900,Product Launch — Enterprise Tier,28892.26,Urgent product launch — enterprise tier work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0019,2025-09-04,2025-09-06,Blake Turner,James Wright,Legal,CC-901,Customer Portal Redesign,15557.79,Urgent customer portal redesign work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0020,2025-06-27,2025-07-02,Riley Thompson,Jennifer Adams,Engineering,CC-905,Revenue Recognition Replatform,78849.06,Vendor engagement for revenue recognition replatform phase completion,Q2 2025,FY2025
+EXC-0021,2025-08-13,2025-08-18,Riley Thompson,Priya Patel,Marketing,CC-901,SOC 2 Certification Push,20517.27,Cross-functional project cost — soc 2 certification push shared resources,Q3 2025,FY2025
+EXC-0022,2025-08-04,2025-08-09,Riley Thompson,Lisa Kim,Executive,CC-901,SOC 2 Certification Push,41461.49,Executive-sponsored initiative — soc 2 certification push acceleration,Q3 2025,FY2025
+EXC-0023,2025-09-22,2025-09-24,Rowan Mitchell,Robert Johnson,IT,CC-901,SOC 2 Certification Push,52868.63,Urgent soc 2 certification push work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0024,2025-08-11,2025-08-16,Taylor Swift-Chen,Thomas Brown,Finance,CC-901,Cloud Migration Sprint,34235.5,Unplanned but necessary spend for cloud migration sprint remediation,Q3 2025,FY2025
+EXC-0025,2025-09-15,2025-09-20,Riley Thompson,Lisa Kim,Product,CC-901,Supply Chain Digitization,71949.74,Cross-functional project cost — supply chain digitization shared resources,Q3 2025,FY2025
+EXC-0026,2025-09-08,2025-09-10,Hayden Cooper,David Lee,IT,CC-909,Supply Chain Digitization,71132.0,Critical dependency for supply chain digitization — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0027,2025-09-08,2025-09-09,Reese Patel,Robert Johnson,Legal,CC-901,Warehouse Management Overhaul,46041.92,Cross-functional project cost — warehouse management overhaul shared resources,Q3 2025,FY2025
+EXC-0028,2025-06-16,2025-06-20,Taylor Swift-Chen,Sarah Chen,Engineering,CC-901,Revenue Recognition Replatform,25434.1,One-time cost for revenue recognition replatform — no recurring commitment,Q2 2025,FY2025
+EXC-0029,2025-07-09,2025-07-10,Hayden Cooper,Robert Johnson,IT,CC-901,API Gateway Modernization,8000,Urgent api gateway modernization work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0030,2025-08-28,2025-08-29,Phoenix Scott,Maria Garcia,HR,CC-901,Supply Chain Digitization,54172.57,One-time cost for supply chain digitization — no recurring commitment,Q3 2025,FY2025
+EXC-0031,2025-09-26,2025-09-30,Sam Nguyen,Sarah Chen,Operations,CC-901,Zero Trust Network Implementation,27980.16,One-time cost for zero trust network implementation — no recurring commitment,Q3 2025,FY2025
+EXC-0032,2025-09-15,2025-09-18,Jesse Clarke,Robert Johnson,Finance,CC-901,Supply Chain Digitization,79205.08,Critical dependency for supply chain digitization — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0033,2025-07-28,2025-08-01,Jesse Clarke,Robert Johnson,Product,CC-901,HR System Upgrade,43883.32,Cross-functional project cost — hr system upgrade shared resources,Q3 2025,FY2025
+EXC-0034,2025-09-18,2025-09-22,Sam Nguyen,Sarah Chen,Finance,CC-900,Office Relocation — Floor 3,25629.05,Urgent office relocation — floor 3 work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0035,2025-08-11,2025-08-16,Avery Brooks,James Wright,Legal,CC-901,ESG Reporting Framework,33054.08,Critical dependency for esg reporting framework — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0036,2025-06-23,2025-06-28,Alex Rivera,Maria Garcia,HR,CC-901,API Gateway Modernization,45866.09,Time-sensitive opportunity for api gateway modernization — competitive pressure,Q2 2025,FY2025
+EXC-0037,2025-09-30,2025-10-01,Avery Brooks,Sarah Chen,Product,CC-901,Revenue Recognition Replatform,32205.16,Time-sensitive opportunity for revenue recognition replatform — competitive pressure,Q3 2025,FY2025
+EXC-0038,2025-07-28,2025-07-30,Blake Turner,Priya Patel,HR,CC-901,AI/ML Platform Build,44772.16,One-time cost for ai/ml platform build — no recurring commitment,Q3 2025,FY2025
+EXC-0039,2025-08-28,2025-08-30,Pat O'Brien,Sarah Chen,Engineering,CC-905,Partner Integration Hub,44936.63,One-time cost for partner integration hub — no recurring commitment,Q3 2025,FY2025
+EXC-0040,2025-08-15,2025-08-16,Rowan Mitchell,Sarah Chen,Engineering,CC-901,API Gateway Modernization,28861.22,Cross-functional project cost — api gateway modernization shared resources,Q3 2025,FY2025
+EXC-0041,2025-07-28,2025-08-02,Emery Zhou,David Lee,Engineering,CC-901,Supply Chain Digitization,57025.75,Time-sensitive opportunity for supply chain digitization — competitive pressure,Q3 2025,FY2025
+EXC-0042,2025-08-11,2025-08-16,Jordan Park,Thomas Brown,Product,CC-901,Compliance Automation,65790.02,Time-sensitive opportunity for compliance automation — competitive pressure,Q3 2025,FY2025
+EXC-0043,2025-09-02,2025-09-06,Casey Morgan,Priya Patel,Engineering,CC-901,Sales Enablement Platform,60899.36,Cross-functional project cost — sales enablement platform shared resources,Q3 2025,FY2025
+EXC-0044,2025-07-04,2025-07-09,Hayden Cooper,David Lee,IT,CC-901,Customer Portal Redesign,74563.66,Unplanned but necessary spend for customer portal redesign remediation,Q3 2025,FY2025
+EXC-0045,2025-08-26,2025-08-31,Rowan Mitchell,Robert Johnson,IT,CC-901,Product Launch — Enterprise Tier,48432.97,Vendor engagement for product launch — enterprise tier phase completion,Q3 2025,FY2025
+EXC-0046,2025-09-02,2025-09-06,Reese Patel,Priya Patel,IT,CC-901,Zero Trust Network Implementation,24366.25,Unplanned but necessary spend for zero trust network implementation remediation,Q3 2025,FY2025
+EXC-0047,2025-09-12,2025-09-14,Casey Morgan,Robert Johnson,Engineering,CC-901,Data Center Consolidation,39992.58,Time-sensitive opportunity for data center consolidation — competitive pressure,Q3 2025,FY2025
+EXC-0048,2025-07-17,2025-07-21,Jesse Clarke,David Lee,Legal,CC-901,Partner Integration Hub,48576.88,Vendor engagement for partner integration hub phase completion,Q3 2025,FY2025
+EXC-0049,2025-07-04,2025-07-05,Cameron Walsh,Sarah Chen,Sales,CC-901,Revenue Recognition Replatform,44729.57,One-time cost for revenue recognition replatform — no recurring commitment,Q3 2025,FY2025
+EXC-0050,2025-08-22,2025-08-24,Avery Brooks,David Lee,IT,CC-901,AI/ML Platform Build,76609.86,One-time cost for ai/ml platform build — no recurring commitment,Q3 2025,FY2025
+EXC-0051,2025-06-25,2025-06-29,Quinn Foster,Michael Torres,Legal,CC-901,Data Center Consolidation,34166.16,Critical dependency for data center consolidation — delay would impact Q4 delivery,Q2 2025,FY2025
+EXC-0052,2025-08-01,2025-08-06,Phoenix Scott,Michael Torres,Product,CC-901,Customer Portal Redesign,20586.43,One-time cost for customer portal redesign — no recurring commitment,Q3 2025,FY2025
+EXC-0053,2025-07-31,2025-08-01,Emery Zhou,Sarah Chen,IT,CC-901,Security Audit Remediation,49787.07,Cross-functional project cost — security audit remediation shared resources,Q3 2025,FY2025
+EXC-0054,2025-06-18,2025-06-21,Jordan Park,Robert Johnson,Operations,CC-901,ESG Reporting Framework,65312.36,Unplanned but necessary spend for esg reporting framework remediation,Q2 2025,FY2025
+EXC-0055,2025-09-10,2025-09-15,Phoenix Scott,Lisa Kim,Sales,CC-901,Revenue Recognition Replatform,51341.08,Vendor engagement for revenue recognition replatform phase completion,Q3 2025,FY2025
+EXC-0056,2025-07-04,2025-07-08,Phoenix Scott,Priya Patel,IT,CC-901,Partner Integration Hub,105475.74,One-time cost for partner integration hub — no recurring commitment,Q3 2025,FY2025
+EXC-0057,2025-08-11,2025-08-16,Jordan Park,Maria Garcia,Executive,CC-901,Data Center Consolidation,8000,Cross-functional project cost — data center consolidation shared resources,Q3 2025,FY2025
+EXC-0058,2025-09-29,2025-10-04,Taylor Swift-Chen,Michael Torres,Sales,CC-905,HR System Upgrade,42060.95,Cross-functional project cost — hr system upgrade shared resources,Q3 2025,FY2025
+EXC-0059,2025-08-15,2025-08-19,Blake Turner,David Lee,Marketing,CC-901,ESG Reporting Framework,52661.19,Urgent esg reporting framework work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0060,2025-06-23,2025-06-28,Cameron Walsh,Sarah Chen,Engineering,CC-901,Revenue Recognition Replatform,43005.35,Critical dependency for revenue recognition replatform — delay would impact Q4 delivery,Q2 2025,FY2025
+EXC-0061,2025-07-17,2025-07-22,Hayden Cooper,Priya Patel,Operations,CC-901,SOC 2 Certification Push,12042.45,Executive-sponsored initiative — soc 2 certification push acceleration,Q3 2025,FY2025
+EXC-0062,2025-07-21,2025-07-22,Casey Morgan,David Lee,Engineering,CC-901,Customer Portal Redesign,52790.52,Cross-functional project cost — customer portal redesign shared resources,Q3 2025,FY2025
+EXC-0063,2025-07-29,2025-08-03,Drew Martinez,Thomas Brown,IT,CC-901,ESG Reporting Framework,48012.23,Critical dependency for esg reporting framework — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0064,2025-07-23,2025-07-27,Reese Patel,James Wright,Product,CC-901,Supply Chain Digitization,39369.22,Executive-sponsored initiative — supply chain digitization acceleration,Q3 2025,FY2025
+EXC-0065,2025-07-08,2025-07-11,Alex Rivera,Priya Patel,Sales,CC-901,ESG Reporting Framework,37715.54,One-time cost for esg reporting framework — no recurring commitment,Q3 2025,FY2025
+EXC-0066,2025-09-26,2025-09-30,Rowan Mitchell,David Lee,Finance,CC-901,Compliance Automation,42833.82,Critical dependency for compliance automation — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0067,2025-09-12,2025-09-16,Riley Thompson,Maria Garcia,Engineering,CC-901,Sales Enablement Platform,72842.66,Unplanned but necessary spend for sales enablement platform remediation,Q3 2025,FY2025
+EXC-0068,2025-08-18,2025-08-20,Cameron Walsh,Lisa Kim,Finance,CC-901,ESG Reporting Framework,34740.15,Vendor engagement for esg reporting framework phase completion,Q3 2025,FY2025
+EXC-0069,2025-08-22,2025-08-24,Taylor Swift-Chen,Michael Torres,Sales,CC-901,Customer Portal Redesign,29116.73,Urgent customer portal redesign work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0070,2025-07-25,2025-07-28,Taylor Swift-Chen,James Wright,Operations,CC-901,Zero Trust Network Implementation,17160.41,Executive-sponsored initiative — zero trust network implementation acceleration,Q3 2025,FY2025
+EXC-0071,2025-09-02,2025-09-07,Quinn Foster,David Lee,Legal,CC-901,Disaster Recovery Setup,24228.33,Critical dependency for disaster recovery setup — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0072,2025-07-31,2025-08-01,Sam Nguyen,Priya Patel,IT,CC-901,Compliance Automation,33510.34,Critical dependency for compliance automation — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0073,2025-09-10,2025-09-12,Taylor Swift-Chen,James Wright,Marketing,CC-901,Supply Chain Digitization,35520.0,Critical dependency for supply chain digitization — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0074,2025-08-26,2025-08-29,Hayden Cooper,James Wright,Operations,CC-901,Partner Integration Hub,58386.04,Urgent partner integration hub work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0075,2025-07-14,2025-07-17,Sam Nguyen,Robert Johnson,Engineering,CC-901,ERP Migration Phase 2,33324.79,Unplanned but necessary spend for erp migration phase 2 remediation,Q3 2025,FY2025
+EXC-0076,2025-09-15,2025-09-20,Dakota Kim,Priya Patel,Engineering,CC-900,HR System Upgrade,47438.13,Time-sensitive opportunity for hr system upgrade — competitive pressure,Q3 2025,FY2025
+EXC-0077,2025-08-20,2025-08-24,Riley Thompson,Thomas Brown,Marketing,CC-901,Disaster Recovery Setup,33008.94,Time-sensitive opportunity for disaster recovery setup — competitive pressure,Q3 2025,FY2025
+EXC-0078,2025-07-09,2025-07-13,Quinn Foster,Maria Garcia,Engineering,CC-901,API Gateway Modernization,53357.1,Time-sensitive opportunity for api gateway modernization — competitive pressure,Q3 2025,FY2025
+EXC-0079,2025-06-17,2025-06-22,Morgan Lee,Maria Garcia,Engineering,CC-901,Disaster Recovery Setup,36814.36,Critical dependency for disaster recovery setup — delay would impact Q4 delivery,Q2 2025,FY2025
+EXC-0080,2025-07-03,2025-07-05,Pat O'Brien,James Wright,Sales,CC-901,API Gateway Modernization,64318.33,One-time cost for api gateway modernization — no recurring commitment,Q3 2025,FY2025
+EXC-0081,2025-07-02,2025-07-06,Drew Martinez,David Lee,Engineering,CC-909,Compliance Automation,44224.81,One-time cost for compliance automation — no recurring commitment,Q3 2025,FY2025
+EXC-0082,2025-08-15,2025-08-18,Casey Morgan,James Wright,Product,CC-901,Sales Enablement Platform,15039.27,Time-sensitive opportunity for sales enablement platform — competitive pressure,Q3 2025,FY2025
+EXC-0083,2025-08-11,2025-08-16,Sam Nguyen,James Wright,Executive,CC-901,Sales Enablement Platform,43242.8,Urgent sales enablement platform work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0084,2025-08-18,2025-08-20,Avery Brooks,Thomas Brown,IT,CC-901,Partner Integration Hub,8000,Critical dependency for partner integration hub — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0085,2025-08-04,2025-08-07,Jesse Clarke,Lisa Kim,Operations,CC-909,Disaster Recovery Setup,24029.8,Time-sensitive opportunity for disaster recovery setup — competitive pressure,Q3 2025,FY2025
+EXC-0086,2025-09-26,2025-09-29,Morgan Lee,Sarah Chen,Legal,CC-901,Cloud Migration Sprint,54687.96,Critical dependency for cloud migration sprint — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0087,2025-08-25,2025-08-27,Morgan Lee,Thomas Brown,HR,CC-908,API Gateway Modernization,59959.08,Unplanned but necessary spend for api gateway modernization remediation,Q3 2025,FY2025
+EXC-0088,2025-08-26,2025-08-30,Jordan Park,Maria Garcia,Sales,CC-901,Compliance Automation,23347.7,Cross-functional project cost — compliance automation shared resources,Q3 2025,FY2025
+EXC-0089,2025-08-26,2025-08-31,Casey Morgan,Sarah Chen,Finance,CC-901,ESG Reporting Framework,42567.31,Executive-sponsored initiative — esg reporting framework acceleration,Q3 2025,FY2025
+EXC-0090,2025-08-04,2025-08-09,Emery Zhou,Jennifer Adams,Finance,CC-901,Product Launch — Enterprise Tier,39887.97,Critical dependency for product launch — enterprise tier — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0091,2025-09-16,2025-09-20,Reese Patel,Robert Johnson,Engineering,CC-901,HR System Upgrade,17791.68,Time-sensitive opportunity for hr system upgrade — competitive pressure,Q3 2025,FY2025
+EXC-0092,2025-09-12,2025-09-16,Jesse Clarke,Thomas Brown,Sales,CC-901,Data Center Consolidation,45826.44,Executive-sponsored initiative — data center consolidation acceleration,Q3 2025,FY2025
+EXC-0093,2025-07-28,2025-08-01,Phoenix Scott,Lisa Kim,Marketing,CC-901,Revenue Recognition Replatform,74005.17,Cross-functional project cost — revenue recognition replatform shared resources,Q3 2025,FY2025
+EXC-0094,2025-06-24,2025-06-26,Dakota Kim,Jennifer Adams,Finance,CC-901,Revenue Recognition Replatform,57072.52,Urgent revenue recognition replatform work required to meet regulatory deadline,Q2 2025,FY2025
+EXC-0095,2025-09-22,2025-09-27,Alex Rivera,David Lee,Product,CC-901,ERP Migration Phase 2,66355.55,One-time cost for erp migration phase 2 — no recurring commitment,Q3 2025,FY2025
+EXC-0096,2025-06-27,2025-06-30,Blake Turner,Jennifer Adams,Executive,CC-901,AI/ML Platform Build,56599.9,Vendor engagement for ai/ml platform build phase completion,Q2 2025,FY2025
+EXC-0097,2025-06-18,2025-06-23,Cameron Walsh,Lisa Kim,Legal,CC-901,Sales Enablement Platform,38049.71,Unplanned but necessary spend for sales enablement platform remediation,Q2 2025,FY2025
+EXC-0098,2025-07-11,2025-07-15,Hayden Cooper,Maria Garcia,Marketing,CC-908,Cloud Migration Sprint,51648.83,Time-sensitive opportunity for cloud migration sprint — competitive pressure,Q3 2025,FY2025
+EXC-0099,2025-07-14,2025-07-19,Reese Patel,Sarah Chen,Finance,CC-901,Security Audit Remediation,34582.99,One-time cost for security audit remediation — no recurring commitment,Q3 2025,FY2025
+EXC-0100,2025-09-25,2025-09-28,Emery Zhou,David Lee,Finance,CC-901,Product Launch — Enterprise Tier,69095.87,Time-sensitive opportunity for product launch — enterprise tier — competitive pressure,Q3 2025,FY2025
+EXC-0101,2025-07-28,2025-08-01,Dakota Kim,Sarah Chen,IT,CC-901,Supply Chain Digitization,25547.81,One-time cost for supply chain digitization — no recurring commitment,Q3 2025,FY2025
+EXC-0102,2025-06-23,2025-06-28,Taylor Swift-Chen,Michael Torres,Operations,CC-901,Supply Chain Digitization,18725.35,Vendor engagement for supply chain digitization phase completion,Q2 2025,FY2025
+EXC-0103,2025-07-07,2025-07-11,Jesse Clarke,Sarah Chen,Legal,CC-901,ESG Reporting Framework,51281.3,Unplanned but necessary spend for esg reporting framework remediation,Q3 2025,FY2025
+EXC-0104,2025-07-14,2025-07-15,Alex Rivera,Lisa Kim,Marketing,CC-901,Compliance Automation,51059.83,Time-sensitive opportunity for compliance automation — competitive pressure,Q3 2025,FY2025
+EXC-0105,2025-07-07,2025-07-09,Casey Morgan,Jennifer Adams,Marketing,CC-906,SOC 2 Certification Push,49816.71,One-time cost for soc 2 certification push — no recurring commitment,Q3 2025,FY2025
+EXC-0106,2025-07-25,2025-07-30,Pat O'Brien,Priya Patel,Marketing,CC-901,ERP Migration Phase 2,41188.12,Cross-functional project cost — erp migration phase 2 shared resources,Q3 2025,FY2025
+EXC-0107,2025-08-12,2025-08-14,Alex Rivera,Thomas Brown,Product,CC-901,Security Audit Remediation,47270.37,One-time cost for security audit remediation — no recurring commitment,Q3 2025,FY2025
+EXC-0108,2025-07-29,2025-07-31,Sam Nguyen,Michael Torres,Sales,CC-901,Data Center Consolidation,87522.27,Critical dependency for data center consolidation — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0109,2025-07-14,2025-07-18,Casey Morgan,James Wright,Marketing,CC-901,Office Relocation — Floor 3,49992.95,Urgent office relocation — floor 3 work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0110,2025-09-08,2025-09-12,Phoenix Scott,Lisa Kim,Engineering,CC-909,AI/ML Platform Build,70375.53,One-time cost for ai/ml platform build — no recurring commitment,Q3 2025,FY2025
+EXC-0111,2025-06-16,2025-06-17,Avery Brooks,Maria Garcia,HR,CC-901,Zero Trust Network Implementation,49823.99,One-time cost for zero trust network implementation — no recurring commitment,Q2 2025,FY2025
+EXC-0112,2025-06-19,2025-06-23,Pat O'Brien,Sarah Chen,Operations,CC-901,Office Relocation — Floor 3,54203.76,Unplanned but necessary spend for office relocation — floor 3 remediation,Q2 2025,FY2025
+EXC-0113,2025-09-12,2025-09-17,Pat O'Brien,James Wright,IT,CC-901,ERP Migration Phase 2,37812.84,Vendor engagement for erp migration phase 2 phase completion,Q3 2025,FY2025
+EXC-0114,2025-07-15,2025-07-17,Sam Nguyen,Michael Torres,Legal,CC-901,ERP Migration Phase 2,60466.73,Critical dependency for erp migration phase 2 — delay would impact Q4 delivery,Q3 2025,FY2025
+EXC-0115,2025-06-19,2025-06-22,Hayden Cooper,James Wright,Executive,CC-901,Supply Chain Digitization,58131.88,One-time cost for supply chain digitization — no recurring commitment,Q2 2025,FY2025
+EXC-0116,2025-06-19,2025-06-22,Rowan Mitchell,James Wright,Sales,CC-901,Revenue Recognition Replatform,56419.42,Cross-functional project cost — revenue recognition replatform shared resources,Q2 2025,FY2025
+EXC-0117,2025-06-23,2025-06-28,Casey Morgan,James Wright,Marketing,CC-905,HR System Upgrade,53351.06,Unplanned but necessary spend for hr system upgrade remediation,Q2 2025,FY2025
+EXC-0118,2025-07-28,2025-08-02,Avery Brooks,Jennifer Adams,Product,CC-901,API Gateway Modernization,37328.29,Cross-functional project cost — api gateway modernization shared resources,Q3 2025,FY2025
+EXC-0119,2025-07-31,2025-08-04,Emery Zhou,Robert Johnson,HR,CC-901,Compliance Automation,57530.76,One-time cost for compliance automation — no recurring commitment,Q3 2025,FY2025
+EXC-0120,2025-08-18,2025-08-19,Hayden Cooper,Robert Johnson,Engineering,CC-901,ERP Migration Phase 2,49739.46,Cross-functional project cost — erp migration phase 2 shared resources,Q3 2025,FY2025
+EXC-0121,2025-02-14,2025-02-15,Cameron Walsh,Maria Garcia,HR,CC-901,API Gateway Modernization,28841.36,One-time cost for api gateway modernization — no recurring commitment,Q1 2025,FY2025
+EXC-0122,2026-01-07,2026-01-08,Pat O'Brien,Jennifer Adams,Engineering,CC-901,Customer Portal Redesign,14766.45,Executive-sponsored initiative — customer portal redesign acceleration,Q1 2026,FY2026
+EXC-0123,2025-10-27,2025-10-29,Morgan Lee,James Wright,Engineering,CC-901,Cloud Migration Sprint,28981.13,Urgent cloud migration sprint work required to meet regulatory deadline,Q4 2025,FY2025
+EXC-0124,2025-06-23,2025-06-24,Jesse Clarke,Sarah Chen,Sales,CC-901,Zero Trust Network Implementation,54334.34,Urgent zero trust network implementation work required to meet regulatory deadline,Q2 2025,FY2025
+EXC-0125,2025-04-25,2025-04-29,Emery Zhou,Priya Patel,Legal,CC-137,Data Center Consolidation,43673.79,One-time cost for data center consolidation — no recurring commitment,Q2 2025,FY2025
+EXC-0126,2026-02-04,2026-02-08,Morgan Lee,Jennifer Adams,Operations,CC-152,Disaster Recovery Setup,50249.0,Critical dependency for disaster recovery setup — delay would impact Q4 delivery,Q1 2026,FY2026
+EXC-0127,2025-10-20,2025-10-25,Riley Thompson,Sarah Chen,Product,CC-147,Disaster Recovery Setup,29641.68,Time-sensitive opportunity for disaster recovery setup — competitive pressure,Q4 2025,FY2025
+EXC-0128,2025-05-26,2025-05-27,Sam Nguyen,James Wright,HR,CC-129,Sales Enablement Platform,53114.42,Cross-functional project cost — sales enablement platform shared resources,Q2 2025,FY2025
+EXC-0129,2025-10-20,2025-10-23,Taylor Swift-Chen,Thomas Brown,Sales,CC-108,Supply Chain Digitization,43927.2,Time-sensitive opportunity for supply chain digitization — competitive pressure,Q4 2025,FY2025
+EXC-0130,2026-03-25,2026-03-28,Alex Rivera,Jennifer Adams,Legal,CC-901,Compliance Automation,60420.75,Executive-sponsored initiative — compliance automation acceleration,Q1 2026,FY2026
+EXC-0131,2025-02-24,2025-02-25,Sam Nguyen,Maria Garcia,Product,CC-145,Partner Integration Hub,51607.29,Vendor engagement for partner integration hub phase completion,Q1 2025,FY2025
+EXC-0132,2025-09-18,2025-09-20,Phoenix Scott,Sarah Chen,Operations,CC-901,Office Relocation — Floor 3,33782.07,Urgent office relocation — floor 3 work required to meet regulatory deadline,Q3 2025,FY2025
+EXC-0133,2025-06-13,2025-06-16,Cameron Walsh,Maria Garcia,Legal,CC-901,Data Center Consolidation,37529.56,One-time cost for data center consolidation — no recurring commitment,Q2 2025,FY2025
+EXC-0134,2025-11-03,2025-11-05,Riley Thompson,Priya Patel,Product,CC-145,ERP Migration Phase 2,35928.55,Urgent erp migration phase 2 work required to meet regulatory deadline,Q4 2025,FY2025
+EXC-0135,2026-01-07,2026-01-09,Casey Morgan,James Wright,Legal,CC-901,Revenue Recognition Replatform,48612.08,Vendor engagement for revenue recognition replatform phase completion,Q1 2026,FY2026
+EXC-0136,2025-09-18,2025-09-19,Drew Martinez,Michael Torres,Operations,CC-153,API Gateway Modernization,49997.01,Executive-sponsored initiative — api gateway modernization acceleration,Q3 2025,FY2025
+EXC-0137,2026-05-19,2026-05-22,Phoenix Scott,Sarah Chen,HR,CC-129,Data Center Consolidation,56847.5,Time-sensitive opportunity for data center consolidation — competitive pressure,Q2 2026,FY2026
+EXC-0138,2025-12-26,2025-12-31,Phoenix Scott,Maria Garcia,HR,CC-129,Sales Enablement Platform,50014.72,Vendor engagement for sales enablement platform phase completion,Q4 2025,FY2025
+EXC-0139,2025-04-16,2025-04-17,Pat O'Brien,Maria Garcia,IT,CC-901,AI/ML Platform Build,53445.86,Cross-functional project cost — ai/ml platform build shared resources,Q2 2025,FY2025
+EXC-0140,2025-04-22,2025-04-24,Cameron Walsh,David Lee,Engineering,CC-103,Zero Trust Network Implementation,41490.99,Cross-functional project cost — zero trust network implementation shared resources,Q2 2025,FY2025
+EXC-0141,2025-12-31,2026-01-04,Pat O'Brien,Sarah Chen,Marketing,CC-901,Revenue Recognition Replatform,60748.75,Unplanned but necessary spend for revenue recognition replatform remediation,Q4 2025,FY2025
+EXC-0142,2025-03-21,2025-03-24,Reese Patel,Maria Garcia,Finance,CC-121,Partner Integration Hub,34831.87,Critical dependency for partner integration hub — delay would impact Q4 delivery,Q1 2025,FY2025
+EXC-0143,2025-05-05,2025-05-08,Sam Nguyen,Robert Johnson,Sales,CC-112,Supply Chain Digitization,39380.94,Critical dependency for supply chain digitization — delay would impact Q4 delivery,Q2 2025,FY2025
+EXC-0144,2025-05-26,2025-05-28,Emery Zhou,Jennifer Adams,IT,CC-901,API Gateway Modernization,31548.5,One-time cost for api gateway modernization — no recurring commitment,Q2 2025,FY2025
+EXC-0145,2025-02-06,2025-02-09,Sam Nguyen,James Wright,Marketing,CC-901,Product Launch — Enterprise Tier,66998.12,Urgent product launch — enterprise tier work required to meet regulatory deadline,Q1 2025,FY2025
+EXC-0146,2025-01-16,2025-01-20,Avery Brooks,Jennifer Adams,Operations,CC-901,Customer Portal Redesign,70019.88,Urgent customer portal redesign work required to meet regulatory deadline,Q1 2025,FY2025
+EXC-0147,2025-10-24,2025-10-25,Jesse Clarke,Thomas Brown,Sales,CC-901,API Gateway Modernization,24184.88,Time-sensitive opportunity for api gateway modernization — competitive pressure,Q4 2025,FY2025
+EXC-0148,2025-05-26,2025-05-27,Emery Zhou,David Lee,Executive,CC-901,Cloud Migration Sprint,43259.75,One-time cost for cloud migration sprint — no recurring commitment,Q2 2025,FY2025
+EXC-0149,2025-02-05,2025-02-10,Pat O'Brien,Lisa Kim,Legal,CC-141,SOC 2 Certification Push,27239.83,Unplanned but necessary spend for soc 2 certification push remediation,Q1 2025,FY2025
+EXC-0150,2025-01-27,2025-02-01,Avery Brooks,Michael Torres,Sales,CC-108,HR System Upgrade,45382.76,Unplanned but necessary spend for hr system upgrade remediation,Q1 2025,FY2025

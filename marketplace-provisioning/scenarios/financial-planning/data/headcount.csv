@@ -1,0 +1,501 @@
+employee_id,department,cost_center_id,hire_date,termination_date,job_title,job_level,annual_salary_usd,status
+EMP-0001,Engineering,CC-104,2023-07-24,,Engineering Manager,3,103248.5,Active
+EMP-0002,Engineering,CC-103,2021-10-31,,Senior Engineer,3,89921.95,Active
+EMP-0003,Engineering,CC-105,2021-11-16,,DevOps Engineer,3,86286.71,Active
+EMP-0004,Engineering,CC-102,2020-11-18,,DevOps Engineer,3,97164.99,Active
+EMP-0005,Engineering,CC-100,2021-03-23,,Engineering Manager,4,127231.74,Active
+EMP-0006,Engineering,CC-104,2024-06-14,,Engineering Manager,2,76739.24,Active
+EMP-0007,Engineering,CC-100,2024-04-24,,Staff Engineer,4,145065.77,Active
+EMP-0008,Engineering,CC-101,2020-12-21,,Senior Engineer,1,57981.68,Active
+EMP-0009,Engineering,CC-101,2024-10-18,,Principal Engineer,4,123458.34,Active
+EMP-0010,Engineering,CC-101,2025-07-10,,Staff Engineer,3,93617.28,Active
+EMP-0011,Engineering,CC-100,2025-05-26,,Software Engineer,4,120537.0,Active
+EMP-0012,Engineering,CC-100,2021-03-21,,Engineering Manager,3,111904.39,Active
+EMP-0013,Engineering,CC-105,2022-04-19,,Staff Engineer,5,188130.89,Active
+EMP-0014,Engineering,CC-102,2025-08-11,,Engineering Manager,4,131661.14,Active
+EMP-0015,Engineering,CC-101,2025-07-13,,Engineering Manager,3,94804.48,Active
+EMP-0016,Engineering,CC-105,2024-07-06,,Principal Engineer,1,55749.72,Active
+EMP-0017,Engineering,CC-102,2023-01-04,,Engineering Manager,2,76057.68,Active
+EMP-0018,Engineering,CC-100,2025-09-08,,Principal Engineer,3,112059.21,Active
+EMP-0019,Engineering,CC-100,2025-12-08,,Principal Engineer,4,125466.4,Active
+EMP-0020,Engineering,CC-106,2020-06-03,,DevOps Engineer,3,113440.12,Active
+EMP-0021,Engineering,CC-102,2022-01-26,,DevOps Engineer,3,99018.65,Active
+EMP-0022,Engineering,CC-101,2025-09-08,,Software Engineer,4,132324.18,Active
+EMP-0023,Engineering,CC-101,2022-12-08,,Senior Engineer,3,90699.56,Active
+EMP-0024,Engineering,CC-101,2022-04-05,,Software Engineer,3,85202.66,Active
+EMP-0025,Engineering,CC-103,2025-11-18,,Staff Engineer,3,104635.96,Active
+EMP-0026,Engineering,CC-105,2025-06-30,,Engineering Manager,4,122752.33,Active
+EMP-0027,Engineering,CC-105,2026-03-23,,Senior Engineer,2,80131.34,Active
+EMP-0028,Engineering,CC-100,2021-10-22,,Staff Engineer,4,118932.24,Active
+EMP-0029,Engineering,CC-104,2023-11-15,,Senior Engineer,2,79238.44,Active
+EMP-0030,Engineering,CC-100,2020-05-19,,DevOps Engineer,3,86903.79,Active
+EMP-0031,Engineering,CC-104,2022-09-03,,Engineering Manager,5,173611.95,Active
+EMP-0032,Engineering,CC-101,2025-09-04,,Engineering Manager,3,85431.14,Active
+EMP-0033,Engineering,CC-100,2022-10-24,2024-01-03,Engineering Manager,4,124801.34,Terminated
+EMP-0034,Engineering,CC-104,2025-05-23,,DevOps Engineer,3,92300.41,Active
+EMP-0035,Engineering,CC-106,2022-06-25,,Software Engineer,5,178534.54,Active
+EMP-0036,Engineering,CC-105,2026-03-28,,Principal Engineer,4,146629.46,Active
+EMP-0037,Engineering,CC-106,2021-01-29,,Engineering Manager,2,70875.79,Active
+EMP-0038,Engineering,CC-103,2025-10-16,,Senior Engineer,6,207529.08,Active
+EMP-0039,Engineering,CC-103,2023-05-15,,DevOps Engineer,5,153238.6,Active
+EMP-0040,Engineering,CC-100,2021-10-14,2023-12-24,DevOps Engineer,3,101576.22,Terminated
+EMP-0041,Engineering,CC-106,2023-02-18,2023-08-13,Senior Engineer,3,114508.74,Terminated
+EMP-0042,Engineering,CC-106,2026-04-18,2026-07-17,Senior Engineer,3,114756.6,Terminated
+EMP-0043,Engineering,CC-103,2020-06-01,,Staff Engineer,3,93549.05,Active
+EMP-0044,Engineering,CC-104,2025-08-25,,Engineering Manager,4,136803.8,Active
+EMP-0045,Engineering,CC-103,2020-10-14,,Engineering Manager,4,147059.38,Active
+EMP-0046,Engineering,CC-105,2020-04-13,,Staff Engineer,2,83460.11,Active
+EMP-0047,Engineering,CC-103,2020-09-28,,Staff Engineer,3,102463.89,Active
+EMP-0048,Engineering,CC-101,2025-04-27,,Engineering Manager,3,92530.23,Active
+EMP-0049,Engineering,CC-106,2024-07-15,,Staff Engineer,2,80430.09,Active
+EMP-0050,Engineering,CC-102,2024-09-01,,Engineering Manager,3,95606.37,Active
+EMP-0051,Engineering,CC-105,2025-01-29,,Principal Engineer,3,101885.75,Active
+EMP-0052,Engineering,CC-105,2023-02-06,,Principal Engineer,3,101071.69,Active
+EMP-0053,Engineering,CC-101,2022-02-24,,Principal Engineer,5,196208.53,Active
+EMP-0054,Engineering,CC-106,2025-07-17,,Engineering Manager,3,90472.45,Active
+EMP-0055,Engineering,CC-101,2025-07-26,,Principal Engineer,6,251528.83,Active
+EMP-0056,Engineering,CC-103,2023-09-25,,Software Engineer,3,87148.73,Active
+EMP-0057,Engineering,CC-104,2020-01-14,,Staff Engineer,3,107921.7,Active
+EMP-0058,Engineering,CC-100,2020-01-11,,Staff Engineer,6,245610.28,Active
+EMP-0059,Engineering,CC-106,2022-05-26,,Principal Engineer,2,77496.28,Active
+EMP-0060,Engineering,CC-104,2020-02-09,,Engineering Manager,3,88603.7,Active
+EMP-0061,Engineering,CC-103,2021-02-20,,DevOps Engineer,5,148911.76,Active
+EMP-0062,Engineering,CC-104,2025-08-19,,Staff Engineer,4,124263.89,Active
+EMP-0063,Engineering,CC-100,2025-08-30,,Software Engineer,3,90448.32,Active
+EMP-0064,Engineering,CC-103,2024-07-10,,Senior Engineer,3,94038.42,Active
+EMP-0065,Engineering,CC-105,2021-08-31,,DevOps Engineer,4,141735.4,Active
+EMP-0066,Engineering,CC-102,2020-01-14,,Engineering Manager,5,166462.66,Active
+EMP-0067,Engineering,CC-100,2022-05-10,,Principal Engineer,6,215085.57,Active
+EMP-0068,Engineering,CC-103,2025-07-04,,DevOps Engineer,5,192222.52,Active
+EMP-0069,Engineering,CC-100,2020-09-30,,DevOps Engineer,2,72265.49,Active
+EMP-0070,Engineering,CC-104,2021-11-04,,Software Engineer,3,98890.68,Active
+EMP-0071,Engineering,CC-103,2025-07-28,,Principal Engineer,4,150342.42,Active
+EMP-0072,Engineering,CC-106,2025-01-23,,Software Engineer,4,125395.72,Active
+EMP-0073,Engineering,CC-102,2024-04-23,,Senior Engineer,6,224336.55,Active
+EMP-0074,Engineering,CC-105,2022-08-22,,Principal Engineer,4,127316.97,Active
+EMP-0075,Engineering,CC-106,2024-11-17,,DevOps Engineer,2,79594.6,Active
+EMP-0076,Engineering,CC-100,2021-04-17,,Staff Engineer,3,86085.92,Active
+EMP-0077,Engineering,CC-100,2025-07-29,,Senior Engineer,3,92803.03,Active
+EMP-0078,Engineering,CC-106,2025-09-11,,Senior Engineer,5,180904.43,Active
+EMP-0079,Engineering,CC-105,2021-10-09,,DevOps Engineer,2,64245.45,Active
+EMP-0080,Engineering,CC-106,2023-04-07,,Senior Engineer,2,67424.82,Active
+EMP-0081,Engineering,CC-104,2023-01-30,,Principal Engineer,3,98185.79,Active
+EMP-0082,Engineering,CC-106,2020-05-05,,Principal Engineer,3,96620.85,Active
+EMP-0083,Engineering,CC-103,2025-08-01,2026-04-12,Principal Engineer,2,73179.69,Terminated
+EMP-0084,Engineering,CC-100,2022-03-22,2024-05-17,Staff Engineer,3,113947.41,Terminated
+EMP-0085,Engineering,CC-103,2021-02-09,,Principal Engineer,3,96389.37,Active
+EMP-0086,Engineering,CC-105,2024-01-19,,Senior Engineer,4,144856.98,Active
+EMP-0087,Engineering,CC-103,2023-01-16,,Engineering Manager,2,65540.22,Active
+EMP-0088,Engineering,CC-100,2023-07-08,,Principal Engineer,6,251324.97,Active
+EMP-0089,Engineering,CC-104,2023-06-06,,DevOps Engineer,5,176999.89,Active
+EMP-0090,Engineering,CC-103,2023-02-11,,Principal Engineer,5,176486.9,Active
+EMP-0091,Engineering,CC-103,2025-01-04,,Engineering Manager,2,78939.55,Active
+EMP-0092,Engineering,CC-104,2023-01-09,,Engineering Manager,4,139225.57,Active
+EMP-0093,Engineering,CC-100,2020-02-03,,Staff Engineer,3,101945.35,Active
+EMP-0094,Engineering,CC-104,2021-05-15,,Staff Engineer,3,107376.56,Active
+EMP-0095,Engineering,CC-103,2020-08-04,,Software Engineer,3,93365.12,Active
+EMP-0096,Engineering,CC-103,2025-08-08,,Software Engineer,4,134207.12,Active
+EMP-0097,Engineering,CC-103,2020-09-06,,Staff Engineer,4,121355.93,Active
+EMP-0098,Engineering,CC-100,2020-08-12,,Staff Engineer,5,161648.63,Active
+EMP-0099,Engineering,CC-100,2024-04-12,,Senior Engineer,3,114447.46,Active
+EMP-0100,Engineering,CC-100,2023-07-10,,Principal Engineer,4,119413.56,Active
+EMP-0101,Sales,CC-109,2024-03-04,,Account Executive,1,58623.06,Active
+EMP-0102,Sales,CC-112,2025-09-22,,Sales Manager,2,81809.93,Active
+EMP-0103,Sales,CC-110,2023-08-13,,VP Sales,4,152428.32,Active
+EMP-0104,Sales,CC-110,2023-06-01,,BDR,4,118475.62,Active
+EMP-0105,Sales,CC-113,2020-10-01,,Solutions Engineer,3,98189.24,Active
+EMP-0106,Sales,CC-113,2025-07-30,,Solutions Engineer,4,130639.3,Active
+EMP-0107,Sales,CC-108,2021-05-03,,Sales Director,2,81735.88,Active
+EMP-0108,Sales,CC-113,2025-10-13,2026-03-16,Sales Director,3,95988.02,Terminated
+EMP-0109,Sales,CC-113,2026-05-11,2026-08-09,Sales Manager,2,70431.22,Terminated
+EMP-0110,Sales,CC-112,2022-11-17,,BDR,3,88958.68,Active
+EMP-0111,Sales,CC-113,2025-09-08,,Solutions Engineer,4,143125.55,Active
+EMP-0112,Sales,CC-107,2022-10-19,,VP Sales,2,63955.92,Active
+EMP-0113,Sales,CC-109,2021-10-29,,VP Sales,5,165620.65,Active
+EMP-0114,Sales,CC-107,2023-12-24,,Solutions Engineer,3,86182.86,Active
+EMP-0115,Sales,CC-113,2021-11-24,,Sales Director,4,127553.55,Active
+EMP-0116,Sales,CC-110,2020-02-29,,Sales Director,2,70798.37,Active
+EMP-0117,Sales,CC-110,2025-10-06,,Account Executive,2,73270.98,Active
+EMP-0118,Sales,CC-112,2021-12-15,,Sales Manager,4,148847.9,Active
+EMP-0119,Sales,CC-109,2022-09-16,,Sales Manager,3,110242.96,Active
+EMP-0120,Sales,CC-110,2025-08-04,,Account Executive,3,96812.15,Active
+EMP-0121,Sales,CC-113,2024-08-23,,VP Sales,5,195172.26,Active
+EMP-0122,Sales,CC-109,2025-08-23,,Account Executive,1,48033.92,Active
+EMP-0123,Sales,CC-108,2025-06-17,,Sales Manager,4,129678.38,Active
+EMP-0124,Sales,CC-109,2022-11-13,,BDR,4,151098.39,Active
+EMP-0125,Sales,CC-109,2025-09-23,,VP Sales,2,80834.46,Active
+EMP-0126,Sales,CC-107,2024-08-11,,Solutions Engineer,3,105245.98,Active
+EMP-0127,Sales,CC-109,2025-10-02,,VP Sales,3,103048.45,Active
+EMP-0128,Sales,CC-109,2022-05-10,,Sales Manager,3,109459.14,Active
+EMP-0129,Sales,CC-111,2023-11-05,,VP Sales,3,109882.0,Active
+EMP-0130,Sales,CC-107,2024-09-27,,Sales Manager,3,114692.22,Active
+EMP-0131,Sales,CC-108,2025-09-06,,VP Sales,4,149045.94,Active
+EMP-0132,Sales,CC-113,2022-11-19,,VP Sales,3,87646.3,Active
+EMP-0133,Sales,CC-109,2025-09-28,,Account Executive,5,156024.19,Active
+EMP-0134,Sales,CC-107,2023-11-17,,Sales Manager,3,106372.5,Active
+EMP-0135,Sales,CC-111,2020-08-31,2022-09-02,VP Sales,4,119150.31,Terminated
+EMP-0136,Sales,CC-108,2023-11-29,,Account Executive,4,121049.14,Active
+EMP-0137,Sales,CC-111,2025-09-07,,Sales Director,3,113977.62,Active
+EMP-0138,Sales,CC-109,2023-01-16,,VP Sales,3,105638.66,Active
+EMP-0139,Sales,CC-111,2025-07-22,,Sales Director,4,123283.53,Active
+EMP-0140,Sales,CC-109,2020-07-14,,VP Sales,2,83561.61,Active
+EMP-0141,Sales,CC-112,2022-02-12,,VP Sales,2,69860.25,Active
+EMP-0142,Sales,CC-107,2022-05-06,,Sales Director,2,72488.27,Active
+EMP-0143,Sales,CC-110,2024-02-01,,Sales Manager,3,112853.89,Active
+EMP-0144,Sales,CC-110,2025-08-30,,Solutions Engineer,3,95353.0,Active
+EMP-0145,Sales,CC-113,2022-06-18,,Sales Director,3,103070.87,Active
+EMP-0146,Sales,CC-111,2025-09-13,,Sales Director,2,75888.67,Active
+EMP-0147,Sales,CC-113,2024-12-27,,Account Executive,2,83565.49,Active
+EMP-0148,Sales,CC-111,2026-05-06,,BDR,5,175511.35,Active
+EMP-0149,Sales,CC-113,2025-09-26,,Sales Director,3,101873.63,Active
+EMP-0150,Sales,CC-113,2025-11-10,,BDR,4,144365.29,Active
+EMP-0151,Sales,CC-110,2023-04-12,,VP Sales,4,142246.05,Active
+EMP-0152,Sales,CC-113,2025-07-27,,VP Sales,3,113178.81,Active
+EMP-0153,Sales,CC-111,2025-09-10,,Solutions Engineer,4,116914.91,Active
+EMP-0154,Sales,CC-108,2020-05-10,2021-07-23,Account Executive,5,183558.07,Terminated
+EMP-0155,Sales,CC-109,2022-10-29,,Sales Manager,5,195300.12,Active
+EMP-0156,Sales,CC-110,2020-03-26,,Sales Manager,5,161948.27,Active
+EMP-0157,Sales,CC-109,2025-08-08,,Account Executive,3,111883.3,Active
+EMP-0158,Sales,CC-112,2025-05-10,,Solutions Engineer,3,112267.77,Active
+EMP-0159,Sales,CC-108,2025-07-24,2025-12-11,Solutions Engineer,4,134526.04,Terminated
+EMP-0160,Sales,CC-110,2020-10-21,,Account Executive,4,152326.37,Active
+EMP-0161,Sales,CC-110,2024-05-25,,VP Sales,3,114730.34,Active
+EMP-0162,Sales,CC-112,2022-06-19,,VP Sales,3,89055.34,Active
+EMP-0163,Sales,CC-113,2020-04-12,,Sales Manager,4,150999.26,Active
+EMP-0164,Sales,CC-108,2020-02-16,2021-06-15,Sales Manager,2,83230.34,Terminated
+EMP-0165,Sales,CC-110,2021-01-06,,Sales Director,5,151869.28,Active
+EMP-0166,Sales,CC-108,2020-10-11,,Account Executive,3,105872.01,Active
+EMP-0167,Sales,CC-108,2026-03-02,,Account Executive,2,83039.85,Active
+EMP-0168,Sales,CC-113,2024-06-17,,VP Sales,5,164536.61,Active
+EMP-0169,Sales,CC-110,2022-10-29,,Account Executive,1,47546.03,Active
+EMP-0170,Sales,CC-111,2024-10-27,,Solutions Engineer,3,98593.86,Active
+EMP-0171,Sales,CC-113,2025-07-16,,Solutions Engineer,1,54325.67,Active
+EMP-0172,Sales,CC-111,2020-04-14,,VP Sales,4,152982.85,Active
+EMP-0173,Sales,CC-113,2020-07-09,,BDR,3,107045.49,Active
+EMP-0174,Sales,CC-112,2023-01-16,,Sales Director,3,94931.27,Active
+EMP-0175,Sales,CC-112,2025-02-04,,Sales Manager,1,50467.01,Active
+EMP-0176,Sales,CC-112,2024-06-20,,Sales Director,3,102672.11,Active
+EMP-0177,Sales,CC-111,2025-06-26,,Solutions Engineer,4,115589.54,Active
+EMP-0178,Sales,CC-113,2022-06-09,,BDR,3,101198.02,Active
+EMP-0179,Sales,CC-108,2025-07-06,,Sales Director,3,110182.27,Active
+EMP-0180,Sales,CC-113,2025-09-17,,Account Executive,2,81469.35,Active
+EMP-0181,Marketing,CC-116,2020-01-09,2021-05-15,Demand Gen Lead,6,227834.21,Terminated
+EMP-0182,Marketing,CC-117,2025-01-03,,Demand Gen Lead,4,146170.65,Active
+EMP-0183,Marketing,CC-114,2021-01-01,,Marketing Manager,2,66888.79,Active
+EMP-0184,Marketing,CC-115,2025-04-13,,Marketing Manager,2,85939.67,Active
+EMP-0185,Marketing,CC-117,2022-02-27,,Content Strategist,3,89915.62,Active
+EMP-0186,Marketing,CC-118,2024-05-09,,Marketing Manager,4,149805.8,Active
+EMP-0187,Marketing,CC-119,2022-11-23,,Marketing Manager,6,251644.64,Active
+EMP-0188,Marketing,CC-119,2026-01-01,,Marketing Manager,3,97877.15,Active
+EMP-0189,Marketing,CC-116,2021-03-15,,CMO,3,85620.94,Active
+EMP-0190,Marketing,CC-117,2022-08-06,2023-09-26,Content Strategist,4,146293.13,Terminated
+EMP-0191,Marketing,CC-118,2021-01-14,,Marketing Manager,3,106071.04,Active
+EMP-0192,Marketing,CC-120,2020-01-04,,CMO,5,199389.09,Active
+EMP-0193,Marketing,CC-116,2025-02-02,,Content Strategist,5,199894.25,Active
+EMP-0194,Marketing,CC-120,2020-12-15,,CMO,5,174159.69,Active
+EMP-0195,Marketing,CC-117,2025-01-23,,Marketing Analyst,1,59369.69,Active
+EMP-0196,Marketing,CC-119,2024-08-08,,Demand Gen Lead,3,97575.53,Active
+EMP-0197,Marketing,CC-118,2021-02-17,,Demand Gen Lead,5,167120.69,Active
+EMP-0198,Marketing,CC-116,2024-10-17,,Content Strategist,3,104073.9,Active
+EMP-0199,Marketing,CC-118,2023-11-05,,Marketing Analyst,3,112761.51,Active
+EMP-0200,Marketing,CC-120,2026-05-22,,Content Strategist,3,99471.56,Active
+EMP-0201,Marketing,CC-115,2024-03-11,,CMO,4,130372.73,Active
+EMP-0202,Marketing,CC-119,2021-10-21,,Marketing Manager,4,141341.78,Active
+EMP-0203,Marketing,CC-116,2021-02-12,,CMO,4,150464.73,Active
+EMP-0204,Marketing,CC-116,2020-09-10,,CMO,4,147584.08,Active
+EMP-0205,Marketing,CC-119,2021-02-03,,CMO,5,186990.74,Active
+EMP-0206,Marketing,CC-117,2022-06-30,,Content Strategist,2,70656.53,Active
+EMP-0207,Marketing,CC-116,2023-10-11,,CMO,3,106060.55,Active
+EMP-0208,Marketing,CC-120,2023-11-12,,Marketing Analyst,4,124062.49,Active
+EMP-0209,Marketing,CC-119,2023-04-07,,Marketing Analyst,2,80777.15,Active
+EMP-0210,Marketing,CC-114,2020-03-11,,Demand Gen Lead,3,107918.3,Active
+EMP-0211,Marketing,CC-115,2024-07-31,,Marketing Manager,4,146808.61,Active
+EMP-0212,Marketing,CC-116,2025-12-31,2026-05-30,Content Strategist,2,75494.44,Terminated
+EMP-0213,Marketing,CC-117,2023-01-27,,Marketing Analyst,2,69367.77,Active
+EMP-0214,Marketing,CC-118,2020-09-07,,CMO,5,174935.66,Active
+EMP-0215,Marketing,CC-116,2022-10-16,,Marketing Manager,2,84047.45,Active
+EMP-0216,Marketing,CC-117,2024-10-04,,CMO,2,81766.6,Active
+EMP-0217,Marketing,CC-116,2023-04-03,,Content Strategist,4,126335.01,Active
+EMP-0218,Marketing,CC-118,2022-04-03,,Brand Manager,3,106881.04,Active
+EMP-0219,Marketing,CC-120,2020-04-09,,Demand Gen Lead,5,157793.03,Active
+EMP-0220,Marketing,CC-114,2021-03-02,,Marketing Analyst,2,79715.03,Active
+EMP-0221,Marketing,CC-115,2023-07-02,,Brand Manager,3,89630.95,Active
+EMP-0222,Marketing,CC-115,2025-05-06,,Demand Gen Lead,2,83134.9,Active
+EMP-0223,Marketing,CC-118,2025-11-04,,Brand Manager,4,153265.24,Active
+EMP-0224,Marketing,CC-120,2024-05-30,,Marketing Manager,2,63907.96,Active
+EMP-0225,Marketing,CC-117,2024-12-16,,Brand Manager,4,125330.02,Active
+EMP-0226,Marketing,CC-117,2023-10-29,,Marketing Analyst,4,119976.82,Active
+EMP-0227,Marketing,CC-117,2024-06-30,,Marketing Analyst,3,107876.24,Active
+EMP-0228,Marketing,CC-116,2021-12-30,2023-04-13,CMO,2,66097.02,Terminated
+EMP-0229,Marketing,CC-117,2021-08-11,,Marketing Manager,3,92816.52,Active
+EMP-0230,Marketing,CC-116,2023-09-01,2023-12-23,CMO,3,111538.39,Terminated
+EMP-0231,Finance,CC-124,2023-09-24,,FP&A Manager,6,228944.03,Active
+EMP-0232,Finance,CC-126,2025-12-30,,Controller,3,91775.35,Active
+EMP-0233,Finance,CC-127,2021-05-02,,Controller,3,99862.05,Active
+EMP-0234,Finance,CC-127,2022-03-15,,Controller,3,90293.82,Active
+EMP-0235,Finance,CC-127,2022-11-15,,Treasury Analyst,3,113604.18,Active
+EMP-0236,Finance,CC-123,2026-01-07,,Controller,5,183576.37,Active
+EMP-0237,Finance,CC-123,2023-06-20,,Accountant,3,109891.67,Active
+EMP-0238,Finance,CC-125,2021-03-12,,CFO,2,78256.42,Active
+EMP-0239,Finance,CC-127,2021-03-23,2021-10-01,Controller,3,108276.27,Terminated
+EMP-0240,Finance,CC-122,2026-05-16,,Treasury Analyst,4,117969.7,Active
+EMP-0241,Finance,CC-125,2025-09-05,,FP&A Manager,2,81862.62,Active
+EMP-0242,Finance,CC-121,2023-02-27,,Controller,5,149180.2,Active
+EMP-0243,Finance,CC-124,2025-02-21,,CFO,2,73704.94,Active
+EMP-0244,Finance,CC-123,2021-03-06,,Controller,3,100057.05,Active
+EMP-0245,Finance,CC-123,2020-01-19,,Accountant,2,73895.1,Active
+EMP-0246,Finance,CC-121,2026-05-23,,CFO,3,112364.35,Active
+EMP-0247,Finance,CC-122,2022-02-26,2024-07-09,Treasury Analyst,3,107008.74,Terminated
+EMP-0248,Finance,CC-125,2020-07-02,,Accountant,3,87906.78,Active
+EMP-0249,Finance,CC-125,2023-08-27,,Controller,3,89636.59,Active
+EMP-0250,Finance,CC-126,2025-03-17,,FP&A Manager,3,109642.82,Active
+EMP-0251,Finance,CC-122,2026-03-23,,Controller,2,64070.75,Active
+EMP-0252,Finance,CC-124,2026-03-03,,Financial Analyst,3,90352.59,Active
+EMP-0253,Finance,CC-126,2020-02-24,,Financial Analyst,3,101312.5,Active
+EMP-0254,Finance,CC-122,2025-11-23,,Financial Analyst,3,85207.81,Active
+EMP-0255,Finance,CC-125,2020-01-02,,Accountant,2,75856.79,Active
+EMP-0256,Finance,CC-126,2025-11-15,,CFO,4,146582.05,Active
+EMP-0257,Finance,CC-121,2021-09-25,2024-02-05,Financial Analyst,6,196195.58,Terminated
+EMP-0258,Finance,CC-122,2026-01-30,2026-05-27,Controller,3,90101.66,Terminated
+EMP-0259,Finance,CC-123,2025-03-29,,FP&A Manager,4,121527.06,Active
+EMP-0260,Finance,CC-125,2020-10-10,,Treasury Analyst,6,200175.56,Active
+EMP-0261,Finance,CC-122,2020-08-31,,Accountant,4,142248.08,Active
+EMP-0262,Finance,CC-125,2021-07-03,,FP&A Manager,2,82232.56,Active
+EMP-0263,Finance,CC-127,2021-09-25,,Controller,3,94963.98,Active
+EMP-0264,Finance,CC-125,2023-06-08,,Treasury Analyst,4,130562.93,Active
+EMP-0265,Finance,CC-123,2026-01-23,,Treasury Analyst,4,139688.51,Active
+EMP-0266,Finance,CC-122,2020-12-28,2021-08-19,FP&A Manager,4,144982.21,Terminated
+EMP-0267,Finance,CC-122,2024-01-27,,Treasury Analyst,3,98666.18,Active
+EMP-0268,Finance,CC-127,2022-06-24,,Treasury Analyst,4,140979.39,Active
+EMP-0269,Finance,CC-123,2021-02-03,,FP&A Manager,2,77247.08,Active
+EMP-0270,Finance,CC-122,2026-03-23,,Treasury Analyst,2,79459.51,Active
+EMP-0271,HR,CC-134,2024-08-03,,HR Business Partner,4,139108.78,Active
+EMP-0272,HR,CC-129,2023-05-04,2024-11-23,CHRO,3,103816.52,Terminated
+EMP-0273,HR,CC-132,2020-06-21,,CHRO,3,112493.2,Active
+EMP-0274,HR,CC-128,2021-01-27,,HR Business Partner,5,197162.23,Active
+EMP-0275,HR,CC-129,2026-04-22,,Benefits Specialist,6,228151.21,Active
+EMP-0276,HR,CC-131,2023-02-19,,Compensation Analyst,3,101081.02,Active
+EMP-0277,HR,CC-129,2022-11-20,2023-04-04,Benefits Specialist,3,90229.31,Terminated
+EMP-0278,HR,CC-128,2025-10-17,,HR Manager,3,101201.98,Active
+EMP-0279,HR,CC-133,2022-01-29,,HR Business Partner,4,137326.63,Active
+EMP-0280,HR,CC-131,2023-12-27,,Compensation Analyst,1,56152.44,Active
+EMP-0281,HR,CC-131,2022-05-11,,Compensation Analyst,4,155020.46,Active
+EMP-0282,HR,CC-134,2021-08-24,,CHRO,4,128122.12,Active
+EMP-0283,HR,CC-133,2024-03-10,,Benefits Specialist,3,85734.74,Active
+EMP-0284,HR,CC-128,2023-01-04,,Compensation Analyst,3,85397.88,Active
+EMP-0285,HR,CC-129,2026-04-21,,Compensation Analyst,4,130147.3,Active
+EMP-0286,HR,CC-134,2022-02-05,,HR Manager,4,142434.47,Active
+EMP-0287,HR,CC-131,2020-06-01,2021-08-18,CHRO,2,79333.93,Terminated
+EMP-0288,HR,CC-131,2025-01-10,,HR Business Partner,3,93079.45,Active
+EMP-0289,HR,CC-129,2024-01-12,,Compensation Analyst,3,99537.73,Active
+EMP-0290,HR,CC-128,2025-12-21,,CHRO,3,96590.16,Active
+EMP-0291,HR,CC-132,2025-12-16,,HR Business Partner,3,105080.89,Active
+EMP-0292,HR,CC-133,2021-01-22,,HR Manager,4,116246.62,Active
+EMP-0293,HR,CC-133,2022-10-20,,HR Business Partner,3,103826.61,Active
+EMP-0294,HR,CC-133,2025-08-30,2026-02-03,Recruiter,5,155817.27,Terminated
+EMP-0295,HR,CC-131,2021-10-04,,Compensation Analyst,3,111038.32,Active
+EMP-0296,HR,CC-132,2025-02-13,,CHRO,6,252503.03,Active
+EMP-0297,HR,CC-131,2022-02-05,,Compensation Analyst,4,130064.93,Active
+EMP-0298,HR,CC-130,2024-01-03,,HR Manager,3,97408.64,Active
+EMP-0299,HR,CC-131,2026-01-23,,Compensation Analyst,4,132011.05,Active
+EMP-0300,HR,CC-134,2025-08-13,,Benefits Specialist,2,72769.27,Active
+EMP-0301,Legal,CC-137,2025-04-21,,Compliance Officer,1,47636.89,Active
+EMP-0302,Legal,CC-136,2022-12-05,,Compliance Officer,3,110455.3,Active
+EMP-0303,Legal,CC-140,2024-12-26,,IP Attorney,3,102548.96,Active
+EMP-0304,Legal,CC-135,2025-09-14,,IP Attorney,3,93599.34,Active
+EMP-0305,Legal,CC-136,2023-06-29,,Legal Analyst,3,107355.68,Active
+EMP-0306,Legal,CC-139,2025-05-29,2026-02-14,Corporate Counsel,4,149286.38,Terminated
+EMP-0307,Legal,CC-141,2024-06-01,,Compliance Officer,2,78261.11,Active
+EMP-0308,Legal,CC-139,2023-11-27,,Corporate Counsel,3,90344.93,Active
+EMP-0309,Legal,CC-135,2022-02-21,,Paralegal,5,156717.4,Active
+EMP-0310,Legal,CC-135,2025-02-28,,Paralegal,5,186487.03,Active
+EMP-0311,Legal,CC-140,2020-01-24,,General Counsel,4,130035.84,Active
+EMP-0312,Legal,CC-137,2023-04-21,,Paralegal,2,64911.04,Active
+EMP-0313,Legal,CC-138,2020-01-11,,Corporate Counsel,3,103108.44,Active
+EMP-0314,Legal,CC-138,2022-11-23,,Compliance Officer,3,108089.64,Active
+EMP-0315,Legal,CC-140,2022-04-21,,Paralegal,3,99398.87,Active
+EMP-0316,Legal,CC-138,2025-12-24,,IP Attorney,4,131675.43,Active
+EMP-0317,Legal,CC-138,2021-01-06,,General Counsel,3,99415.43,Active
+EMP-0318,Legal,CC-139,2023-06-11,,Compliance Officer,3,105216.83,Active
+EMP-0319,Legal,CC-136,2022-02-13,,IP Attorney,4,140446.42,Active
+EMP-0320,Legal,CC-135,2020-10-02,,IP Attorney,3,101931.55,Active
+EMP-0321,Legal,CC-138,2020-04-23,,Corporate Counsel,2,65207.7,Active
+EMP-0322,Legal,CC-136,2024-02-26,,IP Attorney,4,126867.27,Active
+EMP-0323,Legal,CC-137,2025-12-17,,Paralegal,3,95080.32,Active
+EMP-0324,Legal,CC-141,2024-12-14,,Corporate Counsel,3,101958.38,Active
+EMP-0325,Legal,CC-139,2021-11-29,,Legal Analyst,2,64531.72,Active
+EMP-0326,Product,CC-147,2025-01-21,,Senior PM,2,75454.87,Active
+EMP-0327,Product,CC-143,2023-11-28,,VP Product,3,90131.48,Active
+EMP-0328,Product,CC-148,2022-12-07,,Product Director,4,122923.74,Active
+EMP-0329,Product,CC-145,2025-10-15,2026-02-28,Product Manager,3,94577.64,Terminated
+EMP-0330,Product,CC-145,2021-02-20,,Product Director,6,251456.28,Active
+EMP-0331,Product,CC-143,2022-04-30,,Product Analyst,5,163607.18,Active
+EMP-0332,Product,CC-143,2024-08-13,,Product Manager,3,86641.3,Active
+EMP-0333,Product,CC-146,2025-03-18,,VP Product,5,150498.09,Active
+EMP-0334,Product,CC-145,2020-10-31,2022-02-22,UX Designer,1,57166.81,Terminated
+EMP-0335,Product,CC-147,2022-08-09,,UX Designer,3,91228.83,Active
+EMP-0336,Product,CC-145,2020-01-09,,Senior PM,6,256673.63,Active
+EMP-0337,Product,CC-145,2022-10-03,,VP Product,3,87215.1,Active
+EMP-0338,Product,CC-142,2022-01-04,,Senior PM,3,113278.2,Active
+EMP-0339,Product,CC-142,2023-09-16,,Product Director,3,106661.72,Active
+EMP-0340,Product,CC-143,2022-07-21,,VP Product,5,153754.27,Active
+EMP-0341,Product,CC-144,2022-03-21,,VP Product,5,167957.43,Active
+EMP-0342,Product,CC-148,2023-07-01,,Senior PM,2,64904.06,Active
+EMP-0343,Product,CC-143,2022-10-03,,Product Director,4,120977.49,Active
+EMP-0344,Product,CC-148,2020-05-25,,Senior PM,5,197722.19,Active
+EMP-0345,Product,CC-143,2020-07-05,,Product Analyst,5,199212.91,Active
+EMP-0346,Product,CC-143,2020-03-10,2021-06-17,UX Designer,4,151715.99,Terminated
+EMP-0347,Product,CC-146,2024-01-30,,UX Designer,2,69779.05,Active
+EMP-0348,Product,CC-147,2020-05-26,,Senior PM,3,108841.26,Active
+EMP-0349,Product,CC-146,2022-06-15,,Product Director,6,223227.31,Active
+EMP-0350,Product,CC-146,2026-03-22,2026-06-20,Product Analyst,3,111488.8,Terminated
+EMP-0351,Product,CC-142,2024-12-02,,Product Manager,4,138233.87,Active
+EMP-0352,Product,CC-148,2023-11-15,,Senior PM,3,113770.18,Active
+EMP-0353,Product,CC-145,2025-11-18,2026-05-06,VP Product,6,262392.23,Terminated
+EMP-0354,Product,CC-144,2024-05-09,2025-05-29,Product Manager,1,50905.83,Terminated
+EMP-0355,Product,CC-147,2021-02-24,,UX Designer,3,94994.42,Active
+EMP-0356,Product,CC-147,2023-11-22,,VP Product,3,107959.87,Active
+EMP-0357,Product,CC-148,2020-06-08,,Product Analyst,3,112999.37,Active
+EMP-0358,Product,CC-143,2025-07-28,,Senior PM,4,143609.23,Active
+EMP-0359,Product,CC-142,2021-11-24,,UX Designer,1,50713.81,Active
+EMP-0360,Product,CC-148,2022-09-06,,UX Designer,3,111022.11,Active
+EMP-0361,Product,CC-143,2026-04-27,,UX Designer,4,144679.02,Active
+EMP-0362,Product,CC-148,2022-09-18,,Product Manager,2,78862.25,Active
+EMP-0363,Product,CC-148,2023-05-18,,Senior PM,2,64861.77,Active
+EMP-0364,Product,CC-143,2026-02-20,,Product Analyst,2,66999.32,Active
+EMP-0365,Product,CC-144,2024-08-11,,Product Manager,5,188663.36,Active
+EMP-0366,Product,CC-143,2021-06-23,,Product Director,5,164392.19,Active
+EMP-0367,Product,CC-147,2021-10-01,,Senior PM,2,67094.93,Active
+EMP-0368,Product,CC-146,2020-08-16,2021-02-20,Senior PM,2,73820.78,Terminated
+EMP-0369,Product,CC-144,2026-02-08,,Product Manager,2,78651.59,Active
+EMP-0370,Product,CC-143,2025-06-23,,Senior PM,4,124200.07,Active
+EMP-0371,Product,CC-145,2023-08-14,,Senior PM,2,84922.07,Active
+EMP-0372,Product,CC-147,2023-02-23,,UX Designer,4,125879.26,Active
+EMP-0373,Product,CC-148,2024-03-19,,Product Analyst,5,176961.18,Active
+EMP-0374,Product,CC-142,2025-02-03,,Product Director,5,160065.37,Active
+EMP-0375,Product,CC-146,2020-01-15,,Product Manager,1,54421.44,Active
+EMP-0376,Product,CC-143,2024-05-25,,UX Designer,5,168527.68,Active
+EMP-0377,Product,CC-145,2022-02-07,,VP Product,4,128291.53,Active
+EMP-0378,Product,CC-148,2021-11-02,,Senior PM,3,112975.62,Active
+EMP-0379,Product,CC-146,2024-10-24,,VP Product,2,70978.15,Active
+EMP-0380,Product,CC-143,2026-02-11,,Product Analyst,4,149780.79,Active
+EMP-0381,Operations,CC-149,2022-01-16,,Logistics Coordinator,2,75055.13,Active
+EMP-0382,Operations,CC-150,2024-11-05,,Process Engineer,2,67936.65,Active
+EMP-0383,Operations,CC-153,2022-07-02,,Logistics Coordinator,4,118099.94,Active
+EMP-0384,Operations,CC-149,2021-12-24,,Operations Director,2,77281.22,Active
+EMP-0385,Operations,CC-154,2021-08-15,,Logistics Coordinator,1,56334.89,Active
+EMP-0386,Operations,CC-151,2020-06-22,,Operations Manager,4,155196.18,Active
+EMP-0387,Operations,CC-150,2021-12-04,,Logistics Coordinator,5,158490.06,Active
+EMP-0388,Operations,CC-155,2024-02-23,,COO,4,135907.28,Active
+EMP-0389,Operations,CC-154,2026-05-12,,COO,4,151404.75,Active
+EMP-0390,Operations,CC-153,2023-11-28,2025-04-25,COO,5,185192.23,Terminated
+EMP-0391,Operations,CC-151,2022-02-13,,Supply Chain Analyst,6,214705.09,Active
+EMP-0392,Operations,CC-155,2023-11-01,,Supply Chain Analyst,4,150585.97,Active
+EMP-0393,Operations,CC-153,2022-04-28,,Logistics Coordinator,3,104317.98,Active
+EMP-0394,Operations,CC-151,2020-11-22,,Supply Chain Analyst,4,139431.09,Active
+EMP-0395,Operations,CC-152,2020-05-12,,Logistics Coordinator,4,128531.25,Active
+EMP-0396,Operations,CC-151,2026-05-25,,Operations Director,3,114738.99,Active
+EMP-0397,Operations,CC-149,2021-06-12,,Operations Manager,4,142326.73,Active
+EMP-0398,Operations,CC-152,2025-05-28,2026-03-29,Process Engineer,5,152427.03,Terminated
+EMP-0399,Operations,CC-151,2023-05-28,,Operations Director,3,105438.14,Active
+EMP-0400,Operations,CC-150,2023-12-04,,COO,4,125639.53,Active
+EMP-0401,Operations,CC-153,2024-02-11,,COO,3,95891.73,Active
+EMP-0402,Operations,CC-155,2024-04-09,,COO,4,120395.67,Active
+EMP-0403,Operations,CC-154,2020-01-03,,Logistics Coordinator,3,88905.63,Active
+EMP-0404,Operations,CC-154,2022-12-18,,Operations Manager,2,66237.85,Active
+EMP-0405,Operations,CC-149,2024-02-16,,Supply Chain Analyst,3,104600.31,Active
+EMP-0406,Operations,CC-153,2024-09-27,,Operations Manager,3,111890.37,Active
+EMP-0407,Operations,CC-153,2026-05-22,,Operations Director,5,187545.85,Active
+EMP-0408,Operations,CC-151,2023-05-22,,Supply Chain Analyst,2,73296.66,Active
+EMP-0409,Operations,CC-154,2023-03-29,,Supply Chain Analyst,3,90958.15,Active
+EMP-0410,Operations,CC-150,2020-04-06,,Supply Chain Analyst,3,106794.07,Active
+EMP-0411,Operations,CC-155,2024-07-29,,Operations Manager,3,91619.67,Active
+EMP-0412,Operations,CC-154,2022-04-30,,Logistics Coordinator,3,111688.91,Active
+EMP-0413,Operations,CC-154,2022-02-17,,Operations Director,1,47821.82,Active
+EMP-0414,Operations,CC-154,2025-12-25,,Logistics Coordinator,5,181252.54,Active
+EMP-0415,Operations,CC-150,2022-09-13,,Supply Chain Analyst,5,187990.61,Active
+EMP-0416,Operations,CC-153,2024-01-28,,Operations Director,5,169847.21,Active
+EMP-0417,Operations,CC-154,2023-02-27,,COO,3,98045.97,Active
+EMP-0418,Operations,CC-155,2024-04-10,,Supply Chain Analyst,2,73055.49,Active
+EMP-0419,Operations,CC-153,2020-05-31,,Operations Manager,4,115961.41,Active
+EMP-0420,Operations,CC-151,2020-06-11,,Logistics Coordinator,4,119170.03,Active
+EMP-0421,Operations,CC-151,2025-11-15,,Supply Chain Analyst,3,103180.04,Active
+EMP-0422,Operations,CC-153,2021-03-05,,COO,3,94221.71,Active
+EMP-0423,Operations,CC-154,2020-03-21,2021-03-08,COO,3,109798.78,Terminated
+EMP-0424,Operations,CC-154,2020-09-09,,Logistics Coordinator,4,142602.4,Active
+EMP-0425,Operations,CC-150,2026-05-23,,Operations Manager,1,56129.26,Active
+EMP-0426,IT,CC-159,2024-08-23,,IT Manager,2,65401.15,Active
+EMP-0427,IT,CC-162,2023-01-29,,IT Manager,1,52492.26,Active
+EMP-0428,IT,CC-159,2025-09-05,,IT Manager,3,86166.9,Active
+EMP-0429,IT,CC-158,2024-10-29,,Help Desk Lead,4,125574.58,Active
+EMP-0430,IT,CC-158,2022-07-22,2023-12-06,CTO,1,52544.48,Terminated
+EMP-0431,IT,CC-162,2021-06-22,,Systems Admin,4,117384.13,Active
+EMP-0432,IT,CC-161,2026-01-20,,Security Analyst,3,88524.45,Active
+EMP-0433,IT,CC-158,2021-12-14,,Help Desk Lead,2,68425.64,Active
+EMP-0434,IT,CC-158,2022-02-28,2022-09-13,IT Manager,4,131835.39,Terminated
+EMP-0435,IT,CC-157,2022-11-09,,IT Manager,2,70895.93,Active
+EMP-0436,IT,CC-159,2020-05-27,,Systems Admin,2,67026.58,Active
+EMP-0437,IT,CC-161,2023-08-11,,CTO,6,217640.78,Active
+EMP-0438,IT,CC-161,2021-12-25,2023-09-05,Help Desk Lead,3,108735.08,Terminated
+EMP-0439,IT,CC-157,2024-10-21,,Security Analyst,4,124074.56,Active
+EMP-0440,IT,CC-160,2025-07-02,,Systems Admin,3,104646.64,Active
+EMP-0441,IT,CC-162,2020-10-31,,Network Engineer,2,81143.45,Active
+EMP-0442,IT,CC-161,2025-09-15,,Help Desk Lead,3,89942.23,Active
+EMP-0443,IT,CC-161,2025-01-24,,CTO,4,120246.55,Active
+EMP-0444,IT,CC-158,2022-01-26,,CTO,5,187231.54,Active
+EMP-0445,IT,CC-161,2022-11-18,,Network Engineer,3,90751.54,Active
+EMP-0446,IT,CC-161,2025-08-24,,Security Analyst,2,69214.1,Active
+EMP-0447,IT,CC-156,2024-05-31,,Network Engineer,3,111361.8,Active
+EMP-0448,IT,CC-159,2020-10-14,,Systems Admin,4,120244.65,Active
+EMP-0449,IT,CC-161,2025-08-24,,Security Analyst,3,100499.64,Active
+EMP-0450,IT,CC-157,2025-02-08,2026-01-16,Network Engineer,1,58154.24,Terminated
+EMP-0451,IT,CC-161,2020-08-08,,Systems Admin,4,118121.4,Active
+EMP-0452,IT,CC-156,2022-02-21,,Help Desk Lead,3,102290.0,Active
+EMP-0453,IT,CC-159,2022-01-08,,CTO,3,109858.86,Active
+EMP-0454,IT,CC-158,2025-08-27,,CTO,5,179705.6,Active
+EMP-0455,IT,CC-161,2021-04-24,,Help Desk Lead,4,130997.44,Active
+EMP-0456,IT,CC-156,2024-09-10,,Help Desk Lead,2,65717.3,Active
+EMP-0457,IT,CC-161,2025-07-31,,CTO,4,122061.44,Active
+EMP-0458,IT,CC-160,2025-05-09,,Security Analyst,4,115585.86,Active
+EMP-0459,IT,CC-158,2022-07-25,,IT Manager,4,138868.86,Active
+EMP-0460,IT,CC-162,2024-05-21,,CTO,6,225046.39,Active
+EMP-0461,IT,CC-162,2023-10-26,,IT Manager,1,47359.15,Active
+EMP-0462,IT,CC-161,2020-08-06,2022-08-06,CTO,4,129358.64,Terminated
+EMP-0463,IT,CC-159,2025-08-30,,Network Engineer,6,221083.12,Active
+EMP-0464,IT,CC-162,2023-06-30,,Systems Admin,4,146130.87,Active
+EMP-0465,IT,CC-160,2022-12-06,2023-04-24,CTO,3,105974.99,Terminated
+EMP-0466,IT,CC-156,2020-06-22,,CTO,2,77932.83,Active
+EMP-0467,IT,CC-160,2023-06-25,,IT Manager,3,100656.31,Active
+EMP-0468,IT,CC-161,2025-07-12,,IT Manager,3,110005.71,Active
+EMP-0469,IT,CC-161,2021-05-02,,CTO,3,85698.72,Active
+EMP-0470,IT,CC-161,2020-06-15,,IT Manager,3,111123.95,Active
+EMP-0471,IT,CC-157,2023-09-23,,Help Desk Lead,5,193882.9,Active
+EMP-0472,IT,CC-157,2025-09-07,,Help Desk Lead,3,86073.35,Active
+EMP-0473,IT,CC-158,2020-08-29,,Security Analyst,3,98263.12,Active
+EMP-0474,IT,CC-156,2025-04-17,,Network Engineer,4,127912.13,Active
+EMP-0475,IT,CC-160,2022-10-14,,Systems Admin,6,215127.37,Active
+EMP-0476,Executive,CC-163,2025-07-26,2025-11-19,EVP,2,74059.36,Terminated
+EMP-0477,Executive,CC-163,2020-04-15,,CEO,3,110687.41,Active
+EMP-0478,Executive,CC-164,2022-10-17,,Chief of Staff,4,114973.64,Active
+EMP-0479,Executive,CC-167,2022-11-19,,EVP,4,131153.09,Active
+EMP-0480,Executive,CC-167,2020-04-10,,Executive Assistant,3,106128.82,Active
+EMP-0481,Executive,CC-166,2021-04-11,,VP Strategy,3,101875.21,Active
+EMP-0482,Executive,CC-164,2022-12-03,,Board Liaison,5,151268.75,Active
+EMP-0483,Executive,CC-168,2023-03-29,,CEO,4,150671.17,Active
+EMP-0484,Executive,CC-166,2024-11-13,,EVP,2,79262.91,Active
+EMP-0485,Executive,CC-169,2024-12-23,,EVP,2,71410.74,Active
+EMP-0486,Executive,CC-164,2020-06-03,,Board Liaison,3,107369.99,Active
+EMP-0487,Executive,CC-167,2023-05-23,,Chief of Staff,3,106630.92,Active
+EMP-0488,Executive,CC-167,2021-01-07,,VP Strategy,3,96491.8,Active
+EMP-0489,Executive,CC-169,2022-10-21,,Chief of Staff,4,151105.29,Active
+EMP-0490,Executive,CC-163,2025-01-16,,Board Liaison,3,111304.72,Active
+EMP-0491,Executive,CC-166,2020-06-23,,CEO,3,101693.75,Active
+EMP-0492,Executive,CC-164,2023-05-29,,EVP,2,79862.27,Active
+EMP-0493,Executive,CC-163,2024-12-12,,Board Liaison,3,104323.16,Active
+EMP-0494,Executive,CC-168,2020-09-10,,VP Strategy,3,91681.73,Active
+EMP-0495,Executive,CC-168,2023-06-07,,Chief of Staff,4,118989.85,Active
+EMP-0496,Executive,CC-165,2022-11-10,,Board Liaison,3,85390.86,Active
+EMP-0497,Executive,CC-164,2021-11-10,,Chief of Staff,3,108885.15,Active
+EMP-0498,Executive,CC-163,2023-04-24,,Chief of Staff,6,200911.09,Active
+EMP-0499,Executive,CC-163,2021-04-01,,Board Liaison,3,97097.26,Active
+EMP-0500,Executive,CC-169,2024-08-01,2024-11-19,Executive Assistant,3,111764.8,Terminated
