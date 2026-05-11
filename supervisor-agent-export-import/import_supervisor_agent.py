@@ -4,6 +4,7 @@
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -44,6 +45,68 @@ def apply_catalog_map(name: str, rules: list[tuple[str, str]]) -> str:
         if name.startswith(old_prefix + "."):
             return new_prefix + name[len(old_prefix):]
     return name
+
+
+def apply_catalog_map_to_text(text: str, rules: list[tuple[str, str]]) -> str:
+    """Apply catalog mapping rules to free-form text or SQL.
+
+    For each rule `old_prefix=new_prefix`, replaces occurrences of
+    `<old_prefix>.<rest>` with `<new_prefix>.<rest>` using a left word-boundary
+    so we don't match inside longer identifiers (e.g. `my_old_prefix.` won't
+    match the `old_prefix=` rule). Rules are already sorted by prefix-length
+    descending, so longer (more specific) prefixes match first.
+    """
+    if not text or not rules:
+        return text
+    for old_prefix, new_prefix in rules:
+        pattern = re.compile(r"(?<![\w.])" + re.escape(old_prefix) + r"\.")
+        text = pattern.sub(new_prefix + ".", text)
+    return text
+
+
+def rewrite_serialized_genie_space(serialized: dict, rules: list[tuple[str, str]]) -> None:
+    """Apply catalog mapping rules to every place in a serialized Genie space
+    that can contain fully-qualified table references. Mutates `serialized`
+    in place.
+
+    Covers:
+      - data_sources.tables[].identifier (the table being registered)
+      - data_sources.tables[].description (per-table descriptions, freeform text)
+      - instructions.text_instructions[].content (freeform text)
+      - instructions.example_question_sqls[].sql (SQL strings)
+      - benchmarks.questions[].answer[].content (canonical SQL strings)
+    """
+    if not rules:
+        return
+
+    # Table identifiers (exact FQ name) and per-table descriptions (freeform text)
+    for table in serialized.get("data_sources", {}).get("tables", []) or []:
+        old_id = table.get("identifier", "")
+        new_id = apply_catalog_map(old_id, rules)
+        if new_id != old_id:
+            log.info("  Table mapping: %s -> %s", old_id, new_id)
+            table["identifier"] = new_id
+        desc = table.get("description")
+        if isinstance(desc, list):
+            table["description"] = [apply_catalog_map_to_text(s, rules) for s in desc]
+
+    # Text instructions and example SQL queries
+    instr = serialized.get("instructions", {}) or {}
+    for ti in instr.get("text_instructions", []) or []:
+        content = ti.get("content")
+        if isinstance(content, list):
+            ti["content"] = [apply_catalog_map_to_text(s, rules) for s in content]
+    for eq in instr.get("example_question_sqls", []) or []:
+        sql = eq.get("sql")
+        if isinstance(sql, list):
+            eq["sql"] = [apply_catalog_map_to_text(s, rules) for s in sql]
+
+    # Benchmark question canonical SQL
+    for bq in serialized.get("benchmarks", {}).get("questions", []) or []:
+        for ans in bq.get("answer", []) or []:
+            content = ans.get("content")
+            if isinstance(content, list):
+                ans["content"] = [apply_catalog_map_to_text(s, rules) for s in content]
 
 
 def parse_name_map(raw: str | None) -> dict[str, str]:
@@ -774,8 +837,16 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
     existing = find_existing_knowledge_assistant(w, display_name)
 
     if existing is None:
-        return _create_knowledge_assistant(w, expected_top, expected_sources, definition, tool_id,
-                                           input_dir, export_dir, volume_path)
+        ka_id = _create_knowledge_assistant(w, expected_top, expected_sources, definition, tool_id,
+                                            input_dir, export_dir, volume_path)
+        if ka_id is not None:
+            reconcile_examples(
+                w, f"knowledge-assistants/{ka_id}",
+                "Knowledge assistant", display_name,
+                definition.get("examples", []),
+                yes_update, skip_existing,
+            )
+        return ka_id
 
     # Existing KA found: compute diff
     ka_id = existing["id"]
@@ -797,6 +868,13 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
     has_diff = bool(top_diffs or src_diff["to_add"] or src_diff["to_remove"] or src_diff["to_update"])
     if not has_diff:
         log.info("Knowledge assistant '%s' already matches export (id: %s); reusing.", display_name, ka_id)
+        # Top-level and sources match, but examples might still differ — reconcile separately.
+        reconcile_examples(
+            w, f"knowledge-assistants/{ka_id}",
+            "Knowledge assistant", display_name,
+            definition.get("examples", []),
+            yes_update, skip_existing,
+        )
         return ka_id
 
     diff_lines: list[str] = []
@@ -895,6 +973,13 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
         except Exception as e:
             log.error("Failed to update knowledge source '%s': %s", u["expected"]["display_name"], e)
 
+    reconcile_examples(
+        w, f"knowledge-assistants/{ka_id}",
+        "Knowledge assistant", display_name,
+        definition.get("examples", []),
+        yes_update, skip_existing,
+    )
+
     return ka_id
 
 
@@ -964,17 +1049,13 @@ def resolve_genie_room(w: WorkspaceClient, tool_entry: dict, input_dir: Path,
     description = definition.get("description", "")
     log.info("Resolving genie room '%s'", title)
 
-    # Apply catalog map to table identifiers in serialized JSON
+    # Apply catalog map to all FQ table references in the serialized space:
+    # identifiers, per-table descriptions, text instructions, example SQL,
+    # and benchmark canonical SQL.
     if catalog_rules and serialized_raw:
         try:
             serialized = json.loads(serialized_raw)
-            tables = serialized.get("data_sources", {}).get("tables", [])
-            for table in tables:
-                old_id = table.get("identifier", "")
-                new_id = apply_catalog_map(old_id, catalog_rules)
-                if new_id != old_id:
-                    log.info("  Table mapping: %s -> %s", old_id, new_id)
-                    table["identifier"] = new_id
+            rewrite_serialized_genie_space(serialized, catalog_rules)
             serialized_raw = json.dumps(serialized)
         except json.JSONDecodeError as e:
             log.warning("Failed to parse serialized.json for catalog mapping: %s", e)
@@ -1353,8 +1434,11 @@ def reconcile_tools(w: WorkspaceClient, agent_id: str,
     return (added_or_updated, deleted, failed)
 
 
-def list_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
-    """List all examples for the supervisor agent (paginated)."""
+def list_examples(w: WorkspaceClient, parent_path: str) -> list[dict]:
+    """List all examples for a parent (supervisor agent or KA). Paginated.
+
+    parent_path: "supervisor-agents/<id>" or "knowledge-assistants/<id>"
+    """
     results = []
     page_token = None
     while True:
@@ -1362,7 +1446,7 @@ def list_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
         if page_token:
             query["page_token"] = page_token
         resp = w.api_client.do(
-            "GET", f"/api/2.1/supervisor-agents/{agent_id}/examples", query=query,
+            "GET", f"/api/2.1/{parent_path}/examples", query=query,
         )
         results.extend(resp.get("examples", []))
         page_token = resp.get("next_page_token")
@@ -1379,20 +1463,21 @@ def normalize_example(ex: dict) -> dict:
     }
 
 
-def reconcile_examples(w: WorkspaceClient, agent_id: str,
+def reconcile_examples(w: WorkspaceClient, parent_path: str,
+                       entity_kind: str, entity_name: str,
                        manifest_examples: list[dict],
                        yes_update: bool, skip_existing: bool) -> tuple[int, int, int]:
-    """Reconcile examples on the supervisor agent against the manifest.
+    """Reconcile examples on a parent (supervisor agent or KA) against the manifest.
 
-    Match by question (which must be unique within the agent — duplicates abort).
-
-    Returns (added_or_updated, deleted, failed) counts.
+    parent_path: "supervisor-agents/<id>" or "knowledge-assistants/<id>"
+    Match by question (must be unique — duplicates abort).
+    Returns (added_or_updated, deleted, failed).
     """
-    if not manifest_examples and not list_examples(w, agent_id):
+    existing_raw = list_examples(w, parent_path)
+    if not manifest_examples and not existing_raw:
         return (0, 0, 0)
 
     expected_norm = [normalize_example(e) for e in manifest_examples]
-    existing_raw = list_examples(w, agent_id)
     existing_norm = [normalize_example(e) for e in existing_raw]
 
     def index_by_question(items: list[dict], side: str) -> dict[str, dict]:
@@ -1429,7 +1514,9 @@ def reconcile_examples(w: WorkspaceClient, agent_id: str,
     for u in to_update:
         diff_lines.append(f"~ Update example: \"{u['expected']['question'][:80]}\"")
 
-    decision = resolve_conflict("Examples on agent", "(reconcile)", diff_lines, yes_update, skip_existing)
+    decision = resolve_conflict(f"Examples on {entity_kind.lower()}",
+                                entity_name, diff_lines,
+                                yes_update, skip_existing)
     if decision == CONFLICT_SKIP:
         return (0, 0, 0)
 
@@ -1444,7 +1531,7 @@ def reconcile_examples(w: WorkspaceClient, agent_id: str,
             continue
         try:
             w.api_client.do(
-                "DELETE", f"/api/2.1/supervisor-agents/{agent_id}/examples/{eid}",
+                "DELETE", f"/api/2.1/{parent_path}/examples/{eid}",
             )
             log.info("Deleted example '%s'", e["question"][:80])
             deleted += 1
@@ -1456,7 +1543,7 @@ def reconcile_examples(w: WorkspaceClient, agent_id: str,
     for e in to_add:
         try:
             w.api_client.do(
-                "POST", f"/api/2.1/supervisor-agents/{agent_id}/examples", body=e,
+                "POST", f"/api/2.1/{parent_path}/examples", body=e,
             )
             log.info("Added example '%s'", e["question"][:80])
             added_or_updated += 1
@@ -1464,7 +1551,7 @@ def reconcile_examples(w: WorkspaceClient, agent_id: str,
             log.error("Failed to add example '%s': %s", e["question"][:80], e2)
             failed += 1
 
-    # Updates: only `question` and `guidelines` are updatable per the API.
+    # Updates
     for u in to_update:
         eid = cur_id_by_q.get(u["existing"]["question"])
         if not eid:
@@ -1478,7 +1565,7 @@ def reconcile_examples(w: WorkspaceClient, agent_id: str,
             continue
         try:
             w.api_client.do(
-                "PATCH", f"/api/2.1/supervisor-agents/{agent_id}/examples/{eid}",
+                "PATCH", f"/api/2.1/{parent_path}/examples/{eid}",
                 query={"update_mask": ",".join(diffs)},
                 body=u["expected"],
             )
@@ -1577,9 +1664,11 @@ def import_agent(w: WorkspaceClient, manifest: dict, input_dir: Path,
         yes_update, skip_existing,
     )
 
-    # Phase 5: Reconcile examples
+    # Phase 5: Reconcile examples on the supervisor agent
     ex_updated, ex_deleted, ex_failed = reconcile_examples(
-        w, agent_id, manifest.get("examples", []),
+        w, f"supervisor-agents/{agent_id}",
+        "Supervisor agent", agent_def["display_name"],
+        manifest.get("examples", []),
         yes_update, skip_existing,
     )
 

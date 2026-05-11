@@ -80,9 +80,15 @@ python import_supervisor_agent.py \
 
 The `--catalog-map` option rewrites fully-qualified names (`catalog.schema.name`) in:
 
-- Genie room table references
+- Genie room `data_sources.tables[].identifier` (the registered tables)
+- Genie room **per-table descriptions** (freeform text references to other tables)
+- Genie room **text instructions** content
+- Genie room **example SQL queries** (`instructions.example_question_sqls[].sql`)
+- Genie room **benchmark canonical SQL** (`benchmarks.questions[].answer[].content`)
 - Knowledge source `index` and `file_table` names
 - Tool specs of types: `uc_function`, `uc_table`, `vector_search_index`, `volume`, `schema`, `catalog`
+
+For SQL strings and freeform text, the rewriter uses a left word-boundary so it won't match inside longer identifiers (e.g. the rule `old_cat=new` won't change `my_old_cat.something`).
 
 Each rule is `old=new`:
 

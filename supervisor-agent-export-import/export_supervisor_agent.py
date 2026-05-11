@@ -224,6 +224,9 @@ def export_knowledge_assistant(w: WorkspaceClient, ka_config: dict, agent_dir: P
 
         definition["knowledge_sources"].append(source_entry)
 
+    # Add examples
+    definition["examples"] = export_ka_examples(w, ka_id)
+
     # Write definition
     def_path = ka_dir / "definition.json"
     def_path.write_text(json.dumps(definition, indent=2))
@@ -270,6 +273,28 @@ def export_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
             query["page_token"] = page_token
         resp = w.api_client.do(
             "GET", f"/api/2.1/supervisor-agents/{agent_id}/examples", query=query,
+        )
+        for ex in resp.get("examples", []):
+            results.append({
+                "question": ex.get("question", ""),
+                "guidelines": list(ex.get("guidelines", []) or []),
+            })
+        page_token = resp.get("next_page_token")
+        if not page_token:
+            break
+    return results
+
+
+def export_ka_examples(w: WorkspaceClient, ka_id: str) -> list[dict]:
+    """List all examples for a knowledge assistant. Returns a list of {question, guidelines}."""
+    results = []
+    page_token = None
+    while True:
+        query = {}
+        if page_token:
+            query["page_token"] = page_token
+        resp = w.api_client.do(
+            "GET", f"/api/2.1/knowledge-assistants/{ka_id}/examples", query=query,
         )
         for ex in resp.get("examples", []):
             results.append({

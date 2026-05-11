@@ -193,3 +193,4 @@ coverage.txt
 /llnotes/llnotes
 /llnotes/main
 /metascan/main
+/supervisor-agent-export-import/genie_benchmark.py
