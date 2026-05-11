@@ -1,6 +1,6 @@
 # Databricks Supervisor Agent Replication Tools
 
-Export a Supervisor Agent (with its knowledge assistants, genie rooms, UC functions, and MCP-server tools) from one workspace and import it into another.
+Export a Supervisor Agent (with its knowledge assistants, genie rooms, examples, and any of the 14 supported tool types) from one workspace and import it into another.
 
 ## Prerequisites
 
@@ -20,16 +20,21 @@ python export_supervisor_agent.py --name "My Agent" --output-dir ./export
 |----------|----------|-------------|
 | `--name` | Yes | Display name of the supervisor agent |
 | `--output-dir` | No | Output directory (default: `./export`) |
+| `--include-volume-contents` | No | For `volume`-type tools, also download the volume's contents into the export directory (default: off) |
 
 ### What gets exported
 
 - **Supervisor agent** definition (name, description, instructions)
 - **Knowledge assistants** with their knowledge source definitions and downloaded files from UC volumes
 - **Genie rooms** with their serialized space payloads
-- **UC function tools** (`uc_function`) — recorded by full name (`catalog.schema.function_name`)
-- **Connection tools** (`connection`, used for external MCP servers) — recorded by name
-- **App tools** (`app`, used for custom MCP servers / custom agents) — recorded by name
-- The `volume` tool type is currently recorded in the manifest as skipped
+- **Examples** (top-level `examples` array on the agent — `question` + `guidelines`)
+- **All 14 tool types** are now exported by recording the type-specific spec:
+  - UC objects identified by full name (`catalog.schema.name`): `uc_function`, `uc_table`, `vector_search_index`, `volume`, `schema`, `catalog`
+  - For `volume` tools, pass `--include-volume-contents` to also download the volume's files into `<agent_dir>/volumes/<sanitized_name>/`. The import will sync these files to the target volume.
+  - Workspace-level singletons identified by name: `serving_endpoint`, `uc_connection`, `app`
+  - Resources identified by opaque ID, augmented at export with the resource's `display_name` for cross-workspace lookup at import: `lakeview_dashboard`, `supervisor_agent`
+  - Parameter-less: `web_search`
+  - Existing managed types: `knowledge_assistant`, `genie_space`
 
 ### Output structure
 
@@ -62,11 +67,14 @@ python import_supervisor_agent.py \
 | `--warehouse-id` | Yes | SQL warehouse ID for genie rooms in the target workspace |
 | `--volume-path` | Yes | UC volume base path where knowledge assistant files will be uploaded |
 | `--catalog-map` | No | Comma-separated catalog/schema mapping rules for UC objects (see below) |
-| `--connection-map` | No | Comma-separated `old=new` rename rules for connection-type tools |
-| `--app-map` | No | Comma-separated `old=new` rename rules for app-type tools |
+| `--connection-map` | No | Comma-separated `old=new` rename rules for `uc_connection` tools |
+| `--app-map` | No | Comma-separated `old=new` rename rules for `app` tools |
+| `--endpoint-map` | No | Comma-separated `old=new` rename rules for `serving_endpoint` tools |
+| `--dashboard-map` | No | Comma-separated `old_display_name=new_display_name` rules for `lakeview_dashboard` tools |
+| `--agent-map` | No | Comma-separated `old_display_name=new_display_name` rules for `supervisor_agent` tools (sub-agents) |
 | `--yes-update` | No | Always update existing objects without prompting (mutually exclusive with `--skip-existing`) |
 | `--skip-existing` | No | Never update existing objects, always reuse them (mutually exclusive with `--yes-update`) |
-| `--force` | No | Skip pre-flight dependency checks; proceed even if referenced tables/indexes/volumes/functions/connections/apps are missing |
+| `--force` | No | Skip pre-flight dependency checks; proceed even if referenced UC/workspace objects are missing |
 
 ### Catalog mapping
 
@@ -74,7 +82,7 @@ The `--catalog-map` option rewrites fully-qualified names (`catalog.schema.name`
 
 - Genie room table references
 - Knowledge source `index` and `file_table` names
-- UC function tool names
+- Tool specs of types: `uc_function`, `uc_table`, `vector_search_index`, `volume`, `schema`, `catalog`
 
 Each rule is `old=new`:
 
@@ -83,14 +91,42 @@ Each rule is `old=new`:
 
 More specific (longer) prefixes are matched first. Names that don't match any rule are left unchanged.
 
-### Connection and app name maps
+### Name maps
 
-`--connection-map` and `--app-map` accept exact-name renames as `old=new` pairs (comma-separated). Connections and apps are workspace/UC-level singletons with flat names (no catalog prefix), so they are renamed by exact match. Names that don't appear in the map are left unchanged.
+The other map flags accept exact-name renames as `old=new` pairs (comma-separated):
+
+- `--connection-map` — `uc_connection` tools (UC connections, used for external MCP servers)
+- `--app-map` — `app` tools (Databricks Apps, used for custom MCP / custom agents)
+- `--endpoint-map` — `serving_endpoint` tools
 
 ```
 --connection-map "old_mcp=new_mcp,sandbox_mcp=prod_mcp"
 --app-map "old_app_name=new_app_name"
+--endpoint-map "old_endpoint=new_endpoint"
 ```
+
+### Lookup-by-display-name (dashboards and sub-agents)
+
+For `lakeview_dashboard` and `supervisor_agent` tools, the source workspace's opaque ID is meaningless in the target. Instead:
+
+1. The export captures the resource's `display_name` alongside its ID.
+2. At import time, the tool looks up the matching `display_name` in the target workspace and uses the new ID for the tool spec.
+3. If the display name has changed, use `--dashboard-map "old_name=new_name"` or `--agent-map "old_name=new_name"` to rewrite the lookup name before the search.
+4. If neither lookup nor map resolves the resource, the pre-flight check fails (override with `--force`).
+
+### Pre-flight checks
+
+Before any creation or upload, the import tool validates that all referenced UC and workspace objects exist in the target workspace:
+
+- The UC volume passed via `--volume-path`
+- All tables referenced by genie rooms (after catalog mapping)
+- All tables referenced by `file_table` knowledge sources (after catalog mapping)
+- All vector search indexes referenced by `index` knowledge sources (after catalog mapping)
+- All resources referenced by tool specs:
+  - `uc_function`, `uc_table`, `vector_search_index`, `volume`, `schema`, `catalog` (after catalog mapping)
+  - `uc_connection`, `app`, `serving_endpoint` (after the corresponding name map)
+  - `lakeview_dashboard`, `supervisor_agent` (looked up by `display_name`, optionally renamed by `--dashboard-map` / `--agent-map`)
+- `web_search` requires no dependency check, but the workspace must have it enabled (workspace-level enablement is enforced by the API at create time).
 
 ### Pre-flight checks
 
@@ -123,7 +159,8 @@ For each entity (supervisor agent, knowledge assistant, genie room), the tool fi
 When updating, child objects are reconciled to match the manifest:
 
 - **Knowledge assistant**: knowledge sources are added, removed, or updated. Sources are matched by `display_name` (which must be unique within the KA — duplicates abort the import). For `files` sources that are added or updated, their files are re-uploaded.
-- **Supervisor agent**: tools are added, removed, or updated. Tools are matched by `tool_id`. Tools whose `tool_type` is supported but where the target resource changed (e.g., the function/connection/app name was remapped) are deleted and recreated, since the Tool API only allows updating `description` in place. Tools of types that the import tool does not support (currently only `volume`) on the existing agent are left untouched.
+- **Supervisor agent — tools**: tools are added, removed, or updated. Tools are matched by `tool_id`. Tools whose `tool_type` is supported but where the target resource changed (e.g., a function/connection/app name was remapped, or a dashboard/sub-agent now resolves to a different ID) are deleted and recreated, since the Tool API only allows updating `description` in place. Tools of types not in the supported list on the existing agent are left untouched.
+- **Supervisor agent — examples**: examples are added, removed, or updated to match the manifest. Examples are matched by their `question` text (which must be unique within the agent — duplicates abort the import). Both `question` and `guidelines` are reconciled.
 
 ### Prerequisites in the target workspace
 
@@ -131,22 +168,26 @@ Before running the import, ensure the following objects exist in the target work
 
 - **SQL warehouse** -- the warehouse ID passed via `--warehouse-id` must be an active warehouse
 - **UC volume** -- the volume path passed via `--volume-path` must exist (the tool creates subdirectories within it)
-- **Tables referenced by genie rooms** -- all tables in genie room data sources (after catalog mapping is applied) must exist in the target workspace
-- **Vector search indexes** -- any indexes referenced by knowledge assistant `index`-type sources (after catalog mapping) must exist
-- **Tables for file_table sources** -- any tables referenced by `file_table`-type knowledge sources (after catalog mapping) must exist
-- **UC functions** -- any functions referenced by `uc_function` tools (after catalog mapping) must exist
-- **UC connections** -- any connections referenced by `connection` tools (after `--connection-map`) must exist
-- **Databricks Apps** -- any apps referenced by `app` tools (after `--app-map`) must exist
+- **Tables referenced by genie rooms** and `file_table` knowledge sources (after catalog mapping)
+- **Vector search indexes** referenced by `index` knowledge sources or `vector_search_index` tools (after catalog mapping)
+- **UC objects** referenced by tool specs (after catalog mapping): functions, tables, volumes, schemas, catalogs
+- **UC connections** referenced by `uc_connection` tools (after `--connection-map`)
+- **Databricks Apps** referenced by `app` tools (after `--app-map`)
+- **Serving endpoints** referenced by `serving_endpoint` tools (after `--endpoint-map`)
+- **Lakeview dashboards** referenced by `lakeview_dashboard` tools — looked up by `display_name`
+- **Supervisor agents** referenced by `supervisor_agent` (sub-agent) tools — looked up by `display_name`
 
-The import tool uploads knowledge assistant files to the target volume automatically, but it does not migrate tables, indexes, UC functions, connections, apps, or other objects between workspaces. Those must be deployed separately.
+The import tool uploads knowledge assistant files to the target volume automatically, but it does not migrate tables, indexes, functions, connections, apps, dashboards, sub-agents, or other objects between workspaces. Those must be deployed separately.
 
 ### What the import creates / updates
 
 1. Validates dependencies (Phase 0)
 2. For each knowledge assistant: uploads files (if needed), then creates or updates the KA and reconciles its knowledge sources
 3. For each genie room: creates or updates the room with remapped table identifiers
-4. Creates or updates the supervisor agent
-5. Reconciles tools on the agent to match the manifest
+4. Resolves tool specs for non-managed types (looking up dashboards / sub-agents by `display_name`, applying name and catalog maps)
+5. Creates or updates the supervisor agent
+6. Reconciles tools on the agent to match the manifest
+7. Reconciles examples on the agent to match the manifest
 
 ### Non-interactive use
 

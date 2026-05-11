@@ -129,6 +129,8 @@ def parse_volume_path(volume_path: str) -> str:
 def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
                     volume_path: str, catalog_rules: list[tuple[str, str]],
                     connection_map: dict[str, str], app_map: dict[str, str],
+                    endpoint_map: dict[str, str], dashboard_map: dict[str, str],
+                    agent_map: dict[str, str],
                     force: bool) -> None:
     """Validate that all referenced UC objects exist before starting the import.
 
@@ -143,6 +145,14 @@ def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
     missing_connections: list[str] = []
     missing_apps: list[str] = []
     skipped_index_checks: list[str] = []
+    missing_volumes_tool: list[str] = []  # volume tool type
+    missing_uc_tables: list[str] = []
+    missing_indexes_tool: list[str] = []  # vector_search_index tool type
+    missing_catalogs: list[str] = []
+    missing_schemas: list[str] = []
+    missing_endpoints: list[str] = []
+    missing_dashboards: list[str] = []
+    missing_target_agents: list[str] = []
 
     # Volume
     try:
@@ -233,8 +243,8 @@ def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
             except Exception as e:
                 log.warning("Could not verify UC function '%s': %s; treating as missing", name, e)
                 missing_functions.append(name)
-        elif tool_type == "connection":
-            name = apply_name_map(tool.get("connection", {}).get("name", ""), connection_map)
+        elif tool_type == "uc_connection" or tool_type == "connection":
+            name = apply_name_map((tool.get("uc_connection") or tool.get("connection") or {}).get("name", ""), connection_map)
             if not name:
                 continue
             try:
@@ -255,38 +265,136 @@ def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
             except Exception as e:
                 log.warning("Could not verify app '%s': %s; treating as missing", name, e)
                 missing_apps.append(name)
+        elif tool_type == "volume":
+            name = apply_catalog_map(tool.get("volume", {}).get("name", ""), catalog_rules)
+            if not name:
+                continue
+            try:
+                w.volumes.read(name)
+            except NotFound:
+                missing_volumes_tool.append(name)
+            except Exception as e:
+                log.warning("Could not verify volume '%s': %s; treating as missing", name, e)
+                missing_volumes_tool.append(name)
+        elif tool_type == "uc_table":
+            name = apply_catalog_map(tool.get("uc_table", {}).get("name", ""), catalog_rules)
+            if not name:
+                continue
+            try:
+                resp = w.tables.exists(name)
+                if not getattr(resp, "table_exists", False):
+                    missing_uc_tables.append(name)
+            except Exception as e:
+                log.warning("Could not verify UC table '%s': %s; treating as missing", name, e)
+                missing_uc_tables.append(name)
+        elif tool_type == "vector_search_index":
+            name = apply_catalog_map(tool.get("vector_search_index", {}).get("name", ""), catalog_rules)
+            if not name:
+                continue
+            try:
+                w.vector_search_indexes.get_index(name)
+            except NotFound:
+                missing_indexes_tool.append(name)
+            except AttributeError:
+                skipped_index_checks.append(name)
+            except Exception as e:
+                log.warning("Could not verify vector index '%s': %s; treating as missing", name, e)
+                missing_indexes_tool.append(name)
+        elif tool_type == "catalog":
+            name = apply_catalog_map(tool.get("catalog", {}).get("name", ""), catalog_rules)
+            if not name:
+                continue
+            try:
+                w.catalogs.get(name)
+            except NotFound:
+                missing_catalogs.append(name)
+            except Exception as e:
+                log.warning("Could not verify catalog '%s': %s; treating as missing", name, e)
+                missing_catalogs.append(name)
+        elif tool_type == "schema":
+            name = apply_catalog_map(tool.get("schema", {}).get("name", ""), catalog_rules)
+            if not name:
+                continue
+            try:
+                w.schemas.get(name)
+            except NotFound:
+                missing_schemas.append(name)
+            except Exception as e:
+                log.warning("Could not verify schema '%s': %s; treating as missing", name, e)
+                missing_schemas.append(name)
+        elif tool_type == "serving_endpoint":
+            name = apply_name_map(tool.get("serving_endpoint", {}).get("name", ""), endpoint_map)
+            if not name:
+                continue
+            if not find_serving_endpoint(w, name):
+                missing_endpoints.append(name)
+        elif tool_type == "lakeview_dashboard":
+            display = apply_name_map(tool.get("lakeview_dashboard", {}).get("display_name", ""), dashboard_map)
+            if not display:
+                continue
+            if find_lakeview_dashboard_by_name(w, display) is None:
+                missing_dashboards.append(display)
+        elif tool_type == "supervisor_agent":
+            display = apply_name_map(tool.get("supervisor_agent", {}).get("display_name", ""), agent_map)
+            if not display:
+                continue
+            if find_existing_supervisor_agent(w, display) is None:
+                missing_target_agents.append(display)
+        elif tool_type == "web_search":
+            pass  # no dependency to check
 
     if skipped_index_checks:
         log.warning("Vector search index existence check unavailable; not verified: %s", skipped_index_checks)
 
     any_missing = (missing_volumes or missing_tables or missing_indexes
-                   or missing_functions or missing_connections or missing_apps)
+                   or missing_functions or missing_connections or missing_apps
+                   or missing_volumes_tool or missing_uc_tables or missing_indexes_tool
+                   or missing_catalogs or missing_schemas or missing_endpoints
+                   or missing_dashboards or missing_target_agents)
     if any_missing:
         log.error("Pre-flight check failed. Missing dependencies in target workspace:")
         if missing_volumes:
-            log.error("  Volumes:")
-            for v in missing_volumes:
-                log.error("    - %s", v)
+            log.error("  Volumes (KA file uploads):")
+            for v in missing_volumes: log.error("    - %s", v)
         if missing_tables:
-            log.error("  Tables:")
-            for t in missing_tables:
-                log.error("    - %s", t)
+            log.error("  Tables (genie / file_table sources):")
+            for t in missing_tables: log.error("    - %s", t)
         if missing_indexes:
-            log.error("  Vector search indexes:")
-            for i in missing_indexes:
-                log.error("    - %s", i)
+            log.error("  Vector search indexes (KA index sources):")
+            for i in missing_indexes: log.error("    - %s", i)
         if missing_functions:
             log.error("  UC functions:")
-            for f in missing_functions:
-                log.error("    - %s", f)
+            for f in missing_functions: log.error("    - %s", f)
         if missing_connections:
             log.error("  Connections:")
-            for c in missing_connections:
-                log.error("    - %s", c)
+            for c in missing_connections: log.error("    - %s", c)
         if missing_apps:
             log.error("  Apps:")
-            for a in missing_apps:
-                log.error("    - %s", a)
+            for a in missing_apps: log.error("    - %s", a)
+        if missing_volumes_tool:
+            log.error("  Volume tools:")
+            for v in missing_volumes_tool: log.error("    - %s", v)
+        if missing_uc_tables:
+            log.error("  UC tables (uc_table tools):")
+            for t in missing_uc_tables: log.error("    - %s", t)
+        if missing_indexes_tool:
+            log.error("  Vector indexes (vector_search_index tools):")
+            for i in missing_indexes_tool: log.error("    - %s", i)
+        if missing_catalogs:
+            log.error("  Catalogs:")
+            for c in missing_catalogs: log.error("    - %s", c)
+        if missing_schemas:
+            log.error("  Schemas:")
+            for s in missing_schemas: log.error("    - %s", s)
+        if missing_endpoints:
+            log.error("  Serving endpoints:")
+            for e in missing_endpoints: log.error("    - %s", e)
+        if missing_dashboards:
+            log.error("  Lakeview dashboards (by display_name; pass --dashboard-map for renames):")
+            for d in missing_dashboards: log.error("    - %s", d)
+        if missing_target_agents:
+            log.error("  Supervisor agents (target agent for sub-agent tools; pass --agent-map for renames):")
+            for a in missing_target_agents: log.error("    - %s", a)
         if not force:
             log.error("Re-run with --force to proceed despite missing dependencies, or create the missing objects first.")
             sys.exit(1)
@@ -355,6 +463,36 @@ def find_existing_genie_space(w: WorkspaceClient, title: str):
         if not page_token:
             break
     return None
+
+
+def find_lakeview_dashboard_by_name(w: WorkspaceClient, display_name: str) -> str | None:
+    """Find a lakeview dashboard by display_name in the target workspace.
+
+    Returns the dashboard_id if found, else None.
+    """
+    if not display_name:
+        return None
+    try:
+        for dash in w.lakeview.list():
+            if getattr(dash, "display_name", None) == display_name:
+                return getattr(dash, "dashboard_id", None)
+    except Exception as e:
+        log.warning("Failed to list lakeview dashboards: %s", e)
+    return None
+
+
+def find_serving_endpoint(w: WorkspaceClient, name: str) -> bool:
+    """Check whether a serving endpoint exists in the target workspace by name."""
+    if not name:
+        return False
+    try:
+        w.serving_endpoints.get(name)
+        return True
+    except NotFound:
+        return False
+    except Exception as e:
+        log.warning("Could not verify serving endpoint '%s': %s; treating as missing", name, e)
+        return False
 
 
 def list_knowledge_sources(w: WorkspaceClient, ka_id: str) -> list[dict]:
@@ -906,15 +1044,74 @@ def resolve_genie_room(w: WorkspaceClient, tool_entry: dict, input_dir: Path,
     return space_id
 
 
+def resolve_tool_spec(w: WorkspaceClient, tool_entry: dict,
+                      catalog_rules: list[tuple[str, str]],
+                      connection_map: dict[str, str],
+                      app_map: dict[str, str],
+                      endpoint_map: dict[str, str],
+                      dashboard_map: dict[str, str],
+                      agent_map: dict[str, str]) -> tuple[dict | None, str | None]:
+    """Resolve the tool spec for a non-KA / non-genie tool type.
+
+    Returns (spec_dict, error_msg). On success spec_dict is populated and error_msg is None.
+    On failure spec_dict is None and error_msg describes what couldn't be resolved.
+
+    For tool types that need cross-workspace lookup (dashboard, agent), this performs
+    the lookup. For map-eligible types, applies the mapping.
+    """
+    tool_type = tool_entry["tool_type"]
+
+    if tool_type in ("uc_function", "uc_table", "vector_search_index",
+                      "catalog", "schema", "volume"):
+        original = tool_entry.get(tool_type, {}).get("name", "")
+        return ({"name": apply_catalog_map(original, catalog_rules)}, None)
+
+    if tool_type == "uc_connection":
+        original = (tool_entry.get("uc_connection") or tool_entry.get("connection") or {}).get("name", "")
+        return ({"name": apply_name_map(original, connection_map)}, None)
+
+    if tool_type == "app":
+        original = tool_entry.get("app", {}).get("name", "")
+        return ({"name": apply_name_map(original, app_map)}, None)
+
+    if tool_type == "serving_endpoint":
+        original = tool_entry.get("serving_endpoint", {}).get("name", "")
+        return ({"name": apply_name_map(original, endpoint_map)}, None)
+
+    if tool_type == "web_search":
+        return ({}, None)
+
+    if tool_type == "lakeview_dashboard":
+        spec = tool_entry.get("lakeview_dashboard", {})
+        original_display = spec.get("display_name", "")
+        # Apply map first if provided
+        target_display = apply_name_map(original_display, dashboard_map)
+        # Lookup by display_name in target workspace
+        target_id = find_lakeview_dashboard_by_name(w, target_display)
+        if not target_id:
+            return (None, f"dashboard '{target_display}' not found in target workspace")
+        return ({"dashboard_id": target_id}, None)
+
+    if tool_type == "supervisor_agent":
+        spec = tool_entry.get("supervisor_agent", {})
+        original_display = spec.get("display_name", "")
+        target_display = apply_name_map(original_display, agent_map)
+        target = find_existing_supervisor_agent(w, target_display)
+        if not target:
+            return (None, f"supervisor agent '{target_display}' not found in target workspace")
+        target_id = target.get("supervisor_agent_id") or target.get("id")
+        return ({"supervisor_agent_id": target_id}, None)
+
+    return (None, f"unsupported tool type for resolution: {tool_type}")
+
+
 def build_expected_tool(tool_entry: dict, resolved_id: str | None,
-                        catalog_rules: list[tuple[str, str]],
-                        connection_map: dict[str, str],
-                        app_map: dict[str, str]) -> dict:
+                        spec_override: dict | None) -> dict:
     """Build the expected target-workspace tool body from a manifest tool entry.
 
-    For `knowledge_assistant` and `genie_space`, `resolved_id` is the new resource id
-    created/found in this run. For other types, the name comes from the manifest with
-    the appropriate mapping applied.
+    For knowledge_assistant and genie_space, `resolved_id` is the new resource ID
+    created/found in this run. For other types, `spec_override` is the resolved
+    spec dict (from resolve_tool_spec).
     """
     tool_type = tool_entry["tool_type"]
     body = {
@@ -925,20 +1122,16 @@ def build_expected_tool(tool_entry: dict, resolved_id: str | None,
         body["knowledge_assistant"] = {"knowledge_assistant_id": resolved_id}
     elif tool_type == "genie_space":
         body["genie_space"] = {"id": resolved_id}
-    elif tool_type == "uc_function":
-        original = tool_entry.get("uc_function", {}).get("name", "")
-        body["uc_function"] = {"name": apply_catalog_map(original, catalog_rules)}
-    elif tool_type == "connection":
-        original = tool_entry.get("connection", {}).get("name", "")
-        body["connection"] = {"name": apply_name_map(original, connection_map)}
-    elif tool_type == "app":
-        original = tool_entry.get("app", {}).get("name", "")
-        body["app"] = {"name": apply_name_map(original, app_map)}
+    else:
+        body[tool_type] = spec_override or {}
     return body
 
 
 def normalize_existing_tool(tool: dict) -> dict:
-    """Project an existing-on-target tool dict to the same shape as build_expected_tool."""
+    """Project an existing-on-target tool dict to the same shape as build_expected_tool.
+
+    Strips fields that are output_only or workspace-side noise (e.g. KA's serving_endpoint_name).
+    """
     tool_type = tool.get("tool_type", "")
     body = {
         "description": tool.get("description", ""),
@@ -950,16 +1143,28 @@ def normalize_existing_tool(tool: dict) -> dict:
         }
     elif tool_type == "genie_space":
         body["genie_space"] = {"id": tool.get("genie_space", {}).get("id", "")}
-    elif tool_type == "uc_function":
-        body["uc_function"] = {"name": tool.get("uc_function", {}).get("name", "")}
-    elif tool_type == "connection":
-        body["connection"] = {"name": tool.get("connection", {}).get("name", "")}
-    elif tool_type == "app":
-        body["app"] = {"name": tool.get("app", {}).get("name", "")}
+    elif tool_type == "lakeview_dashboard":
+        body["lakeview_dashboard"] = {
+            "dashboard_id": tool.get("lakeview_dashboard", {}).get("dashboard_id", "")
+        }
+    elif tool_type == "supervisor_agent":
+        body["supervisor_agent"] = {
+            "supervisor_agent_id": tool.get("supervisor_agent", {}).get("supervisor_agent_id", "")
+        }
+    elif tool_type == "web_search":
+        body["web_search"] = {}
+    elif tool_type in ("uc_function", "uc_table", "vector_search_index", "catalog",
+                        "schema", "volume", "uc_connection", "app", "serving_endpoint"):
+        body[tool_type] = {"name": tool.get(tool_type, {}).get("name", "")}
     return body
 
 
-SUPPORTED_TOOL_TYPES = ("knowledge_assistant", "genie_space", "uc_function", "connection", "app")
+SUPPORTED_TOOL_TYPES = (
+    "knowledge_assistant", "genie_space",
+    "uc_function", "uc_connection", "app", "volume",
+    "uc_table", "vector_search_index", "catalog", "schema",
+    "serving_endpoint", "lakeview_dashboard", "supervisor_agent", "web_search",
+)
 
 
 def resolve_supervisor_agent(w: WorkspaceClient, agent_def: dict,
@@ -1025,13 +1230,12 @@ def resolve_supervisor_agent(w: WorkspaceClient, agent_def: dict,
 
 def reconcile_tools(w: WorkspaceClient, agent_id: str,
                     manifest_tools: list[dict], resolved_ids: dict[str, str | None],
-                    catalog_rules: list[tuple[str, str]],
-                    connection_map: dict[str, str],
-                    app_map: dict[str, str],
+                    resolved_specs: dict[str, dict | None],
                     yes_update: bool, skip_existing: bool) -> tuple[int, int, int]:
     """Reconcile tools on the supervisor agent against the manifest.
 
     `resolved_ids` maps tool_id -> resolved KA/genie id (or None if resolution failed).
+    `resolved_specs` maps tool_id -> resolved spec dict (or None) for non-KA/non-genie types.
 
     Returns (added_or_updated, deleted, failed) counts.
     """
@@ -1046,9 +1250,14 @@ def reconcile_tools(w: WorkspaceClient, agent_id: str,
         if entry.get("tool_type") not in SUPPORTED_TOOL_TYPES:
             continue
         rid = resolved_ids.get(entry["tool_id"])
-        if rid is None:
-            continue
-        expected_by_id[entry["tool_id"]] = build_expected_tool(entry, rid, catalog_rules, connection_map, app_map)
+        spec = resolved_specs.get(entry["tool_id"])
+        if entry["tool_type"] in ("knowledge_assistant", "genie_space"):
+            if rid is None:
+                continue
+        else:
+            if spec is None:
+                continue
+        expected_by_id[entry["tool_id"]] = build_expected_tool(entry, rid, spec)
 
     added_or_updated = 0
     deleted = 0
@@ -1080,8 +1289,17 @@ def reconcile_tools(w: WorkspaceClient, agent_id: str,
                 or existing_norm.get("knowledge_assistant") != expected.get("knowledge_assistant")
                 or existing_norm.get("genie_space") != expected.get("genie_space")
                 or existing_norm.get("uc_function") != expected.get("uc_function")
-                or existing_norm.get("connection") != expected.get("connection")
+                or existing_norm.get("uc_connection") != expected.get("uc_connection")
                 or existing_norm.get("app") != expected.get("app")
+                or existing_norm.get("volume") != expected.get("volume")
+                or existing_norm.get("uc_table") != expected.get("uc_table")
+                or existing_norm.get("vector_search_index") != expected.get("vector_search_index")
+                or existing_norm.get("catalog") != expected.get("catalog")
+                or existing_norm.get("schema") != expected.get("schema")
+                or existing_norm.get("serving_endpoint") != expected.get("serving_endpoint")
+                or existing_norm.get("lakeview_dashboard") != expected.get("lakeview_dashboard")
+                or existing_norm.get("supervisor_agent") != expected.get("supervisor_agent")
+                or existing_norm.get("web_search") != expected.get("web_search")
             )
 
             if other_changed:
@@ -1135,30 +1353,177 @@ def reconcile_tools(w: WorkspaceClient, agent_id: str,
     return (added_or_updated, deleted, failed)
 
 
+def list_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
+    """List all examples for the supervisor agent (paginated)."""
+    results = []
+    page_token = None
+    while True:
+        query = {}
+        if page_token:
+            query["page_token"] = page_token
+        resp = w.api_client.do(
+            "GET", f"/api/2.1/supervisor-agents/{agent_id}/examples", query=query,
+        )
+        results.extend(resp.get("examples", []))
+        page_token = resp.get("next_page_token")
+        if not page_token:
+            break
+    return results
+
+
+def normalize_example(ex: dict) -> dict:
+    """Project an example dict to {question, guidelines} for comparison."""
+    return {
+        "question": ex.get("question", ""),
+        "guidelines": list(ex.get("guidelines", []) or []),
+    }
+
+
+def reconcile_examples(w: WorkspaceClient, agent_id: str,
+                       manifest_examples: list[dict],
+                       yes_update: bool, skip_existing: bool) -> tuple[int, int, int]:
+    """Reconcile examples on the supervisor agent against the manifest.
+
+    Match by question (which must be unique within the agent — duplicates abort).
+
+    Returns (added_or_updated, deleted, failed) counts.
+    """
+    if not manifest_examples and not list_examples(w, agent_id):
+        return (0, 0, 0)
+
+    expected_norm = [normalize_example(e) for e in manifest_examples]
+    existing_raw = list_examples(w, agent_id)
+    existing_norm = [normalize_example(e) for e in existing_raw]
+
+    def index_by_question(items: list[dict], side: str) -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        for it in items:
+            q = it.get("question", "")
+            if q in out:
+                log.error("Duplicate example question on %s side: '%s'", side, q[:80])
+                sys.exit(1)
+            out[q] = it
+        return out
+
+    exp_idx = index_by_question(expected_norm, "expected")
+    cur_idx = index_by_question(existing_norm, "existing")
+    cur_id_by_q = {e.get("question", ""): e.get("example_id") for e in existing_raw}
+
+    to_add = [exp_idx[q] for q in exp_idx if q not in cur_idx]
+    to_remove = [cur_idx[q] for q in cur_idx if q not in exp_idx]
+    to_update = [
+        {"existing": cur_idx[q], "expected": exp_idx[q]}
+        for q in exp_idx
+        if q in cur_idx and exp_idx[q] != cur_idx[q]
+    ]
+
+    has_diff = bool(to_add or to_remove or to_update)
+    if not has_diff:
+        return (0, 0, 0)
+
+    diff_lines: list[str] = []
+    for e in to_add:
+        diff_lines.append(f"+ Add example: \"{e['question'][:80]}\"")
+    for e in to_remove:
+        diff_lines.append(f"- Remove example: \"{e['question'][:80]}\"")
+    for u in to_update:
+        diff_lines.append(f"~ Update example: \"{u['expected']['question'][:80]}\"")
+
+    decision = resolve_conflict("Examples on agent", "(reconcile)", diff_lines, yes_update, skip_existing)
+    if decision == CONFLICT_SKIP:
+        return (0, 0, 0)
+
+    added_or_updated = 0
+    deleted = 0
+    failed = 0
+
+    # Deletes first
+    for e in to_remove:
+        eid = cur_id_by_q.get(e["question"])
+        if not eid:
+            continue
+        try:
+            w.api_client.do(
+                "DELETE", f"/api/2.1/supervisor-agents/{agent_id}/examples/{eid}",
+            )
+            log.info("Deleted example '%s'", e["question"][:80])
+            deleted += 1
+        except Exception as e2:
+            log.error("Failed to delete example '%s': %s", e["question"][:80], e2)
+            failed += 1
+
+    # Adds
+    for e in to_add:
+        try:
+            w.api_client.do(
+                "POST", f"/api/2.1/supervisor-agents/{agent_id}/examples", body=e,
+            )
+            log.info("Added example '%s'", e["question"][:80])
+            added_or_updated += 1
+        except Exception as e2:
+            log.error("Failed to add example '%s': %s", e["question"][:80], e2)
+            failed += 1
+
+    # Updates: only `question` and `guidelines` are updatable per the API.
+    for u in to_update:
+        eid = cur_id_by_q.get(u["existing"]["question"])
+        if not eid:
+            continue
+        diffs = []
+        if u["existing"]["question"] != u["expected"]["question"]:
+            diffs.append("question")
+        if u["existing"]["guidelines"] != u["expected"]["guidelines"]:
+            diffs.append("guidelines")
+        if not diffs:
+            continue
+        try:
+            w.api_client.do(
+                "PATCH", f"/api/2.1/supervisor-agents/{agent_id}/examples/{eid}",
+                query={"update_mask": ",".join(diffs)},
+                body=u["expected"],
+            )
+            log.info("Updated example '%s'", u["expected"]["question"][:80])
+            added_or_updated += 1
+        except Exception as e2:
+            log.error("Failed to update example '%s': %s", u["expected"]["question"][:80], e2)
+            failed += 1
+
+    return (added_or_updated, deleted, failed)
+
+
 def import_agent(w: WorkspaceClient, manifest: dict, input_dir: Path,
                  warehouse_id: str, volume_path: str,
                  catalog_rules: list[tuple[str, str]],
                  connection_map: dict[str, str] | None = None,
                  app_map: dict[str, str] | None = None,
+                 endpoint_map: dict[str, str] | None = None,
+                 dashboard_map: dict[str, str] | None = None,
+                 agent_map: dict[str, str] | None = None,
                  yes_update: bool = False, skip_existing: bool = False,
                  force: bool = False):
     """Import a supervisor agent and all its tools (with reconciliation)."""
     agent_def = manifest["supervisor_agent"]
     connection_map = connection_map or {}
     app_map = app_map or {}
+    endpoint_map = endpoint_map or {}
+    dashboard_map = dashboard_map or {}
+    agent_map = agent_map or {}
     log.info("Importing agent '%s'", agent_def["display_name"])
 
     # Phase 0: Pre-flight validation
     preflight_check(w, manifest, input_dir, volume_path, catalog_rules,
-                    connection_map, app_map, force)
+                    connection_map, app_map, endpoint_map, dashboard_map, agent_map,
+                    force)
 
     # Phase 1 + 2: Resolve KAs and genie rooms (each may create/update existing)
     resolved_ids: dict[str, str | None] = {}  # tool_id -> KA id or genie space id
+    resolved_specs: dict[str, dict | None] = {}
     for tool_entry in manifest.get("tools", []):
         if tool_entry.get("skipped"):
             log.info("Skipping tool '%s' (%s)",
                      tool_entry["tool_id"], tool_entry.get("skip_reason", ""))
             resolved_ids[tool_entry["tool_id"]] = None
+            resolved_specs[tool_entry["tool_id"]] = None
             continue
 
         ttype = tool_entry["tool_type"]
@@ -1167,26 +1532,54 @@ def import_agent(w: WorkspaceClient, manifest: dict, input_dir: Path,
                 w, tool_entry, input_dir, volume_path, catalog_rules,
                 yes_update, skip_existing,
             )
+            resolved_specs[tool_entry["tool_id"]] = None
         elif ttype == "genie_space":
             resolved_ids[tool_entry["tool_id"]] = resolve_genie_room(
                 w, tool_entry, input_dir, warehouse_id, catalog_rules,
                 yes_update, skip_existing,
             )
-        elif ttype in ("uc_function", "connection", "app"):
-            # No separate resource to resolve; the tool body is built directly from the manifest.
-            # We only need a truthy placeholder so reconcile_tools includes this entry.
-            resolved_ids[tool_entry["tool_id"]] = "<no-resource>"
+            resolved_specs[tool_entry["tool_id"]] = None
+        elif ttype in SUPPORTED_TOOL_TYPES:
+            spec, err = resolve_tool_spec(
+                w, tool_entry, catalog_rules,
+                connection_map, app_map, endpoint_map, dashboard_map, agent_map,
+            )
+            if err:
+                log.error("Could not resolve tool '%s' (%s): %s",
+                          tool_entry["tool_id"], ttype, err)
+            resolved_ids[tool_entry["tool_id"]] = None
+            resolved_specs[tool_entry["tool_id"]] = spec
+
+            # Sync volume contents if the export captured them
+            if ttype == "volume" and spec is not None and tool_entry.get("export_dir"):
+                target_name = spec.get("name", "")
+                parts = target_name.split(".")
+                if len(parts) == 3 and all(parts):
+                    target_volume_path = "/Volumes/" + "/".join(parts)
+                    local_dir = input_dir / tool_entry["export_dir"]
+                    log.info("Syncing volume contents for tool '%s': %s -> %s",
+                             tool_entry["tool_id"], local_dir, target_volume_path)
+                    sync_directory(w, local_dir, target_volume_path)
+                else:
+                    log.warning("Volume tool '%s' has invalid mapped name '%s'; skipping content sync",
+                                tool_entry["tool_id"], target_name)
         else:
             log.info("Skipping unsupported tool type '%s'", ttype)
             resolved_ids[tool_entry["tool_id"]] = None
+            resolved_specs[tool_entry["tool_id"]] = None
 
     # Phase 3: Resolve supervisor agent
     agent_id = resolve_supervisor_agent(w, agent_def, yes_update, skip_existing)
 
     # Phase 4: Reconcile tools
     added_or_updated, deleted, failed = reconcile_tools(
-        w, agent_id, manifest.get("tools", []), resolved_ids,
-        catalog_rules, connection_map, app_map,
+        w, agent_id, manifest.get("tools", []), resolved_ids, resolved_specs,
+        yes_update, skip_existing,
+    )
+
+    # Phase 5: Reconcile examples
+    ex_updated, ex_deleted, ex_failed = reconcile_examples(
+        w, agent_id, manifest.get("examples", []),
         yes_update, skip_existing,
     )
 
@@ -1195,6 +1588,8 @@ def import_agent(w: WorkspaceClient, manifest: dict, input_dir: Path,
     log.info("Agent: %s (id: %s)", agent_def["display_name"], agent_id)
     log.info("Tools added/updated: %d, deleted: %d, failed: %d",
              added_or_updated, deleted, failed)
+    log.info("Examples added/updated: %d, deleted: %d, failed: %d",
+             ex_updated, ex_deleted, ex_failed)
 
 
 def main():
@@ -1224,6 +1619,18 @@ def main():
     parser.add_argument(
         "--app-map",
         help="Comma-separated app-name renames: old_name=new_name (for app-type tools)",
+    )
+    parser.add_argument(
+        "--endpoint-map",
+        help="Comma-separated serving-endpoint name renames: old_name=new_name",
+    )
+    parser.add_argument(
+        "--dashboard-map",
+        help="Comma-separated lakeview-dashboard renames by display_name: old_display_name=new_display_name",
+    )
+    parser.add_argument(
+        "--agent-map",
+        help="Comma-separated supervisor-agent renames by display_name: old_display_name=new_display_name",
     )
     parser.add_argument(
         "--yes-update", action="store_true",
@@ -1265,12 +1672,18 @@ def main():
         catalog_rules = parse_catalog_map(args.catalog_map)
         connection_map = parse_name_map(args.connection_map)
         app_map = parse_name_map(args.app_map)
+        endpoint_map = parse_name_map(args.endpoint_map)
+        dashboard_map = parse_name_map(args.dashboard_map)
+        agent_map = parse_name_map(args.agent_map)
 
         import_agent(
             w, manifest, input_dir,
             args.warehouse_id, args.volume_path, catalog_rules,
             connection_map=connection_map,
             app_map=app_map,
+            endpoint_map=endpoint_map,
+            dashboard_map=dashboard_map,
+            agent_map=agent_map,
             yes_update=args.yes_update,
             skip_existing=args.skip_existing,
             force=args.force,

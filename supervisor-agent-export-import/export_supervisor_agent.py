@@ -65,7 +65,8 @@ def list_agent_tools(w: WorkspaceClient, agent_id: str) -> list[dict]:
     )
 
 
-def export_tool(w: WorkspaceClient, tool: dict, agent_dir: Path) -> dict:
+def export_tool(w: WorkspaceClient, tool: dict, agent_dir: Path,
+                include_volume_contents: bool = False) -> dict:
     """Export a single tool. Returns its manifest entry."""
     tool_type = tool.get("tool_type", "unknown")
     tool_id = tool.get("tool_id", "unknown")
@@ -87,14 +88,56 @@ def export_tool(w: WorkspaceClient, tool: dict, agent_dir: Path) -> dict:
         entry["genie_space"] = gs_config
         export_dir = export_genie_room(w, gs_config, agent_dir)
         entry["export_dir"] = export_dir
-    elif tool_type == "uc_function":
-        entry["uc_function"] = tool.get("uc_function", {})
+    elif tool_type == "volume":
+        spec = tool.get("volume", {})
+        entry["volume"] = spec
+        if include_volume_contents:
+            full_name = spec.get("name", "")
+            parts = full_name.split(".")
+            if len(parts) == 3 and all(parts):
+                volume_path = "/Volumes/" + "/".join(parts)
+                vol_dir = agent_dir / "volumes" / sanitize_name(full_name)
+                vol_dir.mkdir(parents=True, exist_ok=True)
+                log.info("Downloading volume contents: %s -> %s", volume_path, vol_dir)
+                download_volume_path(w, volume_path, vol_dir)
+                entry["export_dir"] = str(Path("volumes") / sanitize_name(full_name))
+            else:
+                log.warning("Volume tool '%s' has invalid name '%s'; skipping content download",
+                            tool_id, full_name)
+    elif tool_type in ("uc_function", "uc_connection", "app",
+                        "uc_table", "vector_search_index", "catalog", "schema",
+                        "serving_endpoint", "web_search"):
+        # Simple types: capture the type-specific spec as-is
+        entry[tool_type] = tool.get(tool_type, {})
+    elif tool_type == "lakeview_dashboard":
+        spec = dict(tool.get("lakeview_dashboard", {}))
+        # Augment with dashboard display_name for cross-workspace lookup
+        dashboard_id = spec.get("dashboard_id", "")
+        if dashboard_id:
+            try:
+                dash = w.lakeview.get(dashboard_id)
+                spec["display_name"] = getattr(dash, "display_name", "") or ""
+            except Exception as e:
+                log.warning("Could not fetch dashboard '%s' for display_name: %s", dashboard_id, e)
+                spec["display_name"] = ""
+        entry["lakeview_dashboard"] = spec
+    elif tool_type == "supervisor_agent":
+        spec = dict(tool.get("supervisor_agent", {}))
+        agent_id = spec.get("supervisor_agent_id", "")
+        if agent_id:
+            try:
+                target = w.api_client.do("GET", f"/api/2.1/supervisor-agents/{agent_id}")
+                spec["display_name"] = target.get("display_name", "") or ""
+            except Exception as e:
+                log.warning("Could not fetch supervisor agent '%s' for display_name: %s", agent_id, e)
+                spec["display_name"] = ""
+        entry["supervisor_agent"] = spec
+    # Legacy: API used "connection"; treat the same as uc_connection
     elif tool_type == "connection":
-        entry["connection"] = tool.get("connection", {})
-    elif tool_type == "app":
-        entry["app"] = tool.get("app", {})
+        entry["uc_connection"] = tool.get("connection", {})
+        entry["tool_type"] = "uc_connection"
     else:
-        log.info("Skipping tool '%s' (type: %s)", tool_id, tool_type)
+        log.info("Skipping tool '%s' (unknown type: %s)", tool_id, tool_type)
         entry["skipped"] = True
         entry["skip_reason"] = "tool type not supported for export"
 
@@ -217,7 +260,30 @@ def export_genie_room(w: WorkspaceClient, gs_config: dict, agent_dir: Path) -> s
     return str(Path("genie_rooms") / room_name)
 
 
-def export_agent(w: WorkspaceClient, agent_name: str, output_dir: Path):
+def export_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
+    """List all examples for the supervisor agent. Returns a list of {question, guidelines}."""
+    results = []
+    page_token = None
+    while True:
+        query = {}
+        if page_token:
+            query["page_token"] = page_token
+        resp = w.api_client.do(
+            "GET", f"/api/2.1/supervisor-agents/{agent_id}/examples", query=query,
+        )
+        for ex in resp.get("examples", []):
+            results.append({
+                "question": ex.get("question", ""),
+                "guidelines": list(ex.get("guidelines", []) or []),
+            })
+        page_token = resp.get("next_page_token")
+        if not page_token:
+            break
+    return results
+
+
+def export_agent(w: WorkspaceClient, agent_name: str, output_dir: Path,
+                 include_volume_contents: bool = False):
     """Export a supervisor agent and all its tools."""
     log.info("Exporting agent '%s' to %s", agent_name, output_dir)
 
@@ -244,10 +310,12 @@ def export_agent(w: WorkspaceClient, agent_name: str, output_dir: Path):
             "instructions": agent.get("instructions", ""),
         },
         "tools": [],
+        "examples": export_examples(w, agent_id),
     }
 
     for tool in tools:
-        tool_entry = export_tool(w, tool, agent_dir)
+        tool_entry = export_tool(w, tool, agent_dir,
+                                 include_volume_contents=include_volume_contents)
         manifest["tools"].append(tool_entry)
 
     # Write manifest
@@ -268,12 +336,17 @@ def main():
         default="./export",
         help="Root directory for the export output (default: ./export)",
     )
+    parser.add_argument(
+        "--include-volume-contents", action="store_true",
+        help="For volume-type tools, also download the volume's contents into the export directory (default: off)",
+    )
     args = parser.parse_args()
 
     try:
         w = WorkspaceClient()
         log.info("Connected to %s", w.config.host)
-        export_agent(w, args.name, Path(args.output_dir))
+        export_agent(w, args.name, Path(args.output_dir),
+                     include_volume_contents=args.include_volume_contents)
         log.info("Export complete.")
     except SystemExit:
         raise
