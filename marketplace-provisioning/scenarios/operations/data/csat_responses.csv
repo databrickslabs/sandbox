@@ -1,0 +1,1201 @@
+response_id,order_id,customer_id,response_date,satisfaction_score,complaint_category,free_text_comment
+CSAT-00001,ORD-00941,CUST-00379,2025-06-03,10,None,Exactly what I needed. Would buy again.
+CSAT-00002,ORD-00557,CUST-00308,2025-07-08,5,None,Wrong color sent. Had to return.
+CSAT-00003,ORD-01466,CUST-00919,2025-05-21,7,None,Smooth ordering process and fast delivery.
+CSAT-00004,ORD-00191,CUST-01582,2025-07-22,2,Customer Service,My furniture arrived with visible damage from shipping.
+CSAT-00005,ORD-02513,CUST-00499,2025-05-08,7,None,Exactly what I needed. Would buy again.
+CSAT-00006,ORD-01437,CUST-00501,2025-05-01,7,None,Very happy with my purchase.
+CSAT-00007,ORD-01474,CUST-01320,2025-06-06,7,None,Excellent value for the money.
+CSAT-00008,ORD-01613,CUST-01335,2025-05-06,5,Delivery Speed,
+CSAT-00009,ORD-02888,CUST-00967,2025-04-19,7,None,
+CSAT-00010,ORD-00410,CUST-01137,2025-07-06,5,Delivery Speed,
+CSAT-00011,ORD-02966,CUST-00878,2025-06-19,4,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00012,ORD-02870,CUST-00993,2025-06-06,6,Packaging,The item broke within a week of use.
+CSAT-00013,ORD-01884,CUST-00715,2025-06-22,8,None,Happy customer. Will order again.
+CSAT-00014,ORD-00593,CUST-00099,2025-04-30,5,None,Not worth the price. Feels cheaply made.
+CSAT-00015,ORD-01353,CUST-00977,2025-06-16,7,Packaging,Smooth ordering process and fast delivery.
+CSAT-00016,ORD-00937,CUST-00905,2025-06-15,6,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00017,ORD-00907,CUST-00434,2025-04-30,10,None,Happy customer. Will order again.
+CSAT-00018,ORD-01631,CUST-01552,2025-06-12,5,Customer Service,
+CSAT-00019,ORD-00852,CUST-01214,2025-06-15,5,Delivery Speed,Product quality was not what I expected.
+CSAT-00020,ORD-02414,CUST-01620,2025-05-15,7,None,
+CSAT-00021,ORD-01700,CUST-00192,2025-05-18,2,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00022,ORD-01919,CUST-00803,2025-07-04,5,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00023,ORD-01989,CUST-00059,2025-06-27,4,Delivery Speed,The delivery driver left my heavy package in the rain.
+CSAT-00024,ORD-00348,CUST-00794,2025-06-18,6,None,The item broke within a week of use.
+CSAT-00025,ORD-02993,CUST-01240,2025-07-01,7,None,Exactly what I needed. Would buy again.
+CSAT-00026,ORD-00855,CUST-00490,2025-04-11,5,Product Quality,Product quality was not what I expected.
+CSAT-00027,ORD-01964,CUST-00015,2025-05-31,7,None,Exactly what I needed. Would buy again.
+CSAT-00028,ORD-01367,CUST-01795,2025-04-18,6,None,
+CSAT-00029,ORD-01658,CUST-01027,2025-06-27,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00030,ORD-01415,CUST-01633,2025-05-07,6,Product Quality,
+CSAT-00031,ORD-01850,CUST-01058,2025-06-22,6,Delivery Speed,
+CSAT-00032,ORD-02770,CUST-01464,2025-05-02,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00033,ORD-00252,CUST-00841,2025-06-04,1,Delivery Speed,Delivery was 2 weeks late and the item was damaged.
+CSAT-00034,ORD-00788,CUST-00392,2025-06-27,5,Delivery Speed,
+CSAT-00035,ORD-02233,CUST-01004,2025-06-09,5,Delivery Speed,
+CSAT-00036,ORD-01787,CUST-00361,2025-07-04,5,Customer Service,Wrong color sent. Had to return.
+CSAT-00037,ORD-00178,CUST-00343,2025-05-16,5,None,Packaging was minimal — item rattled around in the box.
+CSAT-00038,ORD-01672,CUST-01796,2025-06-28,5,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00039,ORD-00578,CUST-00347,2025-04-24,2,Product Quality,Took a few extra days but the product is okay.
+CSAT-00040,ORD-01628,CUST-00730,2025-05-13,6,Product Quality,Expected better quality for the price.
+CSAT-00041,ORD-01797,CUST-00432,2025-06-13,9,None,
+CSAT-00042,ORD-02772,CUST-00121,2025-05-17,1,Delivery Speed,Package arrived two weeks late with no explanation.
+CSAT-00043,ORD-01149,CUST-00008,2025-04-29,8,Product Quality,"Great product, arrived on time!"
+CSAT-00044,ORD-01399,CUST-01181,2025-06-09,8,None,Smooth ordering process and fast delivery.
+CSAT-00045,ORD-00614,CUST-01161,2025-06-28,2,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00046,ORD-02907,CUST-01636,2025-07-08,6,None,Wrong color sent. Had to return.
+CSAT-00047,ORD-00908,CUST-01339,2025-05-13,8,None,Excellent value for the money.
+CSAT-00048,ORD-02729,CUST-00990,2025-04-30,10,None,
+CSAT-00049,ORD-00833,CUST-00732,2025-06-06,7,None,Fast shipping and good quality.
+CSAT-00050,ORD-01767,CUST-00956,2025-07-04,6,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00051,ORD-01403,CUST-00191,2025-06-09,7,None,Excellent value for the money.
+CSAT-00052,ORD-00631,CUST-00404,2025-05-21,7,None,Excellent value for the money.
+CSAT-00053,ORD-00200,CUST-00416,2025-04-21,9,None,Good experience overall.
+CSAT-00054,ORD-01444,CUST-00175,2025-05-28,8,None,Very happy with my purchase.
+CSAT-00055,ORD-01199,CUST-00685,2025-05-03,7,None,Happy customer. Will order again.
+CSAT-00056,ORD-02825,CUST-00364,2025-06-13,8,None,Good experience overall.
+CSAT-00057,ORD-02039,CUST-01402,2025-04-16,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00058,ORD-01662,CUST-00075,2025-05-27,6,None,
+CSAT-00059,ORD-01341,CUST-01010,2025-07-01,3,Product Quality,Wrong color sent. Had to return.
+CSAT-00060,ORD-00839,CUST-01037,2025-06-02,10,None,Very happy with my purchase.
+CSAT-00061,ORD-02514,CUST-01757,2025-07-15,5,Packaging,Took a few extra days but the product is okay.
+CSAT-00062,ORD-01071,CUST-01234,2025-05-21,5,None,
+CSAT-00063,ORD-01534,CUST-01203,2025-06-23,5,None,Wrong color sent. Had to return.
+CSAT-00064,ORD-02133,CUST-01246,2025-06-14,1,Delivery Speed,No tracking updates for over a week. Very frustrating.
+CSAT-00065,ORD-02622,CUST-00992,2025-06-10,3,Delivery Speed,Delivery was so late I almost forgot I ordered it.
+CSAT-00066,ORD-02281,CUST-01279,2025-06-16,7,None,Good experience overall.
+CSAT-00067,ORD-01150,CUST-00455,2025-06-14,3,Product Quality,The item broke within a week of use.
+CSAT-00068,ORD-01555,CUST-01682,2025-07-05,6,Customer Service,The item broke within a week of use.
+CSAT-00069,ORD-02638,CUST-00436,2025-06-18,7,Packaging,Happy customer. Will order again.
+CSAT-00070,ORD-02732,CUST-00335,2025-05-02,9,None,Love it! Shipping was quick.
+CSAT-00071,ORD-02562,CUST-00419,2025-05-16,5,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-00072,ORD-00158,CUST-00539,2025-06-28,6,Delivery Speed,Expected better quality for the price.
+CSAT-00073,ORD-00414,CUST-01637,2025-05-19,8,None,Love it! Shipping was quick.
+CSAT-00074,ORD-00321,CUST-01041,2025-06-11,8,Product Quality,Love it! Shipping was quick.
+CSAT-00075,ORD-01432,CUST-01549,2025-04-15,7,None,Smooth ordering process and fast delivery.
+CSAT-00076,ORD-02503,CUST-00792,2025-05-27,7,None,Excellent value for the money.
+CSAT-00077,ORD-01145,CUST-00441,2025-06-10,8,Product Quality,Exactly what I needed. Would buy again.
+CSAT-00078,ORD-02994,CUST-01397,2025-06-29,7,None,Happy customer. Will order again.
+CSAT-00079,ORD-00594,CUST-00837,2025-06-26,6,None,
+CSAT-00080,ORD-01343,CUST-00535,2025-05-23,2,Delivery Speed,Took forever to arrive and packaging was torn open.
+CSAT-00081,ORD-02568,CUST-01102,2025-06-22,5,Delivery Speed,Product quality was not what I expected.
+CSAT-00082,ORD-01592,CUST-01324,2025-06-25,5,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00083,ORD-02945,CUST-00614,2025-04-23,8,None,
+CSAT-00084,ORD-01347,CUST-01443,2025-07-04,6,Customer Service,Expected better quality for the price.
+CSAT-00085,ORD-02974,CUST-01677,2025-04-13,8,None,
+CSAT-00086,ORD-01828,CUST-01263,2025-07-15,6,None,
+CSAT-00087,ORD-00826,CUST-00404,2025-06-24,7,None,Good experience overall.
+CSAT-00088,ORD-01318,CUST-01783,2025-06-21,5,Packaging,
+CSAT-00089,ORD-01345,CUST-00088,2025-05-27,8,None,Exactly what I needed. Would buy again.
+CSAT-00090,ORD-00734,CUST-00243,2025-04-27,8,None,
+CSAT-00091,ORD-00440,CUST-00255,2025-04-12,6,None,
+CSAT-00092,ORD-01448,CUST-00111,2025-07-14,8,Product Quality,
+CSAT-00093,ORD-01089,CUST-01103,2025-05-27,8,None,"Great product, arrived on time!"
+CSAT-00094,ORD-01473,CUST-01205,2025-07-08,6,Delivery Speed,
+CSAT-00095,ORD-02582,CUST-00388,2025-06-24,5,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-00096,ORD-01319,CUST-00733,2025-06-23,5,Product Quality,Took a few extra days but the product is okay.
+CSAT-00097,ORD-01059,CUST-01588,2025-05-24,8,None,
+CSAT-00098,ORD-02491,CUST-00282,2025-06-04,4,Product Quality,Product quality was not what I expected.
+CSAT-00099,ORD-02896,CUST-00842,2025-06-14,7,None,
+CSAT-00100,ORD-00973,CUST-00743,2025-05-08,5,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-00101,ORD-00720,CUST-01083,2025-06-18,8,None,Excellent value for the money.
+CSAT-00102,ORD-00287,CUST-01156,2025-06-03,9,None,Smooth ordering process and fast delivery.
+CSAT-00103,ORD-00849,CUST-01533,2025-07-06,3,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00104,ORD-01645,CUST-00432,2025-04-27,8,None,Product exceeded my expectations.
+CSAT-00105,ORD-01111,CUST-01153,2025-07-10,5,Delivery Speed,
+CSAT-00106,ORD-00365,CUST-00921,2025-06-02,7,None,Good experience overall.
+CSAT-00107,ORD-01529,CUST-01411,2025-06-20,5,Packaging,Took a few extra days but the product is okay.
+CSAT-00108,ORD-02601,CUST-01552,2025-04-15,6,Packaging,Wrong color sent. Had to return.
+CSAT-00109,ORD-00497,CUST-01153,2025-04-22,6,Product Quality,Product quality was not what I expected.
+CSAT-00110,ORD-02348,CUST-01679,2025-07-02,6,Product Quality,The item broke within a week of use.
+CSAT-00111,ORD-00613,CUST-01511,2025-05-04,10,None,Love it! Shipping was quick.
+CSAT-00112,ORD-00451,CUST-00148,2025-06-16,6,None,
+CSAT-00113,ORD-00504,CUST-00691,2025-07-17,1,Delivery Speed,Item showed up late and the box was crushed.
+CSAT-00114,ORD-00616,CUST-01091,2025-06-24,3,Delivery Speed,Product quality was not what I expected.
+CSAT-00115,ORD-01556,CUST-00490,2025-05-29,7,Packaging,
+CSAT-00116,ORD-01166,CUST-01271,2025-07-10,5,None,
+CSAT-00117,ORD-02056,CUST-00128,2025-05-20,6,Packaging,Product quality was not what I expected.
+CSAT-00118,ORD-01304,CUST-01245,2025-04-21,10,None,Excellent value for the money.
+CSAT-00119,ORD-02311,CUST-01119,2025-05-30,9,Product Quality,Smooth ordering process and fast delivery.
+CSAT-00120,ORD-02360,CUST-00381,2025-05-02,6,Packaging,Wrong color sent. Had to return.
+CSAT-00121,ORD-02587,CUST-00422,2025-07-16,1,Delivery Speed,The package was supposed to arrive last week. Still waiting.
+CSAT-00122,ORD-00659,CUST-01140,2025-06-27,3,Packaging,Product quality was not what I expected.
+CSAT-00123,ORD-01427,CUST-00997,2025-04-27,10,None,
+CSAT-00124,ORD-01258,CUST-00174,2025-06-01,8,Product Quality,
+CSAT-00125,ORD-00704,CUST-01709,2025-05-05,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00126,ORD-01162,CUST-00843,2025-06-14,8,None,Excellent value for the money.
+CSAT-00127,ORD-00065,CUST-00531,2025-06-17,6,None,Expected better quality for the price.
+CSAT-00128,ORD-01376,CUST-00191,2025-06-28,7,None,Excellent value for the money.
+CSAT-00129,ORD-02010,CUST-00932,2025-05-01,9,None,Exactly what I needed. Would buy again.
+CSAT-00130,ORD-00651,CUST-00691,2025-04-22,7,None,
+CSAT-00131,ORD-02384,CUST-01021,2025-05-11,10,None,Fast shipping and good quality.
+CSAT-00132,ORD-00974,CUST-01619,2025-06-24,7,None,
+CSAT-00133,ORD-02574,CUST-01353,2025-04-20,7,None,Fast shipping and good quality.
+CSAT-00134,ORD-02160,CUST-01738,2025-05-13,6,None,
+CSAT-00135,ORD-00777,CUST-00237,2025-07-06,8,None,
+CSAT-00136,ORD-00459,CUST-00842,2025-05-18,7,None,Excellent value for the money.
+CSAT-00137,ORD-01784,CUST-00185,2025-05-04,9,None,
+CSAT-00138,ORD-00165,CUST-00273,2025-07-07,3,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00139,ORD-02659,CUST-00194,2025-05-23,8,Product Quality,
+CSAT-00140,ORD-01979,CUST-01464,2025-05-05,8,None,"Great product, arrived on time!"
+CSAT-00141,ORD-02908,CUST-00990,2025-06-11,8,Packaging,
+CSAT-00142,ORD-00341,CUST-00764,2025-06-20,4,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00143,ORD-00532,CUST-00440,2025-07-05,4,Product Quality,Product quality was not what I expected.
+CSAT-00144,ORD-01385,CUST-01094,2025-04-30,5,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00145,ORD-00208,CUST-00374,2025-07-05,8,Packaging,
+CSAT-00146,ORD-00774,CUST-00360,2025-04-20,8,None,Product exceeded my expectations.
+CSAT-00147,ORD-01976,CUST-00996,2025-05-11,8,None,
+CSAT-00148,ORD-01452,CUST-00028,2025-04-27,10,None,Smooth ordering process and fast delivery.
+CSAT-00149,ORD-00168,CUST-00724,2025-04-20,9,None,
+CSAT-00150,ORD-02051,CUST-00457,2025-04-25,10,None,Exactly what I needed. Would buy again.
+CSAT-00151,ORD-00358,CUST-01025,2025-06-01,6,Packaging,Product quality was not what I expected.
+CSAT-00152,ORD-00122,CUST-00390,2025-06-26,7,None,
+CSAT-00153,ORD-02038,CUST-00031,2025-05-12,10,Packaging,Smooth ordering process and fast delivery.
+CSAT-00154,ORD-00752,CUST-01379,2025-06-12,9,None,
+CSAT-00155,ORD-01279,CUST-00748,2025-06-11,7,None,
+CSAT-00156,ORD-02764,CUST-01145,2025-04-26,8,None,Smooth ordering process and fast delivery.
+CSAT-00157,ORD-00445,CUST-01610,2025-06-14,7,None,Love it! Shipping was quick.
+CSAT-00158,ORD-02082,CUST-01689,2025-06-06,8,None,Love it! Shipping was quick.
+CSAT-00159,ORD-02650,CUST-00609,2025-04-17,6,Packaging,Took a few extra days but the product is okay.
+CSAT-00160,ORD-01702,CUST-00274,2025-06-14,6,Product Quality,
+CSAT-00161,ORD-02706,CUST-00201,2025-06-12,9,Packaging,Exactly what I needed. Would buy again.
+CSAT-00162,ORD-01292,CUST-01214,2025-06-01,5,Customer Service,
+CSAT-00163,ORD-02081,CUST-00288,2025-05-08,3,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00164,ORD-02322,CUST-01738,2025-07-04,6,None,The item broke within a week of use.
+CSAT-00165,ORD-01720,CUST-01100,2025-06-29,8,None,Excellent value for the money.
+CSAT-00166,ORD-02904,CUST-00952,2025-05-14,7,None,"Great product, arrived on time!"
+CSAT-00167,ORD-01712,CUST-01110,2025-04-30,8,None,
+CSAT-00168,ORD-01536,CUST-00203,2025-04-24,9,None,"Great product, arrived on time!"
+CSAT-00169,ORD-01994,CUST-01436,2025-06-17,5,Customer Service,
+CSAT-00170,ORD-01014,CUST-01645,2025-04-25,8,None,Excellent value for the money.
+CSAT-00171,ORD-01070,CUST-01545,2025-05-08,5,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00172,ORD-02485,CUST-01088,2025-07-02,5,None,
+CSAT-00173,ORD-02875,CUST-00304,2025-04-26,9,None,Exactly what I needed. Would buy again.
+CSAT-00174,ORD-01342,CUST-01282,2025-07-08,6,Customer Service,
+CSAT-00175,ORD-02064,CUST-01703,2025-07-04,6,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00176,ORD-02069,CUST-00403,2025-05-08,10,None,Fast shipping and good quality.
+CSAT-00177,ORD-01305,CUST-01622,2025-05-15,6,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00178,ORD-00877,CUST-01167,2025-04-19,6,Customer Service,
+CSAT-00179,ORD-01863,CUST-00443,2025-07-15,5,Delivery Speed,
+CSAT-00180,ORD-01263,CUST-01608,2025-07-02,3,Customer Service,Took a few extra days but the product is okay.
+CSAT-00181,ORD-02521,CUST-00433,2025-04-29,5,Packaging,Product quality was not what I expected.
+CSAT-00182,ORD-01857,CUST-00611,2025-06-25,5,Customer Service,Expected better quality for the price.
+CSAT-00183,ORD-01803,CUST-00388,2025-05-29,7,None,Smooth ordering process and fast delivery.
+CSAT-00184,ORD-01896,CUST-00784,2025-05-29,9,None,
+CSAT-00185,ORD-01573,CUST-00363,2025-06-20,3,Product Quality,Wrong color sent. Had to return.
+CSAT-00186,ORD-01418,CUST-00954,2025-07-01,5,None,Customer service was unhelpful when I called about my order.
+CSAT-00187,ORD-01160,CUST-01054,2025-04-19,10,None,"Great product, arrived on time!"
+CSAT-00188,ORD-00583,CUST-01408,2025-05-30,7,None,Product exceeded my expectations.
+CSAT-00189,ORD-01819,CUST-01242,2025-05-13,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00190,ORD-02012,CUST-01697,2025-05-09,6,Product Quality,
+CSAT-00191,ORD-01638,CUST-00687,2025-06-11,4,Packaging,Wrong color sent. Had to return.
+CSAT-00192,ORD-02416,CUST-00718,2025-06-01,7,Product Quality,
+CSAT-00193,ORD-00374,CUST-01323,2025-07-08,6,Delivery Speed,Expected better quality for the price.
+CSAT-00194,ORD-02341,CUST-00002,2025-04-24,5,Delivery Speed,
+CSAT-00195,ORD-02642,CUST-00053,2025-06-23,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00196,ORD-01657,CUST-01261,2025-05-02,6,Delivery Speed,Packaging was minimal — item rattled around in the box.
+CSAT-00197,ORD-01630,CUST-01029,2025-06-22,7,None,
+CSAT-00198,ORD-02435,CUST-00921,2025-06-13,5,Packaging,
+CSAT-00199,ORD-02815,CUST-01700,2025-04-29,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00200,ORD-01364,CUST-01553,2025-05-14,5,Product Quality,
+CSAT-00201,ORD-01757,CUST-01602,2025-05-15,7,None,Good experience overall.
+CSAT-00202,ORD-00003,CUST-01655,2025-05-06,7,None,Exactly what I needed. Would buy again.
+CSAT-00203,ORD-02436,CUST-01064,2025-04-16,8,None,
+CSAT-00204,ORD-02147,CUST-00204,2025-05-17,6,None,Took a few extra days but the product is okay.
+CSAT-00205,ORD-01801,CUST-00643,2025-05-05,10,None,Exactly what I needed. Would buy again.
+CSAT-00206,ORD-00710,CUST-00488,2025-05-24,8,None,Very happy with my purchase.
+CSAT-00207,ORD-02749,CUST-01141,2025-04-12,10,Packaging,Happy customer. Will order again.
+CSAT-00208,ORD-02036,CUST-00442,2025-07-05,8,None,Exactly what I needed. Would buy again.
+CSAT-00209,ORD-01526,CUST-01093,2025-06-26,6,Product Quality,Expected better quality for the price.
+CSAT-00210,ORD-00407,CUST-01596,2025-06-15,6,None,Product quality was not what I expected.
+CSAT-00211,ORD-00697,CUST-00969,2025-07-12,4,Packaging,Expected better quality for the price.
+CSAT-00212,ORD-02244,CUST-00032,2025-07-01,6,Delivery Speed,
+CSAT-00213,ORD-01877,CUST-01307,2025-06-23,10,None,
+CSAT-00214,ORD-00412,CUST-01170,2025-04-26,5,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-00215,ORD-00463,CUST-00697,2025-05-31,7,None,Fast shipping and good quality.
+CSAT-00216,ORD-00812,CUST-01297,2025-06-19,7,None,
+CSAT-00217,ORD-01389,CUST-01324,2025-05-10,7,None,Product exceeded my expectations.
+CSAT-00218,ORD-01594,CUST-01096,2025-04-16,4,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-00219,ORD-02651,CUST-01406,2025-07-04,5,None,Product quality was not what I expected.
+CSAT-00220,ORD-00259,CUST-01312,2025-05-29,6,Delivery Speed,
+CSAT-00221,ORD-02200,CUST-00110,2025-07-30,1,Delivery Speed,Extremely slow shipping. Will think twice before ordering again.
+CSAT-00222,ORD-00413,CUST-01106,2025-07-10,7,Product Quality,Exactly what I needed. Would buy again.
+CSAT-00223,ORD-01483,CUST-01383,2025-06-05,7,None,Good experience overall.
+CSAT-00224,ORD-01981,CUST-00151,2025-04-20,8,Product Quality,Smooth ordering process and fast delivery.
+CSAT-00225,ORD-01667,CUST-00953,2025-04-15,8,None,"Great product, arrived on time!"
+CSAT-00226,ORD-02193,CUST-01202,2025-05-01,8,Packaging,Fast shipping and good quality.
+CSAT-00227,ORD-01545,CUST-00883,2025-06-22,8,None,Product exceeded my expectations.
+CSAT-00228,ORD-02476,CUST-00205,2025-05-23,7,None,Excellent value for the money.
+CSAT-00229,ORD-01576,CUST-01744,2025-04-24,10,None,
+CSAT-00230,ORD-02953,CUST-00904,2025-07-01,5,Packaging,Took a few extra days but the product is okay.
+CSAT-00231,ORD-00362,CUST-00313,2025-07-14,7,None,
+CSAT-00232,ORD-02763,CUST-00701,2025-05-01,8,None,Fast shipping and good quality.
+CSAT-00233,ORD-01633,CUST-01053,2025-05-11,5,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-00234,ORD-00108,CUST-00453,2025-05-29,6,Delivery Speed,
+CSAT-00235,ORD-02324,CUST-01645,2025-05-15,3,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00236,ORD-01477,CUST-00282,2025-06-07,8,None,Happy customer. Will order again.
+CSAT-00237,ORD-00010,CUST-01430,2025-05-28,7,None,Product exceeded my expectations.
+CSAT-00238,ORD-00290,CUST-00922,2025-05-31,8,None,
+CSAT-00239,ORD-01184,CUST-00557,2025-06-17,4,Delivery Speed,The item broke within a week of use.
+CSAT-00240,ORD-02942,CUST-00422,2025-06-20,8,None,Smooth ordering process and fast delivery.
+CSAT-00241,ORD-01003,CUST-01043,2025-04-23,7,None,
+CSAT-00242,ORD-00584,CUST-00459,2025-04-19,8,None,Product exceeded my expectations.
+CSAT-00243,ORD-00340,CUST-01136,2025-05-07,8,None,"Great product, arrived on time!"
+CSAT-00244,ORD-01987,CUST-00671,2025-06-13,4,Delivery Speed,Package arrived two weeks late with no explanation.
+CSAT-00245,ORD-00169,CUST-00943,2025-05-25,9,None,
+CSAT-00246,ORD-00637,CUST-00446,2025-06-12,7,None,
+CSAT-00247,ORD-02092,CUST-00493,2025-06-29,7,None,
+CSAT-00248,ORD-00109,CUST-00786,2025-06-18,9,None,
+CSAT-00249,ORD-01293,CUST-00340,2025-07-11,2,Delivery Speed,Heavy item was left at the wrong address initially.
+CSAT-00250,ORD-01224,CUST-00744,2025-06-24,7,None,Fast shipping and good quality.
+CSAT-00251,ORD-02982,CUST-00074,2025-04-16,9,None,Smooth ordering process and fast delivery.
+CSAT-00252,ORD-01888,CUST-00808,2025-04-22,3,Delivery Speed,No tracking updates for over a week. Very frustrating.
+CSAT-00253,ORD-00589,CUST-00409,2025-05-30,6,None,
+CSAT-00254,ORD-00949,CUST-00556,2025-04-13,7,None,Smooth ordering process and fast delivery.
+CSAT-00255,ORD-00477,CUST-00116,2025-04-26,10,None,"Great product, arrived on time!"
+CSAT-00256,ORD-01533,CUST-00302,2025-04-20,9,None,Good experience overall.
+CSAT-00257,ORD-00920,CUST-01751,2025-05-03,5,Customer Service,Wrong color sent. Had to return.
+CSAT-00258,ORD-01107,CUST-00756,2025-07-01,7,None,
+CSAT-00259,ORD-02988,CUST-01295,2025-05-07,6,Product Quality,Product quality was not what I expected.
+CSAT-00260,ORD-00306,CUST-00922,2025-06-12,4,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00261,ORD-01286,CUST-01673,2025-04-17,8,None,
+CSAT-00262,ORD-02295,CUST-01751,2025-06-01,1,Delivery Speed,Heavy item was left at the wrong address initially.
+CSAT-00263,ORD-01189,CUST-01287,2025-07-12,4,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00264,ORD-01811,CUST-01357,2025-06-04,9,None,Good experience overall.
+CSAT-00265,ORD-02774,CUST-00244,2025-04-21,7,None,
+CSAT-00266,ORD-00819,CUST-00718,2025-07-05,6,Customer Service,Took a few extra days but the product is okay.
+CSAT-00267,ORD-00503,CUST-00997,2025-06-15,5,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-00268,ORD-01774,CUST-00511,2025-05-17,7,Packaging,Exactly what I needed. Would buy again.
+CSAT-00269,ORD-01758,CUST-00313,2025-04-24,8,None,Good experience overall.
+CSAT-00270,ORD-00671,CUST-00766,2025-05-26,8,None,Happy customer. Will order again.
+CSAT-00271,ORD-00283,CUST-00040,2025-04-27,9,None,Love it! Shipping was quick.
+CSAT-00272,ORD-02727,CUST-01028,2025-06-14,7,None,Love it! Shipping was quick.
+CSAT-00273,ORD-01256,CUST-00786,2025-05-17,6,Product Quality,Expected better quality for the price.
+CSAT-00274,ORD-01928,CUST-01163,2025-07-01,1,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00275,ORD-02695,CUST-00909,2025-05-15,5,Delivery Speed,The item broke within a week of use.
+CSAT-00276,ORD-01682,CUST-01765,2025-07-28,1,Delivery Speed,Late delivery and damaged packaging. Very disappointed.
+CSAT-00277,ORD-01654,CUST-01380,2025-07-18,5,None,Not worth the price. Feels cheaply made.
+CSAT-00278,ORD-02336,CUST-00927,2025-07-09,6,None,
+CSAT-00279,ORD-01562,CUST-01603,2025-05-05,6,Customer Service,
+CSAT-00280,ORD-01617,CUST-01589,2025-05-08,9,Product Quality,
+CSAT-00281,ORD-02785,CUST-01202,2025-07-03,4,Product Quality,Product quality was not what I expected.
+CSAT-00282,ORD-02655,CUST-00209,2025-04-26,8,None,
+CSAT-00283,ORD-00346,CUST-00427,2025-05-19,6,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00284,ORD-01207,CUST-01298,2025-05-09,9,None,Love it! Shipping was quick.
+CSAT-00285,ORD-01579,CUST-01245,2025-04-20,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-00286,ORD-01365,CUST-01007,2025-06-22,4,Delivery Speed,Expected better quality for the price.
+CSAT-00287,ORD-00404,CUST-00821,2025-05-11,5,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00288,ORD-01652,CUST-00429,2025-05-07,7,Packaging,
+CSAT-00289,ORD-01546,CUST-01300,2025-04-27,4,Delivery Speed,Late delivery and damaged packaging. Very disappointed.
+CSAT-00290,ORD-01959,CUST-01243,2025-06-17,8,Packaging,
+CSAT-00291,ORD-00491,CUST-00549,2025-06-26,4,Packaging,The item broke within a week of use.
+CSAT-00292,ORD-02218,CUST-00136,2025-06-19,6,Delivery Speed,Expected better quality for the price.
+CSAT-00293,ORD-02075,CUST-01540,2025-05-07,7,Product Quality,Very happy with my purchase.
+CSAT-00294,ORD-01269,CUST-00626,2025-06-28,4,Delivery Speed,Product quality was not what I expected.
+CSAT-00295,ORD-02865,CUST-01768,2025-05-08,10,Packaging,Good experience overall.
+CSAT-00296,ORD-02438,CUST-00942,2025-04-15,9,None,
+CSAT-00297,ORD-01985,CUST-00497,2025-05-22,8,None,Fast shipping and good quality.
+CSAT-00298,ORD-00036,CUST-00378,2025-05-29,10,None,Good experience overall.
+CSAT-00299,ORD-00236,CUST-00131,2025-06-15,8,None,Very happy with my purchase.
+CSAT-00300,ORD-02914,CUST-01052,2025-04-21,8,None,
+CSAT-00301,ORD-01912,CUST-00023,2025-04-30,2,Delivery Speed,No tracking updates for over a week. Very frustrating.
+CSAT-00302,ORD-01518,CUST-00023,2025-07-03,3,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-00303,ORD-02268,CUST-01663,2025-06-07,7,None,Happy customer. Will order again.
+CSAT-00304,ORD-02120,CUST-00008,2025-06-06,5,None,Packaging was minimal — item rattled around in the box.
+CSAT-00305,ORD-01929,CUST-01637,2025-06-05,5,None,
+CSAT-00306,ORD-01026,CUST-01686,2025-06-22,1,Customer Service,I had to rearrange my schedule three times for this delivery.
+CSAT-00307,ORD-00756,CUST-01249,2025-04-15,7,None,
+CSAT-00308,ORD-01847,CUST-00470,2025-04-16,7,None,
+CSAT-00309,ORD-01454,CUST-00435,2025-07-14,6,None,
+CSAT-00310,ORD-02814,CUST-01260,2025-06-17,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00311,ORD-00291,CUST-01326,2025-04-25,7,None,"Great product, arrived on time!"
+CSAT-00312,ORD-02396,CUST-01223,2025-08-01,1,Delivery Speed,No communication about the delay. Had to call three times.
+CSAT-00313,ORD-00740,CUST-01248,2025-05-10,3,Customer Service,No communication about the delay. Had to call three times.
+CSAT-00314,ORD-01897,CUST-01532,2025-04-30,7,None,Excellent value for the money.
+CSAT-00315,ORD-01226,CUST-01799,2025-04-28,9,Packaging,Fast shipping and good quality.
+CSAT-00316,ORD-00222,CUST-01447,2025-07-06,6,None,Not worth the price. Feels cheaply made.
+CSAT-00317,ORD-01926,CUST-01581,2025-04-26,7,Packaging,Good experience overall.
+CSAT-00318,ORD-00467,CUST-00607,2025-06-10,6,Customer Service,Took a few extra days but the product is okay.
+CSAT-00319,ORD-01387,CUST-00439,2025-05-09,8,None,Exactly what I needed. Would buy again.
+CSAT-00320,ORD-02921,CUST-00295,2025-07-03,5,None,Not worth the price. Feels cheaply made.
+CSAT-00321,ORD-01707,CUST-01737,2025-05-26,8,None,Very happy with my purchase.
+CSAT-00322,ORD-00853,CUST-01247,2025-06-19,3,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-00323,ORD-00045,CUST-00425,2025-05-10,7,None,
+CSAT-00324,ORD-01203,CUST-00363,2025-05-07,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00325,ORD-00995,CUST-01444,2025-04-29,10,None,
+CSAT-00326,ORD-01933,CUST-01542,2025-06-17,6,Delivery Speed,
+CSAT-00327,ORD-02878,CUST-00696,2025-05-17,7,None,Product exceeded my expectations.
+CSAT-00328,ORD-00981,CUST-00926,2025-04-30,9,None,
+CSAT-00329,ORD-01310,CUST-00303,2025-05-08,7,Packaging,Happy customer. Will order again.
+CSAT-00330,ORD-02555,CUST-01107,2025-04-18,9,None,Exactly what I needed. Would buy again.
+CSAT-00331,ORD-00609,CUST-01326,2025-04-26,8,None,
+CSAT-00332,ORD-00754,CUST-00286,2025-05-30,5,Product Quality,The item broke within a week of use.
+CSAT-00333,ORD-00984,CUST-00314,2025-06-17,8,None,Good experience overall.
+CSAT-00334,ORD-01823,CUST-01074,2025-06-02,8,None,
+CSAT-00335,ORD-00265,CUST-00078,2025-07-05,5,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00336,ORD-02135,CUST-01601,2025-07-16,4,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00337,ORD-01541,CUST-00648,2025-06-18,3,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00338,ORD-00522,CUST-00732,2025-06-30,6,None,The item broke within a week of use.
+CSAT-00339,ORD-01424,CUST-00442,2025-04-26,8,None,Happy customer. Will order again.
+CSAT-00340,ORD-01684,CUST-01658,2025-07-05,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-00341,ORD-01127,CUST-01438,2025-06-23,7,None,
+CSAT-00342,ORD-01763,CUST-00075,2025-04-16,7,None,Exactly what I needed. Would buy again.
+CSAT-00343,ORD-00110,CUST-00834,2025-05-23,8,None,Happy customer. Will order again.
+CSAT-00344,ORD-02656,CUST-01023,2025-04-18,9,None,
+CSAT-00345,ORD-00769,CUST-01278,2025-04-29,8,None,Love it! Shipping was quick.
+CSAT-00346,ORD-01119,CUST-00180,2025-04-29,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-00347,ORD-00568,CUST-01337,2025-04-16,8,None,Love it! Shipping was quick.
+CSAT-00348,ORD-00219,CUST-01175,2025-05-17,4,Delivery Speed,The item broke within a week of use.
+CSAT-00349,ORD-02118,CUST-00081,2025-04-25,6,Delivery Speed,
+CSAT-00350,ORD-02044,CUST-01252,2025-05-28,10,None,Very happy with my purchase.
+CSAT-00351,ORD-00436,CUST-00559,2025-05-21,10,None,Product exceeded my expectations.
+CSAT-00352,ORD-00946,CUST-01666,2025-05-04,5,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00353,ORD-00758,CUST-00334,2025-06-07,4,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-00354,ORD-01709,CUST-00081,2025-06-13,8,None,Love it! Shipping was quick.
+CSAT-00355,ORD-02578,CUST-00385,2025-05-05,7,None,
+CSAT-00356,ORD-00860,CUST-01368,2025-06-15,7,None,Love it! Shipping was quick.
+CSAT-00357,ORD-00305,CUST-01260,2025-04-17,10,None,Good experience overall.
+CSAT-00358,ORD-01103,CUST-00770,2025-05-12,6,None,Wrong color sent. Had to return.
+CSAT-00359,ORD-02115,CUST-00372,2025-07-11,6,Product Quality,The item broke within a week of use.
+CSAT-00360,ORD-00377,CUST-01359,2025-06-01,8,None,Product exceeded my expectations.
+CSAT-00361,ORD-00148,CUST-00938,2025-07-06,9,None,Happy customer. Will order again.
+CSAT-00362,ORD-02433,CUST-00451,2025-06-10,7,None,Good experience overall.
+CSAT-00363,ORD-01475,CUST-01473,2025-04-28,7,Product Quality,
+CSAT-00364,ORD-00042,CUST-00855,2025-04-10,9,Product Quality,Very happy with my purchase.
+CSAT-00365,ORD-02917,CUST-00511,2025-06-07,8,None,
+CSAT-00366,ORD-01615,CUST-00939,2025-06-26,8,None,"Great product, arrived on time!"
+CSAT-00367,ORD-02998,CUST-00769,2025-06-13,8,Product Quality,Smooth ordering process and fast delivery.
+CSAT-00368,ORD-01908,CUST-00504,2025-05-28,5,Delivery Speed,Product quality was not what I expected.
+CSAT-00369,ORD-02798,CUST-01125,2025-07-08,7,None,
+CSAT-00370,ORD-02972,CUST-00787,2025-05-19,5,None,
+CSAT-00371,ORD-00228,CUST-00056,2025-06-27,8,None,Very happy with my purchase.
+CSAT-00372,ORD-00114,CUST-00761,2025-05-22,7,None,Happy customer. Will order again.
+CSAT-00373,ORD-00210,CUST-01241,2025-07-19,1,Delivery Speed,Delivery was so late I almost forgot I ordered it.
+CSAT-00374,ORD-02775,CUST-00992,2025-05-13,10,None,Product exceeded my expectations.
+CSAT-00375,ORD-00549,CUST-00484,2025-07-07,10,None,Good experience overall.
+CSAT-00376,ORD-01110,CUST-00127,2025-04-29,9,Product Quality,Fast shipping and good quality.
+CSAT-00377,ORD-02393,CUST-01368,2025-05-04,8,None,Love it! Shipping was quick.
+CSAT-00378,ORD-00137,CUST-01344,2025-04-13,6,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-00379,ORD-01517,CUST-00747,2025-06-21,5,Delivery Speed,Product quality was not what I expected.
+CSAT-00380,ORD-02652,CUST-01221,2025-06-24,7,None,Love it! Shipping was quick.
+CSAT-00381,ORD-02464,CUST-00796,2025-06-28,6,None,The item broke within a week of use.
+CSAT-00382,ORD-01426,CUST-01017,2025-06-10,8,Packaging,Product exceeded my expectations.
+CSAT-00383,ORD-01893,CUST-00575,2025-04-16,5,Packaging,
+CSAT-00384,ORD-00225,CUST-00760,2025-06-21,8,None,Exactly what I needed. Would buy again.
+CSAT-00385,ORD-00814,CUST-00971,2025-06-09,4,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00386,ORD-00794,CUST-00868,2025-05-20,9,None,Fast shipping and good quality.
+CSAT-00387,ORD-00664,CUST-00956,2025-04-29,8,Product Quality,Smooth ordering process and fast delivery.
+CSAT-00388,ORD-02780,CUST-00151,2025-06-29,6,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-00389,ORD-02986,CUST-00509,2025-06-28,7,None,
+CSAT-00390,ORD-01506,CUST-01007,2025-05-13,8,None,Product exceeded my expectations.
+CSAT-00391,ORD-01183,CUST-01070,2025-04-14,8,Packaging,
+CSAT-00392,ORD-01126,CUST-00771,2025-07-06,3,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00393,ORD-00096,CUST-01085,2025-05-30,7,None,Smooth ordering process and fast delivery.
+CSAT-00394,ORD-02641,CUST-00162,2025-04-20,7,Product Quality,Exactly what I needed. Would buy again.
+CSAT-00395,ORD-01906,CUST-01741,2025-06-26,4,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00396,ORD-00790,CUST-01633,2025-05-17,7,None,Product exceeded my expectations.
+CSAT-00397,ORD-01208,CUST-00020,2025-04-28,4,Packaging,My furniture arrived with visible damage from shipping.
+CSAT-00398,ORD-01841,CUST-01280,2025-05-25,6,None,Expected better quality for the price.
+CSAT-00399,ORD-02413,CUST-01343,2025-04-12,7,None,Fast shipping and good quality.
+CSAT-00400,ORD-02703,CUST-01498,2025-06-18,7,None,
+CSAT-00401,ORD-02431,CUST-00478,2025-06-22,4,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-00402,ORD-00572,CUST-00082,2025-06-09,3,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00403,ORD-02254,CUST-00011,2025-04-28,9,None,Excellent value for the money.
+CSAT-00404,ORD-00329,CUST-00837,2025-05-27,9,None,"Great product, arrived on time!"
+CSAT-00405,ORD-00078,CUST-01263,2025-04-14,8,None,Excellent value for the money.
+CSAT-00406,ORD-01240,CUST-00911,2025-07-10,5,Product Quality,
+CSAT-00407,ORD-01030,CUST-01260,2025-07-08,4,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00408,ORD-00401,CUST-01780,2025-06-18,4,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00409,ORD-02344,CUST-00787,2025-05-23,7,None,Fast shipping and good quality.
+CSAT-00410,ORD-02756,CUST-00399,2025-04-20,9,None,"Great product, arrived on time!"
+CSAT-00411,ORD-01690,CUST-00090,2025-06-07,4,Packaging,Took a few extra days but the product is okay.
+CSAT-00412,ORD-00103,CUST-00082,2025-05-19,4,Customer Service,The item broke within a week of use.
+CSAT-00413,ORD-00656,CUST-00920,2025-04-25,10,None,Very happy with my purchase.
+CSAT-00414,ORD-00335,CUST-01134,2025-07-01,7,None,Excellent value for the money.
+CSAT-00415,ORD-02139,CUST-01381,2025-05-27,9,None,
+CSAT-00416,ORD-01407,CUST-00976,2025-06-27,7,None,Product exceeded my expectations.
+CSAT-00417,ORD-00792,CUST-01316,2025-06-23,8,None,Fast shipping and good quality.
+CSAT-00418,ORD-02166,CUST-01489,2025-06-21,2,Delivery Speed,Package arrived two weeks late with no explanation.
+CSAT-00419,ORD-00525,CUST-01662,2025-05-07,2,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00420,ORD-00649,CUST-01683,2025-06-14,2,Delivery Speed,Heavy item was left at the wrong address initially.
+CSAT-00421,ORD-01892,CUST-01225,2025-05-11,9,None,Happy customer. Will order again.
+CSAT-00422,ORD-02138,CUST-00160,2025-06-15,5,Customer Service,
+CSAT-00423,ORD-01655,CUST-00990,2025-04-18,5,None,The item broke within a week of use.
+CSAT-00424,ORD-01340,CUST-01764,2025-04-23,9,None,Happy customer. Will order again.
+CSAT-00425,ORD-00929,CUST-01133,2025-06-27,6,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00426,ORD-01248,CUST-01480,2025-07-11,2,Delivery Speed,I had to rearrange my schedule three times for this delivery.
+CSAT-00427,ORD-00999,CUST-01093,2025-05-31,5,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00428,ORD-02826,CUST-00896,2025-05-07,6,None,
+CSAT-00429,ORD-02255,CUST-01635,2025-04-24,9,Packaging,
+CSAT-00430,ORD-01608,CUST-01454,2025-04-25,10,None,Love it! Shipping was quick.
+CSAT-00431,ORD-02871,CUST-01694,2025-05-04,7,Packaging,Product exceeded my expectations.
+CSAT-00432,ORD-01505,CUST-01352,2025-04-20,9,None,Good experience overall.
+CSAT-00433,ORD-01445,CUST-01221,2025-06-12,9,None,Love it! Shipping was quick.
+CSAT-00434,ORD-02100,CUST-00805,2025-06-15,4,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00435,ORD-00229,CUST-01552,2025-06-24,7,None,Good experience overall.
+CSAT-00436,ORD-01501,CUST-00866,2025-05-14,6,Product Quality,Took a few extra days but the product is okay.
+CSAT-00437,ORD-00416,CUST-01268,2025-06-10,7,None,
+CSAT-00438,ORD-02600,CUST-00046,2025-06-18,9,None,"Great product, arrived on time!"
+CSAT-00439,ORD-01090,CUST-00031,2025-05-10,9,None,Fast shipping and good quality.
+CSAT-00440,ORD-02486,CUST-01729,2025-06-17,1,Packaging,Expected better quality for the price.
+CSAT-00441,ORD-01165,CUST-01790,2025-07-17,3,Delivery Speed,Package arrived two weeks late with no explanation.
+CSAT-00442,ORD-02170,CUST-00836,2025-05-25,7,None,"Great product, arrived on time!"
+CSAT-00443,ORD-02585,CUST-00583,2025-05-09,9,None,
+CSAT-00444,ORD-02593,CUST-01088,2025-06-13,4,Packaging,Product quality was not what I expected.
+CSAT-00445,ORD-01378,CUST-00106,2025-05-03,7,None,Smooth ordering process and fast delivery.
+CSAT-00446,ORD-01956,CUST-00994,2025-06-14,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00447,ORD-02352,CUST-01039,2025-05-16,7,None,Smooth ordering process and fast delivery.
+CSAT-00448,ORD-00092,CUST-00965,2025-05-16,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-00449,ORD-02931,CUST-01239,2025-05-19,4,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00450,ORD-01094,CUST-00306,2025-04-22,8,Packaging,
+CSAT-00451,ORD-01840,CUST-01079,2025-05-03,9,None,Very happy with my purchase.
+CSAT-00452,ORD-02743,CUST-01727,2025-05-03,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00453,ORD-01146,CUST-00307,2025-04-24,8,None,Fast shipping and good quality.
+CSAT-00454,ORD-02427,CUST-00557,2025-06-09,7,None,
+CSAT-00455,ORD-02561,CUST-01455,2025-06-08,7,None,Happy customer. Will order again.
+CSAT-00456,ORD-02457,CUST-00236,2025-06-25,5,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00457,ORD-00842,CUST-01218,2025-05-28,8,None,Product exceeded my expectations.
+CSAT-00458,ORD-01708,CUST-01470,2025-04-08,7,None,Fast shipping and good quality.
+CSAT-00459,ORD-01260,CUST-01674,2025-05-07,7,None,Good experience overall.
+CSAT-00460,ORD-01447,CUST-01388,2025-04-21,8,None,Love it! Shipping was quick.
+CSAT-00461,ORD-00093,CUST-00350,2025-06-03,6,Product Quality,
+CSAT-00462,ORD-02031,CUST-01577,2025-07-06,5,Delivery Speed,
+CSAT-00463,ORD-01346,CUST-01710,2025-05-17,10,None,
+CSAT-00464,ORD-02123,CUST-01037,2025-04-22,8,None,"Great product, arrived on time!"
+CSAT-00465,ORD-01837,CUST-00048,2025-06-08,6,Delivery Speed,
+CSAT-00466,ORD-00827,CUST-00460,2025-06-26,5,None,
+CSAT-00467,ORD-01799,CUST-01486,2025-05-08,9,Product Quality,Smooth ordering process and fast delivery.
+CSAT-00468,ORD-02429,CUST-01089,2025-07-08,4,Packaging,Expected better quality for the price.
+CSAT-00469,ORD-00067,CUST-00238,2025-06-18,5,Delivery Speed,
+CSAT-00470,ORD-02480,CUST-01261,2025-06-28,10,None,
+CSAT-00471,ORD-01703,CUST-00285,2025-05-09,7,None,Smooth ordering process and fast delivery.
+CSAT-00472,ORD-01738,CUST-00839,2025-06-08,7,None,Exactly what I needed. Would buy again.
+CSAT-00473,ORD-01338,CUST-00215,2025-06-06,5,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-00474,ORD-02291,CUST-01685,2025-04-21,10,None,Smooth ordering process and fast delivery.
+CSAT-00475,ORD-02599,CUST-00243,2025-06-24,3,Customer Service,The item broke within a week of use.
+CSAT-00476,ORD-02523,CUST-01273,2025-06-16,8,None,Fast shipping and good quality.
+CSAT-00477,ORD-02971,CUST-00584,2025-04-19,10,None,
+CSAT-00478,ORD-02424,CUST-01433,2025-05-27,2,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00479,ORD-00442,CUST-00398,2025-05-02,1,Delivery Speed,Took forever to arrive and packaging was torn open.
+CSAT-00480,ORD-02790,CUST-01651,2025-05-22,9,None,Love it! Shipping was quick.
+CSAT-00481,ORD-01459,CUST-00865,2025-05-02,7,None,Very happy with my purchase.
+CSAT-00482,ORD-01668,CUST-00846,2025-05-18,8,None,
+CSAT-00483,ORD-01905,CUST-01465,2025-06-15,5,Packaging,Expected better quality for the price.
+CSAT-00484,ORD-01894,CUST-01048,2025-04-23,5,None,Not worth the price. Feels cheaply made.
+CSAT-00485,ORD-00576,CUST-00292,2025-04-20,9,None,
+CSAT-00486,ORD-01421,CUST-00611,2025-05-22,3,Packaging,Expected better quality for the price.
+CSAT-00487,ORD-00021,CUST-01772,2025-06-24,7,None,Product exceeded my expectations.
+CSAT-00488,ORD-00481,CUST-01196,2025-06-13,6,Packaging,The item broke within a week of use.
+CSAT-00489,ORD-02906,CUST-01181,2025-07-08,3,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00490,ORD-00450,CUST-01521,2025-06-20,6,None,Took a few extra days but the product is okay.
+CSAT-00491,ORD-01497,CUST-00599,2025-05-03,10,None,"Great product, arrived on time!"
+CSAT-00492,ORD-00448,CUST-00250,2025-07-03,4,Packaging,Took a few extra days but the product is okay.
+CSAT-00493,ORD-02050,CUST-01574,2025-07-08,4,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-00494,ORD-01480,CUST-00829,2025-06-10,9,None,Happy customer. Will order again.
+CSAT-00495,ORD-00803,CUST-01772,2025-04-21,7,None,Exactly what I needed. Would buy again.
+CSAT-00496,ORD-01650,CUST-00664,2025-07-04,5,Packaging,
+CSAT-00497,ORD-01202,CUST-00398,2025-05-18,10,None,"Great product, arrived on time!"
+CSAT-00498,ORD-01388,CUST-00754,2025-06-11,5,Delivery Speed,
+CSAT-00499,ORD-00931,CUST-00543,2025-06-14,7,None,Excellent value for the money.
+CSAT-00500,ORD-01915,CUST-01744,2025-05-12,8,Packaging,"Great product, arrived on time!"
+CSAT-00501,ORD-00627,CUST-00650,2025-05-23,8,None,Happy customer. Will order again.
+CSAT-00502,ORD-00824,CUST-01054,2025-06-30,5,Packaging,
+CSAT-00503,ORD-02708,CUST-00153,2025-04-23,9,None,Good experience overall.
+CSAT-00504,ORD-02940,CUST-00826,2025-05-11,7,None,Very happy with my purchase.
+CSAT-00505,ORD-00087,CUST-00179,2025-06-11,8,None,
+CSAT-00506,ORD-00032,CUST-00612,2025-04-17,9,Product Quality,
+CSAT-00507,ORD-00059,CUST-00998,2025-05-03,8,None,Good experience overall.
+CSAT-00508,ORD-01561,CUST-00367,2025-04-14,7,None,Product exceeded my expectations.
+CSAT-00509,ORD-02153,CUST-00173,2025-05-21,9,None,Happy customer. Will order again.
+CSAT-00510,ORD-00575,CUST-00278,2025-05-29,10,None,"Great product, arrived on time!"
+CSAT-00511,ORD-01382,CUST-01733,2025-07-07,1,Delivery Speed,Expected better quality for the price.
+CSAT-00512,ORD-00598,CUST-00479,2025-07-10,6,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00513,ORD-01824,CUST-00857,2025-04-20,9,None,
+CSAT-00514,ORD-01297,CUST-00251,2025-04-26,8,Product Quality,Product exceeded my expectations.
+CSAT-00515,ORD-00501,CUST-01388,2025-07-11,7,None,"Great product, arrived on time!"
+CSAT-00516,ORD-01287,CUST-00421,2025-04-28,7,None,
+CSAT-00517,ORD-00736,CUST-01540,2025-05-31,9,None,Fast shipping and good quality.
+CSAT-00518,ORD-02037,CUST-00882,2025-05-24,9,None,
+CSAT-00519,ORD-02852,CUST-00932,2025-04-13,9,None,Product exceeded my expectations.
+CSAT-00520,ORD-01812,CUST-00456,2025-06-20,8,None,Exactly what I needed. Would buy again.
+CSAT-00521,ORD-02690,CUST-00150,2025-04-28,8,None,Fast shipping and good quality.
+CSAT-00522,ORD-00038,CUST-00313,2025-04-25,8,None,Exactly what I needed. Would buy again.
+CSAT-00523,ORD-02210,CUST-01341,2025-05-02,7,None,Happy customer. Will order again.
+CSAT-00524,ORD-01315,CUST-01314,2025-07-08,5,None,The item broke within a week of use.
+CSAT-00525,ORD-00893,CUST-00221,2025-05-13,9,None,Exactly what I needed. Would buy again.
+CSAT-00526,ORD-01017,CUST-01357,2025-05-13,8,None,Excellent value for the money.
+CSAT-00527,ORD-01006,CUST-01602,2025-05-03,6,None,
+CSAT-00528,ORD-02922,CUST-00938,2025-05-14,9,None,Product exceeded my expectations.
+CSAT-00529,ORD-00376,CUST-01624,2025-07-12,8,None,Good experience overall.
+CSAT-00530,ORD-00796,CUST-01284,2025-04-14,10,None,
+CSAT-00531,ORD-00325,CUST-00376,2025-06-01,5,Delivery Speed,Packaging was minimal — item rattled around in the box.
+CSAT-00532,ORD-00592,CUST-00608,2025-06-18,5,None,Wrong color sent. Had to return.
+CSAT-00533,ORD-01175,CUST-01526,2025-07-06,8,None,Fast shipping and good quality.
+CSAT-00534,ORD-02868,CUST-00991,2025-05-20,5,Packaging,Expected better quality for the price.
+CSAT-00535,ORD-02257,CUST-00341,2025-05-12,8,Product Quality,Excellent value for the money.
+CSAT-00536,ORD-01972,CUST-01594,2025-04-23,9,None,
+CSAT-00537,ORD-00180,CUST-00219,2025-04-27,8,None,Very happy with my purchase.
+CSAT-00538,ORD-00707,CUST-01082,2025-05-13,10,None,Exactly what I needed. Would buy again.
+CSAT-00539,ORD-00161,CUST-01616,2025-04-14,8,None,Excellent value for the money.
+CSAT-00540,ORD-01889,CUST-01071,2025-04-30,5,None,The item broke within a week of use.
+CSAT-00541,ORD-00925,CUST-01080,2025-06-27,7,None,Very happy with my purchase.
+CSAT-00542,ORD-00194,CUST-01394,2025-05-04,8,None,Very happy with my purchase.
+CSAT-00543,ORD-00485,CUST-01156,2025-06-10,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00544,ORD-02776,CUST-00263,2025-07-13,5,Packaging,
+CSAT-00545,ORD-02835,CUST-00796,2025-06-26,7,None,"Great product, arrived on time!"
+CSAT-00546,ORD-01334,CUST-00773,2025-05-04,9,None,
+CSAT-00547,ORD-00605,CUST-01677,2025-04-14,8,Packaging,
+CSAT-00548,ORD-01491,CUST-01090,2025-07-11,7,None,Excellent value for the money.
+CSAT-00549,ORD-01161,CUST-00905,2025-06-08,5,None,Expected better quality for the price.
+CSAT-00550,ORD-01554,CUST-00492,2025-04-24,6,None,Expected better quality for the price.
+CSAT-00551,ORD-02806,CUST-00059,2025-04-24,6,None,Expected better quality for the price.
+CSAT-00552,ORD-00489,CUST-01397,2025-06-03,8,None,Happy customer. Will order again.
+CSAT-00553,ORD-00006,CUST-01791,2025-07-09,6,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00554,ORD-00782,CUST-01385,2025-06-19,1,Delivery Speed,The package was supposed to arrive last week. Still waiting.
+CSAT-00555,ORD-01309,CUST-00656,2025-04-10,10,Product Quality,Good experience overall.
+CSAT-00556,ORD-01871,CUST-00920,2025-06-25,7,None,Smooth ordering process and fast delivery.
+CSAT-00557,ORD-02784,CUST-01199,2025-05-29,6,None,
+CSAT-00558,ORD-00181,CUST-00643,2025-06-28,6,Customer Service,Wrong color sent. Had to return.
+CSAT-00559,ORD-02229,CUST-01796,2025-04-13,9,None,Exactly what I needed. Would buy again.
+CSAT-00560,ORD-01914,CUST-00220,2025-07-02,4,Product Quality,Took a few extra days but the product is okay.
+CSAT-00561,ORD-00570,CUST-00678,2025-07-02,6,Product Quality,Wrong color sent. Had to return.
+CSAT-00562,ORD-01910,CUST-00595,2025-05-24,1,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00563,ORD-02105,CUST-00386,2025-05-11,9,None,Love it! Shipping was quick.
+CSAT-00564,ORD-01528,CUST-01234,2025-05-14,2,Packaging,Took a few extra days but the product is okay.
+CSAT-00565,ORD-01311,CUST-00730,2025-04-16,9,Packaging,
+CSAT-00566,ORD-01782,CUST-01369,2025-05-03,7,None,Very happy with my purchase.
+CSAT-00567,ORD-01052,CUST-00002,2025-04-18,5,None,
+CSAT-00568,ORD-02738,CUST-00716,2025-07-02,2,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-00569,ORD-02788,CUST-00838,2025-07-12,2,Product Quality,Expected better quality for the price.
+CSAT-00570,ORD-02332,CUST-00570,2025-04-28,8,None,Happy customer. Will order again.
+CSAT-00571,ORD-00526,CUST-01624,2025-04-22,7,None,Fast shipping and good quality.
+CSAT-00572,ORD-01015,CUST-00782,2025-07-08,6,Delivery Speed,The item broke within a week of use.
+CSAT-00573,ORD-00350,CUST-00853,2025-05-08,7,None,
+CSAT-00574,ORD-01430,CUST-00250,2025-07-11,2,Packaging,Delivery was 2 weeks late and the item was damaged.
+CSAT-00575,ORD-01921,CUST-00481,2025-05-16,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00576,ORD-01957,CUST-01246,2025-07-03,7,None,Product exceeded my expectations.
+CSAT-00577,ORD-02304,CUST-00245,2025-05-29,2,Delivery Speed,Package arrived two weeks late with no explanation.
+CSAT-00578,ORD-00019,CUST-00064,2025-04-26,8,None,Happy customer. Will order again.
+CSAT-00579,ORD-00820,CUST-00174,2025-05-10,10,None,Fast shipping and good quality.
+CSAT-00580,ORD-01697,CUST-01257,2025-06-06,5,Product Quality,Wrong color sent. Had to return.
+CSAT-00581,ORD-01804,CUST-00149,2025-07-07,2,Delivery Speed,Heavy item was left at the wrong address initially.
+CSAT-00582,ORD-01542,CUST-00052,2025-06-14,5,Packaging,
+CSAT-00583,ORD-01348,CUST-01607,2025-04-29,8,None,Love it! Shipping was quick.
+CSAT-00584,ORD-00469,CUST-00645,2025-06-30,5,None,Expected better quality for the price.
+CSAT-00585,ORD-00014,CUST-00649,2025-06-24,6,Product Quality,Wrong color sent. Had to return.
+CSAT-00586,ORD-00679,CUST-01732,2025-06-04,7,None,Very happy with my purchase.
+CSAT-00587,ORD-00960,CUST-00021,2025-05-25,7,None,
+CSAT-00588,ORD-01938,CUST-00434,2025-04-21,9,None,Exactly what I needed. Would buy again.
+CSAT-00589,ORD-00652,CUST-00711,2025-07-10,1,Product Quality,The item broke within a week of use.
+CSAT-00590,ORD-02099,CUST-00209,2025-07-01,3,Customer Service,Product quality was not what I expected.
+CSAT-00591,ORD-01210,CUST-01227,2025-06-17,7,None,
+CSAT-00592,ORD-02161,CUST-00365,2025-05-29,9,None,Product exceeded my expectations.
+CSAT-00593,ORD-01113,CUST-01337,2025-05-01,6,None,Took a few extra days but the product is okay.
+CSAT-00594,ORD-01219,CUST-01017,2025-05-06,7,Packaging,Happy customer. Will order again.
+CSAT-00595,ORD-01750,CUST-00638,2025-07-09,2,Packaging,Item showed up late and the box was crushed.
+CSAT-00596,ORD-02620,CUST-00745,2025-06-01,7,None,Happy customer. Will order again.
+CSAT-00597,ORD-00723,CUST-00702,2025-06-22,4,Packaging,The item broke within a week of use.
+CSAT-00598,ORD-01673,CUST-00959,2025-05-10,6,None,Wrong color sent. Had to return.
+CSAT-00599,ORD-00188,CUST-00592,2025-05-29,5,Product Quality,
+CSAT-00600,ORD-02625,CUST-00855,2025-05-30,7,None,Excellent value for the money.
+CSAT-00601,ORD-01223,CUST-01714,2025-05-31,8,Product Quality,Fast shipping and good quality.
+CSAT-00602,ORD-01214,CUST-00299,2025-05-04,6,None,
+CSAT-00603,ORD-01056,CUST-01020,2025-04-12,9,Product Quality,
+CSAT-00604,ORD-02127,CUST-01078,2025-04-19,7,None,Smooth ordering process and fast delivery.
+CSAT-00605,ORD-02603,CUST-01520,2025-07-04,7,None,Very happy with my purchase.
+CSAT-00606,ORD-01082,CUST-01154,2025-04-20,4,Product Quality,Product quality was not what I expected.
+CSAT-00607,ORD-02618,CUST-00809,2025-06-20,4,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00608,ORD-00100,CUST-01079,2025-07-21,3,Delivery Speed,Took forever to arrive and packaging was torn open.
+CSAT-00609,ORD-02362,CUST-00631,2025-04-22,4,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00610,ORD-02107,CUST-00017,2025-06-13,6,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00611,ORD-00922,CUST-01247,2025-06-14,5,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00612,ORD-01500,CUST-00939,2025-07-11,4,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00613,ORD-01623,CUST-00034,2025-05-08,6,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00614,ORD-02983,CUST-01318,2025-05-18,7,None,"Great product, arrived on time!"
+CSAT-00615,ORD-00119,CUST-01135,2025-06-10,8,None,Exactly what I needed. Would buy again.
+CSAT-00616,ORD-02608,CUST-00257,2025-05-09,6,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00617,ORD-00101,CUST-00265,2025-07-01,1,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00618,ORD-02842,CUST-01110,2025-05-20,5,Packaging,Product quality was not what I expected.
+CSAT-00619,ORD-02242,CUST-01605,2025-04-12,8,None,
+CSAT-00620,ORD-00133,CUST-00533,2025-04-20,6,Packaging,Wrong color sent. Had to return.
+CSAT-00621,ORD-00864,CUST-01043,2025-04-27,7,Packaging,Happy customer. Will order again.
+CSAT-00622,ORD-00464,CUST-01037,2025-05-01,10,None,Excellent value for the money.
+CSAT-00623,ORD-02567,CUST-01100,2025-07-01,6,None,
+CSAT-00624,ORD-02154,CUST-00619,2025-07-15,1,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00625,ORD-01644,CUST-01700,2025-06-20,8,None,Love it! Shipping was quick.
+CSAT-00626,ORD-01711,CUST-00920,2025-04-20,10,None,
+CSAT-00627,ORD-02973,CUST-00344,2025-06-27,7,None,Very happy with my purchase.
+CSAT-00628,ORD-00821,CUST-00864,2025-05-16,1,Delivery Speed,I had to rearrange my schedule three times for this delivery.
+CSAT-00629,ORD-02174,CUST-00815,2025-05-21,8,None,
+CSAT-00630,ORD-02812,CUST-01519,2025-06-12,4,Delivery Speed,The item broke within a week of use.
+CSAT-00631,ORD-00597,CUST-00995,2025-05-02,8,None,Fast shipping and good quality.
+CSAT-00632,ORD-00639,CUST-00124,2025-05-24,7,None,Happy customer. Will order again.
+CSAT-00633,ORD-02711,CUST-00494,2025-06-21,7,None,Good experience overall.
+CSAT-00634,ORD-00384,CUST-01275,2025-06-10,6,Packaging,Wrong color sent. Had to return.
+CSAT-00635,ORD-02150,CUST-00754,2025-04-29,8,None,Good experience overall.
+CSAT-00636,ORD-02795,CUST-00209,2025-05-15,6,Delivery Speed,
+CSAT-00637,ORD-01121,CUST-01688,2025-04-28,7,None,Smooth ordering process and fast delivery.
+CSAT-00638,ORD-00274,CUST-00305,2025-05-07,10,None,Smooth ordering process and fast delivery.
+CSAT-00639,ORD-02859,CUST-01597,2025-05-26,6,None,The item broke within a week of use.
+CSAT-00640,ORD-00640,CUST-00652,2025-05-12,3,Delivery Speed,Delivery was 2 weeks late and the item was damaged.
+CSAT-00641,ORD-00714,CUST-01612,2025-07-03,7,Packaging,Good experience overall.
+CSAT-00642,ORD-02478,CUST-01659,2025-05-05,5,None,Packaging was minimal — item rattled around in the box.
+CSAT-00643,ORD-02658,CUST-01315,2025-04-15,7,None,Excellent value for the money.
+CSAT-00644,ORD-01602,CUST-00290,2025-05-22,7,None,Exactly what I needed. Would buy again.
+CSAT-00645,ORD-01228,CUST-01179,2025-06-20,6,Customer Service,Wrong color sent. Had to return.
+CSAT-00646,ORD-00086,CUST-01077,2025-04-19,7,None,Exactly what I needed. Would buy again.
+CSAT-00647,ORD-02141,CUST-00405,2025-07-05,7,None,
+CSAT-00648,ORD-00388,CUST-00937,2025-04-12,8,None,Smooth ordering process and fast delivery.
+CSAT-00649,ORD-01270,CUST-01181,2025-06-28,3,Delivery Speed,Extremely slow shipping. Will think twice before ordering again.
+CSAT-00650,ORD-00623,CUST-01393,2025-05-15,1,Delivery Speed,Late delivery and damaged packaging. Very disappointed.
+CSAT-00651,ORD-01091,CUST-01564,2025-06-07,6,Delivery Speed,The item broke within a week of use.
+CSAT-00652,ORD-02590,CUST-01346,2025-05-13,9,Packaging,Fast shipping and good quality.
+CSAT-00653,ORD-01564,CUST-00195,2025-04-27,7,None,
+CSAT-00654,ORD-00282,CUST-00855,2025-04-18,7,None,Love it! Shipping was quick.
+CSAT-00655,ORD-01939,CUST-00711,2025-05-20,7,None,Good experience overall.
+CSAT-00656,ORD-01060,CUST-00820,2025-06-10,8,None,"Great product, arrived on time!"
+CSAT-00657,ORD-00905,CUST-00100,2025-06-11,5,None,The item broke within a week of use.
+CSAT-00658,ORD-02379,CUST-00649,2025-06-08,6,Packaging,Took a few extra days but the product is okay.
+CSAT-00659,ORD-01472,CUST-01727,2025-06-16,4,Delivery Speed,Took forever to arrive and packaging was torn open.
+CSAT-00660,ORD-01233,CUST-00616,2025-06-25,4,Product Quality,Wrong color sent. Had to return.
+CSAT-00661,ORD-01859,CUST-01760,2025-06-27,7,None,Smooth ordering process and fast delivery.
+CSAT-00662,ORD-02277,CUST-00900,2025-06-15,6,Packaging,Product quality was not what I expected.
+CSAT-00663,ORD-01465,CUST-01353,2025-07-01,7,None,Love it! Shipping was quick.
+CSAT-00664,ORD-02889,CUST-01401,2025-06-13,5,Delivery Speed,The item broke within a week of use.
+CSAT-00665,ORD-01238,CUST-00193,2025-05-21,6,Product Quality,The item broke within a week of use.
+CSAT-00666,ORD-00160,CUST-01196,2025-05-10,9,None,Love it! Shipping was quick.
+CSAT-00667,ORD-01294,CUST-01016,2025-05-10,9,None,"Great product, arrived on time!"
+CSAT-00668,ORD-01539,CUST-01694,2025-05-09,5,None,Not worth the price. Feels cheaply made.
+CSAT-00669,ORD-00733,CUST-01693,2025-06-08,6,Product Quality,Expected better quality for the price.
+CSAT-00670,ORD-00625,CUST-00664,2025-07-04,5,Product Quality,Product quality was not what I expected.
+CSAT-00671,ORD-01144,CUST-00737,2025-06-18,4,Product Quality,The item broke within a week of use.
+CSAT-00672,ORD-01681,CUST-00084,2025-06-18,6,None,
+CSAT-00673,ORD-02361,CUST-01708,2025-06-25,6,Customer Service,
+CSAT-00674,ORD-01025,CUST-00221,2025-04-20,8,None,Exactly what I needed. Would buy again.
+CSAT-00675,ORD-01468,CUST-00627,2025-06-04,4,Packaging,Product quality was not what I expected.
+CSAT-00676,ORD-02338,CUST-00177,2025-06-11,8,None,Happy customer. Will order again.
+CSAT-00677,ORD-02125,CUST-00266,2025-05-11,7,None,Good experience overall.
+CSAT-00678,ORD-01955,CUST-00243,2025-05-23,7,None,Fast shipping and good quality.
+CSAT-00679,ORD-01268,CUST-00932,2025-05-01,5,Delivery Speed,The item broke within a week of use.
+CSAT-00680,ORD-02418,CUST-01612,2025-05-04,8,None,Good experience overall.
+CSAT-00681,ORD-00533,CUST-00162,2025-04-30,6,None,Wrong color sent. Had to return.
+CSAT-00682,ORD-00495,CUST-00887,2025-07-01,2,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00683,ORD-01154,CUST-00160,2025-06-24,6,Product Quality,The item broke within a week of use.
+CSAT-00684,ORD-01931,CUST-00469,2025-06-28,4,Customer Service,Product was fine but the shipping delay ruined my plans.
+CSAT-00685,ORD-00630,CUST-01065,2025-06-01,6,None,
+CSAT-00686,ORD-02208,CUST-00129,2025-05-23,8,None,Product exceeded my expectations.
+CSAT-00687,ORD-00427,CUST-00681,2025-05-11,8,None,
+CSAT-00688,ORD-02707,CUST-01257,2025-05-27,8,None,Product exceeded my expectations.
+CSAT-00689,ORD-02894,CUST-00861,2025-06-02,9,None,
+CSAT-00690,ORD-01950,CUST-00104,2025-05-29,3,Product Quality,The item broke within a week of use.
+CSAT-00691,ORD-00899,CUST-01021,2025-07-09,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00692,ORD-01865,CUST-01596,2025-06-19,4,Product Quality,Took a few extra days but the product is okay.
+CSAT-00693,ORD-02841,CUST-01235,2025-05-09,8,None,Very happy with my purchase.
+CSAT-00694,ORD-00544,CUST-00190,2025-05-03,6,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00695,ORD-02469,CUST-00141,2025-05-17,6,Delivery Speed,
+CSAT-00696,ORD-01825,CUST-00771,2025-06-06,9,None,Fast shipping and good quality.
+CSAT-00697,ORD-00607,CUST-00502,2025-06-06,1,Delivery Speed,Delivery was so late I almost forgot I ordered it.
+CSAT-00698,ORD-00447,CUST-01536,2025-05-26,6,Delivery Speed,
+CSAT-00699,ORD-02090,CUST-00603,2025-04-19,8,None,Fast shipping and good quality.
+CSAT-00700,ORD-02259,CUST-00068,2025-06-27,6,None,
+CSAT-00701,ORD-02787,CUST-00446,2025-06-17,6,None,Expected better quality for the price.
+CSAT-00702,ORD-02597,CUST-01099,2025-05-20,8,Packaging,
+CSAT-00703,ORD-00051,CUST-01400,2025-04-24,7,None,Love it! Shipping was quick.
+CSAT-00704,ORD-00255,CUST-00166,2025-06-28,6,Delivery Speed,Expected better quality for the price.
+CSAT-00705,ORD-00304,CUST-00159,2025-06-26,6,None,
+CSAT-00706,ORD-00527,CUST-00570,2025-04-24,8,None,Happy customer. Will order again.
+CSAT-00707,ORD-01080,CUST-00073,2025-05-31,3,Customer Service,Heavy item was left at the wrong address initially.
+CSAT-00708,ORD-01354,CUST-01207,2025-06-20,7,None,"Great product, arrived on time!"
+CSAT-00709,ORD-01649,CUST-00802,2025-04-23,9,None,Excellent value for the money.
+CSAT-00710,ORD-01155,CUST-01367,2025-05-30,8,None,Exactly what I needed. Would buy again.
+CSAT-00711,ORD-02076,CUST-00941,2025-05-26,8,None,Smooth ordering process and fast delivery.
+CSAT-00712,ORD-00460,CUST-01285,2025-06-10,10,Packaging,Good experience overall.
+CSAT-00713,ORD-02297,CUST-01154,2025-07-01,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00714,ORD-02078,CUST-00034,2025-05-03,7,None,Smooth ordering process and fast delivery.
+CSAT-00715,ORD-01553,CUST-00327,2025-04-11,8,None,Very happy with my purchase.
+CSAT-00716,ORD-00779,CUST-01438,2025-05-14,9,None,Excellent value for the money.
+CSAT-00717,ORD-01716,CUST-00374,2025-07-03,7,Packaging,Happy customer. Will order again.
+CSAT-00718,ORD-01688,CUST-00828,2025-07-02,7,Product Quality,Product exceeded my expectations.
+CSAT-00719,ORD-00892,CUST-01178,2025-06-28,8,None,
+CSAT-00720,ORD-02710,CUST-01697,2025-06-17,6,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00721,ORD-02910,CUST-00308,2025-04-28,10,None,Good experience overall.
+CSAT-00722,ORD-00588,CUST-01103,2025-04-23,6,Packaging,Took a few extra days but the product is okay.
+CSAT-00723,ORD-02705,CUST-00800,2025-04-23,10,None,Happy customer. Will order again.
+CSAT-00724,ORD-02263,CUST-00775,2025-07-10,4,Delivery Speed,Wrong color sent. Had to return.
+CSAT-00725,ORD-02067,CUST-01477,2025-06-09,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00726,ORD-00865,CUST-00906,2025-04-26,8,Packaging,Exactly what I needed. Would buy again.
+CSAT-00727,ORD-01560,CUST-01637,2025-05-26,9,None,Excellent value for the money.
+CSAT-00728,ORD-00696,CUST-00545,2025-05-27,9,None,Smooth ordering process and fast delivery.
+CSAT-00729,ORD-00397,CUST-00036,2025-05-14,8,None,
+CSAT-00730,ORD-02222,CUST-00004,2025-06-12,6,Product Quality,Wrong color sent. Had to return.
+CSAT-00731,ORD-01808,CUST-01280,2025-06-23,5,Customer Service,Expected better quality for the price.
+CSAT-00732,ORD-02563,CUST-00843,2025-07-03,6,None,Expected better quality for the price.
+CSAT-00733,ORD-01886,CUST-00964,2025-05-10,7,None,Very happy with my purchase.
+CSAT-00734,ORD-01198,CUST-00904,2025-04-16,6,None,The item broke within a week of use.
+CSAT-00735,ORD-02872,CUST-00389,2025-04-10,6,Packaging,Product quality was not what I expected.
+CSAT-00736,ORD-01128,CUST-00931,2025-04-22,10,None,Exactly what I needed. Would buy again.
+CSAT-00737,ORD-01188,CUST-00268,2025-06-16,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-00738,ORD-00175,CUST-00936,2025-04-25,7,None,Smooth ordering process and fast delivery.
+CSAT-00739,ORD-02911,CUST-00144,2025-05-03,9,None,Smooth ordering process and fast delivery.
+CSAT-00740,ORD-02301,CUST-00439,2025-05-24,8,None,Exactly what I needed. Would buy again.
+CSAT-00741,ORD-01923,CUST-00993,2025-04-18,6,Packaging,Took a few extra days but the product is okay.
+CSAT-00742,ORD-00214,CUST-00506,2025-05-27,7,None,Fast shipping and good quality.
+CSAT-00743,ORD-00312,CUST-00847,2025-07-02,9,None,Smooth ordering process and fast delivery.
+CSAT-00744,ORD-02496,CUST-01769,2025-05-03,7,Product Quality,
+CSAT-00745,ORD-02741,CUST-01747,2025-05-30,10,None,Good experience overall.
+CSAT-00746,ORD-00975,CUST-00821,2025-04-28,8,None,Product exceeded my expectations.
+CSAT-00747,ORD-01066,CUST-01092,2025-06-07,5,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-00748,ORD-02731,CUST-01137,2025-07-08,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-00749,ORD-00628,CUST-00437,2025-04-11,8,None,Product exceeded my expectations.
+CSAT-00750,ORD-02068,CUST-01771,2025-05-19,7,None,
+CSAT-00751,ORD-00970,CUST-01326,2025-06-24,5,Product Quality,Product quality was not what I expected.
+CSAT-00752,ORD-02692,CUST-00561,2025-05-03,5,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00753,ORD-01409,CUST-00821,2025-04-12,7,None,"Great product, arrived on time!"
+CSAT-00754,ORD-01991,CUST-01513,2025-05-16,7,None,
+CSAT-00755,ORD-00498,CUST-00020,2025-05-19,6,None,
+CSAT-00756,ORD-00686,CUST-00315,2025-05-28,7,Product Quality,Exactly what I needed. Would buy again.
+CSAT-00757,ORD-02742,CUST-01599,2025-04-04,9,None,Happy customer. Will order again.
+CSAT-00758,ORD-00760,CUST-00968,2025-04-22,2,Delivery Speed,No communication about the delay. Had to call three times.
+CSAT-00759,ORD-00516,CUST-01125,2025-05-13,10,None,
+CSAT-00760,ORD-01010,CUST-01344,2025-04-26,8,None,Product exceeded my expectations.
+CSAT-00761,ORD-00309,CUST-00734,2025-07-04,2,Delivery Speed,Tracking said 'in transit' for 10 days straight.
+CSAT-00762,ORD-01232,CUST-00312,2025-05-19,8,None,Love it! Shipping was quick.
+CSAT-00763,ORD-02915,CUST-01418,2025-05-01,9,None,
+CSAT-00764,ORD-00266,CUST-00347,2025-05-25,8,None,Smooth ordering process and fast delivery.
+CSAT-00765,ORD-01016,CUST-00099,2025-05-13,8,None,Fast shipping and good quality.
+CSAT-00766,ORD-00844,CUST-00596,2025-06-09,3,Product Quality,Expected better quality for the price.
+CSAT-00767,ORD-02041,CUST-00701,2025-05-14,7,None,Smooth ordering process and fast delivery.
+CSAT-00768,ORD-01548,CUST-01088,2025-06-28,6,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00769,ORD-02110,CUST-00561,2025-05-30,8,None,Love it! Shipping was quick.
+CSAT-00770,ORD-00192,CUST-01104,2025-06-24,5,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-00771,ORD-02501,CUST-00794,2025-06-22,5,Delivery Speed,
+CSAT-00772,ORD-01423,CUST-00320,2025-07-10,7,None,
+CSAT-00773,ORD-02273,CUST-01165,2025-05-21,2,Customer Service,My furniture arrived with visible damage from shipping.
+CSAT-00774,ORD-02224,CUST-01526,2025-05-25,8,None,Love it! Shipping was quick.
+CSAT-00775,ORD-00682,CUST-01722,2025-06-15,10,None,
+CSAT-00776,ORD-02463,CUST-01011,2025-07-06,2,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00777,ORD-01618,CUST-00714,2025-07-12,5,Delivery Speed,
+CSAT-00778,ORD-00642,CUST-00700,2025-05-22,8,Packaging,Love it! Shipping was quick.
+CSAT-00779,ORD-00126,CUST-01515,2025-05-19,6,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00780,ORD-01639,CUST-00749,2025-05-15,7,None,Exactly what I needed. Would buy again.
+CSAT-00781,ORD-00959,CUST-00113,2025-04-15,7,None,
+CSAT-00782,ORD-00421,CUST-00375,2025-05-04,8,None,Product exceeded my expectations.
+CSAT-00783,ORD-02571,CUST-01400,2025-06-26,7,None,Love it! Shipping was quick.
+CSAT-00784,ORD-00030,CUST-01670,2025-05-08,8,None,Smooth ordering process and fast delivery.
+CSAT-00785,ORD-01272,CUST-00509,2025-05-30,8,None,Product exceeded my expectations.
+CSAT-00786,ORD-01622,CUST-00071,2025-06-26,5,Packaging,
+CSAT-00787,ORD-02548,CUST-00666,2025-05-24,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00788,ORD-01099,CUST-01154,2025-05-08,5,Customer Service,The item broke within a week of use.
+CSAT-00789,ORD-02383,CUST-00672,2025-06-21,4,Customer Service,Expected better quality for the price.
+CSAT-00790,ORD-00285,CUST-00031,2025-04-13,10,None,
+CSAT-00791,ORD-00004,CUST-00861,2025-05-28,5,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00792,ORD-00138,CUST-01282,2025-04-19,8,None,Exactly what I needed. Would buy again.
+CSAT-00793,ORD-01004,CUST-00084,2025-05-04,9,None,"Great product, arrived on time!"
+CSAT-00794,ORD-00221,CUST-00976,2025-07-05,7,None,Happy customer. Will order again.
+CSAT-00795,ORD-02572,CUST-00827,2025-04-28,6,None,The item broke within a week of use.
+CSAT-00796,ORD-01355,CUST-00853,2025-04-25,9,None,
+CSAT-00797,ORD-00471,CUST-00701,2025-04-16,8,Packaging,Love it! Shipping was quick.
+CSAT-00798,ORD-01194,CUST-01366,2025-06-03,10,None,
+CSAT-00799,ORD-01870,CUST-00165,2025-05-10,10,None,Product exceeded my expectations.
+CSAT-00800,ORD-01209,CUST-00731,2025-04-17,5,Product Quality,Took a few extra days but the product is okay.
+CSAT-00801,ORD-01278,CUST-01128,2025-07-06,6,Packaging,The item broke within a week of use.
+CSAT-00802,ORD-00264,CUST-01737,2025-05-02,7,None,Very happy with my purchase.
+CSAT-00803,ORD-01770,CUST-01106,2025-06-10,9,Product Quality,
+CSAT-00804,ORD-02453,CUST-00766,2025-05-26,7,None,Happy customer. Will order again.
+CSAT-00805,ORD-01879,CUST-00783,2025-04-30,8,None,Good experience overall.
+CSAT-00806,ORD-00530,CUST-01275,2025-05-14,9,None,Exactly what I needed. Would buy again.
+CSAT-00807,ORD-01350,CUST-00221,2025-05-10,7,None,
+CSAT-00808,ORD-02797,CUST-00508,2025-04-22,6,Packaging,Took a few extra days but the product is okay.
+CSAT-00809,ORD-01922,CUST-00415,2025-07-11,5,Product Quality,Took a few extra days but the product is okay.
+CSAT-00810,ORD-02559,CUST-00374,2025-04-15,7,None,"Great product, arrived on time!"
+CSAT-00811,ORD-00123,CUST-00298,2025-05-11,6,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00812,ORD-00534,CUST-00350,2025-05-10,9,None,Exactly what I needed. Would buy again.
+CSAT-00813,ORD-01620,CUST-01448,2025-07-03,8,None,Very happy with my purchase.
+CSAT-00814,ORD-02948,CUST-00923,2025-04-14,7,None,
+CSAT-00815,ORD-00319,CUST-01571,2025-04-11,9,None,Product exceeded my expectations.
+CSAT-00816,ORD-02506,CUST-01395,2025-05-14,5,Product Quality,
+CSAT-00817,ORD-02744,CUST-00677,2025-04-28,6,Packaging,Wrong color sent. Had to return.
+CSAT-00818,ORD-00709,CUST-00527,2025-04-23,9,None,Good experience overall.
+CSAT-00819,ORD-00263,CUST-00888,2025-05-19,5,Customer Service,The item broke within a week of use.
+CSAT-00820,ORD-01476,CUST-01124,2025-07-05,4,Delivery Speed,Delivery was so late I almost forgot I ordered it.
+CSAT-00821,ORD-02375,CUST-00883,2025-04-22,10,None,Excellent value for the money.
+CSAT-00822,ORD-00872,CUST-00856,2025-06-13,10,None,Product exceeded my expectations.
+CSAT-00823,ORD-00926,CUST-00964,2025-04-24,9,None,Excellent value for the money.
+CSAT-00824,ORD-00861,CUST-00718,2025-06-03,6,None,Expected better quality for the price.
+CSAT-00825,ORD-00890,CUST-01334,2025-06-21,5,Product Quality,Expected better quality for the price.
+CSAT-00826,ORD-01048,CUST-01491,2025-05-02,8,Packaging,Happy customer. Will order again.
+CSAT-00827,ORD-00692,CUST-00796,2025-06-09,6,Customer Service,
+CSAT-00828,ORD-01535,CUST-00123,2025-07-10,6,Packaging,
+CSAT-00829,ORD-00220,CUST-00152,2025-04-29,7,None,Excellent value for the money.
+CSAT-00830,ORD-01479,CUST-00095,2025-04-20,8,Packaging,
+CSAT-00831,ORD-02280,CUST-01405,2025-04-23,9,None,Fast shipping and good quality.
+CSAT-00832,ORD-00398,CUST-01027,2025-05-03,7,None,Product exceeded my expectations.
+CSAT-00833,ORD-01887,CUST-00462,2025-07-02,6,None,
+CSAT-00834,ORD-00626,CUST-01050,2025-06-17,7,Packaging,
+CSAT-00835,ORD-02059,CUST-00575,2025-05-24,6,Packaging,Product quality was not what I expected.
+CSAT-00836,ORD-02366,CUST-00162,2025-06-16,7,None,Good experience overall.
+CSAT-00837,ORD-01719,CUST-00697,2025-04-12,7,Packaging,Good experience overall.
+CSAT-00838,ORD-01096,CUST-00815,2025-07-07,5,None,
+CSAT-00839,ORD-01044,CUST-01231,2025-05-08,7,None,Excellent value for the money.
+CSAT-00840,ORD-00134,CUST-00167,2025-05-01,5,Customer Service,Expected better quality for the price.
+CSAT-00841,ORD-02965,CUST-00270,2025-07-11,6,Packaging,Not worth the price. Feels cheaply made.
+CSAT-00842,ORD-01261,CUST-00125,2025-06-02,8,None,Excellent value for the money.
+CSAT-00843,ORD-01081,CUST-00913,2025-04-29,10,None,Smooth ordering process and fast delivery.
+CSAT-00844,ORD-01686,CUST-01419,2025-06-22,6,None,
+CSAT-00845,ORD-02404,CUST-00878,2025-05-07,10,None,
+CSAT-00846,ORD-00284,CUST-01307,2025-06-19,6,Customer Service,
+CSAT-00847,ORD-01585,CUST-00515,2025-04-29,6,None,
+CSAT-00848,ORD-02321,CUST-01203,2025-05-26,9,None,
+CSAT-00849,ORD-01485,CUST-00396,2025-06-29,6,Packaging,Wrong color sent. Had to return.
+CSAT-00850,ORD-00202,CUST-00047,2025-04-30,7,None,Happy customer. Will order again.
+CSAT-00851,ORD-01125,CUST-01326,2025-05-27,7,None,
+CSAT-00852,ORD-00075,CUST-01344,2025-06-10,6,None,
+CSAT-00853,ORD-00675,CUST-00179,2025-05-11,9,None,
+CSAT-00854,ORD-02465,CUST-00273,2025-05-28,6,Product Quality,Expected better quality for the price.
+CSAT-00855,ORD-01333,CUST-00215,2025-04-16,6,Product Quality,
+CSAT-00856,ORD-01513,CUST-01652,2025-04-27,10,None,Product exceeded my expectations.
+CSAT-00857,ORD-00666,CUST-01196,2025-05-13,8,None,
+CSAT-00858,ORD-02531,CUST-00051,2025-05-27,6,None,Not worth the price. Feels cheaply made.
+CSAT-00859,ORD-02509,CUST-00482,2025-07-05,7,Packaging,Product exceeded my expectations.
+CSAT-00860,ORD-01512,CUST-01385,2025-07-09,7,None,Exactly what I needed. Would buy again.
+CSAT-00861,ORD-02545,CUST-01041,2025-04-25,9,None,
+CSAT-00862,ORD-01116,CUST-00160,2025-05-31,9,None,
+CSAT-00863,ORD-00490,CUST-00453,2025-06-27,3,Product Quality,Expected better quality for the price.
+CSAT-00864,ORD-02126,CUST-01397,2025-06-22,5,Delivery Speed,Expected better quality for the price.
+CSAT-00865,ORD-02109,CUST-00082,2025-04-12,8,None,Excellent value for the money.
+CSAT-00866,ORD-00184,CUST-00167,2025-04-13,10,None,Fast shipping and good quality.
+CSAT-00867,ORD-00838,CUST-00115,2025-06-23,6,Packaging,
+CSAT-00868,ORD-00433,CUST-00381,2025-06-07,2,Delivery Speed,The delivery driver left my heavy package in the rain.
+CSAT-00869,ORD-01937,CUST-01279,2025-06-18,4,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-00870,ORD-02025,CUST-00057,2025-06-12,2,Customer Service,I waited 12 days past the promised date. Unacceptable.
+CSAT-00871,ORD-00701,CUST-00040,2025-05-27,8,None,Very happy with my purchase.
+CSAT-00872,ORD-02347,CUST-00387,2025-06-14,9,None,Excellent value for the money.
+CSAT-00873,ORD-01453,CUST-00627,2025-06-24,6,None,Expected better quality for the price.
+CSAT-00874,ORD-02134,CUST-01176,2025-06-05,5,Product Quality,Expected better quality for the price.
+CSAT-00875,ORD-02927,CUST-00076,2025-04-24,9,None,Product exceeded my expectations.
+CSAT-00876,ORD-02271,CUST-01769,2025-05-24,10,None,Product exceeded my expectations.
+CSAT-00877,ORD-01820,CUST-00218,2025-05-06,6,Product Quality,Expected better quality for the price.
+CSAT-00878,ORD-02892,CUST-01444,2025-07-15,5,Delivery Speed,Expected better quality for the price.
+CSAT-00879,ORD-01288,CUST-00604,2025-06-05,7,None,
+CSAT-00880,ORD-01902,CUST-01095,2025-05-10,8,None,
+CSAT-00881,ORD-01301,CUST-00977,2025-05-05,4,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-00882,ORD-02747,CUST-00153,2025-07-05,10,None,"Great product, arrived on time!"
+CSAT-00883,ORD-00207,CUST-01129,2025-06-11,7,None,Product exceeded my expectations.
+CSAT-00884,ORD-00494,CUST-01726,2025-04-24,6,Delivery Speed,
+CSAT-00885,ORD-00509,CUST-00393,2025-06-01,8,Packaging,Excellent value for the money.
+CSAT-00886,ORD-00646,CUST-01405,2025-05-16,6,Delivery Speed,Expected better quality for the price.
+CSAT-00887,ORD-00475,CUST-01188,2025-05-26,8,None,
+CSAT-00888,ORD-02030,CUST-00829,2025-04-24,8,None,Smooth ordering process and fast delivery.
+CSAT-00889,ORD-01456,CUST-01756,2025-05-26,7,None,Love it! Shipping was quick.
+CSAT-00890,ORD-02828,CUST-00403,2025-07-08,8,None,Exactly what I needed. Would buy again.
+CSAT-00891,ORD-02926,CUST-01350,2025-04-23,5,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-00892,ORD-00801,CUST-01597,2025-06-11,4,Customer Service,Wrong color sent. Had to return.
+CSAT-00893,ORD-00528,CUST-00335,2025-06-29,7,None,
+CSAT-00894,ORD-00155,CUST-01743,2025-05-22,10,None,
+CSAT-00895,ORD-00971,CUST-01405,2025-04-21,9,None,
+CSAT-00896,ORD-02811,CUST-00432,2025-05-23,5,None,Packaging was minimal — item rattled around in the box.
+CSAT-00897,ORD-00747,CUST-00908,2025-06-30,8,None,Product exceeded my expectations.
+CSAT-00898,ORD-01713,CUST-00552,2025-06-04,5,Packaging,Product quality was not what I expected.
+CSAT-00899,ORD-00968,CUST-00588,2025-05-24,9,None,
+CSAT-00900,ORD-00724,CUST-01022,2025-06-20,5,None,Customer service was unhelpful when I called about my order.
+CSAT-00901,ORD-00536,CUST-00534,2025-04-24,7,None,Smooth ordering process and fast delivery.
+CSAT-00902,ORD-00997,CUST-00730,2025-05-10,8,None,Fast shipping and good quality.
+CSAT-00903,ORD-01431,CUST-00385,2025-06-02,6,Product Quality,Expected better quality for the price.
+CSAT-00904,ORD-01993,CUST-01124,2025-04-24,5,None,Wrong color sent. Had to return.
+CSAT-00905,ORD-01768,CUST-00946,2025-04-20,9,None,Product exceeded my expectations.
+CSAT-00906,ORD-01729,CUST-01341,2025-05-15,6,Product Quality,Wrong color sent. Had to return.
+CSAT-00907,ORD-00641,CUST-01622,2025-06-19,9,None,Product exceeded my expectations.
+CSAT-00908,ORD-00772,CUST-01458,2025-05-12,7,Packaging,Happy customer. Will order again.
+CSAT-00909,ORD-01793,CUST-01437,2025-07-08,8,None,
+CSAT-00910,ORD-01616,CUST-01505,2025-05-23,7,None,Product exceeded my expectations.
+CSAT-00911,ORD-00235,CUST-01790,2025-04-17,8,None,Fast shipping and good quality.
+CSAT-00912,ORD-00541,CUST-00536,2025-05-10,6,None,
+CSAT-00913,ORD-02264,CUST-01796,2025-07-04,4,Product Quality,Wrong color sent. Had to return.
+CSAT-00914,ORD-02370,CUST-00540,2025-07-04,4,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00915,ORD-01580,CUST-01063,2025-07-12,6,None,Wrong color sent. Had to return.
+CSAT-00916,ORD-00493,CUST-00348,2025-06-26,5,Packaging,The item broke within a week of use.
+CSAT-00917,ORD-02019,CUST-00083,2025-06-19,7,None,Love it! Shipping was quick.
+CSAT-00918,ORD-01621,CUST-00585,2025-06-18,6,None,The item broke within a week of use.
+CSAT-00919,ORD-00688,CUST-00984,2025-07-27,2,Delivery Speed,The delivery driver left my heavy package in the rain.
+CSAT-00920,ORD-01514,CUST-00238,2025-04-14,7,Packaging,"Great product, arrived on time!"
+CSAT-00921,ORD-02169,CUST-00851,2025-07-03,5,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00922,ORD-02021,CUST-00619,2025-06-26,3,Delivery Speed,The item broke within a week of use.
+CSAT-00923,ORD-00683,CUST-01623,2025-06-15,2,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-00924,ORD-01368,CUST-00509,2025-06-29,5,Product Quality,Product quality was not what I expected.
+CSAT-00925,ORD-02040,CUST-00119,2025-05-06,3,Delivery Speed,I had to rearrange my schedule three times for this delivery.
+CSAT-00926,ORD-01428,CUST-01791,2025-06-01,8,None,
+CSAT-00927,ORD-01251,CUST-00682,2025-05-10,9,None,"Great product, arrived on time!"
+CSAT-00928,ORD-00731,CUST-01736,2025-06-25,6,None,The item broke within a week of use.
+CSAT-00929,ORD-00674,CUST-00723,2025-05-21,5,None,Took a few extra days but the product is okay.
+CSAT-00930,ORD-00055,CUST-01578,2025-04-09,9,None,
+CSAT-00931,ORD-02886,CUST-00120,2025-06-20,8,None,Smooth ordering process and fast delivery.
+CSAT-00932,ORD-01945,CUST-01721,2025-04-19,4,Product Quality,The item broke within a week of use.
+CSAT-00933,ORD-02387,CUST-01321,2025-07-20,4,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-00934,ORD-02713,CUST-01410,2025-06-01,5,Packaging,
+CSAT-00935,ORD-02691,CUST-01381,2025-04-23,7,None,Fast shipping and good quality.
+CSAT-00936,ORD-02342,CUST-00431,2025-06-04,8,None,
+CSAT-00937,ORD-01019,CUST-00113,2025-06-07,1,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-00938,ORD-01559,CUST-00735,2025-04-21,7,Packaging,Product exceeded my expectations.
+CSAT-00939,ORD-02401,CUST-00366,2025-06-05,10,None,Fast shipping and good quality.
+CSAT-00940,ORD-02318,CUST-00081,2025-06-27,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00941,ORD-00201,CUST-00509,2025-07-09,3,Packaging,The item broke within a week of use.
+CSAT-00942,ORD-00482,CUST-01352,2025-06-07,3,Delivery Speed,No communication about the delay. Had to call three times.
+CSAT-00943,ORD-00189,CUST-00248,2025-04-22,8,None,
+CSAT-00944,ORD-02939,CUST-00869,2025-05-05,7,None,Happy customer. Will order again.
+CSAT-00945,ORD-02359,CUST-00422,2025-05-21,9,Product Quality,Excellent value for the money.
+CSAT-00946,ORD-01306,CUST-01575,2025-07-07,4,Customer Service,Customer service was unhelpful when I called about my order.
+CSAT-00947,ORD-02140,CUST-01137,2025-05-07,9,None,Very happy with my purchase.
+CSAT-00948,ORD-00847,CUST-00026,2025-05-05,3,Delivery Speed,I had to rearrange my schedule three times for this delivery.
+CSAT-00949,ORD-01568,CUST-00274,2025-05-12,6,Product Quality,Expected better quality for the price.
+CSAT-00950,ORD-01000,CUST-00781,2025-05-27,5,None,Wrong color sent. Had to return.
+CSAT-00951,ORD-01451,CUST-01498,2025-06-21,4,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-00952,ORD-01225,CUST-00924,2025-05-21,9,None,
+CSAT-00953,ORD-02979,CUST-00672,2025-05-06,8,None,Very happy with my purchase.
+CSAT-00954,ORD-00507,CUST-00576,2025-04-15,8,None,
+CSAT-00955,ORD-01934,CUST-01246,2025-07-07,9,None,
+CSAT-00956,ORD-00479,CUST-00850,2025-06-14,6,Product Quality,The item broke within a week of use.
+CSAT-00957,ORD-02343,CUST-00623,2025-07-05,7,None,Fast shipping and good quality.
+CSAT-00958,ORD-00015,CUST-00437,2025-05-02,6,None,Product quality was not what I expected.
+CSAT-00959,ORD-00739,CUST-00087,2025-05-24,6,Delivery Speed,Product quality was not what I expected.
+CSAT-00960,ORD-00987,CUST-01654,2025-05-09,8,None,
+CSAT-00961,ORD-02530,CUST-01614,2025-05-26,8,None,
+CSAT-00962,ORD-00195,CUST-01195,2025-06-02,8,None,
+CSAT-00963,ORD-01838,CUST-01044,2025-04-13,8,None,Fast shipping and good quality.
+CSAT-00964,ORD-02853,CUST-00956,2025-06-19,7,None,Smooth ordering process and fast delivery.
+CSAT-00965,ORD-00060,CUST-00974,2025-05-05,9,None,Exactly what I needed. Would buy again.
+CSAT-00966,ORD-02687,CUST-01485,2025-05-29,7,None,
+CSAT-00967,ORD-00783,CUST-00543,2025-04-20,7,None,Very happy with my purchase.
+CSAT-00968,ORD-02171,CUST-01733,2025-06-14,2,Delivery Speed,Delivery was so late I almost forgot I ordered it.
+CSAT-00969,ORD-01036,CUST-01168,2025-05-14,8,None,
+CSAT-00970,ORD-02630,CUST-00841,2025-06-20,7,None,Smooth ordering process and fast delivery.
+CSAT-00971,ORD-01246,CUST-01297,2025-04-24,8,None,Fast shipping and good quality.
+CSAT-00972,ORD-00129,CUST-01138,2025-05-28,8,None,Fast shipping and good quality.
+CSAT-00973,ORD-02820,CUST-01732,2025-06-08,5,Packaging,Took a few extra days but the product is okay.
+CSAT-00974,ORD-02373,CUST-00315,2025-06-03,8,None,
+CSAT-00975,ORD-01816,CUST-01761,2025-05-23,8,None,Love it! Shipping was quick.
+CSAT-00976,ORD-01883,CUST-00639,2025-04-18,10,None,
+CSAT-00977,ORD-01836,CUST-01112,2025-04-17,6,None,Customer service was unhelpful when I called about my order.
+CSAT-00978,ORD-02999,CUST-01560,2025-05-16,8,None,Smooth ordering process and fast delivery.
+CSAT-00979,ORD-02735,CUST-01468,2025-05-15,4,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-00980,ORD-00700,CUST-01255,2025-06-18,7,Packaging,Exactly what I needed. Would buy again.
+CSAT-00981,ORD-02855,CUST-01102,2025-05-09,9,None,"Great product, arrived on time!"
+CSAT-00982,ORD-00028,CUST-00539,2025-05-06,8,None,Smooth ordering process and fast delivery.
+CSAT-00983,ORD-00600,CUST-00500,2025-05-08,5,Customer Service,The item broke within a week of use.
+CSAT-00984,ORD-00653,CUST-01186,2025-06-03,6,Delivery Speed,
+CSAT-00985,ORD-02919,CUST-01139,2025-06-12,4,Product Quality,Product quality was not what I expected.
+CSAT-00986,ORD-02261,CUST-01735,2025-04-29,9,None,Exactly what I needed. Would buy again.
+CSAT-00987,ORD-01138,CUST-01201,2025-07-29,2,Delivery Speed,Product was fine but the shipping delay ruined my plans.
+CSAT-00988,ORD-00080,CUST-01329,2025-04-21,7,None,"Great product, arrived on time!"
+CSAT-00989,ORD-01106,CUST-00747,2025-05-10,7,None,
+CSAT-00990,ORD-00635,CUST-01332,2025-05-22,2,Customer Service,My furniture arrived with visible damage from shipping.
+CSAT-00991,ORD-01436,CUST-01415,2025-04-21,3,Delivery Speed,The shipment was delayed repeatedly with no updates.
+CSAT-00992,ORD-01092,CUST-01131,2025-04-18,5,Product Quality,Expected better quality for the price.
+CSAT-00993,ORD-01299,CUST-00673,2025-05-18,6,None,Took a few extra days but the product is okay.
+CSAT-00994,ORD-00342,CUST-00722,2025-05-29,7,None,"Great product, arrived on time!"
+CSAT-00995,ORD-00323,CUST-00205,2025-05-26,8,None,Exactly what I needed. Would buy again.
+CSAT-00996,ORD-00224,CUST-00114,2025-06-21,4,Product Quality,Wrong color sent. Had to return.
+CSAT-00997,ORD-02891,CUST-00812,2025-06-11,9,Packaging,Excellent value for the money.
+CSAT-00998,ORD-01995,CUST-00617,2025-05-08,7,None,Fast shipping and good quality.
+CSAT-00999,ORD-01296,CUST-01331,2025-05-17,10,None,
+CSAT-01000,ORD-02237,CUST-01785,2025-07-14,6,Delivery Speed,
+CSAT-01001,ORD-01101,CUST-01507,2025-06-06,5,Product Quality,Product quality was not what I expected.
+CSAT-01002,ORD-00655,CUST-01319,2025-06-16,7,None,Smooth ordering process and fast delivery.
+CSAT-01003,ORD-00900,CUST-00534,2025-05-01,10,None,
+CSAT-01004,ORD-01369,CUST-00272,2025-05-12,9,None,"Great product, arrived on time!"
+CSAT-01005,ORD-02936,CUST-01258,2025-04-22,8,None,
+CSAT-01006,ORD-00670,CUST-00379,2025-05-25,7,None,"Great product, arrived on time!"
+CSAT-01007,ORD-02627,CUST-01317,2025-06-10,9,None,Happy customer. Will order again.
+CSAT-01008,ORD-01157,CUST-01019,2025-07-05,2,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-01009,ORD-02786,CUST-00608,2025-05-31,7,None,
+CSAT-01010,ORD-00935,CUST-01687,2025-06-15,9,None,Fast shipping and good quality.
+CSAT-01011,ORD-02102,CUST-00786,2025-06-21,8,None,
+CSAT-01012,ORD-02598,CUST-01411,2025-06-16,3,Delivery Speed,Worst delivery experience I've ever had.
+CSAT-01013,ORD-02385,CUST-00332,2025-04-15,8,None,"Great product, arrived on time!"
+CSAT-01014,ORD-00182,CUST-00379,2025-06-27,6,Delivery Speed,The item broke within a week of use.
+CSAT-01015,ORD-00924,CUST-01358,2025-05-03,8,None,
+CSAT-01016,ORD-02083,CUST-01574,2025-04-28,7,None,Good experience overall.
+CSAT-01017,ORD-01170,CUST-01652,2025-06-05,8,None,Fast shipping and good quality.
+CSAT-01018,ORD-00242,CUST-01594,2025-04-24,6,Packaging,Wrong color sent. Had to return.
+CSAT-01019,ORD-00749,CUST-00935,2025-06-06,8,None,
+CSAT-01020,ORD-02846,CUST-01322,2025-06-01,4,Delivery Speed,Late delivery and damaged packaging. Very disappointed.
+CSAT-01021,ORD-02495,CUST-01703,2025-04-21,7,None,
+CSAT-01022,ORD-01390,CUST-01005,2025-05-22,9,None,Product exceeded my expectations.
+CSAT-01023,ORD-00521,CUST-01523,2025-05-26,2,Delivery Speed,The shipment was delayed repeatedly with no updates.
+CSAT-01024,ORD-00234,CUST-01381,2025-06-29,6,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-01025,ORD-01093,CUST-01334,2025-04-25,8,None,Happy customer. Will order again.
+CSAT-01026,ORD-02196,CUST-01758,2025-04-10,8,None,Exactly what I needed. Would buy again.
+CSAT-01027,ORD-00610,CUST-00431,2025-06-28,5,None,
+CSAT-01028,ORD-00771,CUST-01762,2025-06-12,4,Product Quality,Product quality was not what I expected.
+CSAT-01029,ORD-01211,CUST-00151,2025-06-14,4,Delivery Speed,Packaging was minimal — item rattled around in the box.
+CSAT-01030,ORD-01039,CUST-01141,2025-06-13,6,Customer Service,The item broke within a week of use.
+CSAT-01031,ORD-01765,CUST-01316,2025-06-06,9,None,
+CSAT-01032,ORD-01754,CUST-01464,2025-05-13,6,Product Quality,Product quality was not what I expected.
+CSAT-01033,ORD-00836,CUST-01065,2025-05-26,5,None,Not worth the price. Feels cheaply made.
+CSAT-01034,ORD-01647,CUST-01689,2025-07-07,6,Product Quality,Packaging was minimal — item rattled around in the box.
+CSAT-01035,ORD-02558,CUST-01102,2025-06-02,9,Packaging,Smooth ordering process and fast delivery.
+CSAT-01036,ORD-00156,CUST-00532,2025-06-15,1,Delivery Speed,I waited 12 days past the promised date. Unacceptable.
+CSAT-01037,ORD-00209,CUST-01645,2025-05-02,8,None,Smooth ordering process and fast delivery.
+CSAT-01038,ORD-01167,CUST-00516,2025-06-10,7,None,Product exceeded my expectations.
+CSAT-01039,ORD-02525,CUST-00991,2025-04-26,8,None,
+CSAT-01040,ORD-01723,CUST-01098,2025-04-24,3,Customer Service,Customer service was unhelpful when I called about my order.
+CSAT-01041,ORD-02802,CUST-00431,2025-06-10,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-01042,ORD-02071,CUST-00967,2025-07-12,3,Delivery Speed,Customer service was unhelpful when I called about my order.
+CSAT-01043,ORD-02542,CUST-01401,2025-05-07,3,Delivery Speed,Extremely slow shipping. Will think twice before ordering again.
+CSAT-01044,ORD-00546,CUST-01742,2025-06-22,1,Customer Service,The delivery driver left my heavy package in the rain.
+CSAT-01045,ORD-02132,CUST-00891,2025-06-11,6,None,Wrong color sent. Had to return.
+CSAT-01046,ORD-02836,CUST-00575,2025-05-29,6,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-01047,ORD-00957,CUST-01496,2025-07-21,3,Delivery Speed,No communication about the delay. Had to call three times.
+CSAT-01048,ORD-02933,CUST-00953,2025-07-10,5,Product Quality,Customer service was unhelpful when I called about my order.
+CSAT-01049,ORD-01032,CUST-01060,2025-06-11,8,Product Quality,Very happy with my purchase.
+CSAT-01050,ORD-02533,CUST-00389,2025-07-13,6,None,The item broke within a week of use.
+CSAT-01051,ORD-00660,CUST-01496,2025-04-23,8,None,Fast shipping and good quality.
+CSAT-01052,ORD-01885,CUST-01086,2025-06-13,7,None,"Great product, arrived on time!"
+CSAT-01053,ORD-01372,CUST-00326,2025-05-08,10,None,
+CSAT-01054,ORD-01300,CUST-01182,2025-04-10,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-01055,ORD-00715,CUST-01252,2025-04-23,6,None,
+CSAT-01056,ORD-02508,CUST-00129,2025-06-30,5,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-01057,ORD-01327,CUST-01737,2025-06-01,8,None,
+CSAT-01058,ORD-02596,CUST-00774,2025-06-09,9,None,
+CSAT-01059,ORD-02084,CUST-01775,2025-07-06,5,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-01060,ORD-01375,CUST-00977,2025-06-05,4,Delivery Speed,Wrong color sent. Had to return.
+CSAT-01061,ORD-01510,CUST-01555,2025-04-23,8,Packaging,
+CSAT-01062,ORD-02541,CUST-00958,2025-05-07,5,Customer Service,Not worth the price. Feels cheaply made.
+CSAT-01063,ORD-02961,CUST-00662,2025-06-01,8,None,
+CSAT-01064,ORD-02654,CUST-00388,2025-05-04,10,None,Smooth ordering process and fast delivery.
+CSAT-01065,ORD-02406,CUST-00917,2025-07-07,9,None,Excellent value for the money.
+CSAT-01066,ORD-02932,CUST-00691,2025-06-03,6,None,
+CSAT-01067,ORD-02546,CUST-01342,2025-04-19,7,None,Excellent value for the money.
+CSAT-01068,ORD-02223,CUST-01749,2025-06-29,5,Delivery Speed,The item broke within a week of use.
+CSAT-01069,ORD-02136,CUST-00911,2025-05-27,7,None,Very happy with my purchase.
+CSAT-01070,ORD-00586,CUST-01397,2025-06-16,7,None,
+CSAT-01071,ORD-01185,CUST-00527,2025-06-19,6,Delivery Speed,Product quality was not what I expected.
+CSAT-01072,ORD-00024,CUST-01119,2025-05-11,6,None,Product quality was not what I expected.
+CSAT-01073,ORD-01821,CUST-00719,2025-05-10,8,Packaging,Love it! Shipping was quick.
+CSAT-01074,ORD-01593,CUST-01671,2025-07-06,6,None,Packaging was minimal — item rattled around in the box.
+CSAT-01075,ORD-00248,CUST-01630,2025-06-15,4,Delivery Speed,I waited 12 days past the promised date. Unacceptable.
+CSAT-01076,ORD-02792,CUST-01016,2025-06-06,9,None,Love it! Shipping was quick.
+CSAT-01077,ORD-02207,CUST-01622,2025-06-12,10,None,Exactly what I needed. Would buy again.
+CSAT-01078,ORD-00033,CUST-01123,2025-05-29,9,None,Excellent value for the money.
+CSAT-01079,ORD-02305,CUST-00816,2025-04-26,8,None,Love it! Shipping was quick.
+CSAT-01080,ORD-00057,CUST-00140,2025-04-30,5,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-01081,ORD-00320,CUST-01194,2025-06-03,7,None,Excellent value for the money.
+CSAT-01082,ORD-01980,CUST-00753,2025-06-30,4,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-01083,ORD-01965,CUST-01563,2025-05-03,6,Product Quality,Not worth the price. Feels cheaply made.
+CSAT-01084,ORD-02432,CUST-01426,2025-06-08,5,None,Packaging was minimal — item rattled around in the box.
+CSAT-01085,ORD-01312,CUST-01095,2025-06-16,7,None,Exactly what I needed. Would buy again.
+CSAT-01086,ORD-02746,CUST-00340,2025-06-01,3,Delivery Speed,Wrong color sent. Had to return.
+CSAT-01087,ORD-01726,CUST-00510,2025-05-01,8,Product Quality,Fast shipping and good quality.
+CSAT-01088,ORD-02307,CUST-00271,2025-05-18,7,None,
+CSAT-01089,ORD-02805,CUST-01314,2025-06-12,3,Customer Service,Expected better quality for the price.
+CSAT-01090,ORD-00914,CUST-00882,2025-04-25,6,Customer Service,
+CSAT-01091,ORD-00399,CUST-01524,2025-06-14,2,Delivery Speed,Item showed up late and the box was crushed.
+CSAT-01092,ORD-01831,CUST-00084,2025-05-02,8,Packaging,Exactly what I needed. Would buy again.
+CSAT-01093,ORD-01589,CUST-01798,2025-05-28,4,Product Quality,Wrong color sent. Had to return.
+CSAT-01094,ORD-00953,CUST-01462,2025-07-02,5,Packaging,Not worth the price. Feels cheaply made.
+CSAT-01095,ORD-02234,CUST-01144,2025-06-08,7,None,
+CSAT-01096,ORD-00395,CUST-01396,2025-05-25,5,Delivery Speed,
+CSAT-01097,ORD-02537,CUST-01544,2025-05-28,8,Packaging,Very happy with my purchase.
+CSAT-01098,ORD-01490,CUST-00242,2025-06-06,7,None,Product exceeded my expectations.
+CSAT-01099,ORD-00738,CUST-00042,2025-05-25,6,None,
+CSAT-01100,ORD-01142,CUST-01335,2025-05-20,7,None,
+CSAT-01101,ORD-02231,CUST-01007,2025-05-06,8,None,Excellent value for the money.
+CSAT-01102,ORD-01359,CUST-00197,2025-06-09,6,Delivery Speed,The item broke within a week of use.
+CSAT-01103,ORD-01503,CUST-01343,2025-04-22,10,None,Happy customer. Will order again.
+CSAT-01104,ORD-02753,CUST-01615,2025-05-13,9,None,Exactly what I needed. Would buy again.
+CSAT-01105,ORD-01176,CUST-00353,2025-06-05,2,Delivery Speed,Extremely slow shipping. Will think twice before ordering again.
+CSAT-01106,ORD-00897,CUST-00249,2025-05-09,1,Delivery Speed,The delivery driver left my heavy package in the rain.
+CSAT-01107,ORD-02294,CUST-00417,2025-05-26,7,None,Product exceeded my expectations.
+CSAT-01108,ORD-01565,CUST-01545,2025-07-09,8,None,Love it! Shipping was quick.
+CSAT-01109,ORD-01601,CUST-00689,2025-05-04,9,Packaging,
+CSAT-01110,ORD-01114,CUST-01545,2025-05-10,5,None,Customer service was unhelpful when I called about my order.
+CSAT-01111,ORD-00901,CUST-01165,2025-04-27,8,None,Fast shipping and good quality.
+CSAT-01112,ORD-00921,CUST-01278,2025-04-29,7,None,Love it! Shipping was quick.
+CSAT-01113,ORD-01336,CUST-01345,2025-06-25,5,Product Quality,Product quality was not what I expected.
+CSAT-01114,ORD-00239,CUST-01577,2025-07-07,3,Product Quality,The item broke within a week of use.
+CSAT-01115,ORD-01001,CUST-01498,2025-04-20,8,None,Happy customer. Will order again.
+CSAT-01116,ORD-00476,CUST-00634,2025-04-13,8,None,Happy customer. Will order again.
+CSAT-01117,ORD-00386,CUST-00665,2025-05-29,6,Customer Service,The item broke within a week of use.
+CSAT-01118,ORD-01569,CUST-00985,2025-05-24,7,None,
+CSAT-01119,ORD-02086,CUST-01170,2025-06-11,8,None,Happy customer. Will order again.
+CSAT-01120,ORD-00163,CUST-01735,2025-04-27,9,Packaging,Smooth ordering process and fast delivery.
+CSAT-01121,ORD-01264,CUST-00390,2025-05-07,7,None,Exactly what I needed. Would buy again.
+CSAT-01122,ORD-00336,CUST-00647,2025-05-02,8,None,Very happy with my purchase.
+CSAT-01123,ORD-00327,CUST-01187,2025-05-11,8,None,Very happy with my purchase.
+CSAT-01124,ORD-00766,CUST-00520,2025-06-10,7,Packaging,Very happy with my purchase.
+CSAT-01125,ORD-01869,CUST-01740,2025-05-27,7,None,
+CSAT-01126,ORD-02157,CUST-00791,2025-06-14,1,Packaging,Took forever to arrive and packaging was torn open.
+CSAT-01127,ORD-01627,CUST-01510,2025-06-28,8,None,
+CSAT-01128,ORD-00604,CUST-00051,2025-06-25,6,Packaging,Customer service was unhelpful when I called about my order.
+CSAT-01129,ORD-02862,CUST-00074,2025-05-20,8,None,
+CSAT-01130,ORD-00552,CUST-00811,2025-07-08,5,Packaging,Packaging was minimal — item rattled around in the box.
+CSAT-01131,ORD-00797,CUST-00338,2025-06-15,5,None,
+CSAT-01132,ORD-00520,CUST-00390,2025-07-11,6,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-01133,ORD-01507,CUST-01585,2025-05-06,9,None,Excellent value for the money.
+CSAT-01134,ORD-01308,CUST-00485,2025-04-22,9,None,Good experience overall.
+CSAT-01135,ORD-02087,CUST-01548,2025-06-01,8,None,Good experience overall.
+CSAT-01136,ORD-01086,CUST-00366,2025-06-05,6,None,Expected better quality for the price.
+CSAT-01137,ORD-00438,CUST-00217,2025-07-01,3,Delivery Speed,Extremely slow shipping. Will think twice before ordering again.
+CSAT-01138,ORD-02346,CUST-00869,2025-04-20,8,None,Product exceeded my expectations.
+CSAT-01139,ORD-02023,CUST-00343,2025-06-23,5,None,
+CSAT-01140,ORD-00681,CUST-01272,2025-06-05,6,None,
+CSAT-01141,ORD-02614,CUST-01179,2025-05-18,9,None,Happy customer. Will order again.
+CSAT-01142,ORD-00950,CUST-01037,2025-06-10,9,None,Happy customer. Will order again.
+CSAT-01143,ORD-00311,CUST-00310,2025-06-26,4,Product Quality,The item broke within a week of use.
+CSAT-01144,ORD-00632,CUST-01225,2025-07-20,1,Packaging,Took a few extra days but the product is okay.
+CSAT-01145,ORD-02148,CUST-01353,2025-05-21,9,Packaging,Very happy with my purchase.
+CSAT-01146,ORD-02697,CUST-01680,2025-04-24,8,None,
+CSAT-01147,ORD-00372,CUST-00153,2025-06-08,9,None,Love it! Shipping was quick.
+CSAT-01148,ORD-00911,CUST-00970,2025-07-13,3,Product Quality,Wrong color sent. Had to return.
+CSAT-01149,ORD-01839,CUST-00798,2025-06-08,3,Delivery Speed,Late delivery and damaged packaging. Very disappointed.
+CSAT-01150,ORD-02657,CUST-00897,2025-05-11,2,Delivery Speed,The package was supposed to arrive last week. Still waiting.
+CSAT-01151,ORD-00750,CUST-00499,2025-07-04,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-01152,ORD-01999,CUST-01367,2025-04-18,8,None,Product exceeded my expectations.
+CSAT-01153,ORD-01967,CUST-01264,2025-05-11,7,None,Product exceeded my expectations.
+CSAT-01154,ORD-01141,CUST-00441,2025-05-04,6,Product Quality,Expected better quality for the price.
+CSAT-01155,ORD-01446,CUST-01385,2025-04-15,7,None,
+CSAT-01156,ORD-00371,CUST-01127,2025-04-19,9,None,Good experience overall.
+CSAT-01157,ORD-00420,CUST-01722,2025-05-12,5,None,Wrong color sent. Had to return.
+CSAT-01158,ORD-02900,CUST-00227,2025-05-11,7,None,Smooth ordering process and fast delivery.
+CSAT-01159,ORD-01815,CUST-01557,2025-04-17,9,None,Smooth ordering process and fast delivery.
+CSAT-01160,ORD-00955,CUST-00628,2025-06-09,5,Packaging,
+CSAT-01161,ORD-02951,CUST-01231,2025-06-25,3,Delivery Speed,Package arrived damaged — looked like it was dropped.
+CSAT-01162,ORD-02901,CUST-01224,2025-05-10,10,None,Good experience overall.
+CSAT-01163,ORD-02108,CUST-01438,2025-07-16,5,Delivery Speed,Product quality was not what I expected.
+CSAT-01164,ORD-00608,CUST-00576,2025-05-21,9,None,"Great product, arrived on time!"
+CSAT-01165,ORD-00332,CUST-00114,2025-06-28,4,Delivery Speed,Expected better quality for the price.
+CSAT-01166,ORD-01158,CUST-01430,2025-07-02,5,Customer Service,
+CSAT-01167,ORD-02077,CUST-00819,2025-07-01,5,Delivery Speed,Not worth the price. Feels cheaply made.
+CSAT-01168,ORD-01862,CUST-01797,2025-04-18,5,Packaging,Wrong color sent. Had to return.
+CSAT-01169,ORD-01830,CUST-00959,2025-06-18,2,Delivery Speed,Took forever to arrive and packaging was torn open.
+CSAT-01170,ORD-02145,CUST-01579,2025-06-21,6,None,
+CSAT-01171,ORD-02760,CUST-01114,2025-04-23,7,None,Fast shipping and good quality.
+CSAT-01172,ORD-01244,CUST-01474,2025-05-13,7,None,"Great product, arrived on time!"
+CSAT-01173,ORD-02003,CUST-01652,2025-05-20,7,None,Good experience overall.
+CSAT-01174,ORD-01717,CUST-01056,2025-06-25,8,None,
+CSAT-01175,ORD-02241,CUST-01066,2025-04-27,7,Product Quality,Excellent value for the money.
+CSAT-01176,ORD-00216,CUST-01194,2025-07-21,2,Delivery Speed,My furniture arrived with visible damage from shipping.
+CSAT-01177,ORD-01543,CUST-01329,2025-06-06,7,Packaging,Very happy with my purchase.
+CSAT-01178,ORD-00743,CUST-01384,2025-04-25,10,Product Quality,Excellent value for the money.
+CSAT-01179,ORD-02771,CUST-00673,2025-05-10,3,Delivery Speed,Took a few extra days but the product is okay.
+CSAT-01180,ORD-00717,CUST-01624,2025-06-16,6,None,The item broke within a week of use.
+CSAT-01181,ORD-00105,CUST-00357,2025-05-19,8,None,Product exceeded my expectations.
+CSAT-01182,ORD-00254,CUST-01344,2025-04-08,7,None,Love it! Shipping was quick.
+CSAT-01183,ORD-00916,CUST-01373,2025-06-11,10,None,Very happy with my purchase.
+CSAT-01184,ORD-02489,CUST-01593,2025-05-05,7,None,Very happy with my purchase.
+CSAT-01185,ORD-00437,CUST-01414,2025-05-20,8,None,Exactly what I needed. Would buy again.
+CSAT-01186,ORD-02959,CUST-00438,2025-04-24,4,Customer Service,Took a few extra days but the product is okay.
+CSAT-01187,ORD-02426,CUST-01684,2025-06-01,9,None,Very happy with my purchase.
+CSAT-01188,ORD-01486,CUST-00064,2025-04-11,7,Packaging,Product exceeded my expectations.
+CSAT-01189,ORD-01504,CUST-01779,2025-07-01,7,None,Happy customer. Will order again.
+CSAT-01190,ORD-01636,CUST-01540,2025-05-09,7,None,
+CSAT-01191,ORD-02947,CUST-00612,2025-05-13,9,None,
+CSAT-01192,ORD-00483,CUST-01709,2025-06-20,7,None,
+CSAT-01193,ORD-01487,CUST-00899,2025-04-14,7,None,Product exceeded my expectations.
+CSAT-01194,ORD-01502,CUST-01158,2025-05-26,7,None,Smooth ordering process and fast delivery.
+CSAT-01195,ORD-00050,CUST-01468,2025-04-25,7,None,Smooth ordering process and fast delivery.
+CSAT-01196,ORD-01380,CUST-01280,2025-04-25,7,Packaging,Fast shipping and good quality.
+CSAT-01197,ORD-02960,CUST-00630,2025-05-22,7,Product Quality,"Great product, arrived on time!"
+CSAT-01198,ORD-01084,CUST-00958,2025-06-12,7,None,Happy customer. Will order again.
+CSAT-01199,ORD-01563,CUST-01012,2025-05-19,6,Customer Service,Packaging was minimal — item rattled around in the box.
+CSAT-01200,ORD-00256,CUST-01015,2025-06-25,4,Delivery Speed,Customer service was unhelpful when I called about my order.

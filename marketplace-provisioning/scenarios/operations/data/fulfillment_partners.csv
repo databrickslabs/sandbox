@@ -1,0 +1,9 @@
+partner_id,partner_name,specialization,regions_served,avg_transit_days,contract_sla_pct
+FP-001,SwiftShip Express,Express,Northeast;Southeast;Midwest,2,95.0
+FP-002,RegionFirst Delivery,Regional,Southeast;Southwest,3,93.0
+FP-003,PrimeRoute Logistics,General,Northeast;Midwest;West Coast,4,92.0
+FP-004,HeavyHaul Logistics,Heavy/Oversized,Northeast;Southeast;Midwest;Southwest;West Coast,6,90.0
+FP-005,NationWide Fulfillment,General,Northeast;Southeast;Midwest;Southwest;West Coast,4,91.0
+FP-006,CoastLine Carriers,Regional,West Coast;Southwest,3,94.0
+FP-007,MidAm Transport,Regional,Midwest;Southwest,3,92.0
+FP-008,QuickParcel Inc.,Express,Northeast;West Coast;Southeast,2,96.0
