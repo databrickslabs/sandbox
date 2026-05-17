@@ -1,0 +1,153 @@
+.query-panel {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.query-panel-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.query-panel-subtitle {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  color: #999;
+}
+
+.query-panel-empty {
+  text-align: center;
+  color: #999;
+  padding: 32px 0;
+  font-size: 14px;
+}
+
+.query-section {
+  margin-bottom: 16px;
+}
+
+.query-section-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.query-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.query-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.query-chip-primary {
+  border-color: #1565c0;
+  color: #1565c0;
+}
+
+.nl-sql-mapping {
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.mapping-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.mapping-type-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #f3e5f5;
+  color: #7b1fa2;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mapping-nl {
+  font-size: 12px;
+}
+
+.mapping-arrow {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.mapping-sql {
+  display: block;
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px 6px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.mapping-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.confidence-bar {
+  flex: 1;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: #1976d2;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.confidence-label {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}
+
+.query-details {
+  margin-top: 8px;
+}
+
+.query-details-summary {
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.query-json {
+  font-family: monospace;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  margin: 8px 0 0 0;
+}

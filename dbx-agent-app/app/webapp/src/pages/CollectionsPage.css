@@ -1,0 +1,264 @@
+.collections-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.collections-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.collections-title h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.collections-subtitle {
+  margin: 4px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.collections-loading,
+.collections-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px;
+}
+
+.collections-error-banner {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  border-left: 4px solid #c62828;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collections-error-banner button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #c62828;
+  padding: 0 4px;
+}
+
+.collections-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+.collections-sidebar {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.collections-sidebar h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #999;
+  font-size: 14px;
+}
+
+.collections-main {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.collection-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.collection-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.collection-detail-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.collection-detail-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.collection-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.collection-items-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.items-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.collection-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.collection-item-card:hover {
+  border-color: #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.item-name {
+  font-weight: 500;
+  font-size: 15px;
+  word-break: break-word;
+}
+
+.item-name-small {
+  font-weight: 500;
+  font-size: 13px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  word-break: break-all;
+}
+
+.item-meta {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.empty-items {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.empty-items p {
+  margin: 0;
+  color: #999;
+}
+
+.collection-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #999;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .collections-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .collections-sidebar {
+    max-height: 250px;
+  }
+
+  .collection-detail-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+}

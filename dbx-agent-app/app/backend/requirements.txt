@@ -1,0 +1,38 @@
+# FastAPI Framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# Database
+sqlalchemy>=2.0.0
+psycopg[binary]>=3.2.0
+alembic>=1.13.0
+aiosqlite>=0.19.0  # Async SQLite support
+
+# Data Validation
+pydantic>=2.6.0
+pydantic-settings>=2.0.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Databricks SDK
+databricks-sdk>=0.31.0
+databricks-sql-connector>=3.0.0
+
+# MCP Integration
+databricks-mcp>=0.1.0
+
+# HTTP Client
+httpx>=0.27.0
+
+# Template Engine (for code generation)
+jinja2>=3.1.0
+
+# MLflow (for tracing)
+mlflow>=3.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+httpx>=0.27.0  # Required by TestClient

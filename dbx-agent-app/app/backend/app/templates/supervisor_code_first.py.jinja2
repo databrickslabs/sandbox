@@ -1,0 +1,421 @@
+"""
+Code-First Supervisor: {{ collection_name }}
+
+Generated supervisor with dynamic tool discovery at runtime (Pattern 3).
+This supervisor discovers tools from MCP servers at runtime and uses
+OpenAI-style tool calling to orchestrate agent interactions.
+
+Collection ID: {{ collection_id }}
+Generated: {{ generated_at }}
+"""
+
+import os
+import json
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
+import httpx
+import mlflow
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+
+# Configuration from environment variables
+LLM_ENDPOINT = os.environ.get("LLM_ENDPOINT", "databricks-meta-llama-3-1-70b-instruct")
+DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
+DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
+MCP_SERVER_URLS = os.environ.get("MCP_SERVER_URLS", "").split(",")
+
+
+# Data models
+@dataclass
+class ToolInfo:
+    """Represents a tool discovered from an MCP server."""
+    name: str
+    description: str
+    spec: Dict[str, Any]
+    server_url: str
+
+
+class ChatRequest(BaseModel):
+    """Request schema for chat endpoint."""
+    message: str = Field(..., description="User message")
+    conversation_id: Optional[str] = Field(None, description="Conversation ID for continuity")
+
+
+class ChatResponse(BaseModel):
+    """Response schema for chat endpoint."""
+    response: str = Field(..., description="Supervisor response")
+    conversation_id: str = Field(..., description="Conversation ID")
+    trace_info: Optional[Dict[str, Any]] = Field(None, description="MLflow trace information")
+
+
+# MCP Client Functions
+async def fetch_tool_infos(server_url: str) -> List[ToolInfo]:
+    """
+    Fetch available tools from an MCP server.
+
+    This implements Pattern 3: Dynamic tool discovery at runtime.
+    No hard-coded function catalogs - tools are discovered on-demand.
+
+    Args:
+        server_url: MCP server endpoint URL
+
+    Returns:
+        List of ToolInfo objects representing available tools
+
+    Raises:
+        httpx.HTTPError: If MCP server is unreachable
+    """
+    tools: List[ToolInfo] = []
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Send JSON-RPC request to list tools
+            request_payload = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/list",
+                "params": {}
+            }
+
+            response = await client.post(
+                server_url,
+                json=request_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+
+            result = response.json()
+
+            if "error" in result:
+                print(f"Warning: MCP server error from {server_url}: {result['error']}")
+                return tools
+
+            tools_data = result.get("result", {}).get("tools", [])
+
+            # Convert MCP tool format to OpenAI tool spec
+            for tool_data in tools_data:
+                tool_name = tool_data.get("name", "")
+                if not tool_name:
+                    continue
+
+                tool_spec = {
+                    "type": "function",
+                    "function": {
+                        "name": tool_name,
+                        "description": tool_data.get("description", ""),
+                        "parameters": tool_data.get("inputSchema", {})
+                    }
+                }
+
+                tools.append(ToolInfo(
+                    name=tool_name,
+                    description=tool_data.get("description", ""),
+                    spec=tool_spec,
+                    server_url=server_url
+                ))
+
+    except httpx.HTTPError as e:
+        print(f"Warning: Failed to fetch tools from {server_url}: {str(e)}")
+    except Exception as e:
+        print(f"Warning: Unexpected error fetching tools from {server_url}: {str(e)}")
+
+    return tools
+
+
+async def call_tool(tool_name: str, tool_args: Dict[str, Any], server_url: str) -> Any:
+    """
+    Call a tool on an MCP server.
+
+    Args:
+        tool_name: Name of the tool to call
+        tool_args: Arguments to pass to the tool
+        server_url: MCP server endpoint URL
+
+    Returns:
+        Tool execution result
+
+    Raises:
+        httpx.HTTPError: If tool call fails
+    """
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        request_payload = {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": tool_name,
+                "arguments": tool_args
+            }
+        }
+
+        response = await client.post(
+            server_url,
+            json=request_payload,
+            headers={"Content-Type": "application/json"}
+        )
+        response.raise_for_status()
+
+        result = response.json()
+
+        if "error" in result:
+            error = result["error"]
+            raise Exception(f"Tool call error: {error.get('message', 'Unknown error')}")
+
+        return result.get("result", {})
+
+
+# Supervisor Logic
+async def run_supervisor(user_text: str, conversation_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Run the supervisor agent with dynamic tool discovery.
+
+    This implements Pattern 3:
+    1. Discover tools from MCP servers at runtime
+    2. Pass all available tools to LLM
+    3. Execute tool calls as requested by LLM
+    4. Return final response
+
+    Args:
+        user_text: User input message
+        conversation_id: Optional conversation ID for continuity
+
+    Returns:
+        Dictionary with response, conversation_id, and trace info
+    """
+    # Start MLflow trace
+    with mlflow.start_span(name="supervisor") as span:
+        span.set_inputs({"user_text": user_text, "conversation_id": conversation_id})
+
+        # Step 1: Dynamically discover tools from all MCP servers
+        tool_infos: List[ToolInfo] = []
+
+        with mlflow.start_span(name="discover_tools") as discover_span:
+            for server_url in MCP_SERVER_URLS:
+                if not server_url or server_url.strip() == "":
+                    continue
+                server_tools = await fetch_tool_infos(server_url.strip())
+                tool_infos.extend(server_tools)
+
+            discover_span.set_outputs({
+                "tool_count": len(tool_infos),
+                "tools": [t.name for t in tool_infos]
+            })
+
+        # Step 2: Create messages for LLM
+        messages = [
+            {
+                "role": "system",
+                "content": """You are {{ collection_name }}, an AI supervisor that coordinates multiple specialized agents.
+
+Available tools: {{ tool_list|length }} tools from {{ collection_name }} collection.
+
+Your responsibilities:
+1. Understand user requests
+2. Select appropriate tools to fulfill requests
+3. Call tools with correct parameters
+4. Synthesize results into helpful responses
+
+Always explain your reasoning and provide clear, actionable information."""
+            },
+            {
+                "role": "user",
+                "content": user_text
+            }
+        ]
+
+        # Step 3: Call LLM with available tools
+        with mlflow.start_span(name="llm_call") as llm_span:
+            # Prepare tools for API call
+            tools_param = [ti.spec for ti in tool_infos] if tool_infos else None
+
+            # Call Databricks Foundation Model API
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                headers = {
+                    "Authorization": f"Bearer {DATABRICKS_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+
+                request_body = {
+                    "messages": messages,
+                    "max_tokens": 4096,
+                    "temperature": 0.1
+                }
+
+                if tools_param:
+                    request_body["tools"] = tools_param
+                    request_body["tool_choice"] = "auto"
+
+                llm_span.set_inputs(request_body)
+
+                response = await client.post(
+                    f"{DATABRICKS_HOST}/serving-endpoints/{LLM_ENDPOINT}/invocations",
+                    headers=headers,
+                    json=request_body
+                )
+                response.raise_for_status()
+
+                result = response.json()
+                llm_span.set_outputs(result)
+
+        # Step 4: Handle tool calls if requested
+        message = result.get("choices", [{}])[0].get("message", {})
+        tool_calls = message.get("tool_calls", [])
+
+        if tool_calls:
+            with mlflow.start_span(name="execute_tools") as tools_span:
+                tool_results = []
+
+                for tool_call in tool_calls:
+                    function = tool_call.get("function", {})
+                    tool_name = function.get("name")
+                    tool_args = json.loads(function.get("arguments", "{}"))
+
+                    # Find the server URL for this tool
+                    tool_info = next((t for t in tool_infos if t.name == tool_name), None)
+
+                    if not tool_info:
+                        tool_results.append({
+                            "tool_call_id": tool_call.get("id"),
+                            "error": f"Tool {tool_name} not found"
+                        })
+                        continue
+
+                    with mlflow.start_span(name=f"call_{tool_name}") as tool_span:
+                        tool_span.set_inputs({"tool_name": tool_name, "arguments": tool_args})
+
+                        try:
+                            tool_result = await call_tool(tool_name, tool_args, tool_info.server_url)
+                            tool_span.set_outputs(tool_result)
+
+                            tool_results.append({
+                                "tool_call_id": tool_call.get("id"),
+                                "role": "tool",
+                                "name": tool_name,
+                                "content": json.dumps(tool_result)
+                            })
+                        except Exception as e:
+                            tool_span.set_attribute("error", str(e))
+                            tool_results.append({
+                                "tool_call_id": tool_call.get("id"),
+                                "role": "tool",
+                                "name": tool_name,
+                                "content": json.dumps({"error": str(e)})
+                            })
+
+                tools_span.set_outputs({"results": tool_results})
+
+            # Step 5: Get final response from LLM
+            with mlflow.start_span(name="llm_final") as final_span:
+                messages.append(message)
+                messages.extend(tool_results)
+
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    headers = {
+                        "Authorization": f"Bearer {DATABRICKS_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+
+                    request_body = {
+                        "messages": messages,
+                        "max_tokens": 4096,
+                        "temperature": 0.1
+                    }
+
+                    final_span.set_inputs(request_body)
+
+                    response = await client.post(
+                        f"{DATABRICKS_HOST}/serving-endpoints/{LLM_ENDPOINT}/invocations",
+                        headers=headers,
+                        json=request_body
+                    )
+                    response.raise_for_status()
+
+                    result = response.json()
+                    final_span.set_outputs(result)
+
+        # Extract final response
+        final_message = result.get("choices", [{}])[0].get("message", {})
+        final_content = final_message.get("content", "I apologize, but I couldn't generate a response.")
+
+        # Get trace information
+        trace_info = {
+            "trace_id": span.span_id if hasattr(span, 'span_id') else None,
+            "tools_discovered": len(tool_infos),
+            "tools_called": len(tool_calls) if tool_calls else 0
+        }
+
+        span.set_outputs({
+            "response": final_content,
+            "trace_info": trace_info
+        })
+
+        return {
+            "response": final_content,
+            "conversation_id": conversation_id or "new",
+            "trace_info": trace_info
+        }
+
+
+# FastAPI Application
+app = FastAPI(
+    title="{{ collection_name }} Supervisor",
+    description="Code-first supervisor with dynamic tool discovery (Pattern 3)",
+    version="1.0.0"
+)
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    return {"status": "healthy", "supervisor": "{{ collection_name }}"}
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """
+    Chat endpoint for interacting with the supervisor.
+
+    The supervisor dynamically discovers tools from MCP servers and
+    orchestrates agent interactions using OpenAI-style tool calling.
+    """
+    try:
+        result = await run_supervisor(request.message, request.conversation_id)
+        return ChatResponse(**result)
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+@app.get("/tools")
+async def list_tools():
+    """
+    List all currently available tools from MCP servers.
+
+    This endpoint shows which tools the supervisor can currently access.
+    """
+    tool_infos: List[ToolInfo] = []
+
+    for server_url in MCP_SERVER_URLS:
+        if not server_url or server_url.strip() == "":
+            continue
+        server_tools = await fetch_tool_infos(server_url.strip())
+        tool_infos.extend(server_tools)
+
+    return {
+        "tools": [
+            {
+                "name": t.name,
+                "description": t.description,
+                "server_url": t.server_url
+            }
+            for t in tool_infos
+        ],
+        "total": len(tool_infos)
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

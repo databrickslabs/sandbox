@@ -1,0 +1,41 @@
+.create-collection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #0066cc;
+}
+
+.form-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  border-left: 4px solid #c62828;
+}

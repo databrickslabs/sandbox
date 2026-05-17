@@ -1,0 +1,29 @@
+[
+  {
+    "id": "sgp-multi-agent-001",
+    "name": "SGP Multi-Agent System",
+    "description": "Guidepoint expert network platform \u2014 supervisor orchestrates research, expert-finder, analytics, and compliance agents.",
+    "agents": [
+      "research",
+      "expert-finder",
+      "analytics",
+      "compliance"
+    ],
+    "edges": [
+      {
+        "source_agent": "research",
+        "target_agent": "expert-finder",
+        "env_var": "RESEARCH_URL"
+      },
+      {
+        "source_agent": "research",
+        "target_agent": "analytics",
+        "env_var": "RESEARCH_URL"
+      }
+    ],
+    "uc_catalog": "serverless_dxukih_catalog",
+    "uc_schema": "agents",
+    "created_at": "2026-03-03T21:35:00+00:00",
+    "updated_at": "2026-03-05T15:45:17.413143+00:00"
+  }
+]
