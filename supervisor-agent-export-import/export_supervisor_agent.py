@@ -145,7 +145,15 @@ def export_tool(w: WorkspaceClient, tool: dict, agent_dir: Path,
 
 
 def download_volume_path(w: WorkspaceClient, volume_path: str, local_dir: Path):
-    """Recursively download all files from a UC volume path into local_dir."""
+    """Recursively download all files from a UC volume path into local_dir.
+
+    Skips files that already exist locally with the same size and a local
+    mtime >= the remote `last_modified` (epoch ms). After a successful
+    download we set the local mtime to the remote one so subsequent runs
+    can use the equality check reliably.
+    """
+    import os
+
     local_dir.mkdir(parents=True, exist_ok=True)
     try:
         entries = list(w.files.list_directory_contents(volume_path))
@@ -164,13 +172,39 @@ def download_volume_path(w: WorkspaceClient, volume_path: str, local_dir: Path):
 
         if entry.is_directory:
             download_volume_path(w, entry_path, local_path)
-        else:
-            try:
-                resp = w.files.download(entry_path)
-                local_path.write_bytes(resp.contents.read())
-                log.info("Downloaded %s", entry_path)
-            except Exception as e:
-                log.warning("Failed to download '%s': %s", entry_path, e)
+            continue
+
+        remote_size = getattr(entry, "file_size", None)
+        remote_mtime_ms = getattr(entry, "last_modified", None)
+
+        if _local_matches_remote(local_path, remote_size, remote_mtime_ms):
+            log.info("Unchanged (size+mtime match), skipping: %s", entry_path)
+            continue
+
+        try:
+            resp = w.files.download(entry_path)
+            local_path.write_bytes(resp.contents.read())
+            if remote_mtime_ms is not None:
+                # Stamp local mtime with the remote mtime so the next run's
+                # equality check is exact.
+                ts = remote_mtime_ms / 1000.0
+                os.utime(local_path, (ts, ts))
+            log.info("Downloaded %s", entry_path)
+        except Exception as e:
+            log.warning("Failed to download '%s': %s", entry_path, e)
+
+
+def _local_matches_remote(local_path: Path, remote_size, remote_mtime_ms) -> bool:
+    """True if the local file can be safely treated as identical to remote."""
+    if not local_path.exists() or remote_size is None:
+        return False
+    st = local_path.stat()
+    if st.st_size != remote_size:
+        return False
+    if remote_mtime_ms is None:
+        # Remote mtime unknown — accept size match alone.
+        return True
+    return int(st.st_mtime * 1000) >= int(remote_mtime_ms)
 
 
 def export_knowledge_assistant(w: WorkspaceClient, ka_config: dict, agent_dir: Path) -> str:
@@ -263,17 +297,24 @@ def export_genie_room(w: WorkspaceClient, gs_config: dict, agent_dir: Path) -> s
     return str(Path("genie_rooms") / room_name)
 
 
-def export_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
-    """List all examples for the supervisor agent. Returns a list of {question, guidelines}."""
+def _list_examples_resilient(w: WorkspaceClient, path: str, parent_label: str) -> list[dict]:
+    """Paginated list of {question, guidelines} from an /examples endpoint.
+
+    Some Examples endpoints return an InternalError when no examples have ever
+    been added. We log a warning and return an empty list rather than aborting
+    the whole export.
+    """
     results = []
     page_token = None
     while True:
         query = {}
         if page_token:
             query["page_token"] = page_token
-        resp = w.api_client.do(
-            "GET", f"/api/2.1/supervisor-agents/{agent_id}/examples", query=query,
-        )
+        try:
+            resp = w.api_client.do("GET", path, query=query)
+        except Exception as e:
+            log.warning("Could not list examples for %s: %s; treating as empty", parent_label, e)
+            return results
         for ex in resp.get("examples", []):
             results.append({
                 "question": ex.get("question", ""),
@@ -283,28 +324,20 @@ def export_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
         if not page_token:
             break
     return results
+
+
+def export_examples(w: WorkspaceClient, agent_id: str) -> list[dict]:
+    """List all examples for the supervisor agent. Returns a list of {question, guidelines}."""
+    return _list_examples_resilient(
+        w, f"/api/2.1/supervisor-agents/{agent_id}/examples", f"supervisor-agent {agent_id}"
+    )
 
 
 def export_ka_examples(w: WorkspaceClient, ka_id: str) -> list[dict]:
     """List all examples for a knowledge assistant. Returns a list of {question, guidelines}."""
-    results = []
-    page_token = None
-    while True:
-        query = {}
-        if page_token:
-            query["page_token"] = page_token
-        resp = w.api_client.do(
-            "GET", f"/api/2.1/knowledge-assistants/{ka_id}/examples", query=query,
-        )
-        for ex in resp.get("examples", []):
-            results.append({
-                "question": ex.get("question", ""),
-                "guidelines": list(ex.get("guidelines", []) or []),
-            })
-        page_token = resp.get("next_page_token")
-        if not page_token:
-            break
-    return results
+    return _list_examples_resilient(
+        w, f"/api/2.1/knowledge-assistants/{ka_id}/examples", f"knowledge-assistant {ka_id}"
+    )
 
 
 def export_agent(w: WorkspaceClient, agent_name: str, output_dir: Path,
