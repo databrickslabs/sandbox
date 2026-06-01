@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import sys
+import time
 from pathlib import Path
 
 from databricks.sdk import WorkspaceClient
@@ -805,6 +806,47 @@ def sync_directory(w: WorkspaceClient, local_dir: Path, remote_dir: str) -> None
         _delete_remote_recursive(w, sub_remote_path)
 
 
+def wait_for_ka_active(w: WorkspaceClient, ka_id: str, display_name: str,
+                       timeout_seconds: int = 1200, poll_interval: int = 10) -> bool:
+    """Poll a knowledge assistant until it reaches the ACTIVE state.
+
+    A freshly created or recreated KA stays in CREATING (with its knowledge
+    source UPDATING) while it provisions its endpoint and indexes documents.
+    The examples sub-API rejects requests with retryable errors until the KA
+    is ACTIVE, so the SDK retries for retry_timeout_seconds (default 300s) and
+    then raises "Timed out after 0:05:00", aborting the whole import. Callers
+    must therefore wait until the KA is ACTIVE before reconciling examples.
+
+    Returns True once the KA is ACTIVE, or False on timeout / terminal failure.
+    """
+    deadline = time.monotonic() + timeout_seconds
+    last_state = None
+    while True:
+        try:
+            ka = w.api_client.do("GET", f"/api/2.1/knowledge-assistants/{ka_id}")
+        except Exception as e:
+            log.warning("Failed to fetch state of KA '%s': %s", display_name, e)
+            ka = {}
+        state = ka.get("state", "")
+        if state == "ACTIVE":
+            if last_state not in (None, "ACTIVE"):
+                log.info("Knowledge assistant '%s' is now ACTIVE.", display_name)
+            return True
+        if state in ("FAILED", "ERROR", "DELETING", "DELETED"):
+            log.error("Knowledge assistant '%s' is in terminal state '%s'; "
+                      "cannot reconcile examples.", display_name, state)
+            return False
+        if time.monotonic() >= deadline:
+            log.error("Timed out after %ds waiting for KA '%s' to become ACTIVE "
+                      "(last state: %s).", timeout_seconds, display_name, state or "unknown")
+            return False
+        if state != last_state:
+            log.info("Waiting for knowledge assistant '%s' to become ACTIVE "
+                     "(state: %s)...", display_name, state or "unknown")
+        last_state = state
+        time.sleep(poll_interval)
+
+
 def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir: Path,
                                 volume_path: str,
                                 catalog_rules: list[tuple[str, str]],
@@ -839,7 +881,7 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
     if existing is None:
         ka_id = _create_knowledge_assistant(w, expected_top, expected_sources, definition, tool_id,
                                             input_dir, export_dir, volume_path)
-        if ka_id is not None:
+        if ka_id is not None and wait_for_ka_active(w, ka_id, display_name):
             reconcile_examples(
                 w, f"knowledge-assistants/{ka_id}",
                 "Knowledge assistant", display_name,
@@ -869,12 +911,13 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
     if not has_diff:
         log.info("Knowledge assistant '%s' already matches export (id: %s); reusing.", display_name, ka_id)
         # Top-level and sources match, but examples might still differ — reconcile separately.
-        reconcile_examples(
-            w, f"knowledge-assistants/{ka_id}",
-            "Knowledge assistant", display_name,
-            definition.get("examples", []),
-            yes_update, skip_existing,
-        )
+        if wait_for_ka_active(w, ka_id, display_name):
+            reconcile_examples(
+                w, f"knowledge-assistants/{ka_id}",
+                "Knowledge assistant", display_name,
+                definition.get("examples", []),
+                yes_update, skip_existing,
+            )
         return ka_id
 
     diff_lines: list[str] = []
@@ -973,12 +1016,13 @@ def resolve_knowledge_assistant(w: WorkspaceClient, tool_entry: dict, input_dir:
         except Exception as e:
             log.error("Failed to update knowledge source '%s': %s", u["expected"]["display_name"], e)
 
-    reconcile_examples(
-        w, f"knowledge-assistants/{ka_id}",
-        "Knowledge assistant", display_name,
-        definition.get("examples", []),
-        yes_update, skip_existing,
-    )
+    if wait_for_ka_active(w, ka_id, display_name):
+        reconcile_examples(
+            w, f"knowledge-assistants/{ka_id}",
+            "Knowledge assistant", display_name,
+            definition.get("examples", []),
+            yes_update, skip_existing,
+        )
 
     return ka_id
 
