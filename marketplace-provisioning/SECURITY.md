@@ -23,7 +23,7 @@ You will receive an acknowledgment within 48 hours and a detailed response withi
 ## Authentication Model
 
 This app uses the **Databricks App service principal** for all Databricks
-operations (SQL statements, Files API, Genie space CRUD, SCIM lookups,
+operations (SQL statements, Files API, Genie space CRUD,
 permission grants). Credentials are obtained from the
 `databricks.sdk.WorkspaceClient` at runtime — the app never reads a
 `DATABRICKS_TOKEN` environment variable and never accepts a PAT from the
@@ -56,7 +56,6 @@ minimum grants needed to query their provisioned scenario.
 - All Unity Catalog identifiers (catalog, schema, table, column names) are
   validated against a strict identifier regex before being interpolated
   into SQL. See `provisioner._check_ident` / `_check_dotted_ident`.
-- Parameterized SQL bindings are used for all user-supplied values.
 - Mystery text is length-capped and passed through a word-boundary
   profanity filter.
 
