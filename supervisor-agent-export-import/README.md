@@ -199,6 +199,63 @@ The import tool uploads knowledge assistant files to the target volume automatic
 
 If you run the import in an environment without an attached terminal (e.g., CI), you must pass either `--yes-update` or `--skip-existing`. The tool will refuse to start otherwise.
 
+## Single Genie Space tools
+
+`export_genie_space.py` and `import_genie_space.py` are standalone tools for moving **one** Genie Space, without the surrounding supervisor agent. They reuse the same serialized-space handling, catalog mapping, idempotency, and conflict resolution as the supervisor tools, and use the same on-disk layout:
+
+```
+<dir>/
+    definition.json   # title, description, warehouse_id
+    serialized.json   # the serialized_space payload
+```
+
+### Export a single Genie Space
+
+Writes `definition.json` and `serialized.json` directly into `--output-dir`. The space can be identified by ID or by exact title.
+
+```bash
+# By ID
+python export_genie_space.py --space-id <space_id> --output-dir ./my-space
+
+# By title (looked up in the workspace)
+python export_genie_space.py --name "Analysis of CVEs" --output-dir ./my-space
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--space-id` | One of `--space-id` / `--name` | ID of the Genie Space to export |
+| `--name` | One of `--space-id` / `--name` | Exact title of the Genie Space to export (looked up in the workspace) |
+| `--output-dir` | Yes | Directory to write `definition.json` and `serialized.json` into |
+
+### Import a single Genie Space
+
+`import_genie_space.py` imports one Genie Space from a directory laid out as above — either the output of `export_genie_space.py` or one of the `genie_rooms/<room_name>/` folders produced by the supervisor export.
+
+```bash
+python import_genie_space.py \
+    --input-dir ./my-space \
+    --warehouse-id <warehouse_id> \
+    --catalog-map "old_catalog=new_catalog,old_cat.old_schema=new_cat.new_schema"
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--input-dir` | Yes | Path to the exported genie space directory (containing `definition.json` and `serialized.json`) |
+| `--warehouse-id` | Yes | SQL warehouse ID for the genie space in the target workspace |
+| `--catalog-map` | No | Comma-separated catalog/schema mapping rules (same syntax as the supervisor importer — see [Catalog mapping](#catalog-mapping)) |
+| `--yes-update` | No | Always update an existing space without prompting (mutually exclusive with `--skip-existing`) |
+| `--skip-existing` | No | Never update an existing space, always reuse it (mutually exclusive with `--yes-update`) |
+| `--force` | No | Skip the pre-flight table check; proceed even if referenced tables are missing |
+
+### Import behavior
+
+- **Catalog mapping** is applied to the same locations as in the supervisor importer: table identifiers, per-table descriptions, text instructions, example SQL, and benchmark canonical SQL.
+- **Pre-flight check** verifies that every table referenced in `serialized.json` (after catalog mapping) exists in the target workspace. Missing tables abort the import unless `--force` is passed.
+- **Idempotency**: the space is matched by `title`. If none exists it is created; if one exists and its configuration (title, description, warehouse, serialized space) differs, the tool prompts to update (`--yes-update` / `--skip-existing` for non-interactive runs); if it already matches, it is reused silently.
+- On success the new/existing space ID is printed.
+
+> Note: the import tool does not migrate the underlying tables between workspaces — they must already exist in the target (after any catalog remapping).
+
 ## Example: full replication workflow
 
 ```bash
