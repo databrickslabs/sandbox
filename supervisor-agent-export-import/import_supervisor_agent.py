@@ -110,6 +110,95 @@ def rewrite_serialized_genie_space(serialized: dict, rules: list[tuple[str, str]
                 ans["content"] = [apply_catalog_map_to_text(s, rules) for s in content]
 
 
+def _canonical(x):
+    """Strip server-side noise from a serialized-space subtree for comparison:
+    drop empty/null/false values, strip string whitespace, and sort
+    order-irrelevant lists of dicts/lists.
+    """
+    if isinstance(x, dict):
+        out = {}
+        for k, v in x.items():
+            cv = _canonical(v)
+            if cv in (None, "", [], {}, False):
+                continue
+            out[k] = cv
+        return out
+    if isinstance(x, list):
+        items = [_canonical(v) for v in x]
+        if items and all(isinstance(i, (dict, list)) for i in items):
+            items = sorted(items, key=lambda i: json.dumps(i, sort_keys=True))
+        return items
+    if isinstance(x, str):
+        return x.strip()
+    return x
+
+
+def _table_columns(table: dict) -> dict:
+    """Map column_name -> frozenset of enabled (truthy) flags for a table's column_configs."""
+    cols = {}
+    for c in (table.get("column_configs") or []):
+        name = c.get("column_name")
+        if name is None:
+            continue
+        cols[name] = frozenset(
+            k for k, v in c.items()
+            if k != "column_name" and v not in (None, "", False, [], {})
+        )
+    return cols
+
+
+def serialized_spaces_differ(existing_raw: str | None, expected_raw: str | None) -> bool:
+    """True if two serialized_space payloads differ in user-authored content.
+
+    serialized_space is normalized per workspace, so the form the target stores
+    and returns is not byte- or structure-identical to what we send, even for the
+    same logical space. Crucially, the target's Genie service drops column_configs
+    for columns its tables don't have -- re-sending them never converges. A raw or
+    naive structural comparison therefore yields false "differs" results forever.
+
+    This compares only user-authored, convergent content:
+      - tables matched by identifier (not order); a differing table set => differs
+      - per-table description compared canonically
+      - column_configs matched by column_name, compared only for columns present
+        on BOTH sides (a config the target dropped can't be pushed back, so it is
+        not an actionable difference)
+      - everything else (version, instructions, example SQL, benchmarks) compared
+        canonically -- whitespace-, order-, and default-insensitive
+
+    Falls back to a raw string compare if either side isn't valid JSON.
+    """
+    try:
+        live = json.loads(existing_raw) if existing_raw else None
+        exp = json.loads(expected_raw) if expected_raw else None
+    except json.JSONDecodeError:
+        return (existing_raw or "") != (expected_raw or "")
+    if live is None or exp is None:
+        return live != exp
+
+    live_tables = {t.get("identifier", ""): t
+                   for t in (live.get("data_sources", {}).get("tables") or [])}
+    exp_tables = {t.get("identifier", ""): t
+                  for t in (exp.get("data_sources", {}).get("tables") or [])}
+    if set(live_tables) != set(exp_tables):
+        return True
+    for ident, et in exp_tables.items():
+        lt = live_tables[ident]
+        if _canonical(lt.get("description")) != _canonical(et.get("description")):
+            return True
+        lc, ec = _table_columns(lt), _table_columns(et)
+        for col in (set(lc) & set(ec)):
+            if lc[col] != ec[col]:
+                return True
+
+    # Compare everything outside data_sources.tables canonically.
+    def _rest(s):
+        ds = {k: v for k, v in (s.get("data_sources") or {}).items() if k != "tables"}
+        rest = {k: v for k, v in s.items() if k != "data_sources"}
+        rest["data_sources"] = ds
+        return _canonical(rest)
+    return _rest(live) != _rest(exp)
+
+
 def parse_name_map(raw: str | None) -> dict[str, str]:
     """Parse a comma-separated 'old=new' name map into a dict.
 
@@ -1134,16 +1223,10 @@ def resolve_genie_room(w: WorkspaceClient, tool_entry: dict, input_dir: Path,
         diff_lines.append(short_diff("description", full.description or "", description))
     if (full.warehouse_id or "") != warehouse_id:
         diff_lines.append(short_diff("warehouse_id", full.warehouse_id or "", warehouse_id))
-    # Compare serialized_space structurally (not byte-wise) to ignore whitespace/format differences
-    serialized_changed = False
-    try:
-        existing_obj = json.loads(full.serialized_space) if full.serialized_space else None
-        expected_obj = json.loads(serialized_raw) if serialized_raw else None
-        serialized_changed = existing_obj != expected_obj
-    except json.JSONDecodeError:
-        serialized_changed = (full.serialized_space or "") != serialized_raw
-    if serialized_changed:
-        diff_lines.append(short_diff("serialized_space", full.serialized_space or "", serialized_raw))
+    # Compare serialized_space by user-authored content, ignoring server-side
+    # normalization (pretty-printing, reordered/defaulted configs, etc.).
+    if serialized_spaces_differ(full.serialized_space, serialized_raw):
+        diff_lines.append("serialized_space: content differs")
 
     if not diff_lines:
         log.info("Genie room '%s' already matches export (id: %s); reusing.", title, space_id)
