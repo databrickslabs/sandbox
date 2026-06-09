@@ -1,0 +1,81 @@
+cost_center_id,cost_center_name,department,cost_center_type,is_active
+CC-100,Engineering — Core,Engineering,Departmental,Y
+CC-101,Engineering — Projects,Engineering,Departmental,Y
+CC-102,Engineering — Support,Engineering,Departmental,Y
+CC-103,Engineering — Management,Engineering,Departmental,Y
+CC-104,Engineering — R&D,Engineering,Departmental,Y
+CC-105,Engineering — Operations,Engineering,Departmental,Y
+CC-106,Engineering — Strategy,Engineering,Departmental,Y
+CC-107,Sales — Core,Sales,Departmental,Y
+CC-108,Sales — Projects,Sales,Departmental,Y
+CC-109,Sales — Support,Sales,Departmental,Y
+CC-110,Sales — Management,Sales,Departmental,Y
+CC-111,Sales — R&D,Sales,Departmental,Y
+CC-112,Sales — Operations,Sales,Departmental,Y
+CC-113,Sales — Strategy,Sales,Departmental,Y
+CC-114,Marketing — Core,Marketing,Departmental,Y
+CC-115,Marketing — Projects,Marketing,Departmental,Y
+CC-116,Marketing — Support,Marketing,Departmental,Y
+CC-117,Marketing — Management,Marketing,Departmental,Y
+CC-118,Marketing — R&D,Marketing,Departmental,Y
+CC-119,Marketing — Operations,Marketing,Departmental,Y
+CC-120,Marketing — Strategy,Marketing,Departmental,Y
+CC-121,Finance — Core,Finance,Departmental,Y
+CC-122,Finance — Projects,Finance,Departmental,Y
+CC-123,Finance — Support,Finance,Departmental,Y
+CC-124,Finance — Management,Finance,Departmental,Y
+CC-125,Finance — R&D,Finance,Departmental,Y
+CC-126,Finance — Operations,Finance,Departmental,Y
+CC-127,Finance — Strategy,Finance,Departmental,Y
+CC-128,HR — Core,HR,Departmental,Y
+CC-129,HR — Projects,HR,Departmental,Y
+CC-130,HR — Support,HR,Departmental,Y
+CC-131,HR — Management,HR,Departmental,Y
+CC-132,HR — R&D,HR,Departmental,Y
+CC-133,HR — Operations,HR,Departmental,Y
+CC-134,HR — Strategy,HR,Departmental,Y
+CC-135,Legal — Core,Legal,Departmental,Y
+CC-136,Legal — Projects,Legal,Departmental,Y
+CC-137,Legal — Support,Legal,Departmental,Y
+CC-138,Legal — Management,Legal,Departmental,Y
+CC-139,Legal — R&D,Legal,Departmental,Y
+CC-140,Legal — Operations,Legal,Departmental,Y
+CC-141,Legal — Strategy,Legal,Departmental,Y
+CC-142,Product — Core,Product,Departmental,Y
+CC-143,Product — Projects,Product,Departmental,Y
+CC-144,Product — Support,Product,Departmental,Y
+CC-145,Product — Management,Product,Departmental,Y
+CC-146,Product — R&D,Product,Departmental,Y
+CC-147,Product — Operations,Product,Departmental,Y
+CC-148,Product — Strategy,Product,Departmental,Y
+CC-149,Operations — Core,Operations,Departmental,Y
+CC-150,Operations — Projects,Operations,Departmental,Y
+CC-151,Operations — Support,Operations,Departmental,Y
+CC-152,Operations — Management,Operations,Departmental,Y
+CC-153,Operations — R&D,Operations,Departmental,Y
+CC-154,Operations — Operations,Operations,Departmental,Y
+CC-155,Operations — Strategy,Operations,Departmental,Y
+CC-156,IT — Core,IT,Departmental,Y
+CC-157,IT — Projects,IT,Departmental,Y
+CC-158,IT — Support,IT,Departmental,Y
+CC-159,IT — Management,IT,Departmental,Y
+CC-160,IT — R&D,IT,Departmental,Y
+CC-161,IT — Operations,IT,Departmental,Y
+CC-162,IT — Strategy,IT,Departmental,Y
+CC-163,Executive — Core,Executive,Departmental,Y
+CC-164,Executive — Projects,Executive,Departmental,Y
+CC-165,Executive — Support,Executive,Departmental,Y
+CC-166,Executive — Management,Executive,Departmental,Y
+CC-167,Executive — R&D,Executive,Departmental,Y
+CC-168,Executive — Operations,Executive,Departmental,Y
+CC-169,Executive — Strategy,Executive,Departmental,Y
+CC-900,Shared Overhead — General,,Shared,Y
+CC-901,Shared Overhead — Projects,,Shared,Y
+CC-902,Shared Overhead — IT Infrastructure,,Shared,Y
+CC-903,Corporate — Executive Office,,Corporate,Y
+CC-904,Corporate — Board & Governance,,Corporate,Y
+CC-905,Shared Overhead — Facilities,,Shared,Y
+CC-906,Shared Overhead — Security,,Shared,Y
+CC-907,Corporate — Strategic Initiatives,,Corporate,Y
+CC-908,Shared Overhead — Compliance,,Shared,Y
+CC-909,Shared Overhead — Transformation,,Shared,Y

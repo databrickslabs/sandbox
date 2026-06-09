@@ -1,0 +1,27 @@
+[project]
+name = "data-detective"
+version = "1.0.0"
+description = "Data Detective — investigate business mysteries using Genie AI spaces"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "S",    # bandit (security)
+    "B",    # bugbear
+    "I",    # isort
+]
+ignore = [
+    "S101",  # assert usage (ok in non-production paths)
+    "S603",  # subprocess calls (not used)
+    "S608",  # SQL injection — we use parameterized queries
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scenarios/registry.py" = ["E501"]  # long answer key strings

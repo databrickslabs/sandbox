@@ -1,0 +1,201 @@
+product_id,product_name,category,weight_class,unit_price
+PROD-0001,Sunglasses,Clothing,Light,20.32
+PROD-0002,Filing Cabinet,Furniture,Heavy,570.18
+PROD-0003,Tennis Racket,Sporting Goods,Medium,123.68
+PROD-0004,King Bed Frame,Furniture,Oversized,2370.29
+PROD-0005,Office Chair Cushion,Furniture,Medium,69.8
+PROD-0006,Jump Rope,Sporting Goods,Light,16.65
+PROD-0007,Yoga Mat,Sporting Goods,Light,28.89
+PROD-0008,Dining Table,Furniture,Heavy,580.65
+PROD-0009,Scarf,Clothing,Light,5.83
+PROD-0010,Gas Range Oven,Appliances,Oversized,1482.98
+PROD-0011,Bird Feeder,Home & Garden,Medium,84.51
+PROD-0012,Whiteboard,Office Supplies,Medium,63.15
+PROD-0013,Pergola Kit,Home & Garden,Oversized,2232.55
+PROD-0014,Coffee Maker,Appliances,Medium,23.91
+PROD-0015,Screen Protector,Electronics,Light,5.71
+PROD-0016,Baseball Cap,Clothing,Light,33.74
+PROD-0017,Hoodie,Clothing,Medium,123.55
+PROD-0018,Memory Card,Electronics,Light,33.39
+PROD-0019,Side Table,Furniture,Medium,76.43
+PROD-0020,External SSD,Electronics,Medium,70.54
+PROD-0021,String Lights,Home & Garden,Medium,96.8
+PROD-0022,Hand Mixer,Appliances,Light,46.66
+PROD-0023,Dresser,Furniture,Heavy,357.11
+PROD-0024,Planter Box,Home & Garden,Medium,88.26
+PROD-0025,UPS Battery Backup,Electronics,Heavy,188.02
+PROD-0026,Tank Top,Clothing,Light,17.38
+PROD-0027,Laser Printer,Electronics,Heavy,502.37
+PROD-0028,Treadmill,Sporting Goods,Oversized,396.5
+PROD-0029,Pen Set,Office Supplies,Light,36.32
+PROD-0030,USB Flash Drive,Electronics,Light,13.83
+PROD-0031,Bluetooth Earbuds,Electronics,Light,36.33
+PROD-0032,Webcam,Electronics,Medium,21.79
+PROD-0033,Desktop PC,Electronics,Heavy,180.1
+PROD-0034,Picture Frame,Home & Garden,Light,24.2
+PROD-0035,Paper Clips Box,Office Supplies,Light,19.83
+PROD-0036,Rice Cooker,Appliances,Medium,62.43
+PROD-0037,Chest Freezer,Appliances,Oversized,1436.34
+PROD-0038,Olympic Barbell,Sporting Goods,Heavy,162.76
+PROD-0039,Paper Ream (5-Pack),Office Supplies,Medium,119.13
+PROD-0040,Basketball,Sporting Goods,Medium,105.57
+PROD-0041,Hot Tub,Home & Garden,Oversized,904.85
+PROD-0042,Office Desk,Furniture,Heavy,229.95
+PROD-0043,Water Bottle,Sporting Goods,Light,45.8
+PROD-0044,Bookshelf,Furniture,Heavy,399.74
+PROD-0045,Throw Pillow,Furniture,Light,27.05
+PROD-0046,Home Theater System,Electronics,Oversized,2395.06
+PROD-0047,Seed Starter Kit,Home & Garden,Light,19.66
+PROD-0048,Dishwasher Portable,Appliances,Heavy,91.55
+PROD-0049,Sweater,Clothing,Medium,147.29
+PROD-0050,Commercial Ice Maker,Appliances,Oversized,1990.16
+PROD-0051,Jeans,Clothing,Medium,129.3
+PROD-0052,Socks Pack,Clothing,Light,44.37
+PROD-0053,Rowing Machine,Sporting Goods,Oversized,2310.95
+PROD-0054,Bookend Set,Furniture,Medium,38.75
+PROD-0055,T-Shirt,Clothing,Light,18.56
+PROD-0056,Label Maker,Office Supplies,Medium,91.44
+PROD-0057,Elliptical Machine,Sporting Goods,Oversized,1395.29
+PROD-0058,Wireless Mouse,Electronics,Light,8.51
+PROD-0059,Sticky Notes,Office Supplies,Light,8.8
+PROD-0060,Desk Organizer,Office Supplies,Medium,65.3
+PROD-0061,Headphones,Electronics,Medium,72.09
+PROD-0062,Microwave Oven,Appliances,Heavy,409.78
+PROD-0063,Tie,Clothing,Light,20.77
+PROD-0064,Gaming Monitor,Electronics,Heavy,86.09
+PROD-0065,Punching Bag,Sporting Goods,Heavy,335.05
+PROD-0066,Wall Shelf,Furniture,Light,23.79
+PROD-0067,Belt,Clothing,Light,29.57
+PROD-0068,Gloves,Clothing,Light,22.56
+PROD-0069,Dumbbell Set (20lb),Sporting Goods,Medium,53.54
+PROD-0070,Dehumidifier,Appliances,Heavy,414.62
+PROD-0071,Slow Cooker,Appliances,Medium,148.45
+PROD-0072,Charging Cable,Electronics,Light,18.84
+PROD-0073,Stapler,Office Supplies,Light,13.01
+PROD-0074,Streaming Stick,Electronics,Medium,75.1
+PROD-0075,Electric Kettle,Appliances,Light,8.87
+PROD-0076,L-Shaped Sectional Sofa,Furniture,Oversized,1143.38
+PROD-0077,10x12 Storage Shed Kit,Home & Garden,Oversized,466.2
+PROD-0078,Tool Set,Home & Garden,Medium,69.33
+PROD-0079,Tablet Stand,Electronics,Medium,108.45
+PROD-0080,Pressure Washer,Home & Garden,Heavy,446.98
+PROD-0081,Trampoline,Home & Garden,Oversized,2115.69
+PROD-0082,Fire Pit,Home & Garden,Heavy,242.84
+PROD-0083,Cycling Helmet,Sporting Goods,Medium,58.19
+PROD-0084,Standing Desk (Motorized),Furniture,Oversized,1526.62
+PROD-0085,Blender,Appliances,Medium,131.72
+PROD-0086,Portable Speaker,Electronics,Medium,109.78
+PROD-0087,Air Fryer,Appliances,Medium,32.93
+PROD-0088,Toaster,Appliances,Light,12.9
+PROD-0089,Home Gym System,Sporting Goods,Oversized,471.75
+PROD-0090,Welcome Mat,Home & Garden,Medium,60.34
+PROD-0091,French Door Refrigerator,Appliances,Oversized,2433.97
+PROD-0092,Wrist Wraps,Sporting Goods,Light,8.52
+PROD-0093,Notebook Pack,Office Supplies,Light,7.05
+PROD-0094,Weight Bench,Sporting Goods,Heavy,212.44
+PROD-0095,Lawn Mower (Electric),Home & Garden,Heavy,258.41
+PROD-0096,Executive Office Desk,Furniture,Oversized,2342.33
+PROD-0097,Garden Gloves,Home & Garden,Light,6.4
+PROD-0098,Bandana,Clothing,Light,15.72
+PROD-0099,75-inch TV,Electronics,Oversized,281.92
+PROD-0100,Smart Plug,Electronics,Medium,68.27
+PROD-0101,USB-C Hub,Electronics,Light,46.98
+PROD-0102,Resistance Bands,Sporting Goods,Light,14.28
+PROD-0103,Highlighter Set,Office Supplies,Light,43.4
+PROD-0104,Tape Dispenser,Office Supplies,Light,47.31
+PROD-0105,Phone Case,Electronics,Light,6.72
+PROD-0106,Outdoor Patio Set,Furniture,Oversized,2139.6
+PROD-0107,Magazine Rack,Furniture,Medium,73.99
+PROD-0108,Window AC Unit,Appliances,Heavy,310.96
+PROD-0109,Desk Lamp,Furniture,Light,17.94
+PROD-0110,Keyboard,Electronics,Medium,39.78
+PROD-0111,Binder Clips,Office Supplies,Light,19.08
+PROD-0112,Candle Set,Home & Garden,Light,17.01
+PROD-0113,Dress Shirt,Clothing,Medium,32.28
+PROD-0114,Winter Jacket,Clothing,Medium,106.55
+PROD-0115,Front-Load Washer,Appliances,Oversized,1194.31
+PROD-0116,Cycling Helmet v2,Sporting Goods,Medium,123.28
+PROD-0117,Pressure Washer v6,Home & Garden,Heavy,283.38
+PROD-0118,Cycling Helmet v3,Sporting Goods,Medium,125.5
+PROD-0119,Paper Clips Box v3,Office Supplies,Light,35.14
+PROD-0120,Sunglasses v8,Clothing,Light,41.54
+PROD-0121,Rice Cooker v4,Appliances,Medium,116.37
+PROD-0122,Home Gym System v5,Sporting Goods,Oversized,676.71
+PROD-0123,Keyboard v2,Electronics,Medium,121.49
+PROD-0124,Rice Cooker v9,Appliances,Medium,22.19
+PROD-0125,Keyboard v2 v6,Electronics,Medium,74.94
+PROD-0126,Keyboard v2 v6 v3,Electronics,Medium,36.0
+PROD-0127,Wall Shelf v7,Furniture,Light,20.49
+PROD-0128,Dehumidifier v9,Appliances,Heavy,221.72
+PROD-0129,Hoodie v6,Clothing,Medium,39.21
+PROD-0130,Keyboard v2 v6 v3 v6,Electronics,Medium,100.96
+PROD-0131,Highlighter Set v8,Office Supplies,Light,10.11
+PROD-0132,Tool Set v9,Home & Garden,Medium,53.89
+PROD-0133,Side Table v7,Furniture,Medium,146.99
+PROD-0134,Punching Bag v4,Sporting Goods,Heavy,151.92
+PROD-0135,Picture Frame v4,Home & Garden,Light,42.28
+PROD-0136,External SSD v9,Electronics,Medium,24.21
+PROD-0137,Resistance Bands v7,Sporting Goods,Light,17.8
+PROD-0138,Winter Jacket v3,Clothing,Medium,24.76
+PROD-0139,Slow Cooker v4,Appliances,Medium,27.53
+PROD-0140,Charging Cable v7,Electronics,Light,36.42
+PROD-0141,Tie v2,Clothing,Light,40.56
+PROD-0142,Desk Organizer v9,Office Supplies,Medium,42.11
+PROD-0143,Side Table v6,Furniture,Medium,124.73
+PROD-0144,Outdoor Patio Set v4,Furniture,Oversized,1903.86
+PROD-0145,Cycling Helmet v2 v6,Sporting Goods,Medium,113.22
+PROD-0146,Picture Frame v5,Home & Garden,Light,32.72
+PROD-0147,Weight Bench v3,Sporting Goods,Heavy,509.4
+PROD-0148,Fire Pit v7,Home & Garden,Heavy,85.65
+PROD-0149,Dehumidifier v9 v4,Appliances,Heavy,274.09
+PROD-0150,Filing Cabinet v3,Furniture,Heavy,462.73
+PROD-0151,Tape Dispenser v8,Office Supplies,Light,30.82
+PROD-0152,Bandana v9,Clothing,Light,45.48
+PROD-0153,Elliptical Machine v5,Sporting Goods,Oversized,1035.1
+PROD-0154,Hot Tub v4,Home & Garden,Oversized,2075.65
+PROD-0155,Filing Cabinet v7,Furniture,Heavy,579.86
+PROD-0156,Pressure Washer v2,Home & Garden,Heavy,535.39
+PROD-0157,T-Shirt v4,Clothing,Light,26.93
+PROD-0158,Water Bottle v5,Sporting Goods,Light,24.0
+PROD-0159,Office Chair Cushion v3,Furniture,Medium,50.89
+PROD-0160,Bluetooth Earbuds v3,Electronics,Light,37.27
+PROD-0161,USB-C Hub v2,Electronics,Light,12.16
+PROD-0162,Tablet Stand v8,Electronics,Medium,83.88
+PROD-0163,Desktop PC v6,Electronics,Heavy,187.76
+PROD-0164,Office Desk v3,Furniture,Heavy,154.42
+PROD-0165,Cycling Helmet v7,Sporting Goods,Medium,117.75
+PROD-0166,Streaming Stick v2,Electronics,Medium,146.22
+PROD-0167,Scarf v5,Clothing,Light,33.02
+PROD-0168,USB Flash Drive v5,Electronics,Light,46.05
+PROD-0169,Office Chair Cushion v4,Furniture,Medium,129.35
+PROD-0170,External SSD v4,Electronics,Medium,118.25
+PROD-0171,USB Flash Drive v4,Electronics,Light,45.83
+PROD-0172,Keyboard v6,Electronics,Medium,30.42
+PROD-0173,Garden Gloves v7,Home & Garden,Light,36.82
+PROD-0174,Gaming Monitor v6,Electronics,Heavy,519.64
+PROD-0175,Paper Ream (5-Pack) v6,Office Supplies,Medium,126.26
+PROD-0176,Gloves v8,Clothing,Light,26.62
+PROD-0177,Office Desk v4,Furniture,Heavy,437.96
+PROD-0178,Keyboard v2 v4,Electronics,Medium,123.32
+PROD-0179,Stapler v9,Office Supplies,Light,22.09
+PROD-0180,Keyboard v2 v6 v9,Electronics,Medium,69.0
+PROD-0181,Stapler v6,Office Supplies,Light,18.24
+PROD-0182,Winter Jacket v9,Clothing,Medium,34.35
+PROD-0183,Garden Gloves v9,Home & Garden,Light,22.82
+PROD-0184,Cycling Helmet v3 v3,Sporting Goods,Medium,127.29
+PROD-0185,Charging Cable v5,Electronics,Light,25.72
+PROD-0186,Punching Bag v5,Sporting Goods,Heavy,589.67
+PROD-0187,Keyboard v2 v4,Electronics,Medium,40.95
+PROD-0188,Home Gym System v2,Sporting Goods,Oversized,642.39
+PROD-0189,Weight Bench v5,Sporting Goods,Heavy,242.98
+PROD-0190,Desk Lamp v8,Furniture,Light,6.0
+PROD-0191,Tablet Stand v2,Electronics,Medium,26.02
+PROD-0192,Dehumidifier v8,Appliances,Heavy,467.76
+PROD-0193,UPS Battery Backup v2,Electronics,Heavy,340.07
+PROD-0194,Sticky Notes v6,Office Supplies,Light,44.0
+PROD-0195,Office Chair Cushion v4,Furniture,Medium,98.23
+PROD-0196,Bookend Set v7,Furniture,Medium,108.64
+PROD-0197,Air Fryer v9,Appliances,Medium,63.12
+PROD-0198,Dehumidifier v9 v2,Appliances,Heavy,160.93
+PROD-0199,Pergola Kit v6,Home & Garden,Oversized,341.97
+PROD-0200,Bookshelf v5,Furniture,Heavy,294.69

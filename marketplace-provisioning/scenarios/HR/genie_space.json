@@ -1,0 +1,341 @@
+{
+  "space_title": "HR \u2014 The Talent Drain",
+  "space_description": "Investigate a 34% voluntary turnover spike in Q3. Explore employee records, resignations, manager data, and compensation benchmarks to find the root cause.",
+  "catalog_name": "hr_talent",
+  "schema_name": "default",
+  "sample_questions": [
+    "What is the voluntary turnover rate by quarter?",
+    "Which regions have the highest resignation rates?",
+    "How does compensation ratio compare across departments?",
+    "Which managers had the most resignations in Q3 2025?",
+    "What are the most common exit survey reason codes?",
+    "Show me the timeline of resignations for employees under manager MGR-001"
+  ],
+  "tables": [
+    {
+      "identifier": "hr_talent.default.employees",
+      "column_configs": [
+        {
+          "column_name": "employee_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Unique employee identifier"
+        },
+        {
+          "column_name": "first_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employee first name"
+        },
+        {
+          "column_name": "last_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employee last name"
+        },
+        {
+          "column_name": "department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Department (Engineering, Product, Sales, Marketing, Finance, Operations, HR)"
+        },
+        {
+          "column_name": "region",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Geographic region (Northeast, Southeast, Midwest, Southwest, West Coast)"
+        },
+        {
+          "column_name": "hire_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the employee was hired"
+        },
+        {
+          "column_name": "manager_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "ID of the employee's direct manager \u2014 join to managers table"
+        },
+        {
+          "column_name": "job_title",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Job title"
+        },
+        {
+          "column_name": "job_level",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Job level (1-5, higher is more senior)"
+        },
+        {
+          "column_name": "status",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employment status: Active or Resigned"
+        }
+      ]
+    },
+    {
+      "identifier": "hr_talent.default.resignations",
+      "column_configs": [
+        {
+          "column_name": "resignation_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": true,
+          "description": "Unique resignation record identifier"
+        },
+        {
+          "column_name": "employee_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employee who resigned \u2014 join to employees table"
+        },
+        {
+          "column_name": "resignation_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the resignation was submitted"
+        },
+        {
+          "column_name": "last_day",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Employee's last working day"
+        },
+        {
+          "column_name": "reason_code",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Exit reason category (Compensation, Manager Relationship, Career Growth, Work-Life Balance, Relocation, Other)"
+        },
+        {
+          "column_name": "exit_survey_score",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Exit survey satisfaction score (1-10, higher is more satisfied)"
+        }
+      ]
+    },
+    {
+      "identifier": "hr_talent.default.managers",
+      "column_configs": [
+        {
+          "column_name": "manager_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Unique manager identifier \u2014 primary key"
+        },
+        {
+          "column_name": "manager_name",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Manager's full name"
+        },
+        {
+          "column_name": "department",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Department the manager leads"
+        },
+        {
+          "column_name": "region",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Region where the manager is based"
+        },
+        {
+          "column_name": "team_size",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Number of direct reports"
+        },
+        {
+          "column_name": "start_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the manager started in this role"
+        },
+        {
+          "column_name": "end_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date the manager left (null if still active)"
+        },
+        {
+          "column_name": "performance_rating",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Manager performance rating (1-5 scale)"
+        }
+      ]
+    },
+    {
+      "identifier": "hr_talent.default.compensation",
+      "column_configs": [
+        {
+          "column_name": "employee_id",
+          "enable_format_assistance": true,
+          "enable_entity_matching": true,
+          "hidden": false,
+          "description": "Employee identifier \u2014 join to employees table"
+        },
+        {
+          "column_name": "base_salary",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Current base salary in USD"
+        },
+        {
+          "column_name": "market_benchmark",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Market benchmark salary for the same role and level"
+        },
+        {
+          "column_name": "comp_ratio",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Compensation ratio (base_salary / market_benchmark); below 1.0 means below market"
+        },
+        {
+          "column_name": "last_raise_date",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Date of the employee's most recent raise"
+        },
+        {
+          "column_name": "last_raise_pct",
+          "enable_format_assistance": true,
+          "enable_entity_matching": false,
+          "hidden": false,
+          "description": "Percentage of the most recent raise"
+        }
+      ]
+    }
+  ],
+  "table_joins": [
+    {
+      "left_table_identifier": "hr_talent.default.employees",
+      "right_table_identifier": "hr_talent.default.resignations",
+      "join_columns": [
+        {
+          "left_column": "employee_id",
+          "right_column": "employee_id"
+        }
+      ]
+    },
+    {
+      "left_table_identifier": "hr_talent.default.employees",
+      "right_table_identifier": "hr_talent.default.managers",
+      "join_columns": [
+        {
+          "left_column": "manager_id",
+          "right_column": "manager_id"
+        }
+      ]
+    },
+    {
+      "left_table_identifier": "hr_talent.default.employees",
+      "right_table_identifier": "hr_talent.default.compensation",
+      "join_columns": [
+        {
+          "left_column": "employee_id",
+          "right_column": "employee_id"
+        }
+      ]
+    }
+  ],
+  "text_instructions": [
+    "This space is designed to investigate a 34% quarter-over-quarter increase in voluntary turnover during Q3 2025. Use it to explore resignation patterns by manager, region, department, and compensation.",
+    "Data covers the period from January 2025 through March 2026.",
+    "Round all currency values to 2 decimal places and all percentages to 2 decimal places.",
+    "When users ask about turnover without specifying a time period, return all quarters. When they mention a region without specifying, ask: 'Which region would you like to focus on? Options include Northeast, Southeast, Midwest, Southwest, and West Coast.'",
+    "Glossary: CHRO = Chief Human Resources Officer. Comp ratio = base salary divided by market benchmark (below 1.0 = below market). Voluntary turnover = employees who resigned (status = 'Resigned'). QoQ = Quarter-over-Quarter."
+  ],
+  "example_question_sqls": [
+    {
+      "question": "What is the voluntary turnover by quarter?",
+      "sql": "SELECT\n  CONCAT(YEAR(r.resignation_date), '-Q', QUARTER(r.resignation_date)) AS quarter,\n  COUNT(*) AS resignation_count\nFROM hr_talent.`default`.resignations r\nGROUP BY CONCAT(YEAR(r.resignation_date), '-Q', QUARTER(r.resignation_date))\nORDER BY quarter"
+    },
+    {
+      "question": "Which managers had the most resignations?",
+      "sql": "SELECT\n  e.manager_id,\n  m.manager_name,\n  m.department,\n  m.region,\n  COUNT(*) AS resignation_count\nFROM hr_talent.`default`.resignations r\nJOIN hr_talent.`default`.employees e ON r.employee_id = e.employee_id\nJOIN hr_talent.`default`.managers m ON e.manager_id = m.manager_id\nGROUP BY e.manager_id, m.manager_name, m.department, m.region\nORDER BY resignation_count DESC"
+    },
+    {
+      "question": "How does comp ratio compare for resigned vs active employees?",
+      "sql": "SELECT\n  e.status,\n  ROUND(AVG(c.comp_ratio), 2) AS avg_comp_ratio,\n  ROUND(AVG(c.base_salary), 2) AS avg_salary,\n  ROUND(AVG(c.market_benchmark), 2) AS avg_benchmark\nFROM hr_talent.`default`.employees e\nJOIN hr_talent.`default`.compensation c ON e.employee_id = c.employee_id\nGROUP BY e.status"
+    },
+    {
+      "question": "Show resignations timeline for employees under Jordan Rivera (MGR-001)",
+      "sql": "SELECT\n  r.resignation_date,\n  e.employee_id,\n  e.first_name,\n  e.last_name,\n  e.job_title,\n  r.reason_code,\n  r.exit_survey_score\nFROM hr_talent.`default`.resignations r\nJOIN hr_talent.`default`.employees e ON r.employee_id = e.employee_id\nWHERE e.manager_id = 'MGR-001'\nORDER BY r.resignation_date"
+    }
+  ],
+  "sql_snippets": {
+    "filters": [
+      {
+        "display_name": "Q3 2025 Only",
+        "sql": "QUARTER(resignation_date) = 3 AND YEAR(resignation_date) = 2025"
+      },
+      {
+        "display_name": "Resigned Employees",
+        "sql": "hr_talent.`default`.employees.status = 'Resigned'"
+      },
+      {
+        "display_name": "Manager MGR-001",
+        "sql": "hr_talent.`default`.employees.manager_id = 'MGR-001'"
+      },
+      {
+        "display_name": "Below Market Comp",
+        "sql": "hr_talent.`default`.compensation.comp_ratio < 1.0"
+      }
+    ],
+    "measures": [
+      {
+        "display_name": "Resignation Count",
+        "sql": "COUNT(hr_talent.`default`.resignations.resignation_id)"
+      },
+      {
+        "display_name": "Avg Comp Ratio",
+        "sql": "ROUND(AVG(hr_talent.`default`.compensation.comp_ratio), 2)"
+      },
+      {
+        "display_name": "Avg Exit Survey Score",
+        "sql": "ROUND(AVG(hr_talent.`default`.resignations.exit_survey_score), 2)"
+      },
+      {
+        "display_name": "Turnover Rate %",
+        "sql": "ROUND(COUNT(hr_talent.`default`.resignations.resignation_id) * 100.0 / COUNT(hr_talent.`default`.employees.employee_id), 2)"
+      }
+    ]
+  }
+}
