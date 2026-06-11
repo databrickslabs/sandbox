@@ -64,7 +64,8 @@ python import_supervisor_agent.py \
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `--input-dir` | Yes | Path to the exported agent directory (containing `manifest.json`) |
-| `--warehouse-id` | Yes | SQL warehouse ID for genie rooms in the target workspace |
+| `--warehouse-id` | One of id / name | SQL warehouse ID for genie rooms in the target workspace |
+| `--warehouse-name` | One of id / name | SQL warehouse name to look up the ID by (alternative to `--warehouse-id`) |
 | `--volume-path` | Yes | UC volume base path where knowledge assistant files will be uploaded |
 | `--catalog-map` | No | Comma-separated catalog/schema mapping rules for UC objects (see below) |
 | `--connection-map` | No | Comma-separated `old=new` rename rules for `uc_connection` tools |
@@ -241,7 +242,8 @@ python import_genie_space.py \
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `--input-dir` | Yes | Path to the exported genie space directory (containing `definition.json` and `serialized.json`) |
-| `--warehouse-id` | Yes | SQL warehouse ID for the genie space in the target workspace |
+| `--warehouse-id` | One of id / name | SQL warehouse ID for the genie space in the target workspace |
+| `--warehouse-name` | One of id / name | SQL warehouse name to look up the ID by (alternative to `--warehouse-id`) |
 | `--catalog-map` | No | Comma-separated catalog/schema mapping rules (same syntax as the supervisor importer — see [Catalog mapping](#catalog-mapping)) |
 | `--yes-update` | No | Always update an existing space without prompting (mutually exclusive with `--skip-existing`) |
 | `--skip-existing` | No | Never update an existing space, always reuse it (mutually exclusive with `--yes-update`) |
