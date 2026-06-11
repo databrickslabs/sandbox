@@ -268,6 +268,26 @@ def find_existing_genie_space(w: WorkspaceClient, title: str):
     return None
 
 
+def resolve_warehouse_id(w: WorkspaceClient, warehouse_id: str | None,
+                         warehouse_name: str | None) -> str:
+    """Return a warehouse ID, looking it up by name if only a name was given.
+
+    Exits with an error if the name doesn't resolve to exactly one warehouse.
+    """
+    if warehouse_id:
+        return warehouse_id
+    matches = [wh for wh in w.warehouses.list() if wh.name == warehouse_name]
+    if not matches:
+        log.error("No SQL warehouse named '%s' found in the target workspace.", warehouse_name)
+        sys.exit(1)
+    if len(matches) > 1:
+        log.error("Multiple SQL warehouses named '%s' (ids: %s); use --warehouse-id to disambiguate.",
+                  warehouse_name, ", ".join(m.id for m in matches))
+        sys.exit(1)
+    log.info("Resolved warehouse '%s' to id %s", warehouse_name, matches[0].id)
+    return matches[0].id
+
+
 def preflight_check(w: WorkspaceClient, serialized: dict,
                     catalog_rules: list[tuple[str, str]], force: bool) -> None:
     """Validate that all referenced UC tables exist before importing.
@@ -404,9 +424,14 @@ def main():
         help="Path to the exported genie space directory "
              "(containing definition.json and serialized.json)",
     )
-    parser.add_argument(
-        "--warehouse-id", required=True,
+    wh_group = parser.add_mutually_exclusive_group(required=True)
+    wh_group.add_argument(
+        "--warehouse-id",
         help="SQL warehouse ID for the genie space in the target workspace",
+    )
+    wh_group.add_argument(
+        "--warehouse-name",
+        help="SQL warehouse name to look up the ID by (alternative to --warehouse-id)",
     )
     parser.add_argument(
         "--catalog-map",
@@ -451,10 +476,11 @@ def main():
         log.info("Connected to %s", w.config.host)
 
         catalog_rules = parse_catalog_map(args.catalog_map)
+        warehouse_id = resolve_warehouse_id(w, args.warehouse_id, args.warehouse_name)
 
         space_id = resolve_genie_space(
             w, input_dir,
-            args.warehouse_id, catalog_rules,
+            warehouse_id, catalog_rules,
             yes_update=args.yes_update,
             skip_existing=args.skip_existing,
             force=args.force,

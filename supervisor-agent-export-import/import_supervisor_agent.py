@@ -618,6 +618,26 @@ def find_existing_genie_space(w: WorkspaceClient, title: str):
     return None
 
 
+def resolve_warehouse_id(w: WorkspaceClient, warehouse_id: str | None,
+                         warehouse_name: str | None) -> str:
+    """Return a warehouse ID, looking it up by name if only a name was given.
+
+    Exits with an error if the name doesn't resolve to exactly one warehouse.
+    """
+    if warehouse_id:
+        return warehouse_id
+    matches = [wh for wh in w.warehouses.list() if wh.name == warehouse_name]
+    if not matches:
+        log.error("No SQL warehouse named '%s' found in the target workspace.", warehouse_name)
+        sys.exit(1)
+    if len(matches) > 1:
+        log.error("Multiple SQL warehouses named '%s' (ids: %s); use --warehouse-id to disambiguate.",
+                  warehouse_name, ", ".join(m.id for m in matches))
+        sys.exit(1)
+    log.info("Resolved warehouse '%s' to id %s", warehouse_name, matches[0].id)
+    return matches[0].id
+
+
 def find_lakeview_dashboard_by_name(w: WorkspaceClient, display_name: str) -> str | None:
     """Find a lakeview dashboard by display_name in the target workspace.
 
@@ -1816,9 +1836,14 @@ def main():
         "--input-dir", required=True,
         help="Path to the exported agent directory (containing manifest.json)",
     )
-    parser.add_argument(
-        "--warehouse-id", required=True,
+    wh_group = parser.add_mutually_exclusive_group(required=True)
+    wh_group.add_argument(
+        "--warehouse-id",
         help="SQL warehouse ID for genie rooms in the target workspace",
+    )
+    wh_group.add_argument(
+        "--warehouse-name",
+        help="SQL warehouse name to look up the ID by (alternative to --warehouse-id)",
     )
     parser.add_argument(
         "--volume-path", required=True,
@@ -1891,10 +1916,11 @@ def main():
         endpoint_map = parse_name_map(args.endpoint_map)
         dashboard_map = parse_name_map(args.dashboard_map)
         agent_map = parse_name_map(args.agent_map)
+        warehouse_id = resolve_warehouse_id(w, args.warehouse_id, args.warehouse_name)
 
         import_agent(
             w, manifest, input_dir,
-            args.warehouse_id, args.volume_path, catalog_rules,
+            warehouse_id, args.volume_path, catalog_rules,
             connection_map=connection_map,
             app_map=app_map,
             endpoint_map=endpoint_map,
