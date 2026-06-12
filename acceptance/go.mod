@@ -3,7 +3,7 @@ module github.com/databrickslabs/sandbox/acceptance
 go 1.25.0
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1 // MIT
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.12.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.7.0 // MIT
@@ -47,8 +47,8 @@ require (
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/api v0.215.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
