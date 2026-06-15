@@ -15,6 +15,8 @@ go-libs                    @nfx @alexott
 ip_access_list_analyzer    @alexott
 judge-builder              @smoorjani @alkispoly-db
 ka-chat-bot                @taiga-db
+lakemeter                  @CheeYuTan
+marketplace-provisioning   @michellejm
 metascan                   @nfx @alexott
 runtime-packages           @nfx @alexott
 sql_migration_copilot      @robertwhiffin
