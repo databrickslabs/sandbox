@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0 // MIT
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1 // MIT
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.12.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.8.0 // MIT
 	github.com/databricks/databricks-sdk-go v0.148.0 // Apache 2.0
