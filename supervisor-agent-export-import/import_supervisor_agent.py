@@ -429,8 +429,8 @@ def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
             except Exception as e:
                 log.warning("Could not verify volume '%s': %s; treating as missing", name, e)
                 missing_volumes_tool.append(name)
-        elif tool_type == "uc_table":
-            name = apply_catalog_map(tool.get("uc_table", {}).get("name", ""), catalog_rules)
+        elif tool_type in ("uc_table", "table"):
+            name = apply_catalog_map(tool.get(tool_type, {}).get("name", ""), catalog_rules)
             if not name:
                 continue
             try:
@@ -481,12 +481,15 @@ def preflight_check(w: WorkspaceClient, manifest: dict, input_dir: Path,
                 continue
             if not find_serving_endpoint(w, name):
                 missing_endpoints.append(name)
-        elif tool_type == "lakeview_dashboard":
-            display = apply_name_map(tool.get("lakeview_dashboard", {}).get("display_name", ""), dashboard_map)
+        elif tool_type in ("dashboard", "lakeview_dashboard"):
+            spec_key = tool_type
+            display = apply_name_map(tool.get(spec_key, {}).get("display_name", ""), dashboard_map)
             if not display:
                 continue
             if find_lakeview_dashboard_by_name(w, display) is None:
                 missing_dashboards.append(display)
+        elif tool_type in ("uc_mcp", "skill"):
+            pass  # no dependency to check
         elif tool_type == "supervisor_agent":
             display = apply_name_map(tool.get("supervisor_agent", {}).get("display_name", ""), agent_map)
             if not display:
@@ -1289,7 +1292,7 @@ def resolve_tool_spec(w: WorkspaceClient, tool_entry: dict,
     """
     tool_type = tool_entry["tool_type"]
 
-    if tool_type in ("uc_function", "uc_table", "vector_search_index",
+    if tool_type in ("uc_function", "uc_table", "table", "uc_mcp", "vector_search_index",
                       "catalog", "schema", "volume"):
         original = tool_entry.get(tool_type, {}).get("name", "")
         return ({"name": apply_catalog_map(original, catalog_rules)}, None)
@@ -1306,11 +1309,11 @@ def resolve_tool_spec(w: WorkspaceClient, tool_entry: dict,
         original = tool_entry.get("serving_endpoint", {}).get("name", "")
         return ({"name": apply_name_map(original, endpoint_map)}, None)
 
-    if tool_type == "web_search":
+    if tool_type in ("web_search", "skill"):
         return ({}, None)
 
-    if tool_type == "lakeview_dashboard":
-        spec = tool_entry.get("lakeview_dashboard", {})
+    if tool_type in ("dashboard", "lakeview_dashboard"):
+        spec = tool_entry.get(tool_type, {})
         original_display = spec.get("display_name", "")
         # Apply map first if provided
         target_display = apply_name_map(original_display, dashboard_map)
@@ -1371,17 +1374,17 @@ def normalize_existing_tool(tool: dict) -> dict:
         }
     elif tool_type == "genie_space":
         body["genie_space"] = {"id": tool.get("genie_space", {}).get("id", "")}
-    elif tool_type == "lakeview_dashboard":
-        body["lakeview_dashboard"] = {
-            "dashboard_id": tool.get("lakeview_dashboard", {}).get("dashboard_id", "")
+    elif tool_type in ("dashboard", "lakeview_dashboard"):
+        body[tool_type] = {
+            "dashboard_id": tool.get(tool_type, {}).get("dashboard_id", "")
         }
     elif tool_type == "supervisor_agent":
         body["supervisor_agent"] = {
             "supervisor_agent_id": tool.get("supervisor_agent", {}).get("supervisor_agent_id", "")
         }
-    elif tool_type == "web_search":
-        body["web_search"] = {}
-    elif tool_type in ("uc_function", "uc_table", "vector_search_index", "catalog",
+    elif tool_type in ("web_search", "skill"):
+        body[tool_type] = {}
+    elif tool_type in ("uc_function", "uc_table", "table", "uc_mcp", "vector_search_index", "catalog",
                         "schema", "volume", "uc_connection", "app", "serving_endpoint"):
         body[tool_type] = {"name": tool.get(tool_type, {}).get("name", "")}
     return body
@@ -1389,9 +1392,10 @@ def normalize_existing_tool(tool: dict) -> dict:
 
 SUPPORTED_TOOL_TYPES = (
     "knowledge_assistant", "genie_space",
-    "uc_function", "uc_connection", "app", "volume",
-    "uc_table", "vector_search_index", "catalog", "schema",
-    "serving_endpoint", "lakeview_dashboard", "supervisor_agent", "web_search",
+    "uc_function", "uc_connection", "uc_mcp", "app", "volume",
+    "uc_table", "table", "vector_search_index", "catalog", "schema",
+    "serving_endpoint", "dashboard", "lakeview_dashboard", "supervisor_agent",
+    "web_search", "skill",
 )
 
 
@@ -1525,9 +1529,13 @@ def reconcile_tools(w: WorkspaceClient, agent_id: str,
                 or existing_norm.get("catalog") != expected.get("catalog")
                 or existing_norm.get("schema") != expected.get("schema")
                 or existing_norm.get("serving_endpoint") != expected.get("serving_endpoint")
+                or existing_norm.get("dashboard") != expected.get("dashboard")
                 or existing_norm.get("lakeview_dashboard") != expected.get("lakeview_dashboard")
                 or existing_norm.get("supervisor_agent") != expected.get("supervisor_agent")
                 or existing_norm.get("web_search") != expected.get("web_search")
+                or existing_norm.get("table") != expected.get("table")
+                or existing_norm.get("uc_mcp") != expected.get("uc_mcp")
+                or existing_norm.get("skill") != expected.get("skill")
             )
 
             if other_changed:

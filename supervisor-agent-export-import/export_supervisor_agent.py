@@ -105,10 +105,21 @@ def export_tool(w: WorkspaceClient, tool: dict, agent_dir: Path,
                 log.warning("Volume tool '%s' has invalid name '%s'; skipping content download",
                             tool_id, full_name)
     elif tool_type in ("uc_function", "uc_connection", "app",
-                        "uc_table", "vector_search_index", "catalog", "schema",
-                        "serving_endpoint", "web_search"):
+                        "uc_table", "table", "uc_mcp", "vector_search_index", "catalog", "schema",
+                        "serving_endpoint", "web_search", "skill"):
         # Simple types: capture the type-specific spec as-is
         entry[tool_type] = tool.get(tool_type, {})
+    elif tool_type == "dashboard":
+        spec = dict(tool.get("dashboard", {}))
+        dashboard_id = spec.get("dashboard_id", "")
+        if dashboard_id:
+            try:
+                dash = w.lakeview.get(dashboard_id)
+                spec["display_name"] = getattr(dash, "display_name", "") or ""
+            except Exception as e:
+                log.warning("Could not fetch dashboard '%s' for display_name: %s", dashboard_id, e)
+                spec["display_name"] = ""
+        entry["dashboard"] = spec
     elif tool_type == "lakeview_dashboard":
         spec = dict(tool.get("lakeview_dashboard", {}))
         # Augment with dashboard display_name for cross-workspace lookup
