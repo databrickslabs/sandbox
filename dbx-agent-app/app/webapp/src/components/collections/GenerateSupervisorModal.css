@@ -1,0 +1,135 @@
+.generate-supervisor-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 300px;
+}
+
+.mode-selection h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+}
+
+.mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-option {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-option:hover {
+  border-color: #ccc;
+  background: #f9f9f9;
+}
+
+.mode-option.selected {
+  border-color: #0066cc;
+  background: #f0f7ff;
+}
+
+.mode-option input[type="radio"] {
+  margin-top: 4px;
+}
+
+.mode-option strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.mode-option p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.generation-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #c62828;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.generation-result {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.result-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+  font-weight: 500;
+}
+
+.result-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.url-display {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.url-display code {
+  flex: 1;
+  background: #f5f5f5;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.code-display {
+  position: relative;
+}
+
+.code-display pre {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  max-height: 300px;
+  margin: 0;
+}
+
+.code-display button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}

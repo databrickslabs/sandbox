@@ -1,0 +1,85 @@
+# Databricks Apps Configuration for Multi-Agent Registry API
+# Documentation: https://docs.databricks.com/dev-tools/databricks-apps/index.html
+
+# Command to start the application
+# Uses uvicorn with proper worker configuration for production
+command:
+  - python
+  - -m
+  - uvicorn
+  - app.main:app
+  - --host
+  - "0.0.0.0"
+  - --port
+  - "8000"
+  - --workers
+  # Using 1 worker to avoid concurrent startup discovery conflicts
+  - "1"
+  - --loop
+  - uvloop
+  - --http
+  - httptools
+
+# Environment variables
+# Static values use 'value', resource references use 'valueFrom'
+env:
+  # Application Configuration
+  - name: PORT
+    value: "8000"
+  - name: ENVIRONMENT
+    value: production
+  - name: DEBUG
+    value: "false"
+
+  # API Configuration
+  - name: API_TITLE
+    value: "Multi-Agent Registry API"
+  - name: API_VERSION
+    value: "0.1.0"
+  - name: API_PREFIX
+    value: "/api"
+
+  # Database Configuration - Using Databricks SQL Warehouse for persistent storage
+  - name: DATABASE_URL
+    value: "databricks://warehouse"
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: "387bcda0f2ece20c"
+  - name: DB_CATALOG
+    value: "serverless_dxukih_catalog"
+  - name: DB_SCHEMA
+    value: "registry"
+
+  # CORS Configuration
+  # Allow requests from webapp and localhost
+  - name: CORS_ORIGINS
+    value: "https://multi-agent-registry-webapp-7474660127789418.aws.databricksapps.com,http://localhost:5501,http://localhost:3000"
+  - name: CORS_CREDENTIALS
+    value: "true"
+  - name: CORS_METHODS
+    value: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  - name: CORS_HEADERS
+    value: "Content-Type,Authorization,X-Requested-With,Accept,Origin"
+
+# Resources
+resources:
+  - name: sql-warehouse
+    sql_warehouse:
+      id: "387bcda0f2ece20c"
+      permission: CAN_USE
+  - name: serverless-catalog
+    catalog:
+      name: serverless_dxukih_catalog
+      permission: USE_CATALOG
+  - name: registry-schema
+    schema:
+      catalog_name: serverless_dxukih_catalog
+      name: registry
+      permission: USE_SCHEMA
+
+# Health check configuration
+# Databricks Apps will probe this endpoint to determine app readiness
+# The /health endpoint returns {"status": "healthy", "version": "x.x.x"}
+
+# Disable OAuth to make API publicly accessible
+permissions:
+  authorization: NONE
