@@ -2304,9 +2304,11 @@
                 // Highlight JSON-like structures
                 if (formatted.includes('{') && formatted.includes('}')) {
                     try {
-                        // Try to parse and pretty-print JSON
+                        // Try to parse and pretty-print JSON (escape to prevent XSS when assigning via innerHTML)
                         const parsed = JSON.parse(content);
-                        formatted = '<pre>' + JSON.stringify(parsed, null, 2) + '</pre>';
+                        const jsonString = JSON.stringify(parsed, null, 2);
+                        const escapedJson = escapeHtml(jsonString);
+                        formatted = '<pre>' + escapedJson + '</pre>';
                     } catch (e) {
                         // Not valid JSON, keep original formatting
                     }
