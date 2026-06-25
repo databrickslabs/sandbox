@@ -17,6 +17,7 @@ judge-builder              @smoorjani @alkispoly-db
 ka-chat-bot                @taiga-db
 marketplace-provisioning   @michellejm
 metascan                   @nfx @alexott
+oauth_auto_token_rotation  @suryasai87
 runtime-packages           @nfx @alexott
 sql_migration_copilot      @robertwhiffin
 tacklebox                  @Jonathan-Choi
