@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-10T09:20:30.571090",
+  "format": "csv",
+  "total_files": 10,
+  "files": [
+    "dbsql-rates.csv",
+    "dbsql-warehouse-config.csv",
+    "dbu-multipliers.csv",
+    "dbu-rates.csv",
+    "fmapi-databricks-rates.csv",
+    "fmapi-proprietary-rates.csv",
+    "instance-dbu-rates.csv",
+    "serverless-rates.csv",
+    "sku-region-map.csv",
+    "vm-costs.csv"
+  ]
+}
