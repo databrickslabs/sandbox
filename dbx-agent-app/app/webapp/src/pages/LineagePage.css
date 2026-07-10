@@ -1,0 +1,258 @@
+.lineage-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.lineage-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.lineage-page-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.lineage-subtitle {
+  margin: 4px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.lineage-error-banner {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  border-left: 4px solid #c62828;
+}
+
+.lineage-layout {
+  display: flex;
+  gap: 20px;
+  min-height: 600px;
+}
+
+/* Sidebar */
+.lineage-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lineage-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.lineage-search-input:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.lineage-asset-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.lineage-asset-group h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lineage-asset-group + .lineage-asset-group {
+  margin-top: 16px;
+}
+
+.lineage-asset-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.lineage-asset-item:hover {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+}
+
+.lineage-asset-item.active {
+  background: #e8f0fe;
+  border-color: #0066cc;
+}
+
+.lineage-asset-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #333;
+}
+
+.lineage-no-assets {
+  color: #888;
+  font-size: 13px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* Main area */
+.lineage-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lineage-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.lineage-selected-label {
+  font-size: 14px;
+  color: #555;
+}
+
+.lineage-direction-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.direction-btn {
+  padding: 6px 14px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.15s;
+}
+
+.direction-btn + .direction-btn {
+  border-left: 1px solid #e0e0e0;
+}
+
+.direction-btn.active {
+  background: #0066cc;
+  color: white;
+}
+
+.direction-btn:hover:not(.active) {
+  background: #f5f5f5;
+}
+
+/* Placeholder */
+.lineage-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  color: #888;
+}
+
+.lineage-placeholder h3 {
+  margin: 0 0 8px 0;
+  color: #555;
+}
+
+.lineage-placeholder p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.lineage-page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  gap: 16px;
+  color: #888;
+}
+
+/* Impact analysis */
+.lineage-impact-section {
+  padding: 16px;
+  background: #fff3e0;
+  border-radius: 8px;
+  border-left: 4px solid #f9ab00;
+}
+
+.lineage-impact-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #e65100;
+}
+
+.lineage-impact-section > p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.lineage-impact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lineage-impact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.lineage-impact-depth {
+  font-size: 11px;
+  color: #999;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .lineage-layout {
+    flex-direction: column;
+  }
+
+  .lineage-sidebar {
+    width: 100%;
+    max-height: 200px;
+  }
+}

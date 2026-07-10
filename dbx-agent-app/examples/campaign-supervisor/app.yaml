@@ -1,0 +1,17 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  - name: MODEL_ENDPOINT
+    value: databricks-claude-sonnet-4-6
+  - name: CAMPAIGN_INSIGHTS_URL
+    value: https://campaign-insights-7474654520950726.aws.databricksapps.com
+  - name: ACCOUNT_LOOKUP_URL
+    value: https://account-lookup-7474654520950726.aws.databricksapps.com
