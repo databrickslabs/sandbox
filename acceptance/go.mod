@@ -7,7 +7,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.12.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.8.0 // MIT
-	github.com/databricks/databricks-sdk-go v0.157.0 // Apache 2.0
+	github.com/databricks/databricks-sdk-go v0.159.0 // Apache 2.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.1 // Databricks License
 	github.com/nxadm/tail v1.4.11 // MIT
 	github.com/sethvargo/go-githubactions v1.3.2 // Apache 2.0
