@@ -15,7 +15,7 @@ require (
 	golang.org/x/oauth2 v0.36.0 // BSD
 )
 
-require golang.org/x/text v0.39.0
+require golang.org/x/text v0.40.0
 
 require (
 	cloud.google.com/go/auth v0.13.0 // indirect
