@@ -17,8 +17,7 @@ tags:
 
 A minimal, self-contained Scala JAR job that runs on **Databricks serverless
 compute**. It is meant as a copy-and-go starting point: it builds into a single
-fat JAR with `sbt assembly` and demonstrates the three building blocks you are
-most likely to need.
+fat JAR with `sbt assembly` and demonstrates three basic building blocks:
 
 1. **Spark basics** — get the session, build a DataFrame, read a Unity Catalog table.
 2. **UDF basics** — scalar, map-returning, SQL-registered, and a UDF closing over a locally-defined class.
@@ -36,9 +35,6 @@ cluster job in a few ways this example follows:
   Both are provided by the runtime, so they are marked `% provided` and are not
   shipped inside your JAR.
 - Target **Scala 2.13** and **JDK 17**.
-- Obtain `dbutils` on the driver and pass it into your code. Do not hold it in an
-  `object`-level `val`: the initializer can otherwise run inside a UDF closure on
-  an executor, where it fails.
 
 ## Layout
 
@@ -68,21 +64,13 @@ target/scala-2.13/ServerlessJarJobExample-2.13-assembly.jar
 
 ## Deploy and run
 
-1. Upload the assembled JAR to a Unity Catalog volume, e.g. with the Databricks CLI:
-
-   ```bash
-   databricks fs cp \
-     target/scala-2.13/ServerlessJarJobExample-2.13-assembly.jar \
-     dbfs:/Volumes/<catalog>/<schema>/<volume>/ServerlessJarJobExample.jar
-   ```
-
-2. Create a job with a **JAR task** on **serverless** compute:
+1. Create a job with a **JAR task** on **serverless** compute:
    - Main class: `com.databricks.labs.example.ServerlessJarJobExample`
-   - Dependent library: the uploaded JAR
+   - Environment JAR dependency: the uploaded JAR (drag and drop it into the file selector, or browse to select it from a Unity Catalog volume or workspace location)
    - Parameter (`args(0)`): a writable UC volume base path,
      e.g. `/Volumes/<catalog>/<schema>/<volume>`
 
-3. Run the job. On success the driver log ends with:
+2. Run the job. On success the driver log ends with:
 
    ```
    ServerlessJarJobExample: all examples completed successfully
@@ -93,4 +81,4 @@ The single argument is the base path of a UC volume the job can write to; the
 
 ## References
 
-- [Use JARs in Databricks jobs](https://docs.databricks.com/aws/en/jobs/how-to/use-jars-in-workflows)
+- [Create and run JARs on serverless compute](https://docs.databricks.com/aws/en/jobs/how-to/use-jars-in-workflows)

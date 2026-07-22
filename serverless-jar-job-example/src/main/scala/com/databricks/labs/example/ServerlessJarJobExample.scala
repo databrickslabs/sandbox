@@ -8,8 +8,7 @@ import java.util.UUID
 
 /**
  * A minimal, self-contained example of a Scala JAR job that runs on Databricks
- * serverless compute. It demonstrates the three building blocks you are most
- * likely to need:
+ * serverless compute. It demonstrates three basic building blocks:
  *
  *   1. Spark basics    -- get the session, build a DataFrame, read a UC table.
  *   2. UDF basics      -- scalar, map-returning, SQL-registered, and closing
@@ -43,9 +42,7 @@ object ServerlessJarJobExample {
     // Under Spark Connect, getOrCreate() returns the session wired to serverless.
     val spark = SparkSession.builder().getOrCreate()
 
-    // dbutils comes from the databricks-dbutils-scala SDK. Obtain it on the
-    // driver and pass it into helpers -- do NOT store it in an object-level val,
-    // or its initializer can run inside a UDF closure on an executor and fail.
+    // dbutils comes from the databricks-dbutils-scala SDK.
     val dbutils = DBUtils.getDBUtils()
 
     sparkBasics(spark)
