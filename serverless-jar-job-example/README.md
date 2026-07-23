@@ -16,8 +16,10 @@ tags:
 # Serverless Scala JAR job example
 
 A minimal, self-contained Scala JAR job that runs on **Databricks serverless
-compute**. It is meant as a copy-and-go starting point: it builds into a single
-fat JAR with `sbt assembly` and demonstrates three basic building blocks:
+compute**, packaged as a **Databricks Asset Bundle**. It is meant as a
+copy-and-go starting point: the bundle builds the JAR with `sbt assembly`,
+uploads it, and defines a serverless JAR job. The code demonstrates three basic
+building blocks:
 
 1. **Spark basics** — get the session, build a DataFrame, read a Unity Catalog table.
 2. **UDF basics** — scalar, map-returning, SQL-registered, and a UDF closing over a locally-defined class.
@@ -40,6 +42,9 @@ cluster job in a few ways this example follows:
 
 ```
 serverless-jar-job-example/
+├── databricks.yml             # bundle: build the JAR, define variables and target
+├── resources/
+│   └── serverless-jar-job-example.job.yml   # the serverless JAR job
 ├── build.sbt                  # Scala 2.13.16, JDK 17, provided deps, assembly config
 ├── project/
 │   ├── plugins.sbt            # sbt-assembly plugin
@@ -48,37 +53,44 @@ serverless-jar-job-example/
     └── ServerlessJarJobExample.scala
 ```
 
-## Build
+## Prerequisites
 
-You need [sbt](https://www.scala-sbt.org/) and JDK 17.
+- The [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html),
+  authenticated to your workspace.
+- [sbt](https://www.scala-sbt.org/) and JDK 17 (the bundle invokes `sbt assembly`).
 
-```bash
-sbt clean assembly
-```
+## Configure
 
-This produces the fat JAR at:
+Edit `databricks.yml`:
 
-```
-target/scala-2.13/ServerlessJarJobExample-2.13-assembly.jar
-```
+- Set the `dev` target's `workspace.host` to your workspace URL.
+- Set the `volume_base` variable default to a Unity Catalog volume you can write
+  to, e.g. `/Volumes/<catalog>/<schema>/<volume>` (or pass it at deploy time with
+  `--var volume_base=...`).
 
 ## Deploy and run
 
-1. Create a job with a **JAR task** on **serverless** compute:
-   - Main class: `com.databricks.labs.example.ServerlessJarJobExample`
-   - Environment JAR dependency: the uploaded JAR (drag and drop it into the file selector, or browse to select it from a Unity Catalog volume or workspace location)
-   - Parameter (`args(0)`): a writable UC volume base path,
-     e.g. `/Volumes/<catalog>/<schema>/<volume>`
+The bundle builds the JAR, uploads it, and creates the job in one step:
 
-2. Run the job. On success the driver log ends with:
+```bash
+databricks bundle deploy -t dev
+databricks bundle run -t dev serverless-jar-job-example
+```
 
-   ```
-   ServerlessJarJobExample: all examples completed successfully
-   ```
+`bundle deploy` runs `sbt assembly` to produce the fat JAR at
+`target/scala-2.13/ServerlessJarJobExample-2.13-assembly.jar`, uploads it to the
+workspace artifact path, and registers the serverless JAR job. On success the
+run's driver log ends with:
 
-The single argument is the base path of a UC volume the job can write to; the
-`dbutils.fs` example writes a temporary file there and cleans it up afterwards.
+```
+ServerlessJarJobExample: all examples completed successfully
+```
+
+The job's single argument (`args(0)`) is the `volume_base` variable — a UC volume
+the job can write to; the `dbutils.fs` example writes a temporary file there and
+cleans it up afterwards.
 
 ## References
 
 - [Create and run JARs on serverless compute](https://docs.databricks.com/aws/en/jobs/how-to/use-jars-in-workflows)
+- [Databricks Asset Bundles](https://docs.databricks.com/dev-tools/bundles/index.html)

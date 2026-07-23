@@ -1,0 +1,40 @@
+# Databricks Asset Bundle for the serverless Scala JAR job example.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+#
+# The bundle builds the fat JAR with `sbt assembly`, uploads it, and defines a
+# job with a single spark_jar_task on serverless compute. Deploy and run with:
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run -t dev serverless-jar-job-example
+bundle:
+  name: serverless-jar-job-example
+  uuid: bbd857bc-f581-4885-a744-0d951cf4440a
+
+include:
+  - resources/*.yml
+
+variables:
+  volume_base:
+    description: >-
+      Writable Unity Catalog volume base path passed to the job as args(0),
+      e.g. /Volumes/<catalog>/<schema>/<volume>. The dbutils.fs example writes a
+      temporary file under this path and cleans it up.
+    default: /Volumes/main/default/my-volume
+
+# Build the deployable fat JAR with sbt assembly. The `files` source path is the
+# artifact sbt produces (see build.sbt: assembly / assemblyJarName).
+artifacts:
+  jar:
+    type: jar
+    path: .
+    build: sbt ";clean; assembly"
+    files:
+      - source: target/scala-2.13/ServerlessJarJobExample-2.13-assembly.jar
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # Replace with your workspace URL.
+      host: https://<your-workspace>.cloud.databricks.com
