@@ -17,6 +17,6 @@ resources:
       environments:
         - environment_key: default
           spec:
-            client: "4"
+            client: "5"
             java_dependencies:
               - ${workspace.artifact_path}/.internal/ServerlessJarJobExample-2.13-assembly.jar
