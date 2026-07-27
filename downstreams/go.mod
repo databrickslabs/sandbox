@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/databrickslabs/sandbox/acceptance v0.4.6
 	github.com/databrickslabs/sandbox/go-libs v0.4.1
-	github.com/sethvargo/go-githubactions v1.3.2
+	github.com/sethvargo/go-githubactions v1.4.0
 )
 
 require (
