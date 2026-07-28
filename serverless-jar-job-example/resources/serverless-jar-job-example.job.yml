@@ -1,0 +1,22 @@
+# Job definition for the serverless Scala JAR job example.
+resources:
+  jobs:
+    serverless-jar-job-example:
+      name: serverless-jar-job-example
+      tasks:
+        - task_key: main
+          spark_jar_task:
+            main_class_name: com.databricks.labs.example.ServerlessJarJobExample
+            # args(0): the writable UC volume base path.
+            parameters:
+              - ${var.volume_base}
+          environment_key: default
+      # Serverless JAR tasks run under a serverless environment. `client` selects
+      # the serverless environment version; the assembled JAR is listed as a
+      # dependency so the job can load it.
+      environments:
+        - environment_key: default
+          spec:
+            client: "5"
+            java_dependencies:
+              - ${workspace.artifact_path}/.internal/ServerlessJarJobExample-2.13-assembly.jar
