@@ -18,6 +18,7 @@ ka-chat-bot                @taiga-db
 marketplace-provisioning   @michellejm
 metascan                   @nfx @alexott
 runtime-packages           @nfx @alexott
+serverless-jar-job-example @imran-a-hasan
 sql_migration_copilot      @robertwhiffin
 tacklebox                  @Jonathan-Choi
 uc-catalog-cloning         @esiol-db @vasco-lopes
