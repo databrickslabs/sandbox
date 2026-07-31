@@ -1,0 +1,77 @@
+# DataMarket — Databricks Marketplace manifest
+# ─────────────────────────────────────────────────────────────────────────────
+# This file is used when publishing DataMarket through Databricks Marketplace.
+# It declares the resources the consumer must provide at install time.
+#
+# For CLI-based deployment (deploy.sh), use app.yaml.example instead.
+# ─────────────────────────────────────────────────────────────────────────────
+
+command:
+  - "bash"
+  - "-c"
+  - "npm install --include=dev && ([ -d dist ] || npm run build) && node app.js"
+
+env:
+  # ── Lakebase (required) ───────────────────────────────────────────────────
+  # The consumer selects their Lakebase Autoscaling project at install time.
+  # The platform automatically injects PGHOST, PGDATABASE, PGPORT, PGSSLMODE.
+  # LAKEBASE_ENDPOINT is set here so the app can generate short-lived DB
+  # credentials using the app service principal (M2M OAuth).
+  - name: LAKEBASE_ENDPOINT
+    valueFrom: lakebase-db
+
+  # ── SQL Warehouse (optional) ──────────────────────────────────────────────
+  # Required only if DEMO_MODE=false — used to execute real UC GRANT/REVOKE
+  # statements when approving access requests. Can be configured post-install
+  # via Admin → Settings in the app UI.
+  - name: SQL_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+
+  # ── Mode ─────────────────────────────────────────────────────────────────
+  # "false" = production mode (recommended for Marketplace installs)
+  #   • Real SSO identity flows from Databricks Apps headers (Entra ID / Okta)
+  #   • UC GRANT/REVOKE executed via SQL Warehouse when access is approved
+  # "true"  = demo/POC mode
+  #   • Persona switcher visible for demos
+  #   • UC grants generated but not executed
+  - name: DEMO_MODE
+    value: "false"
+
+  # ── Lakebase schema ───────────────────────────────────────────────────────
+  # The Postgres schema where DataMarket tables are stored.
+  # Must match the schema used when running the pre-install setup script.
+  - name: LAKEBASE_SCHEMA
+    value: "datamarket"
+
+  # ── Branding (configure post-install via Admin → Settings) ───────────────
+  # These defaults are used until an admin saves custom values in the app.
+  # No redeployment needed — Settings are stored in Lakebase and take effect
+  # immediately.
+  - name: APP_NAME
+    value: "DataMarket"
+  - name: APP_SUBTITLE
+    value: "Data Discovery & Access"
+
+resources:
+  # ── Lakebase Autoscaling (required) ───────────────────────────────────────
+  # Consumer must create a Lakebase project and run the pre-install setup
+  # script (scripts/setup_notebook.py) before installing.
+  - name: lakebase-db
+    description: >
+      Lakebase Autoscaling project for storing DataMarket metadata: data
+      product catalog, access requests, approvals, audit log, and user
+      library. Create a project in Compute → Lakebase, then run the
+      pre-install setup script to initialize the schema.
+    postgres:
+      permission: CAN_CONNECT_AND_CREATE
+
+  # ── SQL Warehouse (optional) ──────────────────────────────────────────────
+  # Required for production-mode UC grant execution. Can be left unbound at
+  # install and configured later via Admin → Settings.
+  - name: sql-warehouse
+    description: >
+      SQL Warehouse used to execute Unity Catalog GRANT/REVOKE statements
+      when an access request is approved. Required only when DEMO_MODE=false.
+      Any running warehouse with CAN_USE permission works.
+    sql_warehouse:
+      permission: CAN_USE
