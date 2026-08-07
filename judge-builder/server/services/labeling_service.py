@@ -111,10 +111,16 @@ class LabelingService(BaseService):
         # Look for sessions matching this judge (using short ID)
         short_id = get_short_id(judge_id)
 
+        # create_session_name() always places the short ID as the segment right
+        # before the trailing "_labeling" (f'{safe_name}_{short_id}_labeling'), so
+        # anchoring the check there is both correct and collision-safe. A plain
+        # substring check (`short_id in session_name`) would also match a session
+        # whose sanitized judge *name* happens to contain another judge's short ID
+        # anywhere in it, returning the wrong judge's labeling session.
+        suffix = f'_{short_id}_labeling'
         for session in all_sessions:
             session_name = session.name
-            # Check if session belongs to this judge (ends with short ID)
-            if short_id in session_name:
+            if session_name.endswith(suffix):
                 return session
 
         return None
