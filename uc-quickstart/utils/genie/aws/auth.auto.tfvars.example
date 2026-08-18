@@ -1,0 +1,11 @@
+# Databricks Authentication — secrets only.
+# Terraform auto-loads *.auto.tfvars — no need to pass -var-file.
+# This file is gitignored. NEVER check it in.
+#
+#   cp auth.auto.tfvars.example auth.auto.tfvars
+
+databricks_account_id    = ""
+databricks_client_id     = ""
+databricks_client_secret = ""
+databricks_workspace_id  = ""
+databricks_workspace_host = ""
