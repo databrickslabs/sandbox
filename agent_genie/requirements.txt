@@ -1,5 +1,5 @@
 mlflow
-langgraph==0.3.4 
+langgraph==1.1.6 
 databricks-langchain 
 databricks-agents 
 uv
