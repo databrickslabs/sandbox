@@ -7,7 +7,7 @@ require (
 	github.com/databricks/databricks-sdk-go v0.175.0
 	github.com/databrickslabs/sandbox/go-libs v0.4.1
 	github.com/spf13/pflag v1.0.10
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	github.com/yuin/goldmark v1.8.5
 	github.com/yuin/goldmark-meta v1.1.0
 )
@@ -48,6 +48,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/mod v0.30.0 // indirect
