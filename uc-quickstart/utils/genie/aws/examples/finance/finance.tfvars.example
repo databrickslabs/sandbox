@@ -1,0 +1,149 @@
+# ============================================================================
+# Finance ABAC Example — Complete tfvars (ABAC config only)
+# ============================================================================
+# This reproduces the original 5-group finance demo.
+# Credentials go in auth.auto.tfvars; environment config in env.auto.tfvars.
+#
+# Setup:
+#   1. cp auth.auto.tfvars.example auth.auto.tfvars   (credentials — gitignored)
+#      cp env.auto.tfvars.example env.auto.tfvars     (tables + environment)
+#   2. cp examples/finance/finance.tfvars.example abac.auto.tfvars
+#   3. Run examples/finance/0.1finance_abac_functions.sql in SQL editor
+#   4. Run examples/finance/0.2finance_database_schema.sql in SQL editor
+#   5. terraform apply
+# ============================================================================
+
+# === Groups ===
+groups = {
+  "Junior_Analyst"     = { description = "Masked PII, last-4 card, rounded amounts" }
+  "Senior_Analyst"     = { description = "Full PII, full card, full amounts" }
+  "US_Region_Staff"    = { description = "Row access limited to US data" }
+  "EU_Region_Staff"    = { description = "Row access limited to EU data" }
+  "Compliance_Officer" = { description = "Full unmasked access" }
+}
+
+# === Tag policies ===
+tag_policies = [
+  { key = "pii_level",       description = "PII access level", values = ["Limited_PII", "Full_PII"] },
+  { key = "pci_clearance",   description = "PCI-DSS clearance", values = ["Basic", "Full", "Administrative"] },
+  { key = "aml_clearance",   description = "AML investigation clearance", values = ["Junior_Analyst", "Senior_Investigator", "Compliance_Officer"] },
+  { key = "customer_region", description = "Customer data region", values = ["Regional", "US", "EU"] },
+  { key = "data_residency",  description = "Data residency", values = ["Global", "US", "EU"] },
+]
+
+# === Tag assignments ===
+# entity_name is relative to uc_catalog_name.uc_schema_name.
+# For tables:  "TableName"
+# For columns: "TableName.ColumnName"
+tag_assignments = [
+  # Customers table
+  { entity_type = "tables",  entity_name = "Customers",                tag_key = "data_residency",  tag_value = "Global" },
+  { entity_type = "tables",  entity_name = "Customers",                tag_key = "pii_level",       tag_value = "Full_PII" },
+  { entity_type = "tables",  entity_name = "Customers",                tag_key = "customer_region", tag_value = "Regional" },
+  { entity_type = "columns", entity_name = "Customers.CustomerRegion", tag_key = "customer_region", tag_value = "EU" },
+  { entity_type = "columns", entity_name = "Customers.CustomerRegion", tag_key = "data_residency",  tag_value = "EU" },
+  { entity_type = "columns", entity_name = "Customers.SSN",            tag_key = "pii_level",       tag_value = "Full_PII" },
+  { entity_type = "columns", entity_name = "Customers.SSN",            tag_key = "data_residency",  tag_value = "US" },
+  { entity_type = "columns", entity_name = "Customers.FirstName",      tag_key = "pii_level",       tag_value = "Limited_PII" },
+  { entity_type = "columns", entity_name = "Customers.LastName",       tag_key = "pii_level",       tag_value = "Limited_PII" },
+  { entity_type = "columns", entity_name = "Customers.Email",          tag_key = "pii_level",       tag_value = "Limited_PII" },
+
+  # CreditCards table
+  { entity_type = "tables",  entity_name = "CreditCards",              tag_key = "pci_clearance",   tag_value = "Full" },
+  { entity_type = "columns", entity_name = "CreditCards.CardNumber",   tag_key = "pci_clearance",   tag_value = "Full" },
+  { entity_type = "columns", entity_name = "CreditCards.CVV",          tag_key = "pci_clearance",   tag_value = "Administrative" },
+
+  # Transactions table
+  { entity_type = "tables",  entity_name = "Transactions",             tag_key = "aml_clearance",   tag_value = "Senior_Investigator" },
+  { entity_type = "columns", entity_name = "Transactions.Amount",      tag_key = "aml_clearance",   tag_value = "Junior_Analyst" },
+
+  # Accounts table
+  { entity_type = "tables",  entity_name = "Accounts",                 tag_key = "data_residency",  tag_value = "Global" },
+  { entity_type = "tables",  entity_name = "Accounts",                 tag_key = "customer_region", tag_value = "Regional" },
+]
+
+# === FGAC policies ===
+# function_name is relative to uc_catalog_name.uc_schema_name (just the function name).
+fgac_policies = [
+  # PII masking — junior analysts
+  {
+    name            = "pii_junior_mask"
+    policy_type     = "POLICY_TYPE_COLUMN_MASK"
+    to_principals   = ["Junior_Analyst"]
+    comment         = "PII: Mask names and email for junior analysts"
+    match_condition = "hasTagValue('pii_level', 'Limited_PII')"
+    match_alias     = "pii_cols"
+    function_name   = "mask_pii_partial"
+  },
+  {
+    name            = "pii_junior_ssn"
+    policy_type     = "POLICY_TYPE_COLUMN_MASK"
+    to_principals   = ["Junior_Analyst"]
+    comment         = "PII: Mask SSN for junior analysts"
+    match_condition = "hasTagValue('pii_level', 'Full_PII') AND hasTagValue('data_residency', 'US')"
+    match_alias     = "ssn_cols"
+    function_name   = "mask_ssn"
+  },
+
+  # PCI — credit card masking
+  {
+    name            = "pci_junior_last4"
+    policy_type     = "POLICY_TYPE_COLUMN_MASK"
+    to_principals   = ["Junior_Analyst"]
+    comment         = "Card: Last 4 digits only for junior analysts"
+    match_condition = "hasTagValue('pci_clearance', 'Full')"
+    match_alias     = "card_cols"
+    function_name   = "mask_credit_card_last4"
+  },
+  {
+    name              = "pci_cvv_mask_except_compliance"
+    policy_type       = "POLICY_TYPE_COLUMN_MASK"
+    to_principals     = ["account users"]
+    except_principals = ["Compliance_Officer"]
+    comment           = "Card: Mask CVV for all except Compliance_Officer"
+    match_condition   = "hasTagValue('pci_clearance', 'Administrative')"
+    match_alias       = "cvv_cols"
+    function_name     = "mask_credit_card_full"
+  },
+
+  # AML — transaction amount rounding
+  {
+    name            = "aml_junior_round"
+    policy_type     = "POLICY_TYPE_COLUMN_MASK"
+    to_principals   = ["Junior_Analyst"]
+    comment         = "Transactions: Round amount for junior analysts"
+    match_condition = "hasTagValue('aml_clearance', 'Junior_Analyst')"
+    match_alias     = "aml_cols"
+    function_name   = "mask_amount_rounded"
+  },
+
+  # Regional row filters
+  {
+    name            = "region_us"
+    policy_type     = "POLICY_TYPE_ROW_FILTER"
+    to_principals   = ["US_Region_Staff"]
+    comment         = "Region: US staff see US customer data only"
+    when_condition  = "hasTagValue('customer_region', 'Regional')"
+    function_name   = "filter_by_region_us"
+  },
+  {
+    name            = "region_eu"
+    policy_type     = "POLICY_TYPE_ROW_FILTER"
+    to_principals   = ["EU_Region_Staff"]
+    comment         = "Region: EU staff see EU customer data only"
+    when_condition  = "hasTagValue('customer_region', 'Regional')"
+    function_name   = "filter_by_region_eu"
+  },
+]
+
+# === Group members (optional) ===
+# Map of group name -> list of account-level user IDs.
+group_members = {
+  "Junior_Analyst"  = ["4170683363832239"]
+  "US_Region_Staff" = ["4170683363832239"]
+  "Senior_Analyst"  = ["6016306480479573", "1493916322305156"]
+  "EU_Region_Staff" = ["6016306480479573", "1493916322305156"]
+}
+
+# === Genie Space (optional) ===
+# genie_space_id = ""
