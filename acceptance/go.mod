@@ -3,8 +3,8 @@ module github.com/databrickslabs/sandbox/acceptance
 go 1.25.0
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.0 // MIT
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0 // MIT
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.1 // MIT
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.1 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.12.0 // MIT
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.8.0 // MIT
 	github.com/databricks/databricks-sdk-go v0.177.0 // Apache 2.0
@@ -23,7 +23,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/internal v0.7.1 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.2 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.8.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
@@ -43,10 +43,11 @@ require (
 	go.opentelemetry.io/otel/metric v1.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/api v0.215.0 // indirect
