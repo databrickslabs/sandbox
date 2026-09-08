@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/go-libs
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/briandowns/spinner v1.23.2
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.55.0
-	golang.org/x/oauth2 v0.36.0
+	golang.org/x/oauth2 v0.37.0
 )
 
 require (
