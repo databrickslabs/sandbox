@@ -1,6 +1,6 @@
 module github.com/databrickslabs/sandbox/acceptance
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.1 // MIT
@@ -12,7 +12,7 @@ require (
 	github.com/nxadm/tail v1.4.11 // MIT
 	github.com/sethvargo/go-githubactions v1.4.0 // Apache 2.0
 	github.com/stretchr/testify v1.12.1 // MIT
-	golang.org/x/oauth2 v0.36.0 // BSD
+	golang.org/x/oauth2 v0.37.0 // BSD
 )
 
 require golang.org/x/text v0.41.0
