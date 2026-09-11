@@ -183,6 +183,54 @@ class TestLabelingService(TestCase):
 
         self.assertIsNone(result)
 
+    @patch('server.services.labeling_service.labeling')
+    def test_get_labeling_session_helper_ignores_short_id_appearing_in_another_judges_name(
+        self, mock_labeling
+    ):
+        """Reject a false match from another judge's short ID inside a name.
+
+        A different judge's short ID can coincidentally appear inside another
+        judge's sanitized name portion of their session name. The lookup must not
+        return that unrelated session just because the short ID is present somewhere
+        in the string -- it must only match when the short ID occupies the actual
+        short-ID position that create_session_name() places it in (immediately
+        before the trailing "_labeling").
+        """
+        # This session belongs to a DIFFERENT judge, whose own short ID is
+        # "e5f6a7b8" -- but its sanitized name happens to contain "a1b2c3d4",
+        # which is the short ID we're about to search for.
+        decoy_session = Mock()
+        decoy_session.name = 'check_for_a1b2c3d4_keyword_e5f6a7b8_labeling'
+
+        # This is the actual, correctly-formatted session for the judge we're
+        # looking up (judge_id starts with "a1b2c3d4").
+        real_session = Mock()
+        real_session.name = 'quality_judge_a1b2c3d4_labeling'
+
+        mock_labeling.get_labeling_sessions.return_value = [decoy_session, real_session]
+
+        result = self.service._get_labeling_session('a1b2c3d4-1234-5678-abcd-123456789012')
+
+        self.assertEqual(result, real_session)
+
+    @patch('server.services.labeling_service.labeling')
+    def test_get_labeling_session_helper_no_false_positive_when_only_decoy_present(
+        self, mock_labeling
+    ):
+        """Reject the decoy when no real session is present.
+
+        Same collision setup as above, but without the real session present --
+        the lookup must return None rather than falsely matching the decoy.
+        """
+        decoy_session = Mock()
+        decoy_session.name = 'check_for_a1b2c3d4_keyword_e5f6a7b8_labeling'
+
+        mock_labeling.get_labeling_sessions.return_value = [decoy_session]
+
+        result = self.service._get_labeling_session('a1b2c3d4-1234-5678-abcd-123456789012')
+
+        self.assertIsNone(result)
+
     @patch('server.services.labeling_service.logger')
     @patch.object(LabelingService, '_get_labeling_session')
     @patch('server.services.labeling_service.labeling')
