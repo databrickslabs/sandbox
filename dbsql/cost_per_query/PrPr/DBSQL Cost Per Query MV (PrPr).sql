@@ -108,10 +108,10 @@ cpq_warehouse_query_history AS (
     timestampadd(MILLISECOND, coalesce(result_fetch_duration_ms, 0), end_time) AS query_work_end_time,
     -- NEW - Query source
     CASE
+      WHEN query_source.alert_id IS NOT NULL THEN 'ALERT'
       WHEN query_source.job_info.job_id IS NOT NULL THEN 'JOB'
       WHEN query_source.legacy_dashboard_id IS NOT NULL THEN 'LEGACY DASHBOARD'
       WHEN query_source.dashboard_id IS NOT NULL THEN 'AI/BI DASHBOARD'
-      WHEN query_source.alert_id IS NOT NULL THEN 'ALERT'
       WHEN query_source.notebook_id IS NOT NULL THEN 'NOTEBOOK'
       WHEN query_source.sql_query_id IS NOT NULL THEN 'SQL QUERY'
       WHEN query_source.genie_space_id IS NOT NULL THEN 'GENIE SPACE'
@@ -119,10 +119,10 @@ cpq_warehouse_query_history AS (
       ELSE 'UNKNOWN'
     END AS query_source_type,
     COALESCE(
+      query_source.alert_id,
       query_source.job_info.job_id,
       query_source.legacy_dashboard_id,
       query_source.dashboard_id,
-      query_source.alert_id,
       query_source.notebook_id,
       query_source.sql_query_id,
       query_source.genie_space_id,
@@ -456,7 +456,7 @@ select
         WHEN query_source_type = 'SQL QUERY' THEN CONCAT('/sql/queries/', query_source_id)
         WHEN query_source_type = 'AI/BI DASHBOARD' THEN CONCAT('/sql/dashboardsv3/', query_source_id)
         WHEN query_source_type = 'LEGACY DASHBOARD' THEN CONCAT('/sql/dashboards/', query_source_id)
-        WHEN query_source_type = 'ALERTS' THEN CONCAT('/sql/alerts/', query_source_id)
+        WHEN query_source_type = 'ALERT' THEN CONCAT('/sql/alerts/', query_source_id)
         WHEN query_source_type = 'GENIE SPACE' THEN CONCAT('/genie/rooms/', query_source_id)
         WHEN query_source_type = 'NOTEBOOK' THEN CONCAT('/editor/notebooks/', query_source_id)
         ELSE ''
