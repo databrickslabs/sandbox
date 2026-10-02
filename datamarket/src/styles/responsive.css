@@ -1,0 +1,57 @@
+/* Responsive Typography Classes */
+@layer components {
+  .text-responsive-display-1 {
+    @apply text-display-1 lg:text-display-1-lg;
+  }
+  
+  .text-responsive-display-2 {
+    @apply text-display-2 lg:text-display-2-lg;
+  }
+  
+  .text-responsive-h1 {
+    @apply text-h1 lg:text-h1-lg;
+  }
+  
+  .text-responsive-h2 {
+    @apply text-h2 lg:text-h2-lg;
+  }
+  
+  /* Touch-friendly button classes */
+  .btn-touch {
+    @apply min-h-touch min-w-touch flex items-center justify-center;
+  }
+  
+  .btn-touch-sm {
+    @apply min-h-touch-sm min-w-touch-sm flex items-center justify-center;
+  }
+  
+  .btn-touch-lg {
+    @apply min-h-touch-lg min-w-touch-lg flex items-center justify-center;
+  }
+  
+  /* Mobile-friendly spacing */
+  .container-mobile {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-spacing {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+  
+  .grid-responsive {
+    @apply grid gap-4 sm:gap-6 lg:gap-8;
+  }
+  
+  /* Focus states for accessibility */
+  .focus-visible-custom {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+  
+  /* Safe area padding for mobile devices */
+  .safe-area-inset {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

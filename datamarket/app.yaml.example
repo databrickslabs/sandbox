@@ -1,0 +1,41 @@
+command:
+  - "node"
+  - "app.js"
+env:
+  # ── Databricks Identity ──────────────────────────────────────────────────────
+  # DATABRICKS_TOKEN is auto-injected by Databricks Apps at runtime.
+  # Set DATABRICKS_HOST to your workspace URL.
+  - name: DATABRICKS_HOST
+    value: "https://your-workspace.azuredatabricks.net"
+
+  # ── IMPORTANT: Admin bootstrap ───────────────────────────────────────────────
+  # Set this to the deployer's email address. On first SSO login the app will
+  # automatically promote this user to admin so they can access Manage → Settings.
+  # Without this, the deployer lands as a regular analyst with no admin access.
+  # Comma-separate multiple emails for co-admins: "alice@org.com,bob@org.com"
+  - name: ADMIN_EMAIL
+    value: "your-email@company.com"
+
+  # ── Lakebase Connection ───────────────────────────────────────────────────────
+  # Autoscaling Lakebase: Get the endpoint URL from Compute → Lakebase → your project
+  - name: LAKEBASE_HOST
+    value: "ep-your-project.database.region.azuredatabricks.net"
+  - name: LAKEBASE_DB
+    value: "databricks_postgres"
+  - name: LAKEBASE_SCHEMA
+    value: "datamarket"
+  - name: LAKEBASE_ENDPOINT
+    value: "projects/your-project-name/branches/production/endpoints/primary"
+
+  # ── Mode ─────────────────────────────────────────────────────────────────────
+  # "true"  = persona switcher visible (for demos and internal POCs)
+  # "false" = real SSO identity from Databricks Apps headers (for production)
+  # NOTE: When switching from true → false, make sure ADMIN_EMAIL is set first
+  #       or you will land as a regular analyst with no way to configure the app.
+  - name: DEMO_MODE
+    value: "false"
+
+  # ── Branding & integrations ───────────────────────────────────────────────────
+  # Everything else (portal name, tagline, logo, SQL Warehouse ID, search chips,
+  # About/FAQ/Contact content) is configured via Admin → Settings in the app UI.
+  # No redeploy needed for those changes.

@@ -1,0 +1,28 @@
+command:
+  - "node"
+  - "app.js"
+env:
+  # ── Databricks Identity ────────────────────────────────────────────────────
+  - name: DATABRICKS_HOST
+    value: "https://dbc-7e8bd036-20cc.cloud.databricks.com"
+
+  # ── Admin bootstrap ────────────────────────────────────────────────────────
+  # On first SSO login the app auto-promotes this email to admin.
+  # Set this to your own admin email before deploying.
+  - name: ADMIN_EMAIL
+    value: "admin@example.com"
+
+  # ── Lakebase Connection ────────────────────────────────────────────────────
+  - name: LAKEBASE_HOST
+    value: "ep-spring-dust-d8wvin0s.database.us-east-2.cloud.databricks.com"
+  - name: LAKEBASE_DB
+    value: "databricks_postgres"
+  - name: LAKEBASE_SCHEMA
+    value: "datamarket"
+  - name: LAKEBASE_ENDPOINT
+    value: "projects/datamarket/branches/production/endpoints/primary"
+
+  # ── Mode ──────────────────────────────────────────────────────────────────
+  # false = real SSO identity + UC grants. true = persona switcher (demos only)
+  - name: DEMO_MODE
+    value: "false"
