@@ -1,0 +1,31 @@
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+
+This Software depends on the following projects, licensed under the Apache License 2.0:
+
+boto3 and botocore
+Copyright Amazon.com, Inc. or its affiliates.
+License - https://github.com/boto/boto3/blob/develop/LICENSE
+
+Databricks SDK for Python
+Copyright (2023) Databricks, Inc.
+License - https://github.com/databricks/databricks-sdk-py/blob/main/LICENSE
+
+This Software depends on the following projects, licensed under the MIT license:
+
+FastAPI
+Copyright (c) 2018 Sebastián Ramírez
+License - https://github.com/fastapi/fastapi/blob/master/LICENSE
+
+fastavro
+Copyright (c) 2011 Miki Tebeka
+License - https://github.com/fastavro/fastavro/blob/master/LICENSE
+
+urllib3
+Copyright (c) 2008-2020 Andrey Petrov and contributors
+License - https://github.com/urllib3/urllib3/blob/main/LICENSE.txt
+
+This Software depends on the following projects, licensed under the BSD 3-Clause license:
+
+Uvicorn
+Copyright © 2017-present, Encode OSS Ltd.
+License - https://github.com/encode/uvicorn/blob/master/LICENSE.md

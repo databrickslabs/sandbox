@@ -12,6 +12,7 @@ database-diagram-builder   @alexott
 downstreams                @nfx @alexott
 feature-registry-app       @yang-chengg @mparkhe @mingyangge-db @stephanielu5
 go-libs                    @nfx @alexott
+healthlake-opensharing     @mmccarthy404-dbx
 ip_access_list_analyzer    @alexott
 judge-builder              @smoorjani @alkispoly-db
 ka-chat-bot                @taiga-db
