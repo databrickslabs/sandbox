@@ -231,6 +231,12 @@ def test_share_layout_is_the_default_and_gives_each_store_its_own_share(monkeypa
     assert c.get("/delta-sharing/shares/healthlake/schemas").status_code == 404
 
 
+def test_star_serves_every_data_store(monkeypatch):
+    env = make_env(monkeypatch, STORES="*")
+    schemas = env["client"].get("/delta-sharing/shares/healthlake/schemas").json()["items"]
+    assert [s["name"] for s in schemas] == ["alpha", "beta"]
+
+
 def test_explicit_resource_links_need_no_datastore_listing(monkeypatch):
     env = make_env(monkeypatch, STORES=f"fhir={ALPHA_LINK},other={BETA_LINK}")
     schemas = env["client"].get("/delta-sharing/shares/healthlake/schemas").json()["items"]

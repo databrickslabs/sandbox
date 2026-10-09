@@ -1,11 +1,4 @@
-config.sh
-.state/
 .databricks/
-terraform/.terraform/
-terraform/terraform.tfstate*
-terraform/terraform.tfvars.json
-terraform/tfplan
 __pycache__/
 .pytest_cache/
 .venv/
-.DS_Store

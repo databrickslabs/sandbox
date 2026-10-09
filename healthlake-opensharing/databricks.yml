@@ -2,30 +2,30 @@ bundle:
   name: healthlake-opensharing
 
 variables:
-  app_name:
-    description: Databricks App name (lowercase letters, numbers, hyphens; max 30 characters)
-    default: healthlake-opensharing
   aws_region:
-    description: Region of the HealthLake data stores
+    description: AWS region of the HealthLake data stores
   aws_role_arns:
-    description: Comma-separated IAM roles the app assumes with its own Databricks OIDC token, one per AWS account
+    description: IAM role the app assumes with its own Databricks identity (comma-separate roles from several AWS accounts)
   recipient_sp_application_id:
-    description: Service principal Unity Catalog authenticates as; the only caller the server accepts
+    description: Application ID of the service principal Unity Catalog connects as; the only caller the server accepts
+  app_name:
+    description: App name (lowercase letters, numbers, hyphens; at most 30 characters)
+    default: healthlake-opensharing
   layout:
-    description: "share = one share (catalog) per data store; schema = one share with a schema per data store (up to ~45 stores)"
+    description: "share: one share (catalog) per data store. schema: one share with a schema per data store (up to ~45 stores)"
     default: share
   stores:
-    description: "Optional comma-separated name=datastore list to expose (and rename); empty exposes every ACTIVE data store"
-    default: ""
+    description: "name=datastore list to serve and rename, comma-separated; * serves every ACTIVE data store"
+    default: "*"
   instances:
-    description: App instances (1-5); 2 or more gives zero-downtime redeploys
+    description: App instances, 1 to 5; 2 or more keeps the server up during redeploys
     default: 1
 
 resources:
   apps:
     healthlake_opensharing:
       name: ${var.app_name}
-      description: OpenSharing server for AWS HealthLake via Lake Formation credential vending
+      description: OpenSharing server for AWS HealthLake, via Lake Formation credential vending
       source_code_path: ./app
       compute_min_instances: ${var.instances}
       compute_max_instances: ${var.instances}

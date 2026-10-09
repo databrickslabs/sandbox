@@ -47,13 +47,15 @@ if LAYOUT not in ("schema", "share"):
 
 def parse_stores(value):
     stores = {}
+    if value.strip() == "*":  # every ACTIVE data store
+        return stores
     for entry in filter(None, (e.strip() for e in value.split(","))):
         alias, _, source = entry.partition("=")
         stores[alias.strip()] = (source or alias).strip()
     return stores
 
 
-STORES = parse_stores(os.environ.get("STORES", ""))
+STORES = parse_stores(os.environ.get("STORES", "*"))
 
 app = FastAPI()
 # FHIR schemas make responses 100-600 KB of JSON that compresses 20-30x even at level 1
