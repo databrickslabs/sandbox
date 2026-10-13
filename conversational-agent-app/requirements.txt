@@ -6,7 +6,7 @@ dash-iconify==0.1.2
 dash-leaflet==1.0.15
 dash-table==5.0.0
 dash_ag_grid==31.3.0
-dash_mantine_components==0.15.3
+dash_mantine_components==2.6.1
 backoff==2.2.1
 databricks-sdk>=0.56.0
 sqlparse==0.5.3
