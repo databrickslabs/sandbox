@@ -195,6 +195,18 @@ func (c *GitHubClient) ListRuns(ctx context.Context, org, repo, workflow string)
 	})
 }
 
+func (c *GitHubClient) DisableWorkflow(ctx context.Context, org, repo, workflow string) listing.Iterator[workflowRun] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%s/disable", gitHubAPI, org, repo, workflow)
+	err := c.api.Do(ctx, "PUT", path, httpclient)
+	return err
+}
+
+func (c *GitHubClient) EnableWorkflow(ctx context.Context, org, repo, workflow string) listing.Iterator[workflowRun] {
+	path := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%s/enable", gitHubAPI, org, repo, workflow)
+	err := c.api.Do(ctx, "PUT", path, httpclient)
+	return err
+}
+
 func (c *GitHubClient) ListWorkflowJobs(ctx context.Context, org, repo string, runID int64) listing.Iterator[WorkflowJob] {
 	path := fmt.Sprintf("%s/repos/%s/%s/actions/runs/%v/jobs", gitHubAPI, org, repo, runID)
 	return rawPaginator[WorkflowJob, Jobs, int64](ctx, c, path, &PageOptions{}, func(j Jobs) []WorkflowJob {
